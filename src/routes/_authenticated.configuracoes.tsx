@@ -78,6 +78,28 @@ function SettingsPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const reset = useMutation({
+    mutationFn: async () => {
+      await resetFn();
+    },
+    onSuccess: () => {
+      toast.success("Dados de demonstração apagados");
+      qc.invalidateQueries();
+    },
+    onError: (e: any) => toast.error(e.message ?? "Erro ao resetar dados"),
+  });
+
+  const handleReset = async () => {
+    const ok = await confirm({
+      title: "Resetar dados de demonstração?",
+      description:
+        "Isso vai apagar TODOS os clientes, fornecedores, produtos, pedidos, contas a pagar/receber e movimentações financeiras. As configurações da empresa e o usuário admin serão mantidos. Esta ação não pode ser desfeita.",
+      confirmText: "Sim, apagar tudo",
+      destructive: true,
+    });
+    if (ok) reset.mutate();
+  };
+
   const uploadLogo = async (file: File) => {
     const ext = file.name.split(".").pop() ?? "png";
     const path = `${user!.id}/logo-${Date.now()}.${ext}`;
