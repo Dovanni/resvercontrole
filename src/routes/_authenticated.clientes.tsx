@@ -15,6 +15,8 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
 import { isValidCPF, isValidCNPJ, maskCPF, maskCNPJ } from "@/lib/validators";
+import { useConfirm } from "@/components/confirm-dialog";
+import { DataPagination, usePagination } from "@/components/data-pagination";
 
 export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({ meta: [{ title: "Clientes — Rosé" }] }),
@@ -30,6 +32,7 @@ type Customer = {
 
 function CustomersPage() {
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
 
@@ -106,7 +109,7 @@ function CustomersPage() {
               {data?.length === 0 && (
                 <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">Nenhum cliente cadastrado.</TableCell></TableRow>
               )}
-              {data?.map(c => (
+              {pageItems.map(c => (
                 <TableRow key={c.id}>
                   <TableCell className="font-medium">
                     {c.name}
@@ -122,12 +125,15 @@ function CustomersPage() {
                   <TableCell className="text-right">{brl(Number(c.credit_limit))}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => { setEditing(c); setOpen(true); }}><Pencil className="size-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Excluir ${c.name}?`)) remove.mutate(c.id); }}><Trash2 className="size-4 text-destructive" /></Button>
+                    <Button variant="ghost" size="icon" onClick={async () => {
+                      if (await confirm({ title: "Excluir cliente?", description: `O cliente "${c.name}" será removido permanentemente.` })) remove.mutate(c.id);
+                    }}><Trash2 className="size-4 text-destructive" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+          <DataPagination page={page} totalPages={totalPages} total={total} onChange={setPage} />
         </CardContent>
       </Card>
     </div>
