@@ -20,7 +20,8 @@ export const Route = createFileRoute("/_authenticated/produtos")({
 
 type Product = {
   id: string; name: string; brand: string | null; category: string | null;
-  cost_price: number; sale_price: number; stock: number; min_stock: number;
+  cost_price: number; sale_price: number; wholesale_price: number;
+  stock: number; min_stock: number; sku: string | null;
 };
 
 function ProductsPage() {
@@ -133,10 +134,12 @@ function ProductsPage() {
 function ProductForm({ initial, onSubmit, busy }: { initial: Product | null; onSubmit: (v: any) => void; busy: boolean }) {
   const [form, setForm] = useState({
     name: initial?.name ?? "",
+    sku: initial?.sku ?? "",
     brand: initial?.brand ?? "",
     category: initial?.category ?? "",
     cost_price: initial?.cost_price ?? 0,
     sale_price: initial?.sale_price ?? 0,
+    wholesale_price: initial?.wholesale_price ?? 0,
     stock: initial?.stock ?? 0,
     min_stock: initial?.min_stock ?? 3,
   });
@@ -148,20 +151,28 @@ function ProductForm({ initial, onSubmit, busy }: { initial: Product | null; onS
           <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         </div>
         <div className="space-y-1.5">
+          <Label>SKU</Label>
+          <Input value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} placeholder="código" />
+        </div>
+        <div className="space-y-1.5">
           <Label>Marca</Label>
           <Input value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} />
         </div>
-        <div className="space-y-1.5">
+        <div className="col-span-2 space-y-1.5">
           <Label>Categoria</Label>
-          <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="ex: maquiagem" />
+          <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="ex: maquiagem, skincare, perfumaria" />
         </div>
         <div className="space-y-1.5">
           <Label>Preço de custo (R$)</Label>
           <Input type="number" step="0.01" value={form.cost_price} onChange={(e) => setForm({ ...form, cost_price: Number(e.target.value) })} />
         </div>
         <div className="space-y-1.5">
-          <Label>Preço de venda (R$)</Label>
+          <Label>Preço varejo (R$)</Label>
           <Input type="number" step="0.01" required value={form.sale_price} onChange={(e) => setForm({ ...form, sale_price: Number(e.target.value) })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Preço atacado (R$)</Label>
+          <Input type="number" step="0.01" value={form.wholesale_price} onChange={(e) => setForm({ ...form, wholesale_price: Number(e.target.value) })} placeholder="0 = usa varejo" />
         </div>
         <div className="space-y-1.5">
           <Label>Estoque atual</Label>

@@ -1,13 +1,16 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut, Users, Truck, Receipt } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import type { ReactNode } from "react";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/clientes", label: "Clientes", icon: Users },
+  { to: "/fornecedores", label: "Fornecedores", icon: Truck },
   { to: "/produtos", label: "Produtos", icon: Package },
   { to: "/vendas", label: "Vendas", icon: ShoppingBag },
+  { to: "/contas-pagar", label: "Contas a pagar", icon: Receipt },
   { to: "/financeiro", label: "Financeiro", icon: Wallet },
 ] as const;
 
@@ -24,7 +27,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <span className="font-display text-2xl">Rosé</span>
         </div>
-        <nav className="flex-1 px-3 space-y-1">
+        <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
           {nav.map((n) => {
             const active = pathname.startsWith(n.to);
             return (
@@ -65,7 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Button>
         </header>
         <main className="flex-1 overflow-auto">{children}</main>
-        <nav className="md:hidden border-t bg-sidebar flex">
+        <nav className="md:hidden border-t bg-sidebar grid grid-cols-7 text-[10px]">
           {nav.map((n) => {
             const active = pathname.startsWith(n.to);
             return (
@@ -73,12 +76,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={n.to}
                 to={n.to}
                 className={[
-                  "flex-1 flex flex-col items-center py-2 text-xs gap-1",
+                  "flex flex-col items-center py-2 gap-1",
                   active ? "text-primary" : "text-muted-foreground",
                 ].join(" ")}
               >
-                <n.icon className="size-5" />
-                {n.label}
+                <n.icon className="size-4" />
+                <span className="truncate max-w-full px-0.5">{n.label.split(" ")[0]}</span>
               </Link>
             );
           })}
@@ -90,7 +93,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 export function PageHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
   return (
-    <div className="flex items-start justify-between gap-4 mb-6">
+    <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
       <div>
         <h1 className="font-display text-3xl text-foreground">{title}</h1>
         {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}

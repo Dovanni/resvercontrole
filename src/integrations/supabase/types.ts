@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      customers: {
+        Row: {
+          address: string | null
+          created_at: string
+          credit_limit: number
+          customer_type: string
+          document: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          person_type: string
+          phone: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          credit_limit?: number
+          customer_type?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          person_type?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          credit_limit?: number
+          customer_type?: string
+          document?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          person_type?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          zip?: string | null
+        }
+        Relationships: []
+      }
       finance_entries: {
         Row: {
           amount: number
@@ -58,6 +112,65 @@ export type Database = {
           },
         ]
       }
+      payables: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string
+          due_date: string
+          id: string
+          paid_amount: number
+          paid_at: string | null
+          payment_method: string | null
+          recurrence: string
+          status: string
+          supplier_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category?: string
+          created_at?: string
+          description: string
+          due_date: string
+          id?: string
+          paid_amount?: number
+          paid_at?: string | null
+          payment_method?: string | null
+          recurrence?: string
+          status?: string
+          supplier_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string
+          due_date?: string
+          id?: string
+          paid_amount?: number
+          paid_at?: string | null
+          payment_method?: string | null
+          recurrence?: string
+          status?: string
+          supplier_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payables_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           brand: string | null
@@ -65,12 +178,16 @@ export type Database = {
           cost_price: number
           created_at: string
           id: string
+          image_url: string | null
           min_stock: number
           name: string
           sale_price: number
+          sku: string | null
+          status: string
           stock: number
           updated_at: string
           user_id: string
+          wholesale_price: number
         }
         Insert: {
           brand?: string | null
@@ -78,12 +195,16 @@ export type Database = {
           cost_price?: number
           created_at?: string
           id?: string
+          image_url?: string | null
           min_stock?: number
           name: string
           sale_price?: number
+          sku?: string | null
+          status?: string
           stock?: number
           updated_at?: string
           user_id: string
+          wholesale_price?: number
         }
         Update: {
           brand?: string | null
@@ -91,12 +212,16 @@ export type Database = {
           cost_price?: number
           created_at?: string
           id?: string
+          image_url?: string | null
           min_stock?: number
           name?: string
           sale_price?: number
+          sku?: string | null
+          status?: string
           stock?: number
           updated_at?: string
           user_id?: string
+          wholesale_price?: number
         }
         Relationships: []
       }
@@ -171,36 +296,98 @@ export type Database = {
       }
       sales: {
         Row: {
+          channel: string
           created_at: string
+          customer_id: string | null
           customer_name: string | null
           discount: number
           id: string
           notes: string | null
           payment_method: string
           sold_at: string
+          status: string
           total: number
           user_id: string
         }
         Insert: {
+          channel?: string
           created_at?: string
+          customer_id?: string | null
           customer_name?: string | null
           discount?: number
           id?: string
           notes?: string | null
           payment_method?: string
           sold_at?: string
+          status?: string
           total?: number
           user_id: string
         }
         Update: {
+          channel?: string
           created_at?: string
+          customer_id?: string | null
           customer_name?: string | null
           discount?: number
           id?: string
           notes?: string | null
           payment_method?: string
           sold_at?: string
+          status?: string
           total?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppliers: {
+        Row: {
+          contact_name: string | null
+          created_at: string
+          delivery_days: number | null
+          document: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          payment_terms: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contact_name?: string | null
+          created_at?: string
+          delivery_days?: number | null
+          document?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contact_name?: string | null
+          created_at?: string
+          delivery_days?: number | null
+          document?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
