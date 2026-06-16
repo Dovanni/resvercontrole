@@ -173,6 +173,29 @@ function SettingsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {role === "admin" && (
+        <Card className="shadow-soft mt-6 border-destructive/30">
+          <CardContent className="p-6 space-y-3">
+            <div>
+              <h3 className="font-display text-lg">Zona de risco</h3>
+              <p className="text-sm text-muted-foreground">
+                Apaga clientes, fornecedores, produtos, pedidos, contas e movimentações.
+                Mantém apenas o usuário admin e as configurações da empresa.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleReset}
+              disabled={reset.isPending}
+            >
+              <Trash2 className="size-4 mr-1" />
+              {reset.isPending ? "Apagando…" : "Resetar dados de demonstração"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
