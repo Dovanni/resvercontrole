@@ -12,6 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Pencil, Trash2, Upload, Package } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
+import { useConfirm } from "@/components/confirm-dialog";
+import { DataPagination, usePagination } from "@/components/data-pagination";
 
 export const Route = createFileRoute("/_authenticated/produtos")({
   head: () => ({ meta: [{ title: "Produtos — Rosé" }] }),
@@ -26,6 +28,7 @@ type Product = {
 
 function ProductsPage() {
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
 
@@ -37,6 +40,9 @@ function ProductsPage() {
       return data as Product[];
     },
   });
+
+  const { page, setPage, totalPages, total, pageItems } = usePagination(products);
+
 
   const save = useMutation({
     mutationFn: async (p: Partial<Product>) => {
@@ -109,7 +115,7 @@ function ProductsPage() {
               {products?.length === 0 && (
                 <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Nenhum produto cadastrado ainda.</TableCell></TableRow>
               )}
-              {products?.map(p => (
+              {pageItems.map(p => (
                 <TableRow key={p.id}>
                   <TableCell>
                     <div className="size-10 rounded-lg bg-muted overflow-hidden flex items-center justify-center">
@@ -125,12 +131,15 @@ function ProductsPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => { setEditing(p); setOpen(true); }}><Pencil className="size-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Excluir ${p.name}?`)) remove.mutate(p.id); }}><Trash2 className="size-4 text-destructive" /></Button>
+                    <Button variant="ghost" size="icon" onClick={async () => {
+                      if (await confirm({ title: "Excluir produto?", description: `O produto "${p.name}" será removido permanentemente.` })) remove.mutate(p.id);
+                    }}><Trash2 className="size-4 text-destructive" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+          <DataPagination page={page} totalPages={totalPages} total={total} onChange={setPage} />
         </CardContent>
       </Card>
     </div>
