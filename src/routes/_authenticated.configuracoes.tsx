@@ -1,0 +1,143 @@
+import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { PageHeader } from "@/components/app-shell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Upload, Building2, Moon, Sun } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/lib/auth";
+import { isValidCNPJ, maskCNPJ } from "@/lib/validators";
+
+export const Route = createFileRoute("/_authenticated/configuracoes")({
+  head: () => ({ meta: [{ title: "Configurações — Rosé" }] }),
+  component: SettingsPage,
+});
+
+function SettingsPage() {
+  const { user, can } = useAuth();
+  const qc = useQueryClient();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [form, setForm] = useState({ company_name: "", cnpj: "", logo_url: "", theme: "light" as "light" | "dark" });
+
+  if (!can("view:settings")) return <Navigate to="/dashboard" />;
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["company-settings", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("company_settings" as any).select("*").eq("user_id", user!.id).maybeSingle();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
+  useEffect(() => {
+    if (data) setForm({
+      company_name: data.company_name ?? "",
+      cnpj: data.cnpj ?? "",
+      logo_url: data.logo_url ?? "",
+      theme: data.theme ?? "light",
+    });
+  }, [data]);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (form.cnpj && !isValidCNPJ(form.cnpj)) throw new Error("CNPJ inválido");
+      const { error } = await supabase.from("company_settings" as any).upsert({
+        user_id: user!.id,
+        company_name: form.company_name || null,
+        cnpj: form.cnpj || null,
+        logo_url: form.logo_url || null,
+        theme: form.theme,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Configurações salvas");
+      qc.invalidateQueries({ queryKey: ["company-settings"] });
+      document.documentElement.classList.toggle("dark", form.theme === "dark");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const uploadLogo = async (file: File) => {
+    const ext = file.name.split(".").pop() ?? "png";
+    const path = `${user!.id}/logo-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("company-logos").upload(path, file, { upsert: true });
+    if (error) return toast.error(error.message);
+    const { data: signed } = await supabase.storage.from("company-logos").createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
+    if (signed?.signedUrl) setForm((f) => ({ ...f, logo_url: signed.signedUrl }));
+  };
+
+  if (isLoading) return <div className="p-8 text-muted-foreground">Carregando…</div>;
+
+  return (
+    <div className="p-6 md:p-8 max-w-3xl mx-auto">
+      <PageHeader title="Configurações" subtitle="Identidade e preferências da empresa" />
+
+      <Card className="shadow-soft">
+        <CardContent className="p-6 space-y-5">
+          <div className="flex items-center gap-4">
+            <div className="size-20 rounded-2xl bg-muted overflow-hidden flex items-center justify-center">
+              {form.logo_url ? (
+                <img src={form.logo_url} alt="Logo" className="object-cover w-full h-full" />
+              ) : (
+                <Building2 className="size-8 text-muted-foreground" />
+              )}
+            </div>
+            <div className="flex-1">
+              <Button variant="outline" type="button" onClick={() => fileRef.current?.click()}>
+                <Upload className="size-4 mr-1" /> Enviar logo
+              </Button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && uploadLogo(e.target.files[0])}
+              />
+              <p className="text-xs text-muted-foreground mt-2">PNG ou JPG, recomendado quadrado.</p>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Nome da empresa</Label>
+            <Input value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>CNPJ</Label>
+            <Input
+              value={form.cnpj}
+              onChange={(e) => setForm({ ...form, cnpj: maskCNPJ(e.target.value) })}
+              placeholder="00.000.000/0000-00"
+            />
+            {form.cnpj && !isValidCNPJ(form.cnpj) && (
+              <p className="text-xs text-destructive">CNPJ inválido</p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Tema</Label>
+            <Select value={form.theme} onValueChange={(v: any) => setForm({ ...form, theme: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="light"><div className="flex items-center gap-2"><Sun className="size-4" /> Claro</div></SelectItem>
+                <SelectItem value="dark"><div className="flex items-center gap-2"><Moon className="size-4" /> Escuro</div></SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button onClick={() => save.mutate()} disabled={save.isPending} className="w-full bg-gradient-primary text-primary-foreground">
+            {save.isPending ? "Salvando…" : "Salvar configurações"}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
