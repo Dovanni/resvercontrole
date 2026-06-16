@@ -16,24 +16,29 @@ function Dashboard() {
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const since = new Date();
-      since.setDate(since.getDate() - 30);
-      const isoSince = since.toISOString();
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
       const [sales, finance, products, items] = await Promise.all([
-        supabase.from("sales").select("id,total,sold_at,customer_name").gte("sold_at", isoSince).order("sold_at", { ascending: false }),
-        supabase.from("finance_entries").select("type,amount,entry_date").gte("entry_date", isoSince),
+        supabase.from("sales").select("id,total,sold_at,customer_name,channel").gte("sold_at", monthStart).order("sold_at", { ascending: false }),
+        supabase.from("finance_entries").select("type,amount,entry_date").gte("entry_date", monthStart),
         supabase.from("products").select("id,name,stock,min_stock"),
-        supabase.from("sale_items").select("quantity,unit_price,unit_cost,product_id,products(name)").gte("created_at", isoSince),
+        supabase.from("sale_items").select("quantity,unit_price,unit_cost,product_id,products(name)").gte("created_at", monthStart),
       ]);
 
-      const totalRevenue = (sales.data ?? []).reduce((s, r) => s + Number(r.total), 0);
+      const salesRows = sales.data ?? [];
+      const totalRevenue = salesRows.reduce((s, r) => s + Number(r.total), 0);
       const totalIncome = (finance.data ?? []).filter(f => f.type === "income").reduce((s, r) => s + Number(r.amount), 0);
       const totalExpense = (finance.data ?? []).filter(f => f.type === "expense").reduce((s, r) => s + Number(r.amount), 0);
       const totalCost = (items.data ?? []).reduce((s, r) => s + Number(r.unit_cost) * r.quantity, 0);
       const profit = totalRevenue - totalCost;
-      const salesCount = (sales.data ?? []).length;
-      const avgTicket = salesCount ? totalRevenue / salesCount : 0;
+      const salesCount = salesRows.length;
+
+      // ticket médio separado por canal
+      const atac = salesRows.filter(s => s.channel === "atacado");
+      const varj = salesRows.filter(s => s.channel === "varejo");
+      const ticketAtacado = atac.length ? atac.reduce((s, r) => s + Number(r.total), 0) / atac.length : 0;
+      const ticketVarejo = varj.length ? varj.reduce((s, r) => s + Number(r.total), 0) / varj.length : 0;
 
       // top products by qty
       const map = new Map<string, { name: string; qty: number; revenue: number }>();
@@ -52,7 +57,7 @@ function Dashboard() {
         const d = new Date(); d.setDate(d.getDate() - i);
         days[d.toISOString().slice(0, 10)] = 0;
       }
-      (sales.data ?? []).forEach(s => {
+      salesRows.forEach(s => {
         const k = s.sold_at.slice(0, 10);
         if (k in days) days[k] += Number(s.total);
       });
@@ -64,9 +69,10 @@ function Dashboard() {
       const lowStock = (products.data ?? []).filter(p => p.stock <= p.min_stock);
 
       return {
-        totalRevenue, profit, salesCount, avgTicket,
+        totalRevenue, profit, salesCount,
+        ticketAtacado, ticketVarejo,
         totalIncome, totalExpense, balance: totalIncome - totalExpense,
-        topProducts, chart, lowStock, recentSales: (sales.data ?? []).slice(0, 5),
+        topProducts, chart, lowStock, recentSales: salesRows.slice(0, 5),
       };
     },
   });
@@ -76,15 +82,15 @@ function Dashboard() {
   }
 
   const kpis = [
-    { label: "Faturamento (30d)", value: brl(data.totalRevenue), icon: TrendingUp, accent: "bg-gradient-primary text-primary-foreground" },
-    { label: "Lucro estimado", value: brl(data.profit), icon: Wallet, accent: "bg-gradient-gold text-gold-foreground" },
-    { label: "Vendas", value: String(data.salesCount), icon: ShoppingBag, accent: "bg-accent text-accent-foreground" },
-    { label: "Ticket médio", value: brl(data.avgTicket), icon: TrendingUp, accent: "bg-secondary text-secondary-foreground" },
+    { label: "Faturamento do mês", value: brl(data.totalRevenue), icon: TrendingUp, accent: "bg-gradient-primary text-primary-foreground" },
+    { label: "Saldo de caixa", value: brl(data.balance), icon: Wallet, accent: "bg-gradient-gold text-gold-foreground" },
+    { label: "Ticket médio — Varejo", value: brl(data.ticketVarejo), icon: ShoppingBag, accent: "bg-accent text-accent-foreground" },
+    { label: "Ticket médio — Atacado", value: brl(data.ticketAtacado), icon: ShoppingBag, accent: "bg-secondary text-secondary-foreground" },
   ];
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
-      <PageHeader title="Dashboard" subtitle="Visão geral dos últimos 30 dias" />
+      <PageHeader title="Dashboard" subtitle="Visão geral do mês atual" />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {kpis.map(k => (
@@ -119,7 +125,7 @@ function Dashboard() {
         </Card>
 
         <Card className="shadow-soft">
-          <CardHeader><CardTitle className="font-display">Fluxo do mês</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="font-display">Caixa do mês</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <Row label="Entradas" value={brl(data.totalIncome)} icon={<TrendingUp className="size-4 text-success" />} />
             <Row label="Saídas" value={brl(data.totalExpense)} icon={<TrendingDown className="size-4 text-destructive" />} />
