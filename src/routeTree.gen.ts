@@ -21,7 +21,6 @@ import { Route as AuthenticatedFluxoCaixaRouteImport } from './routes/_authentic
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated.financeiro'
 import { Route as AuthenticatedDespesasAnuaisRouteImport } from './routes/_authenticated.despesas-anuais'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
-import { Route as AuthenticatedDespesasAnuaisRouteImport } from './routes/_authenticated.despesas-anuais'
 import { Route as AuthenticatedContasReceberRouteImport } from './routes/_authenticated.contas-receber'
 import { Route as AuthenticatedContasPagarRouteImport } from './routes/_authenticated.contas-pagar'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated.configuracoes'
@@ -99,6 +98,12 @@ const AuthenticatedContasPagarRoute =
   AuthenticatedContasPagarRouteImport.update({
     id: '/contas-pagar',
     path: '/contas-pagar',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedDespesasAnuaisRoute =
+  AuthenticatedDespesasAnuaisRouteImport.update({
+    id: '/despesas-anuais',
+    path: '/despesas-anuais',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedConfiguracoesRoute =
