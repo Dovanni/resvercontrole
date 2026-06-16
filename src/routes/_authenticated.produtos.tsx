@@ -20,7 +20,8 @@ export const Route = createFileRoute("/_authenticated/produtos")({
 
 type Product = {
   id: string; name: string; brand: string | null; category: string | null;
-  cost_price: number; sale_price: number; stock: number; min_stock: number;
+  cost_price: number; sale_price: number; wholesale_price: number;
+  stock: number; min_stock: number; sku: string | null;
 };
 
 function ProductsPage() {
