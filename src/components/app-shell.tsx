@@ -70,7 +70,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Button>
         </header>
         <main className="flex-1 overflow-auto">{children}</main>
-        <nav className="md:hidden border-t bg-sidebar grid grid-cols-7 text-[10px]">
+        <nav className="md:hidden border-t bg-sidebar grid grid-cols-9 text-[10px]">
           {nav.map((n) => {
             const active = pathname.startsWith(n.to);
             return (
