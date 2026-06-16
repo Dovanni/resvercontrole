@@ -45,6 +45,8 @@ function CustomersPage() {
     },
   });
 
+  const { page, setPage, totalPages, total, pageItems } = usePagination(data);
+
   const save = useMutation({
     mutationFn: async (v: Partial<Customer>) => {
       const { data: { user } } = await supabase.auth.getUser();
