@@ -246,6 +246,72 @@ export type Database = {
         }
         Relationships: []
       }
+      receivables: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_id: string | null
+          description: string
+          due_date: string
+          id: string
+          notes: string | null
+          payment_method: string | null
+          received_amount: number
+          received_at: string | null
+          sale_id: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          customer_id?: string | null
+          description: string
+          due_date: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          received_amount?: number
+          received_at?: string | null
+          sale_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_id?: string | null
+          description?: string
+          due_date?: string
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          received_amount?: number
+          received_at?: string | null
+          sale_id?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receivables_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receivables_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sale_items: {
         Row: {
           created_at: string

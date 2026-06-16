@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut, Users, Truck, Receipt } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut, Users, Truck, Receipt, HandCoins, LineChart } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import type { ReactNode } from "react";
@@ -11,6 +11,8 @@ const nav = [
   { to: "/produtos", label: "Produtos", icon: Package },
   { to: "/vendas", label: "Vendas", icon: ShoppingBag },
   { to: "/contas-pagar", label: "Contas a pagar", icon: Receipt },
+  { to: "/contas-receber", label: "Contas a receber", icon: HandCoins },
+  { to: "/fluxo-caixa", label: "Fluxo de caixa", icon: LineChart },
   { to: "/financeiro", label: "Financeiro", icon: Wallet },
 ] as const;
 
@@ -68,7 +70,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Button>
         </header>
         <main className="flex-1 overflow-auto">{children}</main>
-        <nav className="md:hidden border-t bg-sidebar grid grid-cols-7 text-[10px]">
+        <nav className="md:hidden border-t bg-sidebar grid grid-cols-9 text-[10px]">
           {nav.map((n) => {
             const active = pathname.startsWith(n.to);
             return (
