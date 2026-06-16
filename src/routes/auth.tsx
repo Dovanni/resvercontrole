@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { translateAuthError } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Entrar — Rosé" }] }),
@@ -31,7 +32,7 @@ function AuthPage() {
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
-    if (error) toast.error(error.message);
+    if (error) toast.error(translateAuthError(error.message));
     else toast.success("Bem-vinda de volta!");
   }
 
@@ -44,7 +45,7 @@ function AuthPage() {
       options: { data: { full_name: name }, emailRedirectTo: `${window.location.origin}/dashboard` },
     });
     setBusy(false);
-    if (error) toast.error(error.message);
+    if (error) toast.error(translateAuthError(error.message));
     else toast.success("Conta criada! Você já pode usar.");
   }
 
