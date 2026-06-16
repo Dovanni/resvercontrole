@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
+import { isValidCPF, isValidCNPJ, maskCPF, maskCNPJ } from "@/lib/validators";
 
 export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({ meta: [{ title: "Clientes — Rosé" }] }),
@@ -154,8 +155,18 @@ function CustomerForm({ initial, onSubmit, busy }: { initial: Customer | null; o
     } catch { toast.error("Falha ao buscar CEP"); }
   }
 
+  const docValid = !f.document || (f.person_type === "pj" ? isValidCNPJ(f.document) : isValidCPF(f.document));
+  const onDocChange = (v: string) => setF({ ...f, document: f.person_type === "pj" ? maskCNPJ(v) : maskCPF(v) });
+
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(f); }} className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!docValid) { toast.error(`${f.person_type === "pj" ? "CNPJ" : "CPF"} inválido`); return; }
+        onSubmit(f);
+      }}
+      className="space-y-3 max-h-[70vh] overflow-y-auto pr-1"
+    >
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2 space-y-1.5">
           <Label>Nome / Razão social</Label>
@@ -163,7 +174,7 @@ function CustomerForm({ initial, onSubmit, busy }: { initial: Customer | null; o
         </div>
         <div className="space-y-1.5">
           <Label>Pessoa</Label>
-          <Select value={f.person_type} onValueChange={(v: any) => setF({ ...f, person_type: v })}>
+          <Select value={f.person_type} onValueChange={(v: any) => setF({ ...f, person_type: v, document: "" })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="pf">Física (CPF)</SelectItem>
@@ -173,7 +184,13 @@ function CustomerForm({ initial, onSubmit, busy }: { initial: Customer | null; o
         </div>
         <div className="space-y-1.5">
           <Label>{f.person_type === "pj" ? "CNPJ" : "CPF"}</Label>
-          <Input value={f.document} onChange={(e) => setF({ ...f, document: e.target.value })} />
+          <Input
+            value={f.document}
+            onChange={(e) => onDocChange(e.target.value)}
+            placeholder={f.person_type === "pj" ? "00.000.000/0000-00" : "000.000.000-00"}
+            className={!docValid ? "border-destructive" : ""}
+          />
+          {!docValid && <p className="text-xs text-destructive">Documento inválido</p>}
         </div>
         <div className="space-y-1.5">
           <Label>Canal</Label>

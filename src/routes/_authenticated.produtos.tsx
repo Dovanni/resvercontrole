@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, Package } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
 
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/_authenticated/produtos")({
 type Product = {
   id: string; name: string; brand: string | null; category: string | null;
   cost_price: number; sale_price: number; wholesale_price: number;
-  stock: number; min_stock: number; sku: string | null;
+  stock: number; min_stock: number; sku: string | null; photo_url: string | null;
 };
 
 function ProductsPage() {
@@ -96,6 +96,7 @@ function ProductsPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-16"></TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Marca</TableHead>
                 <TableHead className="text-right">Custo</TableHead>
@@ -106,10 +107,15 @@ function ProductsPage() {
             </TableHeader>
             <TableBody>
               {products?.length === 0 && (
-                <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">Nenhum produto cadastrado ainda.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Nenhum produto cadastrado ainda.</TableCell></TableRow>
               )}
               {products?.map(p => (
                 <TableRow key={p.id}>
+                  <TableCell>
+                    <div className="size-10 rounded-lg bg-muted overflow-hidden flex items-center justify-center">
+                      {p.photo_url ? <img src={p.photo_url} alt={p.name} className="w-full h-full object-cover" /> : <Package className="size-4 text-muted-foreground" />}
+                    </div>
+                  </TableCell>
                   <TableCell className="font-medium">{p.name}</TableCell>
                   <TableCell className="text-muted-foreground">{p.brand ?? "—"}</TableCell>
                   <TableCell className="text-right">{brl(Number(p.cost_price))}</TableCell>
@@ -132,6 +138,8 @@ function ProductsPage() {
 }
 
 function ProductForm({ initial, onSubmit, busy }: { initial: Product | null; onSubmit: (v: any) => void; busy: boolean }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState({
     name: initial?.name ?? "",
     sku: initial?.sku ?? "",
@@ -142,9 +150,36 @@ function ProductForm({ initial, onSubmit, busy }: { initial: Product | null; onS
     wholesale_price: initial?.wholesale_price ?? 0,
     stock: initial?.stock ?? 0,
     min_stock: initial?.min_stock ?? 3,
+    photo_url: initial?.photo_url ?? "",
   });
+
+  const uploadPhoto = async (file: File) => {
+    setUploading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Não autenticado");
+      const ext = file.name.split(".").pop() ?? "png";
+      const path = `${user.id}/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("product-photos").upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: signed } = await supabase.storage.from("product-photos").createSignedUrl(path, 60 * 60 * 24 * 365 * 5);
+      if (signed?.signedUrl) setForm((f) => ({ ...f, photo_url: signed.signedUrl }));
+    } catch (e: any) { toast.error(e.message); } finally { setUploading(false); }
+  };
+
   return (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4">
+    <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
+      <div className="flex items-center gap-4">
+        <div className="size-20 rounded-xl bg-muted overflow-hidden flex items-center justify-center">
+          {form.photo_url ? <img src={form.photo_url} alt="" className="w-full h-full object-cover" /> : <Package className="size-7 text-muted-foreground" />}
+        </div>
+        <div>
+          <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
+            <Upload className="size-4 mr-1" /> {uploading ? "Enviando…" : "Foto do produto"}
+          </Button>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && uploadPhoto(e.target.files[0])} />
+        </div>
+      </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2 space-y-1.5">
           <Label>Nome</Label>
