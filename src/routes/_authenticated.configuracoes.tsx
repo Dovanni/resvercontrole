@@ -1,5 +1,6 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
@@ -8,10 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Building2, Moon, Sun } from "lucide-react";
+import { Upload, Building2, Moon, Sun, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { isValidCNPJ, maskCNPJ } from "@/lib/validators";
+import { useConfirm } from "@/components/confirm-dialog";
+import { resetDemoData } from "@/lib/api/reset-demo.functions";
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações — Rosé" }] }),
@@ -19,8 +22,10 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
 });
 
 function SettingsPage() {
-  const { user, can } = useAuth();
+  const { user, can, role } = useAuth();
   const qc = useQueryClient();
+  const confirm = useConfirm();
+  const resetFn = useServerFn(resetDemoData);
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ company_name: "", cnpj: "", logo_url: "", theme: "light" as "light" | "dark" });
 
@@ -72,6 +77,28 @@ function SettingsPage() {
     },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const reset = useMutation({
+    mutationFn: async () => {
+      await resetFn();
+    },
+    onSuccess: () => {
+      toast.success("Dados de demonstração apagados");
+      qc.invalidateQueries();
+    },
+    onError: (e: any) => toast.error(e.message ?? "Erro ao resetar dados"),
+  });
+
+  const handleReset = async () => {
+    const ok = await confirm({
+      title: "Resetar dados de demonstração?",
+      description:
+        "Isso vai apagar TODOS os clientes, fornecedores, produtos, pedidos, contas a pagar/receber e movimentações financeiras. As configurações da empresa e o usuário admin serão mantidos. Esta ação não pode ser desfeita.",
+      confirmText: "Sim, apagar tudo",
+      destructive: true,
+    });
+    if (ok) reset.mutate();
+  };
 
   const uploadLogo = async (file: File) => {
     const ext = file.name.split(".").pop() ?? "png";
@@ -146,6 +173,29 @@ function SettingsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {role === "admin" && (
+        <Card className="shadow-soft mt-6 border-destructive/30">
+          <CardContent className="p-6 space-y-3">
+            <div>
+              <h3 className="font-display text-lg">Zona de risco</h3>
+              <p className="text-sm text-muted-foreground">
+                Apaga clientes, fornecedores, produtos, pedidos, contas e movimentações.
+                Mantém apenas o usuário admin e as configurações da empresa.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleReset}
+              disabled={reset.isPending}
+            >
+              <Trash2 className="size-4 mr-1" />
+              {reset.isPending ? "Apagando…" : "Resetar dados de demonstração"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
