@@ -231,9 +231,27 @@ function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: str
         </div>
         <div className="space-y-1.5">
           <Label>Fornecedor</Label>
-          <Select value={f.supplier_id} onValueChange={(v) => setF({ ...f, supplier_id: v })}>
-            <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
+          <Select
+            value={f.supplier_id || "__none__"}
+            onValueChange={(v) => {
+              if (v === "__none__") {
+                setF({ ...f, supplier_id: "" });
+              } else {
+                const sup = suppliers.find((s) => s.id === v);
+                setF({
+                  ...f,
+                  supplier_id: v,
+                  description: sup && !f.description ? sup.name : (sup ? sup.name : f.description),
+                });
+              }
+            }}
+          >
+            <SelectTrigger><SelectValue placeholder="Opcional — sem fornecedor" /></SelectTrigger>
             <SelectContent>
+              <SelectItem value="__none__">Sem fornecedor (opcional)</SelectItem>
+              {suppliers.length === 0 && (
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">Nenhum fornecedor cadastrado</div>
+              )}
               {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
             </SelectContent>
           </Select>
