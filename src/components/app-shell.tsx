@@ -1,11 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut, Users, Truck, Receipt, HandCoins, LineChart } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, FileText } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import type { ReactNode } from "react";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/bi", label: "BI", icon: BarChart3 },
   { to: "/clientes", label: "Clientes", icon: Users },
   { to: "/fornecedores", label: "Fornecedores", icon: Truck },
   { to: "/produtos", label: "Produtos", icon: Package },
@@ -14,6 +15,7 @@ const nav = [
   { to: "/contas-receber", label: "Contas a receber", icon: HandCoins },
   { to: "/fluxo-caixa", label: "Fluxo de caixa", icon: LineChart },
   { to: "/financeiro", label: "Financeiro", icon: Wallet },
+  { to: "/relatorios", label: "Relatórios", icon: FileText },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
