@@ -13,6 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
+import { useConfirm } from "@/components/confirm-dialog";
+import { DataPagination, usePagination } from "@/components/data-pagination";
 
 export const Route = createFileRoute("/_authenticated/contas-pagar")({
   head: () => ({ meta: [{ title: "Contas a pagar — Rosé" }] }),
@@ -32,6 +34,7 @@ type Payable = {
 
 function PayablesPage() {
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
 
   const { data } = useQuery({
@@ -90,6 +93,7 @@ function PayablesPage() {
   });
 
   const today = new Date().toISOString().slice(0, 10);
+  const { page, setPage, totalPages, total, pageItems } = usePagination(data);
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
@@ -145,7 +149,7 @@ function PayablesPage() {
               {data?.length === 0 && (
                 <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Nenhuma conta cadastrada.</TableCell></TableRow>
               )}
-              {data?.map(p => {
+              {pageItems.map(p => {
                 const overdue = p.status === "pendente" && p.due_date < today;
                 return (
                   <TableRow key={p.id}>
@@ -165,7 +169,9 @@ function PayablesPage() {
                           <CheckCircle2 className="size-4 text-success" />
                         </Button>
                       )}
-                      <Button variant="ghost" size="icon" onClick={() => { if (confirm("Excluir?")) remove.mutate(p.id); }}>
+                      <Button variant="ghost" size="icon" onClick={async () => {
+                        if (await confirm({ title: "Excluir conta?", description: `A conta "${p.description}" será removida permanentemente.` })) remove.mutate(p.id);
+                      }}>
                         <Trash2 className="size-4 text-destructive" />
                       </Button>
                     </TableCell>
@@ -174,6 +180,7 @@ function PayablesPage() {
               })}
             </TableBody>
           </Table>
+          <DataPagination page={page} totalPages={totalPages} total={total} onChange={setPage} />
         </CardContent>
       </Card>
     </div>
