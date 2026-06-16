@@ -53,6 +53,7 @@ function PayablesPage() {
     queryKey: ["suppliers-light"],
     queryFn: async () => {
       const { data, error } = await supabase.from("suppliers").select("id,name").order("name");
+      console.log("[suppliers dropdown] data:", data, "error:", error);
       if (error) throw error;
       return data as { id: string; name: string }[];
     },
