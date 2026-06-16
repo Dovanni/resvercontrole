@@ -22,6 +22,14 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [brand, setBrand] = useState<{ name: string; logo: string }>({ name: "", logo: "" });
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("rose:brand");
+      if (raw) setBrand(JSON.parse(raw));
+    } catch {}
+  }, []);
 
   useEffect(() => {
     if (!loading && session) navigate({ to: "/dashboard" });
@@ -53,10 +61,16 @@ function AuthPage() {
     <div className="min-h-screen bg-gradient-rose flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center size-14 rounded-2xl bg-gradient-primary shadow-glow mb-4">
-            <Sparkles className="size-6 text-primary-foreground" />
-          </div>
-          <h1 className="font-display text-4xl text-foreground">Rosé</h1>
+          {brand.logo ? (
+            <img src={brand.logo} alt={brand.name || "Logo"} className="mx-auto mb-4 max-h-20 w-auto object-contain rounded-2xl" />
+          ) : (
+            <div className="inline-flex items-center justify-center size-14 rounded-2xl bg-gradient-primary shadow-glow mb-4">
+              <Sparkles className="size-6 text-primary-foreground" />
+            </div>
+          )}
+          <h1 className="font-display text-4xl text-foreground">
+            {brand.name || "Sistema de Gestão"}
+          </h1>
           <p className="mt-2 text-sm text-muted-foreground">Controle de vendas para seu negócio de cosméticos</p>
         </div>
 
