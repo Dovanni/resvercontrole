@@ -100,12 +100,6 @@ const AuthenticatedContasPagarRoute =
     path: '/contas-pagar',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedDespesasAnuaisRoute =
-  AuthenticatedDespesasAnuaisRouteImport.update({
-    id: '/despesas-anuais',
-    path: '/despesas-anuais',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedConfiguracoesRoute =
   AuthenticatedConfiguracoesRouteImport.update({
     id: '/configuracoes',
@@ -132,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/contas-pagar': typeof AuthenticatedContasPagarRoute
   '/contas-receber': typeof AuthenticatedContasReceberRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/despesas-anuais': typeof AuthenticatedDespesasAnuaisRoute
   '/despesas-anuais': typeof AuthenticatedDespesasAnuaisRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/fluxo-caixa': typeof AuthenticatedFluxoCaixaRoute
