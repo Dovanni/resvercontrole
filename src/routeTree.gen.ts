@@ -127,7 +127,6 @@ export interface FileRoutesByFullPath {
   '/contas-receber': typeof AuthenticatedContasReceberRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/despesas-anuais': typeof AuthenticatedDespesasAnuaisRoute
-  '/despesas-anuais': typeof AuthenticatedDespesasAnuaisRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/fluxo-caixa': typeof AuthenticatedFluxoCaixaRoute
   '/fornecedores': typeof AuthenticatedFornecedoresRoute
