@@ -37,12 +37,17 @@ function SettingsPage() {
   });
 
   useEffect(() => {
-    if (data) setForm({
-      company_name: data.company_name ?? "",
-      cnpj: data.cnpj ?? "",
-      logo_url: data.logo_url ?? "",
-      theme: data.theme ?? "light",
-    });
+    if (data) {
+      setForm({
+        company_name: data.company_name ?? "",
+        cnpj: data.cnpj ?? "",
+        logo_url: data.logo_url ?? "",
+        theme: data.theme ?? "light",
+      });
+      try {
+        localStorage.setItem("rose:brand", JSON.stringify({ name: data.company_name ?? "", logo: data.logo_url ?? "" }));
+      } catch {}
+    }
   }, [data]);
 
   const save = useMutation({
@@ -61,6 +66,9 @@ function SettingsPage() {
       toast.success("Configurações salvas");
       qc.invalidateQueries({ queryKey: ["company-settings"] });
       document.documentElement.classList.toggle("dark", form.theme === "dark");
+      try {
+        localStorage.setItem("rose:brand", JSON.stringify({ name: form.company_name, logo: form.logo_url }));
+      } catch {}
     },
     onError: (e: any) => toast.error(e.message),
   });
