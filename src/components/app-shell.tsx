@@ -1,26 +1,31 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, FileText } from "lucide-react";
-import { useAuth } from "@/lib/auth";
+import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, FileText, Settings } from "lucide-react";
+import { useAuth, type Permission } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { NotificationsBell } from "@/components/notifications";
 import type { ReactNode } from "react";
 
-const nav = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/bi", label: "BI", icon: BarChart3 },
-  { to: "/clientes", label: "Clientes", icon: Users },
-  { to: "/fornecedores", label: "Fornecedores", icon: Truck },
-  { to: "/produtos", label: "Produtos", icon: Package },
-  { to: "/vendas", label: "Vendas", icon: ShoppingBag },
-  { to: "/contas-pagar", label: "Contas a pagar", icon: Receipt },
-  { to: "/contas-receber", label: "Contas a receber", icon: HandCoins },
-  { to: "/fluxo-caixa", label: "Fluxo de caixa", icon: LineChart },
-  { to: "/financeiro", label: "Financeiro", icon: Wallet },
-  { to: "/relatorios", label: "Relatórios", icon: FileText },
-] as const;
+const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, perm: "view:dashboard" },
+  { to: "/bi", label: "BI", icon: BarChart3, perm: "view:bi" },
+  { to: "/clientes", label: "Clientes", icon: Users, perm: "view:clients" },
+  { to: "/fornecedores", label: "Fornecedores", icon: Truck, perm: "view:suppliers" },
+  { to: "/produtos", label: "Produtos", icon: Package, perm: "view:products" },
+  { to: "/vendas", label: "Vendas", icon: ShoppingBag, perm: "view:sales" },
+  { to: "/contas-pagar", label: "Contas a pagar", icon: Receipt, perm: "view:payables" },
+  { to: "/contas-receber", label: "Contas a receber", icon: HandCoins, perm: "view:receivables" },
+  { to: "/fluxo-caixa", label: "Fluxo de caixa", icon: LineChart, perm: "view:cashflow" },
+  { to: "/financeiro", label: "Financeiro", icon: Wallet, perm: "view:finance" },
+  { to: "/relatorios", label: "Relatórios", icon: FileText, perm: "view:reports" },
+  { to: "/configuracoes", label: "Configurações", icon: Settings, perm: "view:settings" },
+];
+
+const ROLE_LABEL: Record<string, string> = { admin: "Admin", vendedor: "Vendedor", financeiro: "Financeiro" };
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { signOut, user } = useAuth();
+  const { signOut, user, role, can } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const nav = ALL_NAV.filter((n) => can(n.perm));
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -52,7 +57,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           })}
         </nav>
         <div className="p-4 border-t border-sidebar-border">
-          <div className="text-xs text-muted-foreground mb-2 truncate">{user?.email}</div>
+          <div className="text-xs text-muted-foreground mb-0.5 truncate">{user?.email}</div>
+          {role && <div className="text-[10px] text-primary font-medium mb-2 uppercase tracking-wider">{ROLE_LABEL[role]}</div>}
           <Button variant="ghost" size="sm" onClick={() => signOut()} className="w-full justify-start">
             <LogOut className="size-4 mr-2" /> Sair
           </Button>
@@ -60,16 +66,19 @@ export function AppShell({ children }: { children: ReactNode }) {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="md:hidden border-b px-4 py-3 flex items-center justify-between bg-sidebar">
-          <div className="flex items-center gap-2">
+        <header className="border-b px-4 py-3 flex items-center justify-between bg-sidebar md:bg-background md:border-transparent">
+          <div className="flex items-center gap-2 md:hidden">
             <div className="size-8 rounded-lg bg-gradient-primary flex items-center justify-center">
               <Sparkles className="size-4 text-primary-foreground" />
             </div>
             <span className="font-display text-xl">Rosé</span>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => signOut()}>
-            <LogOut className="size-4" />
-          </Button>
+          <div className="md:ml-auto flex items-center gap-1">
+            <NotificationsBell />
+            <Button variant="ghost" size="sm" onClick={() => signOut()} className="md:hidden">
+              <LogOut className="size-4" />
+            </Button>
+          </div>
         </header>
         <main className="flex-1 overflow-auto">{children}</main>
         <nav className="md:hidden border-t bg-sidebar flex overflow-x-auto text-[10px]">
