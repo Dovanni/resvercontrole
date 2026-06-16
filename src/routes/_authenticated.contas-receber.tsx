@@ -14,6 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CheckCircle2, AlertCircle, Download, Plus, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { brl, dateBR } from "@/lib/format";
+import { DataPagination, usePagination } from "@/components/data-pagination";
 
 export const Route = createFileRoute("/_authenticated/contas-receber")({
   head: () => ({ meta: [{ title: "Contas a receber — Rosé" }] }),
@@ -103,6 +104,8 @@ function ReceivablesPage() {
     }
     return { pending, received, overdue };
   }, [filtered]);
+
+  const { page, setPage, totalPages, total, pageItems } = usePagination(filtered);
 
   const exportXlsx = () => {
     const rows = filtered.map((r) => ({
@@ -208,7 +211,7 @@ function ReceivablesPage() {
               {filtered.length === 0 && (
                 <TableRow><TableCell colSpan={8} className="text-center py-10 text-muted-foreground">Sem contas a receber.</TableCell></TableRow>
               )}
-              {filtered.map((r) => {
+              {pageItems.map((r) => {
                 const eff = effectiveStatus(r);
                 const remaining = Number(r.amount) - Number(r.received_amount);
                 return (
@@ -232,6 +235,7 @@ function ReceivablesPage() {
               })}
             </TableBody>
           </Table>
+          <DataPagination page={page} totalPages={totalPages} total={total} onChange={setPage} />
         </CardContent>
       </Card>
 
