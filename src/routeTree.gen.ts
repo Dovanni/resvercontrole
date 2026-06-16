@@ -19,6 +19,7 @@ import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedFornecedoresRouteImport } from './routes/_authenticated.fornecedores'
 import { Route as AuthenticatedFluxoCaixaRouteImport } from './routes/_authenticated.fluxo-caixa'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated.financeiro'
+import { Route as AuthenticatedDespesasAnuaisRouteImport } from './routes/_authenticated.despesas-anuais'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedContasReceberRouteImport } from './routes/_authenticated.contas-receber'
 import { Route as AuthenticatedContasPagarRouteImport } from './routes/_authenticated.contas-pagar'
@@ -76,6 +77,12 @@ const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
   path: '/financeiro',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedDespesasAnuaisRoute =
+  AuthenticatedDespesasAnuaisRouteImport.update({
+    id: '/despesas-anuais',
+    path: '/despesas-anuais',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -119,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/contas-pagar': typeof AuthenticatedContasPagarRoute
   '/contas-receber': typeof AuthenticatedContasReceberRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/despesas-anuais': typeof AuthenticatedDespesasAnuaisRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/fluxo-caixa': typeof AuthenticatedFluxoCaixaRoute
   '/fornecedores': typeof AuthenticatedFornecedoresRoute
@@ -136,6 +144,7 @@ export interface FileRoutesByTo {
   '/contas-pagar': typeof AuthenticatedContasPagarRoute
   '/contas-receber': typeof AuthenticatedContasReceberRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/despesas-anuais': typeof AuthenticatedDespesasAnuaisRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/fluxo-caixa': typeof AuthenticatedFluxoCaixaRoute
   '/fornecedores': typeof AuthenticatedFornecedoresRoute
@@ -155,6 +164,7 @@ export interface FileRoutesById {
   '/_authenticated/contas-pagar': typeof AuthenticatedContasPagarRoute
   '/_authenticated/contas-receber': typeof AuthenticatedContasReceberRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/despesas-anuais': typeof AuthenticatedDespesasAnuaisRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/fluxo-caixa': typeof AuthenticatedFluxoCaixaRoute
   '/_authenticated/fornecedores': typeof AuthenticatedFornecedoresRoute
@@ -174,6 +184,7 @@ export interface FileRouteTypes {
     | '/contas-pagar'
     | '/contas-receber'
     | '/dashboard'
+    | '/despesas-anuais'
     | '/financeiro'
     | '/fluxo-caixa'
     | '/fornecedores'
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/contas-pagar'
     | '/contas-receber'
     | '/dashboard'
+    | '/despesas-anuais'
     | '/financeiro'
     | '/fluxo-caixa'
     | '/fornecedores'
@@ -209,6 +221,7 @@ export interface FileRouteTypes {
     | '/_authenticated/contas-pagar'
     | '/_authenticated/contas-receber'
     | '/_authenticated/dashboard'
+    | '/_authenticated/despesas-anuais'
     | '/_authenticated/financeiro'
     | '/_authenticated/fluxo-caixa'
     | '/_authenticated/fornecedores'
@@ -296,6 +309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/despesas-anuais': {
+      id: '/_authenticated/despesas-anuais'
+      path: '/despesas-anuais'
+      fullPath: '/despesas-anuais'
+      preLoaderRoute: typeof AuthenticatedDespesasAnuaisRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -348,6 +368,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedContasPagarRoute: typeof AuthenticatedContasPagarRoute
   AuthenticatedContasReceberRoute: typeof AuthenticatedContasReceberRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDespesasAnuaisRoute: typeof AuthenticatedDespesasAnuaisRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedFluxoCaixaRoute: typeof AuthenticatedFluxoCaixaRoute
   AuthenticatedFornecedoresRoute: typeof AuthenticatedFornecedoresRoute
@@ -364,6 +385,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedContasPagarRoute: AuthenticatedContasPagarRoute,
   AuthenticatedContasReceberRoute: AuthenticatedContasReceberRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDespesasAnuaisRoute: AuthenticatedDespesasAnuaisRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedFluxoCaixaRoute: AuthenticatedFluxoCaixaRoute,
   AuthenticatedFornecedoresRoute: AuthenticatedFornecedoresRoute,

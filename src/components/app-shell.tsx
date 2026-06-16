@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, FileText, Settings } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, FileText, Settings, CalendarDays } from "lucide-react";
 import { useAuth, type Permission } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { NotificationsBell } from "@/components/notifications";
