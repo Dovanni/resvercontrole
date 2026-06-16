@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/app-shell";
+import { ConfirmProvider } from "@/components/confirm-dialog";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -34,9 +35,11 @@ function AuthedLayout() {
   }
 
   return (
-    <AppShell>
-      <Outlet />
-    </AppShell>
+    <ConfirmProvider>
+      <AppShell>
+        <Outlet />
+      </AppShell>
+    </ConfirmProvider>
   );
 }
 

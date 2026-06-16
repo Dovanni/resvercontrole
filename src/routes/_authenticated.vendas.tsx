@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { brl, dateBR } from "@/lib/format";
+import { DataPagination, usePagination } from "@/components/data-pagination";
 
 export const Route = createFileRoute("/_authenticated/vendas")({
   head: () => ({ meta: [{ title: "Vendas — Rosé" }] }),
@@ -41,6 +42,8 @@ function SalesPage() {
       return data;
     },
   });
+
+  const { page, setPage, totalPages, total, pageItems } = usePagination(sales as any[] | undefined);
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
@@ -85,7 +88,7 @@ function SalesPage() {
               {sales?.length === 0 && (
                 <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">Nenhuma venda ainda.</TableCell></TableRow>
               )}
-              {sales?.map((s: any) => (
+              {pageItems.map((s: any) => (
                 <TableRow key={s.id}>
                   <TableCell className="text-muted-foreground">{dateBR(s.sold_at)}</TableCell>
                   <TableCell className="font-medium">{s.customers?.name ?? s.customer_name ?? "Balcão"}</TableCell>
@@ -103,6 +106,7 @@ function SalesPage() {
               ))}
             </TableBody>
           </Table>
+          <DataPagination page={page} totalPages={totalPages} total={total} onChange={setPage} />
         </CardContent>
       </Card>
     </div>
