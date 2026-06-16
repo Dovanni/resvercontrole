@@ -72,7 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Button>
         </header>
         <main className="flex-1 overflow-auto">{children}</main>
-        <nav className="md:hidden border-t bg-sidebar grid grid-cols-9 text-[10px]">
+        <nav className="md:hidden border-t bg-sidebar flex overflow-x-auto text-[10px]">
           {nav.map((n) => {
             const active = pathname.startsWith(n.to);
             return (
@@ -80,7 +80,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 key={n.to}
                 to={n.to}
                 className={[
-                  "flex flex-col items-center py-2 gap-1",
+                  "flex flex-col items-center py-2 px-3 gap-1 shrink-0 min-w-16",
                   active ? "text-primary" : "text-muted-foreground",
                 ].join(" ")}
               >
