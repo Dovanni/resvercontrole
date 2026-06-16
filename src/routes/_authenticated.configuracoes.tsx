@@ -115,6 +115,13 @@ function SettingsPage() {
     <div className="p-6 md:p-8 max-w-3xl mx-auto">
       <PageHeader title="Configurações" subtitle="Identidade e preferências da empresa" />
 
+      <div className="mb-4">
+        <Button variant="outline" asChild>
+          <Link to="/importar"><Upload className="size-4 mr-1" /> Importar planilha (Excel)</Link>
+        </Button>
+      </div>
+
+
       <Card className="shadow-soft">
         <CardContent className="p-6 space-y-5">
           <div className="flex items-center gap-4">
