@@ -22,8 +22,10 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
 });
 
 function SettingsPage() {
-  const { user, can } = useAuth();
+  const { user, can, role } = useAuth();
   const qc = useQueryClient();
+  const confirm = useConfirm();
+  const resetFn = useServerFn(resetDemoData);
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ company_name: "", cnpj: "", logo_url: "", theme: "light" as "light" | "dark" });
 
