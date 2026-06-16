@@ -12,6 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useConfirm } from "@/components/confirm-dialog";
+import { DataPagination, usePagination } from "@/components/data-pagination";
 
 export const Route = createFileRoute("/_authenticated/fornecedores")({
   head: () => ({ meta: [{ title: "Fornecedores — Rosé" }] }),
@@ -26,6 +28,7 @@ type Supplier = {
 
 function SuppliersPage() {
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
 
@@ -37,6 +40,9 @@ function SuppliersPage() {
       return data as Supplier[];
     },
   });
+
+  const { page, setPage, totalPages, total, pageItems } = usePagination(data);
+
 
   const save = useMutation({
     mutationFn: async (v: Partial<Supplier>) => {
@@ -94,7 +100,7 @@ function SuppliersPage() {
               {data?.length === 0 && (
                 <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">Nenhum fornecedor cadastrado.</TableCell></TableRow>
               )}
-              {data?.map(s => (
+              {pageItems.map(s => (
                 <TableRow key={s.id}>
                   <TableCell className="font-medium">{s.name}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{s.document ?? "—"}</TableCell>
@@ -102,12 +108,15 @@ function SuppliersPage() {
                   <TableCell className="text-sm">{s.delivery_days ? `${s.delivery_days} dias` : "—"}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => { setEditing(s); setOpen(true); }}><Pencil className="size-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Excluir ${s.name}?`)) remove.mutate(s.id); }}><Trash2 className="size-4 text-destructive" /></Button>
+                    <Button variant="ghost" size="icon" onClick={async () => {
+                      if (await confirm({ title: "Excluir fornecedor?", description: `O fornecedor "${s.name}" será removido permanentemente.` })) remove.mutate(s.id);
+                    }}><Trash2 className="size-4 text-destructive" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+          <DataPagination page={page} totalPages={totalPages} total={total} onChange={setPage} />
         </CardContent>
       </Card>
     </div>
