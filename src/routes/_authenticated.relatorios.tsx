@@ -378,6 +378,13 @@ function ReportsPage() {
           onPdf={exportStockPdf}
           onXlsx={exportStockXlsx}
         />
+        <ReportCard
+          icon={<Landmark className="size-5" />}
+          title="Bancário"
+          desc={`${(bankAccounts ?? []).filter(a => a.status === "ativa").length} contas • ${brl(totalBankBalance)}`}
+          onPdf={exportBankPdf}
+          onXlsx={exportBankXlsx}
+        />
       </div>
     </div>
   );
