@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -20,12 +20,26 @@ export const Route = createFileRoute("/_authenticated/vendas")({
   component: SalesPage,
 });
 
-const PAYMENT_METHODS = ["dinheiro", "pix", "cartão débito", "cartão crédito", "boleto", "a prazo"];
+const PAYMENT_METHODS: { value: string; label: string }[] = [
+  { value: "dinheiro", label: "Dinheiro" },
+  { value: "pix", label: "PIX" },
+  { value: "deposito", label: "Depósito bancário" },
+  { value: "transferencia", label: "Transferência" },
+  { value: "cartao_debito", label: "Cartão de débito" },
+  { value: "cartao_credito", label: "Cartão de crédito" },
+  { value: "cartao", label: "Cartão (parcelado)" },
+  { value: "mercado_livre", label: "Venda Mercado Livre" },
+  { value: "boleto", label: "Boleto" },
+  { value: "pix_prazo", label: "PIX a prazo" },
+  { value: "crediario", label: "Crediário" },
+  { value: "prazo", label: "A prazo" },
+];
 const STATUSES = ["orcamento", "confirmado", "separacao", "enviado", "entregue", "cancelado"] as const;
 const STATUS_LABEL: Record<string, string> = {
   orcamento: "Orçamento", confirmado: "Confirmado", separacao: "Em separação",
   enviado: "Enviado", entregue: "Entregue", cancelado: "Cancelado",
 };
+
 
 function SalesPage() {
   const qc = useQueryClient();
