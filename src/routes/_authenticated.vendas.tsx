@@ -298,9 +298,33 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
           <Select value={method} onValueChange={setMethod}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {PAYMENT_METHODS.map(m => <SelectItem key={m} value={m} className="capitalize">{m}</SelectItem>)}
+              {PAYMENT_METHODS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
             </SelectContent>
           </Select>
+        </div>
+        <div className="col-span-2 space-y-1.5">
+          <Label>Conta de destino {locked && <span className="text-xs text-muted-foreground">(automático)</span>}</Label>
+          {locked ? (
+            <Input value={accountName(bankAccountId)} disabled className="bg-muted" />
+          ) : (
+            <Select value={bankAccountId || "__none__"} onValueChange={(v) => setBankAccountId(v === "__none__" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="Selecione a conta" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Não vincular a uma conta</SelectItem>
+                {(bankAccounts ?? []).map(b => (
+                  <SelectItem key={b.id} value={b.id}>
+                    <span className="inline-flex items-center gap-2">
+                      <span className="size-2 rounded-full" style={{ background: b.color }} />
+                      {b.name} <span className="text-muted-foreground">— {b.bank}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <div className="text-xs text-muted-foreground">
+            {locked ? "Esta forma de pagamento cai automaticamente nesta conta." : "A entrada será lançada nesta conta ao confirmar o recebimento."}
+          </div>
         </div>
       </div>
 
