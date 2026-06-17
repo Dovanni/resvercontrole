@@ -241,6 +241,7 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
           customer_id: customerId || null,
           customer_name: selected?.name ?? (walkInName || null),
           channel, status, payment_method: method, total, discount,
+          bank_account_id: bankAccountId || null,
         } as any)
         .select().single();
       if (error) throw error;
