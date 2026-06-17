@@ -294,6 +294,11 @@ function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: str
     payment_method: "pix", recurrence: "nenhuma" as "nenhuma" | "semanal" | "mensal",
   });
   const [repeatCount, setRepeatCount] = useState(1);
+  const [manageCatsOpen, setManageCatsOpen] = useState(false);
+  const { data: cats } = useCategoriasContasPagar();
+  const categoryOptions = (cats && cats.length > 0)
+    ? cats.map((c) => c.nome)
+    : FALLBACK_CATEGORIES;
 
   const addMonths = (iso: string, n: number) => {
     const [y, m, d] = iso.split("-").map(Number);
