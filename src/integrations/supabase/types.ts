@@ -125,6 +125,30 @@ export type Database = {
           },
         ]
       }
+      categorias_contas_pagar: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          padrao: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          padrao?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          padrao?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       company_settings: {
         Row: {
           cnpj: string | null
@@ -817,6 +841,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      seed_default_categorias_contas_pagar: {
+        Args: { _user_id: string }
+        Returns: undefined
       }
     }
     Enums: {
