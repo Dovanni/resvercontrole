@@ -116,7 +116,43 @@ function FinancePage() {
         }
       />
 
+      <Card className="shadow-soft mb-4 cursor-pointer hover:shadow-md transition" onClick={() => setExpandedBalance((v) => !v)}>
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="inline-flex size-10 rounded-xl bg-primary/10 text-primary items-center justify-center"><Landmark className="size-5" /></div>
+              <div>
+                <div className="text-xs text-muted-foreground">Saldo em conta (consolidado)</div>
+                <div className={`text-2xl font-display ${totalBankBalance < 0 ? "text-destructive" : ""}`}>{brl(totalBankBalance)}</div>
+              </div>
+            </div>
+            {expandedBalance ? <ChevronUp className="size-5 text-muted-foreground" /> : <ChevronDown className="size-5 text-muted-foreground" />}
+          </div>
+          {expandedBalance && (
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2 border-t pt-4">
+              {(bankAccounts ?? []).length === 0 && (
+                <div className="text-sm text-muted-foreground">Nenhuma conta bancária ativa.</div>
+              )}
+              {(bankAccounts ?? []).map((a) => {
+                const b = bankBalances[a.id] ?? 0;
+                return (
+                  <div key={a.id} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-muted/40">
+                    <span className="inline-flex items-center gap-2 text-sm">
+                      <span className="size-2.5 rounded-full" style={{ background: a.color }} />
+                      {a.name}
+                      <span className="text-xs text-muted-foreground">({a.bank})</span>
+                    </span>
+                    <span className={`font-medium text-sm ${b < 0 ? "text-destructive" : ""}`}>{brl(b)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-3 gap-4 mb-6">
+
         <Card className="shadow-soft"><CardContent className="p-5">
           <div className="inline-flex size-10 rounded-xl bg-success/10 text-success items-center justify-center mb-3"><TrendingUp className="size-5" /></div>
           <div className="text-2xl font-display">{brl(totals.income)}</div>
