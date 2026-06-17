@@ -48,13 +48,22 @@ const emptyForm = () => ({
   juros_ml: "",
   frete_empresa: "",
   frete_cliente: "",
-  receber: "",
 });
 
 const num = (s: string) => {
   const n = parseFloat(String(s).replace(",", "."));
   return isNaN(n) ? 0 : n;
 };
+
+// Fórmulas oficiais:
+// RECEBER = LOJA - JUROS_ML - FRETE_CLIENTE
+// LUCRO   = LOJA - CUSTO - FRETE_EMPRESA - JUROS_ML
+// MARGEM  = RECEBER * 100 / LOJA
+// RATEIO (mensal) = TOTAL_FORNECEDOR - SUM(CUSTO)
+const calcReceber = (loja: number, juros: number, freteCli: number) => loja - juros - freteCli;
+const calcLucro = (loja: number, custo: number, freteEmp: number, juros: number) =>
+  loja - custo - freteEmp - juros;
+const calcMargem = (receber: number, loja: number) => (loja > 0 ? (receber * 100) / loja : 0);
 
 function ControleVendasPage() {
   const qc = useQueryClient();
@@ -95,18 +104,17 @@ function ControleVendasPage() {
     setFornecedorInput(fornecedorRow ? String(fornecedorRow.valor_fornecedor) : "");
   }, [fornecedorRow]);
 
-  // Preview calculations
+  // Prévia em tempo real
   const preview = useMemo(() => {
     const loja = num(form.loja);
     const custo = num(form.custo);
     const juros = num(form.juros_ml);
     const frete_emp = num(form.frete_empresa);
     const frete_cli = num(form.frete_cliente);
-    const receber = num(form.receber);
-    const rateio = loja - juros - frete_cli;
-    const lucro = receber - custo - juros - frete_emp;
-    const margem = receber > 0 ? (lucro / receber) * 100 : 0;
-    return { rateio, lucro, margem };
+    const receber = calcReceber(loja, juros, frete_cli);
+    const lucro = calcLucro(loja, custo, frete_emp, juros);
+    const margem = calcMargem(receber, loja);
+    return { receber, lucro, margem };
   }, [form]);
 
   const totals = useMemo(() => {
@@ -118,7 +126,6 @@ function ControleVendasPage() {
       frete_empresa: sum("frete_empresa"),
       frete_cliente: sum("frete_cliente"),
       receber: sum("receber"),
-      rateio: sum("rateio"),
       lucro: sum("lucro"),
     };
   }, [rows]);
@@ -127,8 +134,9 @@ function ControleVendasPage() {
     const fornecedor = num(fornecedorInput);
     const investimento = totals.custo + totals.juros_ml + totals.frete_empresa;
     const saldo = fornecedor - investimento;
-    const margem = totals.receber > 0 ? (totals.lucro / totals.receber) * 100 : 0;
-    return { receber: totals.receber, lucro: totals.lucro, margem, rateio: totals.rateio, fornecedor, investimento, saldo };
+    const rateio = fornecedor - totals.custo;
+    const margem = calcMargem(totals.receber, totals.loja);
+    return { receber: totals.receber, lucro: totals.lucro, margem, rateio, fornecedor, investimento, saldo };
   }, [totals, fornecedorInput]);
 
   const save = useMutation({
@@ -147,8 +155,8 @@ function ControleVendasPage() {
         juros_ml: num(form.juros_ml),
         frete_empresa: num(form.frete_empresa),
         frete_cliente: num(form.frete_cliente),
-        receber: num(form.receber),
-        rateio: preview.rateio,
+        receber: preview.receber,
+        rateio: 0,
         lucro: preview.lucro,
       };
       if (form.id) {
@@ -205,7 +213,6 @@ function ControleVendasPage() {
       juros_ml: String(r.juros_ml),
       frete_empresa: String(r.frete_empresa),
       frete_cliente: String(r.frete_cliente),
-      receber: String(r.receber),
     });
   };
 
@@ -220,19 +227,19 @@ function ControleVendasPage() {
 
   const exportXlsx = () => {
     const aoa: any[][] = [
-      ["Data", "Dia", "Loja", "Custo", "Juros ML", "Frete Emp", "Frete Cli", "Receber", "Rateio"],
+      ["Data", "Dia", "Loja", "Custo", "Juros ML", "Frete Emp", "Frete Cli", "Receber", "Lucro"],
     ];
     rows.forEach((r) => {
       const d = new Date(r.data + "T00:00:00");
       aoa.push([
         d.toLocaleDateString("pt-BR"),
         WEEKDAYS[d.getDay()],
-        r.loja, r.custo, r.juros_ml, r.frete_empresa, r.frete_cliente, r.receber, r.rateio,
+        r.loja, r.custo, r.juros_ml, r.frete_empresa, r.frete_cliente, r.receber, r.lucro,
       ]);
     });
     aoa.push([
       "TOTAL", "",
-      totals.loja, totals.custo, totals.juros_ml, totals.frete_empresa, totals.frete_cliente, totals.receber, totals.rateio,
+      totals.loja, totals.custo, totals.juros_ml, totals.frete_empresa, totals.frete_cliente, totals.receber, totals.lucro,
     ]);
     aoa.push([]);
     aoa.push(["Resumo do mês"]);
@@ -296,10 +303,9 @@ function ControleVendasPage() {
             <Field label="Juros ML (R$)"><Input inputMode="decimal" value={form.juros_ml} onChange={(e) => setForm({ ...form, juros_ml: e.target.value })} /></Field>
             <Field label="Frete empresa (R$)"><Input inputMode="decimal" value={form.frete_empresa} onChange={(e) => setForm({ ...form, frete_empresa: e.target.value })} /></Field>
             <Field label="Frete cliente (R$)"><Input inputMode="decimal" value={form.frete_cliente} onChange={(e) => setForm({ ...form, frete_cliente: e.target.value })} /></Field>
-            <Field label="A receber (R$)"><Input inputMode="decimal" value={form.receber} onChange={(e) => setForm({ ...form, receber: e.target.value })} /></Field>
           </div>
           <div className="grid gap-3 grid-cols-1 md:grid-cols-3 text-sm">
-            <PreviewBox label="Rateio (prévia)" value={brl(preview.rateio)} />
+            <PreviewBox label="A receber (prévia)" value={brl(preview.receber)} tone={preview.receber >= 0 ? "positive" : "negative"} />
             <PreviewBox label="Lucro (prévia)" value={brl(preview.lucro)} tone={preview.lucro >= 0 ? "positive" : "negative"} />
             <PreviewBox label="Margem (prévia)" value={`${preview.margem.toFixed(1)}%`} tone={preview.lucro >= 0 ? "positive" : "negative"} />
           </div>
@@ -314,7 +320,7 @@ function ControleVendasPage() {
 
       {/* Fornecedor do mês */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-6 space-y-3">
           <div className="flex flex-col md:flex-row md:items-end gap-3">
             <div className="flex-1">
               <Label>Total devido a fornecedores em {MONTHS[mes - 1]}/{YEAR}</Label>
@@ -329,6 +335,11 @@ function ControleVendasPage() {
               <Save className="size-4 mr-2" /> Salvar fornecedor
             </Button>
           </div>
+          {num(fornecedorInput) <= 0 && (
+            <div className="text-sm rounded-md border border-amber-300 bg-amber-50 text-amber-900 px-3 py-2">
+              ⚠️ Preencha o total de fornecedores para calcular o Rateio e o Saldo corretamente
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -346,7 +357,7 @@ function ControleVendasPage() {
                 <th className="p-2 text-right">Frete Emp</th>
                 <th className="p-2 text-right">Frete Cli</th>
                 <th className="p-2 text-right">Receber</th>
-                <th className="p-2 text-right">Rateio</th>
+                <th className="p-2 text-right">Lucro</th>
                 <th className="p-2 w-24">Ações</th>
               </tr>
             </thead>
@@ -368,7 +379,7 @@ function ControleVendasPage() {
                     <td className="p-2 text-right">{brl(r.frete_empresa)}</td>
                     <td className="p-2 text-right">{brl(r.frete_cliente)}</td>
                     <td className="p-2 text-right">{brl(r.receber)}</td>
-                    <td className={cn("p-2 text-right", r.rateio < 0 && "text-destructive")}>{brl(r.rateio)}</td>
+                    <td className={cn("p-2 text-right", r.lucro < 0 && "text-destructive")}>{brl(r.lucro)}</td>
                     <td className="p-2">
                       <div className="flex gap-1">
                         <Button size="icon" variant="ghost" onClick={() => onEdit(r)}><Pencil className="size-4" /></Button>
@@ -388,7 +399,7 @@ function ControleVendasPage() {
                 <td className="p-2 text-right">{brl(totals.frete_empresa)}</td>
                 <td className="p-2 text-right">{brl(totals.frete_cliente)}</td>
                 <td className="p-2 text-right">{brl(totals.receber)}</td>
-                <td className={cn("p-2 text-right", totals.rateio < 0 && "text-destructive")}>{brl(totals.rateio)}</td>
+                <td className={cn("p-2 text-right", totals.lucro < 0 && "text-destructive")}>{brl(totals.lucro)}</td>
                 <td />
               </tr>
             </tfoot>
