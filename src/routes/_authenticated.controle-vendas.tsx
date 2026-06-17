@@ -213,7 +213,6 @@ function ControleVendasPage() {
       juros_ml: String(r.juros_ml),
       frete_empresa: String(r.frete_empresa),
       frete_cliente: String(r.frete_cliente),
-      receber: String(r.receber),
     });
   };
 
