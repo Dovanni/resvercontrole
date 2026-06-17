@@ -184,7 +184,89 @@ function PayablesPage() {
           <DataPagination page={page} totalPages={totalPages} total={total} onChange={setPage} />
         </CardContent>
       </Card>
+
+      <Dialog open={!!payTarget} onOpenChange={(o) => !o && setPayTarget(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle className="font-display">Registrar pagamento</DialogTitle></DialogHeader>
+          {payTarget && (
+            <PayPayableForm
+              payable={payTarget}
+              bankAccounts={bankAccounts ?? []}
+              onDone={() => {
+                setPayTarget(null);
+                qc.invalidateQueries({ queryKey: ["payables"] });
+                qc.invalidateQueries({ queryKey: ["finance"] });
+                qc.invalidateQueries({ queryKey: ["bank-movements"] });
+                qc.invalidateQueries({ queryKey: ["dashboard"] });
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+function PayPayableForm({ payable, bankAccounts, onDone }: { payable: Payable; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
+  const [paid_at, setPaidAt] = useState(new Date().toISOString().slice(0, 10));
+  const [bank_account_id, setBankAccountId] = useState<string>("");
+  const [amount, setAmount] = useState(Number(payable.amount));
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("payables").update({
+        status: "pago",
+        paid_amount: amount,
+        paid_at: new Date(paid_at).toISOString(),
+        bank_account_id: bank_account_id || null,
+      } as any).eq("id", payable.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success(bank_account_id ? "Pago e lançado na conta bancária" : "Pago"); onDone(); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="space-y-3">
+      <div className="text-sm text-muted-foreground">
+        <div className="font-medium text-foreground">{payable.description}</div>
+        Valor original: {brl(Number(payable.amount))}
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label>Valor pago (R$)</Label>
+          <Input type="number" step="0.01" min={0.01} required value={amount} onChange={(e) => setAmount(Number(e.target.value))} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Data</Label>
+          <Input type="date" required value={paid_at} onChange={(e) => setPaidAt(e.target.value)} />
+        </div>
+        <div className="col-span-2 space-y-1.5">
+          <Label>Conta bancária utilizada</Label>
+          <Select value={bank_account_id || "__none__"} onValueChange={(v) => setBankAccountId(v === "__none__" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Não vincular a uma conta</SelectItem>
+              {bankAccounts.length === 0 && (
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">Cadastre uma conta em "Contas bancárias"</div>
+              )}
+              {bankAccounts.map((b) => (
+                <SelectItem key={b.id} value={b.id}>
+                  <span className="inline-flex items-center gap-2">
+                    <span className="size-2 rounded-full" style={{ background: b.color }} />
+                    {b.name} <span className="text-muted-foreground">— {b.bank}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="text-xs text-muted-foreground">Quando informada, uma movimentação de saída é registrada automaticamente.</div>
+        </div>
+      </div>
+      <Button type="submit" disabled={save.isPending} className="w-full bg-gradient-primary text-primary-foreground">
+        {save.isPending ? "Salvando…" : "Confirmar pagamento"}
+      </Button>
+    </form>
   );
 }
 
