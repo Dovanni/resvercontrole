@@ -135,8 +135,8 @@ function ControleVendasPage() {
     const investimento = totals.custo + totals.juros_ml + totals.frete_empresa;
     // RATEIO = ABS(FORNECEDOR) - CUSTO  (positivo, verde)
     const rateio = Math.abs(fornecedor) - totals.custo;
-    // SALDO = RATEIO
-    const saldo = rateio;
+    // SALDO = FORNECEDOR - CUSTO  (negativo, vermelho)
+    const saldo = fornecedor - totals.custo;
     const margem = calcMargem(totals.lucro, totals.receber);
     return { receber: totals.receber, lucro: totals.lucro, margem, rateio, fornecedor, investimento, saldo };
   }, [totals, fornecedorInput]);
