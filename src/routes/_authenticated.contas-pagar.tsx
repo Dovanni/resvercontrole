@@ -59,7 +59,7 @@ function PayablesPage() {
         .eq("status", "ativa")
         .order("name");
       if (error) throw error;
-      return (data ?? []) as { id: string; name: string; bank: string; color: string }[];
+      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string }[];
     },
   });
 
