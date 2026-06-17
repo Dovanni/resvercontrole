@@ -320,7 +320,7 @@ function ControleVendasPage() {
 
       {/* Fornecedor do mês */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-6 space-y-3">
           <div className="flex flex-col md:flex-row md:items-end gap-3">
             <div className="flex-1">
               <Label>Total devido a fornecedores em {MONTHS[mes - 1]}/{YEAR}</Label>
@@ -335,6 +335,11 @@ function ControleVendasPage() {
               <Save className="size-4 mr-2" /> Salvar fornecedor
             </Button>
           </div>
+          {num(fornecedorInput) <= 0 && (
+            <div className="text-sm rounded-md border border-amber-300 bg-amber-50 text-amber-900 px-3 py-2">
+              ⚠️ Preencha o total de fornecedores para calcular o Rateio e o Saldo corretamente
+            </div>
+          )}
         </CardContent>
       </Card>
 
