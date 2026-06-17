@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { brl, dateBR } from "@/lib/format";
 import { DataPagination, usePagination } from "@/components/data-pagination";
@@ -34,6 +34,7 @@ const PAYMENT_METHODS: { value: string; label: string }[] = [
   { value: "crediario", label: "Crediário" },
   { value: "prazo", label: "A prazo" },
 ];
+const PM_LABEL: Record<string, string> = Object.fromEntries(PAYMENT_METHODS.map(m => [m.value, m.label]));
 const STATUSES = ["orcamento", "confirmado", "separacao", "enviado", "entregue", "cancelado"] as const;
 const STATUS_LABEL: Record<string, string> = {
   orcamento: "Orçamento", confirmado: "Confirmado", separacao: "Em separação",
@@ -44,6 +45,8 @@ const STATUS_LABEL: Record<string, string> = {
 function SalesPage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [viewingId, setViewingId] = useState<string | null>(null);
 
   const { data: sales } = useQuery({
     queryKey: ["sales"],
@@ -59,6 +62,14 @@ function SalesPage() {
 
   const { page, setPage, totalPages, total, pageItems } = usePagination(sales as any[] | undefined);
 
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["sales"] });
+    qc.invalidateQueries({ queryKey: ["products"] });
+    qc.invalidateQueries({ queryKey: ["dashboard"] });
+    qc.invalidateQueries({ queryKey: ["finance"] });
+    qc.invalidateQueries({ queryKey: ["bank-movements"] });
+  };
+
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <PageHeader
@@ -71,19 +82,25 @@ function SalesPage() {
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle className="font-display">Nova venda</DialogTitle></DialogHeader>
-              <NewSaleForm
-                onDone={() => {
-                  setOpen(false);
-                  qc.invalidateQueries({ queryKey: ["sales"] });
-                  qc.invalidateQueries({ queryKey: ["products"] });
-                  qc.invalidateQueries({ queryKey: ["dashboard"] });
-                  qc.invalidateQueries({ queryKey: ["finance"] });
-                }}
-              />
+              <SaleForm onDone={() => { setOpen(false); invalidate(); }} />
             </DialogContent>
           </Dialog>
         }
       />
+
+      <Dialog open={!!editingId} onOpenChange={(o) => !o && setEditingId(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="font-display">Editar venda</DialogTitle></DialogHeader>
+          {editingId && <SaleForm saleId={editingId} onDone={() => { setEditingId(null); invalidate(); }} />}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!viewingId} onOpenChange={(o) => !o && setViewingId(null)}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle className="font-display">Resumo da venda</DialogTitle></DialogHeader>
+          {viewingId && <SaleView saleId={viewingId} />}
+        </DialogContent>
+      </Dialog>
 
       <Card className="shadow-soft">
         <CardContent className="p-0 overflow-x-auto">
@@ -96,11 +113,12 @@ function SalesPage() {
                 <TableHead>Itens</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Total</TableHead>
+                <TableHead className="w-24 text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {sales?.length === 0 && (
-                <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">Nenhuma venda ainda.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Nenhuma venda ainda.</TableCell></TableRow>
               )}
               {pageItems.map((s: any) => (
                 <TableRow key={s.id}>
@@ -116,6 +134,12 @@ function SalesPage() {
                   </TableCell>
                   <TableCell className="text-sm">{STATUS_LABEL[s.status] ?? s.status}</TableCell>
                   <TableCell className="text-right font-medium">{brl(Number(s.total))}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="inline-flex gap-1">
+                      <Button size="icon" variant="ghost" onClick={() => setViewingId(s.id)} title="Visualizar"><Eye className="size-4" /></Button>
+                      <Button size="icon" variant="ghost" onClick={() => setEditingId(s.id)} title="Editar"><Pencil className="size-4" /></Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -130,7 +154,51 @@ function SalesPage() {
 type Product = { id: string; name: string; sale_price: number; wholesale_price: number; cost_price: number; stock: number };
 type LineItem = { product_id: string; quantity: number; unit_price: number; unit_cost: number; name: string; max: number };
 
-function NewSaleForm({ onDone }: { onDone: () => void }) {
+function SaleView({ saleId }: { saleId: string }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["sale-detail", saleId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sales")
+        .select("*, customers(name), bank_accounts(name,bank), sale_items(quantity,unit_price,products(name))")
+        .eq("id", saleId).single();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+  if (isLoading || !data) return <div className="py-6 text-center text-muted-foreground">Carregando…</div>;
+  const items = data.sale_items ?? [];
+  const subtotal = items.reduce((s: number, i: any) => s + Number(i.quantity) * Number(i.unit_price), 0);
+  return (
+    <div className="space-y-4 text-sm">
+      <div className="grid grid-cols-2 gap-3">
+        <div><div className="text-muted-foreground text-xs">Cliente</div><div className="font-medium">{data.customers?.name ?? data.customer_name ?? "Balcão"}</div></div>
+        <div><div className="text-muted-foreground text-xs">Data</div><div>{dateBR(data.sold_at)}</div></div>
+        <div><div className="text-muted-foreground text-xs">Canal</div><div className="capitalize">{data.channel}</div></div>
+        <div><div className="text-muted-foreground text-xs">Status</div><div>{STATUS_LABEL[data.status] ?? data.status}</div></div>
+        <div><div className="text-muted-foreground text-xs">Pagamento</div><div>{PM_LABEL[data.payment_method] ?? data.payment_method}</div></div>
+        <div><div className="text-muted-foreground text-xs">Conta destino</div><div>{data.bank_accounts?.name ?? "—"}</div></div>
+      </div>
+      <div className="rounded-lg border divide-y">
+        {items.map((it: any, idx: number) => (
+          <div key={idx} className="p-2 flex justify-between">
+            <div>{it.quantity}× {it.products?.name}</div>
+            <div className="text-muted-foreground">{brl(Number(it.unit_price) * Number(it.quantity))}</div>
+          </div>
+        ))}
+      </div>
+      <div className="text-right space-y-1">
+        <div className="text-xs text-muted-foreground">Subtotal: {brl(subtotal)}</div>
+        <div className="text-xs text-muted-foreground">Desconto: {brl(Number(data.discount ?? 0))}</div>
+        <div className="font-display text-2xl">Total: {brl(Number(data.total))}</div>
+      </div>
+    </div>
+  );
+}
+
+function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
+  const editing = !!saleId;
+
   const { data: products } = useQuery({
     queryKey: ["products-for-sale"],
     queryFn: async () => {
@@ -152,6 +220,19 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
     },
   });
 
+  const { data: existing } = useQuery({
+    queryKey: ["sale-edit", saleId],
+    enabled: editing,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sales")
+        .select("*, sale_items(product_id,quantity,unit_price,unit_cost,products(name,stock))")
+        .eq("id", saleId!).single();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
   const [customerId, setCustomerId] = useState<string>("");
   const [walkInName, setWalkInName] = useState("");
   const [channel, setChannel] = useState<"varejo" | "atacado">("varejo");
@@ -161,6 +242,7 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
   const [discountMode, setDiscountMode] = useState<"reais" | "percent">("reais");
   const [items, setItems] = useState<LineItem[]>([]);
   const [bankAccountId, setBankAccountId] = useState<string>("");
+  const [loaded, setLoaded] = useState(false);
 
   const { data: bankAccounts } = useQuery({
     queryKey: ["bank-accounts-active"],
@@ -188,11 +270,32 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
   const locked = !!currentRule?.fixo && !!currentRule?.bank_account_id;
   const accountName = (id: string) => (bankAccounts ?? []).find(b => b.id === id)?.name ?? "";
 
+  // Hydrate from existing sale once
   useEffect(() => {
+    if (!editing || !existing || loaded) return;
+    setCustomerId(existing.customer_id ?? "");
+    setWalkInName(existing.customer_name ?? "");
+    setChannel(existing.channel);
+    setStatus(existing.status);
+    setMethod(existing.payment_method);
+    setDiscount(Number(existing.discount ?? 0));
+    setDiscountMode("reais");
+    setBankAccountId(existing.bank_account_id ?? "");
+    setItems((existing.sale_items ?? []).map((it: any) => ({
+      product_id: it.product_id,
+      quantity: Number(it.quantity),
+      unit_price: Number(it.unit_price),
+      unit_cost: Number(it.unit_cost ?? 0),
+      name: it.products?.name ?? "",
+      max: Number(it.products?.stock ?? 0) + Number(it.quantity),
+    })));
+    setLoaded(true);
+  }, [editing, existing, loaded]);
+
+  useEffect(() => {
+    if (editing && !loaded) return;
     if (locked) setBankAccountId(currentRule!.bank_account_id!);
-    else if (currentRule?.bank_account_id) setBankAccountId(currentRule.bank_account_id);
-    else setBankAccountId("");
-  }, [locked, currentRule]);
+  }, [locked, currentRule, editing, loaded]);
 
   const priceFor = (p: Product) =>
     channel === "atacado" && Number(p.wholesale_price) > 0 ? Number(p.wholesale_price) : Number(p.sale_price);
@@ -221,8 +324,6 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
     }]);
   }
 
-
-  // recalc prices when channel changes
   function changeChannel(c: "varejo" | "atacado") {
     setChannel(c);
     setItems(items.map(i => {
@@ -237,27 +338,44 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
       const selected = customers?.find(c => c.id === customerId);
-      const { data: sale, error } = await supabase
-        .from("sales")
-        .insert({
-          user_id: user.id,
-          customer_id: customerId || null,
-          customer_name: selected?.name ?? (walkInName || null),
-          channel, status, payment_method: method, total, discount: discountValue,
-          bank_account_id: bankAccountId || null,
-        } as any)
-        .select().single();
-      if (error) throw error;
-      const rows = items.map(i => ({
-        sale_id: sale.id, user_id: user.id, product_id: i.product_id,
-        quantity: i.quantity, unit_price: i.unit_price, unit_cost: i.unit_cost,
-      }));
-      const { error: e2 } = await supabase.from("sale_items").insert(rows as any);
-      if (e2) throw e2;
+      const payload = {
+        customer_id: customerId || null,
+        customer_name: selected?.name ?? (walkInName || null),
+        channel, status, payment_method: method, total, discount: discountValue,
+        bank_account_id: bankAccountId || null,
+      };
+
+      if (editing) {
+        // Replace items: delete (trigger restores stock), then insert (trigger decrements)
+        const { error: delErr } = await supabase.from("sale_items").delete().eq("sale_id", saleId!);
+        if (delErr) throw delErr;
+        const { error: updErr } = await supabase.from("sales").update(payload as any).eq("id", saleId!);
+        if (updErr) throw updErr;
+        const rows = items.map(i => ({
+          sale_id: saleId!, user_id: user.id, product_id: i.product_id,
+          quantity: i.quantity, unit_price: i.unit_price, unit_cost: i.unit_cost,
+        }));
+        const { error: e2 } = await supabase.from("sale_items").insert(rows as any);
+        if (e2) throw e2;
+      } else {
+        const { data: sale, error } = await supabase
+          .from("sales")
+          .insert({ user_id: user.id, ...payload } as any)
+          .select().single();
+        if (error) throw error;
+        const rows = items.map(i => ({
+          sale_id: sale.id, user_id: user.id, product_id: i.product_id,
+          quantity: i.quantity, unit_price: i.unit_price, unit_cost: i.unit_cost,
+        }));
+        const { error: e2 } = await supabase.from("sale_items").insert(rows as any);
+        if (e2) throw e2;
+      }
     },
-    onSuccess: () => { toast.success("Venda registrada"); onDone(); },
+    onSuccess: () => { toast.success(editing ? "Venda atualizada" : "Venda registrada"); onDone(); },
     onError: (e: any) => toast.error(e.message),
   });
+
+  if (editing && !loaded) return <div className="py-8 text-center text-muted-foreground">Carregando venda…</div>;
 
   return (
     <div className="space-y-4">
@@ -393,7 +511,7 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
 
       <Button onClick={() => submit.mutate()} disabled={submit.isPending || items.length === 0}
         className="w-full bg-gradient-primary text-primary-foreground">
-        {submit.isPending ? "Registrando…" : "Registrar venda"}
+        {submit.isPending ? "Salvando…" : (editing ? "Salvar alterações" : "Registrar venda")}
       </Button>
     </div>
   );
