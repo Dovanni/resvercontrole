@@ -130,11 +130,11 @@ function ControleVendasPage() {
   }, [rows]);
 
   const summary = useMemo(() => {
-    // Fornecedor é uma dívida → sempre negativo
+    // Fornecedor é uma dívida → sempre negativo (vermelho)
     const fornecedor = -Math.abs(num(fornecedorInput));
     const investimento = totals.custo + totals.juros_ml + totals.frete_empresa;
-    // RATEIO = FORNECEDOR - CUSTO  (negativo = quanto ainda se deve)
-    const rateio = fornecedor - totals.custo;
+    // RATEIO = ABS(FORNECEDOR) - CUSTO  (positivo, verde)
+    const rateio = Math.abs(fornecedor) - totals.custo;
     // SALDO = RATEIO
     const saldo = rateio;
     const margem = calcMargem(totals.lucro, totals.receber);
@@ -284,12 +284,12 @@ function ControleVendasPage() {
       {/* Summary */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
         <SummaryCard label="Receber" value={brl(summary.receber)} tone="positive" />
-        <SummaryCard label="Lucro" value={brl(summary.lucro)} tone={summary.lucro >= 0 ? "positive" : "negative"} />
-        <SummaryCard label="Margem" value={`${summary.margem.toFixed(1)}%`} tone={summary.lucro >= 0 ? "positive" : "negative"} />
-        <SummaryCard label="Rateio" value={brl(summary.rateio)} tone="negative" />
-        <SummaryCard label="Fornecedor" value={brl(summary.fornecedor)} tone="negative" />
+        <SummaryCard label="Lucro" value={brl(summary.lucro)} tone="positive" />
+        <SummaryCard label="Margem" value={`${summary.margem.toFixed(1)}%`} tone="info" />
         <SummaryCard label="Investimento" value={brl(summary.investimento)} tone="neutral" />
-        <SummaryCard label="Saldo" value={brl(summary.saldo)} tone="negative" />
+        <SummaryCard label="Fornecedor" value={brl(summary.fornecedor)} tone="negative" />
+        <SummaryCard label="Rateio" value={brl(summary.rateio)} tone="positive" />
+        <SummaryCard label="Saldo" value={brl(summary.saldo)} tone="positive" />
       </div>
 
       {/* Form */}
@@ -421,7 +421,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function SummaryCard({ label, value, tone }: { label: string; value: string; tone: "positive" | "negative" | "neutral" }) {
+function SummaryCard({ label, value, tone }: { label: string; value: string; tone: "positive" | "negative" | "neutral" | "info" }) {
   return (
     <Card className="bg-primary/5">
       <CardContent className="pt-4 pb-3">
@@ -430,6 +430,7 @@ function SummaryCard({ label, value, tone }: { label: string; value: string; ton
           "font-display text-lg mt-1",
           tone === "positive" && "text-emerald-600",
           tone === "negative" && "text-destructive",
+          tone === "info" && "text-blue-600",
         )}>{value}</div>
       </CardContent>
     </Card>
