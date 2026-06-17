@@ -40,19 +40,20 @@ function CashFlowPage() {
   });
 
   const { data: bankMovements } = useQuery({
-    queryKey: ["cashflow", "bank-movements"],
+    queryKey: ["cashflow", "bank-movements-all"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bank_movements" as any)
-        .select("account_id,destination_account_id,type,amount,movement_date");
+        .select("account_id,destination_account_id,type,amount,movement_date,description,category");
       if (error) throw error;
-      return (data ?? []) as unknown as { account_id: string; destination_account_id: string | null; type: string; amount: number; movement_date: string }[];
+      return (data ?? []) as unknown as { account_id: string; destination_account_id: string | null; type: string; amount: number; movement_date: string; description: string; category: string }[];
     },
   });
 
+  // Saldo consolidado (todas as movimentações)
   const bankBalances = useMemo(() => {
     const map: Record<string, number> = {};
-    for (const a of bankAccounts ?? []) map[a.id] = Number(a.initial_balance);
+    for (const a of bankAccounts ?? []) map[a.id] = 0; // initial_balance já vira movimento "saldo_inicial"
     for (const m of bankMovements ?? []) {
       const amt = Number(m.amount);
       if (m.type === "entrada") map[m.account_id] = (map[m.account_id] ?? 0) + amt;
@@ -70,52 +71,70 @@ function CashFlowPage() {
     [bankAccounts, bankBalances]
   );
 
-  const { data: finance } = useQuery({
-    queryKey: ["cashflow", "finance"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("finance_entries")
-        .select("type,amount,entry_date,description,category")
-        .gte("entry_date", startPast.toISOString())
-        .lte("entry_date", today.toISOString())
-        .order("entry_date", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-  });
+  // Movimentações filtradas pela conta selecionada
+  const filteredMovements = useMemo(() => {
+    const all = bankMovements ?? [];
+    if (accountFilter === "todas") return all;
+    return all.filter((m) => m.account_id === accountFilter || m.destination_account_id === accountFilter);
+  }, [bankMovements, accountFilter]);
 
+  // Recebíveis/pagáveis futuros — projeção apenas se filtro = todas (ou filtrados por bank_account_id)
   const { data: futurePayables } = useQuery({
-    queryKey: ["cashflow", "payables"],
+    queryKey: ["cashflow", "payables", accountFilter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("payables")
-        .select("amount,due_date,description,status")
+        .select("amount,due_date,description,status,bank_account_id")
         .neq("status", "pago")
         .neq("status", "cancelado")
         .gte("due_date", isoDay(today))
         .lte("due_date", isoDay(endFuture));
+      if (accountFilter !== "todas") q = q.eq("bank_account_id", accountFilter);
+      const { data, error } = await q;
       if (error) throw error;
-      return data;
+      return data as any[];
     },
   });
 
   const { data: futureReceivables } = useQuery({
-    queryKey: ["cashflow", "receivables"],
+    queryKey: ["cashflow", "receivables", accountFilter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("receivables" as any)
-        .select("amount,received_amount,due_date,description,status")
+        .select("amount,received_amount,due_date,description,status,bank_account_id")
         .neq("status", "recebido")
         .neq("status", "cancelado")
         .gte("due_date", isoDay(today))
         .lte("due_date", isoDay(endFuture));
+      if (accountFilter !== "todas") q = (q as any).eq("bank_account_id", accountFilter);
+      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },
   });
 
   const chart = useMemo(() => {
-    // Build day buckets
+    const todayKey = isoDay(today);
+    const startKey = isoDay(startPast);
+    const endKey = isoDay(endFuture);
+
+    // Saldo de abertura: tudo que aconteceu ANTES do startPast (incluindo saldos iniciais)
+    let opening = 0;
+    for (const m of filteredMovements) {
+      if (m.movement_date >= startKey) continue;
+      const amt = Number(m.amount);
+      if (m.type === "entrada") opening += amt;
+      else if (m.type === "saida") opening -= amt;
+      else if (m.type === "transferencia") {
+        if (accountFilter === "todas") {
+          // intra-sistema: zero
+        } else {
+          if (m.account_id === accountFilter) opening -= amt;
+          if (m.destination_account_id === accountFilter) opening += amt;
+        }
+      }
+    }
+
     const days: Record<string, { date: string; income: number; expense: number; projIncome: number; projExpense: number }> = {};
     const cursor = new Date(startPast);
     while (cursor <= endFuture) {
@@ -124,26 +143,32 @@ function CashFlowPage() {
       cursor.setDate(cursor.getDate() + 1);
     }
 
-    for (const e of finance ?? []) {
-      const k = isoDay(new Date(e.entry_date));
+    for (const m of filteredMovements) {
+      const k = m.movement_date;
       if (!days[k]) continue;
-      if (e.type === "income") days[k].income += Number(e.amount);
-      else days[k].expense += Number(e.amount);
+      const amt = Number(m.amount);
+      if (m.type === "entrada") days[k].income += amt;
+      else if (m.type === "saida") days[k].expense += amt;
+      else if (m.type === "transferencia") {
+        if (accountFilter !== "todas") {
+          if (m.account_id === accountFilter) days[k].expense += amt;
+          if (m.destination_account_id === accountFilter) days[k].income += amt;
+        }
+      }
     }
+
     for (const p of futurePayables ?? []) {
       const k = p.due_date;
-      if (!days[k]) continue;
+      if (!days[k] || k <= todayKey) continue;
       days[k].projExpense += Number(p.amount);
     }
     for (const r of futureReceivables ?? []) {
       const k = r.due_date;
-      if (!days[k]) continue;
-      const remaining = Number(r.amount) - Number(r.received_amount);
-      days[k].projIncome += remaining;
+      if (!days[k] || k <= todayKey) continue;
+      days[k].projIncome += Number(r.amount) - Number(r.received_amount);
     }
 
-    const todayKey = isoDay(today);
-    let balance = 0;
+    let balance = opening;
     const series = Object.values(days)
       .sort((a, b) => a.date.localeCompare(b.date))
       .map((d) => {
@@ -161,23 +186,32 @@ function CashFlowPage() {
         };
       });
 
-    // ensure continuity at today
     const todayIdx = series.findIndex((s) => s.date === todayKey);
     if (todayIdx >= 0) (series[todayIdx] as any).saldoProjetado = series[todayIdx].saldoReal;
 
     return series;
-  }, [finance, futurePayables, futureReceivables]);
+  }, [filteredMovements, futurePayables, futureReceivables, accountFilter]);
 
   const totals = useMemo(() => {
     let income = 0, expense = 0;
-    for (const e of finance ?? []) {
-      if (e.type === "income") income += Number(e.amount);
-      else expense += Number(e.amount);
+    const startKey = isoDay(startPast);
+    const todayKey = isoDay(today);
+    for (const m of filteredMovements) {
+      if (m.movement_date < startKey || m.movement_date > todayKey) continue;
+      const amt = Number(m.amount);
+      if (m.type === "entrada") income += amt;
+      else if (m.type === "saida") expense += amt;
+      else if (m.type === "transferencia" && accountFilter !== "todas") {
+        if (m.account_id === accountFilter) expense += amt;
+        if (m.destination_account_id === accountFilter) income += amt;
+      }
     }
     return { income, expense, balance: income - expense };
-  }, [finance]);
+  }, [filteredMovements, accountFilter]);
 
   const daily = useMemo(() => chart.filter((d) => !d.isFuture).slice(-15).reverse(), [chart]);
+
+  const displayedBalance = accountFilter === "todas" ? totalBankBalance : (bankBalances[accountFilter] ?? 0);
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
@@ -202,9 +236,9 @@ function CashFlowPage() {
           </Select>
         </div>
         <div className="ml-auto text-right">
-          <div className="text-xs text-muted-foreground">Saldo bancário consolidado</div>
-          <div className={`font-display text-2xl ${totalBankBalance < 0 ? "text-destructive" : ""}`}>
-            {brl(accountFilter === "todas" ? totalBankBalance : (bankBalances[accountFilter] ?? 0))}
+          <div className="text-xs text-muted-foreground">Saldo bancário {accountFilter === "todas" ? "consolidado" : "da conta"}</div>
+          <div className={`font-display text-2xl ${displayedBalance < 0 ? "text-destructive" : ""}`}>
+            {brl(displayedBalance)}
           </div>
         </div>
       </CardContent></Card>
