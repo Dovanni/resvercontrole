@@ -236,6 +236,39 @@ export type Database = {
         }
         Relationships: []
       }
+      controle_vendas_fornecedor_historico: {
+        Row: {
+          ano: number
+          created_at: string
+          id: string
+          mes: number
+          motivo: string | null
+          user_id: string
+          valor_anterior: number
+          valor_novo: number
+        }
+        Insert: {
+          ano: number
+          created_at?: string
+          id?: string
+          mes: number
+          motivo?: string | null
+          user_id: string
+          valor_anterior?: number
+          valor_novo?: number
+        }
+        Update: {
+          ano?: number
+          created_at?: string
+          id?: string
+          mes?: number
+          motivo?: string | null
+          user_id?: string
+          valor_anterior?: number
+          valor_novo?: number
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
