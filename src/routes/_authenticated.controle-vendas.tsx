@@ -73,6 +73,9 @@ function ControleVendasPage() {
   const [mes, setMes] = useState<number>(new Date().getMonth() + 1);
   const [form, setForm] = useState(emptyForm());
   const [fornecedorInput, setFornecedorInput] = useState("");
+  const [editingFornecedor, setEditingFornecedor] = useState(false);
+  const [motivoAlteracao, setMotivoAlteracao] = useState("");
+  const [showHistorico, setShowHistorico] = useState(false);
 
   const { data: rows = [] } = useQuery({
     queryKey: ["controle-vendas", YEAR, mes],
