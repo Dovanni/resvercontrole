@@ -527,14 +527,15 @@ function ControleVendasPage() {
                 <th className="p-2 text-right">Frete Cli</th>
                 <th className="p-2 text-right">Receber</th>
                 <th className="p-2 text-right">Lucro</th>
+                <th className="p-2 text-right">Saldo</th>
                 <th className="p-2 w-24">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 && (
-                <tr><td colSpan={10} className="p-6 text-center text-muted-foreground">Nenhum lançamento neste mês.</td></tr>
+              {rowsWithSaldo.length === 0 && (
+                <tr><td colSpan={11} className="p-6 text-center text-muted-foreground">Nenhum lançamento neste mês.</td></tr>
               )}
-              {rows.map((r) => {
+              {rowsWithSaldo.map((r) => {
                 const d = new Date(r.data + "T00:00:00");
                 const dow = d.getDay();
                 const weekend = dow === 0 || dow === 6;
@@ -549,6 +550,12 @@ function ControleVendasPage() {
                     <td className="p-2 text-right">{brl(r.frete_cliente)}</td>
                     <td className="p-2 text-right">{brl(r.receber)}</td>
                     <td className={cn("p-2 text-right", r.lucro < 0 && "text-destructive")}>{brl(r.lucro)}</td>
+                    <td className={cn(
+                      "p-2 text-right font-medium",
+                      r.saldo_acumulado < 0 && "text-destructive",
+                      r.saldo_acumulado === 0 && "text-muted-foreground",
+                      r.saldo_acumulado > 0 && "text-emerald-600",
+                    )}>{brl(r.saldo_acumulado)}</td>
                     <td className="p-2">
                       <div className="flex gap-1">
                         <Button size="icon" variant="ghost" onClick={() => onEdit(r)}><Pencil className="size-4" /></Button>
@@ -569,6 +576,11 @@ function ControleVendasPage() {
                 <td className="p-2 text-right">{brl(totals.frete_cliente)}</td>
                 <td className="p-2 text-right">{brl(totals.receber)}</td>
                 <td className={cn("p-2 text-right", totals.lucro < 0 && "text-destructive")}>{brl(totals.lucro)}</td>
+                <td className={cn(
+                  "p-2 text-right",
+                  summary.saldoAtual < 0 && "text-destructive",
+                  summary.saldoAtual > 0 && "text-emerald-600",
+                )}>{brl(summary.saldoAtual)}</td>
                 <td />
               </tr>
             </tfoot>
