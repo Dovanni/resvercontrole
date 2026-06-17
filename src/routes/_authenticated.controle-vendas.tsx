@@ -394,7 +394,7 @@ function ControleVendasPage() {
                 <td className="p-2 text-right">{brl(totals.frete_empresa)}</td>
                 <td className="p-2 text-right">{brl(totals.frete_cliente)}</td>
                 <td className="p-2 text-right">{brl(totals.receber)}</td>
-                <td className={cn("p-2 text-right", totals.rateio < 0 && "text-destructive")}>{brl(totals.rateio)}</td>
+                <td className={cn("p-2 text-right", totals.lucro < 0 && "text-destructive")}>{brl(totals.lucro)}</td>
                 <td />
               </tr>
             </tfoot>
