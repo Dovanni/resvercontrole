@@ -303,10 +303,9 @@ function ControleVendasPage() {
             <Field label="Juros ML (R$)"><Input inputMode="decimal" value={form.juros_ml} onChange={(e) => setForm({ ...form, juros_ml: e.target.value })} /></Field>
             <Field label="Frete empresa (R$)"><Input inputMode="decimal" value={form.frete_empresa} onChange={(e) => setForm({ ...form, frete_empresa: e.target.value })} /></Field>
             <Field label="Frete cliente (R$)"><Input inputMode="decimal" value={form.frete_cliente} onChange={(e) => setForm({ ...form, frete_cliente: e.target.value })} /></Field>
-            <Field label="A receber (R$)"><Input inputMode="decimal" value={form.receber} onChange={(e) => setForm({ ...form, receber: e.target.value })} /></Field>
           </div>
           <div className="grid gap-3 grid-cols-1 md:grid-cols-3 text-sm">
-            <PreviewBox label="Rateio (prévia)" value={brl(preview.rateio)} />
+            <PreviewBox label="A receber (prévia)" value={brl(preview.receber)} tone={preview.receber >= 0 ? "positive" : "negative"} />
             <PreviewBox label="Lucro (prévia)" value={brl(preview.lucro)} tone={preview.lucro >= 0 ? "positive" : "negative"} />
             <PreviewBox label="Margem (prévia)" value={`${preview.margem.toFixed(1)}%`} tone={preview.lucro >= 0 ? "positive" : "negative"} />
           </div>
