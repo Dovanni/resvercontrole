@@ -333,7 +333,7 @@ function ControleVendasPage() {
       />
 
       {/* Summary */}
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-8">
         <SummaryCard label="Receber" value={brl(summary.receber)} tone="positive" />
         <SummaryCard label="Lucro" value={brl(summary.lucro)} tone="positive" />
         <SummaryCard label="Margem" value={`${summary.margem.toFixed(1)}%`} tone="info" />
@@ -341,6 +341,11 @@ function ControleVendasPage() {
         <SummaryCard label="Fornecedor" value={brl(summary.fornecedor)} tone="negative" />
         <SummaryCard label="Rateio" value={brl(summary.rateio)} tone="negative" />
         <SummaryCard label="Saldo" value={brl(summary.saldo)} tone="negative" />
+        <SummaryCard
+          label={summary.quitado ? "Saldo atual ✅ Quitado!" : "Saldo atual"}
+          value={brl(summary.saldoAtual)}
+          tone={summary.saldoAtual < 0 ? "negative" : summary.saldoAtual > 0 ? "positive" : "neutral"}
+        />
       </div>
 
       {/* Form */}
