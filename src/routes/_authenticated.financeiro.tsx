@@ -52,7 +52,7 @@ function FinancePage() {
 
   const bankBalances = useMemo(() => {
     const map: Record<string, number> = {};
-    for (const a of bankAccounts ?? []) map[a.id] = Number(a.initial_balance);
+    for (const a of bankAccounts ?? []) map[a.id] = 0; // saldo inicial já entra como movimento 'saldo_inicial'
     for (const m of bankMovements ?? []) {
       const amt = Number(m.amount);
       if (m.type === "entrada") map[m.account_id] = (map[m.account_id] ?? 0) + amt;
