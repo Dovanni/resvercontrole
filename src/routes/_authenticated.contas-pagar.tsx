@@ -166,7 +166,7 @@ function PayablesPage() {
                     <TableCell className="text-right font-medium">{brl(Number(p.amount))}</TableCell>
                     <TableCell className="text-right whitespace-nowrap">
                       {p.status !== "pago" && p.status !== "cancelado" && (
-                        <Button variant="ghost" size="icon" title="Marcar como pago" onClick={() => markPaid.mutate(p)}>
+                        <Button variant="ghost" size="icon" title="Marcar como pago" onClick={() => setPayTarget(p)}>
                           <CheckCircle2 className="size-4 text-success" />
                         </Button>
                       )}
