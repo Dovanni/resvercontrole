@@ -286,27 +286,72 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: string }[]; onDone: () => void }) {
+  const confirm = useConfirm();
   const [f, setF] = useState({
     supplier_id: "", description: "", category: "fornecedor",
     amount: 0, due_date: new Date().toISOString().slice(0, 10),
-    payment_method: "pix", recurrence: "nenhuma" as const,
+    payment_method: "pix", recurrence: "nenhuma" as "nenhuma" | "semanal" | "mensal",
   });
+  const [repeatCount, setRepeatCount] = useState(1);
+
+  const addMonths = (iso: string, n: number) => {
+    const [y, m, d] = iso.split("-").map(Number);
+    const dt = new Date(y, m - 1 + n, d);
+    return dt.toISOString().slice(0, 10);
+  };
+  const addWeeks = (iso: string, n: number) => {
+    const dt = new Date(iso + "T00:00");
+    dt.setDate(dt.getDate() + 7 * n);
+    return dt.toISOString().slice(0, 10);
+  };
 
   const save = useMutation({
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
-      const { error } = await supabase.from("payables").insert({
-        ...f, supplier_id: f.supplier_id || null, user_id: user.id,
-      } as any);
+      const isRecurring = f.recurrence !== "nenhuma" && repeatCount > 1;
+      const total = isRecurring ? repeatCount : 1;
+      const rows = Array.from({ length: total }, (_, i) => {
+        const due = isRecurring
+          ? (f.recurrence === "mensal" ? addMonths(f.due_date, i) : addWeeks(f.due_date, i))
+          : f.due_date;
+        const desc = isRecurring ? `${f.description} (${i + 1}/${total})` : f.description;
+        return {
+          supplier_id: f.supplier_id || null,
+          description: desc,
+          category: f.category,
+          amount: f.amount,
+          due_date: due,
+          payment_method: f.payment_method,
+          recurrence: f.recurrence,
+          user_id: user.id,
+        };
+      });
+      const { error } = await supabase.from("payables").insert(rows as any);
       if (error) throw error;
+      return total;
     },
-    onSuccess: () => { toast.success("Conta criada"); onDone(); },
+    onSuccess: (n) => { toast.success(n > 1 ? `${n} contas criadas` : "Conta criada"); onDone(); },
     onError: (e: any) => toast.error(e.message),
   });
 
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const isRecurring = f.recurrence !== "nenhuma" && repeatCount > 1;
+    if (isRecurring) {
+      const ok = await confirm({
+        title: "Confirmar criação",
+        description: `Serão criadas ${repeatCount} contas a pagar no total. Confirmar?`,
+        confirmText: "Criar",
+        destructive: false,
+      });
+      if (!ok) return;
+    }
+    save.mutate();
+  };
+
   return (
-    <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="space-y-3">
+    <form onSubmit={onSubmit} className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2 space-y-1.5">
           <Label>Descrição</Label>
@@ -370,12 +415,27 @@ function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: str
           <Select value={f.recurrence} onValueChange={(v: any) => setF({ ...f, recurrence: v })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="nenhuma">Nenhuma</SelectItem>
+              <SelectItem value="nenhuma">Não se repete</SelectItem>
               <SelectItem value="semanal">Semanal</SelectItem>
               <SelectItem value="mensal">Mensal</SelectItem>
             </SelectContent>
           </Select>
         </div>
+        {f.recurrence !== "nenhuma" && (
+          <div className="space-y-1.5">
+            <Label>Repetir por quantos {f.recurrence === "mensal" ? "meses" : "semanas"}?</Label>
+            <Input
+              type="number"
+              min={1}
+              max={60}
+              value={repeatCount}
+              onChange={(e) => setRepeatCount(Math.max(1, Math.min(60, Number(e.target.value) || 1)))}
+            />
+            <div className="text-xs text-muted-foreground">
+              Serão criadas {repeatCount} {repeatCount === 1 ? "conta" : "contas"} no total.
+            </div>
+          </div>
+        )}
       </div>
       <Button type="submit" disabled={save.isPending} className="w-full bg-gradient-primary text-primary-foreground">
         {save.isPending ? "Salvando…" : "Salvar"}
