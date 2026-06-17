@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { brl } from "@/lib/format";
-import { TrendingUp, TrendingDown, ShoppingBag, Wallet, AlertTriangle } from "lucide-react";
+import { TrendingUp, TrendingDown, ShoppingBag, Wallet, AlertTriangle, ChevronDown } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -77,13 +78,32 @@ function Dashboard() {
     },
   });
 
+  const { data: bankData } = useQuery({
+    queryKey: ["dashboard-bank-balances"],
+    queryFn: async () => {
+      const [accountsRes, movsRes] = await Promise.all([
+        supabase.from("bank_accounts" as any).select("id,name,bank,color,initial_balance").eq("status", "ativa").order("name"),
+        supabase.from("bank_movements" as any).select("account_id,type,amount"),
+      ]);
+      const accounts = (accountsRes.data ?? []) as any[];
+      const movs = (movsRes.data ?? []) as any[];
+      const perAccount = accounts.map(a => {
+        const bal = movs
+          .filter(m => m.account_id === a.id)
+          .reduce((s, m) => s + (m.type === "entrada" ? Number(m.amount) : -Number(m.amount)), Number(a.initial_balance) || 0);
+        return { ...a, balance: bal };
+      });
+      const total = perAccount.reduce((s, a) => s + a.balance, 0);
+      return { perAccount, total };
+    },
+  });
+
   if (isLoading || !data) {
     return <div className="p-8 text-muted-foreground">Carregando…</div>;
   }
 
   const kpis = [
     { label: "Faturamento do mês", value: brl(data.totalRevenue), icon: TrendingUp, accent: "bg-gradient-primary text-primary-foreground" },
-    { label: "Saldo de caixa", value: brl(data.balance), icon: Wallet, accent: "bg-gradient-gold text-gold-foreground" },
     { label: "Ticket médio — Varejo", value: brl(data.ticketVarejo), icon: ShoppingBag, accent: "bg-accent text-accent-foreground" },
     { label: "Ticket médio — Atacado", value: brl(data.ticketAtacado), icon: ShoppingBag, accent: "bg-secondary text-secondary-foreground" },
   ];
@@ -93,6 +113,7 @@ function Dashboard() {
       <PageHeader title="Dashboard" subtitle="Visão geral do mês atual" />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <BankBalanceCard total={bankData?.total ?? 0} accounts={bankData?.perAccount ?? []} />
         {kpis.map(k => (
           <Card key={k.label} className="shadow-soft">
             <CardContent className="p-5">
@@ -193,5 +214,39 @@ function Row({ label, value, icon, strong }: { label: string; value: string; ico
       <div className="flex items-center gap-2 text-sm text-muted-foreground">{icon}{label}</div>
       <div className={strong ? "font-display text-xl" : "font-medium"}>{value}</div>
     </div>
+  );
+}
+
+function BankBalanceCard({ total, accounts }: { total: number; accounts: { id: string; name: string; bank: string; color: string; balance: number }[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Card className="shadow-soft">
+      <CardContent className="p-5">
+        <button type="button" className="w-full text-left" onClick={() => setOpen(o => !o)}>
+          <div className="inline-flex size-10 rounded-xl items-center justify-center mb-3 bg-gradient-gold text-gold-foreground">
+            <Wallet className="size-5" />
+          </div>
+          <div className="flex items-center gap-1 text-2xl font-display">
+            <span className={total < 0 ? "text-destructive" : ""}>{brl(total)}</span>
+            <ChevronDown className={`size-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">Saldo de caixa (todas as contas)</div>
+        </button>
+        {open && (
+          <ul className="mt-4 space-y-2 border-t pt-3">
+            {accounts.length === 0 && <li className="text-xs text-muted-foreground">Nenhuma conta ativa.</li>}
+            {accounts.map(a => (
+              <li key={a.id} className="flex items-center justify-between text-sm">
+                <span className="inline-flex items-center gap-2 min-w-0">
+                  <span className="size-2 rounded-full shrink-0" style={{ background: a.color }} />
+                  <span className="truncate">{a.name}</span>
+                </span>
+                <span className={`font-medium ${a.balance < 0 ? "text-destructive" : ""}`}>{brl(a.balance)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   );
 }

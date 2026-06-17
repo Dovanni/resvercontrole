@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -20,12 +20,26 @@ export const Route = createFileRoute("/_authenticated/vendas")({
   component: SalesPage,
 });
 
-const PAYMENT_METHODS = ["dinheiro", "pix", "cartão débito", "cartão crédito", "boleto", "a prazo"];
+const PAYMENT_METHODS: { value: string; label: string }[] = [
+  { value: "dinheiro", label: "Dinheiro" },
+  { value: "pix", label: "PIX" },
+  { value: "deposito", label: "Depósito bancário" },
+  { value: "transferencia", label: "Transferência" },
+  { value: "cartao_debito", label: "Cartão de débito" },
+  { value: "cartao_credito", label: "Cartão de crédito" },
+  { value: "cartao", label: "Cartão (parcelado)" },
+  { value: "mercado_livre", label: "Venda Mercado Livre" },
+  { value: "boleto", label: "Boleto" },
+  { value: "pix_prazo", label: "PIX a prazo" },
+  { value: "crediario", label: "Crediário" },
+  { value: "prazo", label: "A prazo" },
+];
 const STATUSES = ["orcamento", "confirmado", "separacao", "enviado", "entregue", "cancelado"] as const;
 const STATUS_LABEL: Record<string, string> = {
   orcamento: "Orçamento", confirmado: "Confirmado", separacao: "Em separação",
   enviado: "Enviado", entregue: "Entregue", cancelado: "Cancelado",
 };
+
 
 function SalesPage() {
   const qc = useQueryClient();
@@ -145,6 +159,39 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
   const [method, setMethod] = useState("dinheiro");
   const [discount, setDiscount] = useState(0);
   const [items, setItems] = useState<LineItem[]>([]);
+  const [bankAccountId, setBankAccountId] = useState<string>("");
+
+  const { data: bankAccounts } = useQuery({
+    queryKey: ["bank-accounts-active"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bank_accounts" as any)
+        .select("id,name,bank,color")
+        .eq("status", "ativa")
+        .order("name");
+      if (error) throw error;
+      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string }[];
+    },
+  });
+
+  const { data: rules } = useQuery({
+    queryKey: ["routing-rules"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("payment_routing_rules" as any).select("payment_method,bank_account_id,fixo");
+      if (error) throw error;
+      return (data ?? []) as unknown as { payment_method: string; bank_account_id: string | null; fixo: boolean }[];
+    },
+  });
+
+  const currentRule = useMemo(() => (rules ?? []).find(r => r.payment_method === method), [rules, method]);
+  const locked = !!currentRule?.fixo && !!currentRule?.bank_account_id;
+  const accountName = (id: string) => (bankAccounts ?? []).find(b => b.id === id)?.name ?? "";
+
+  useEffect(() => {
+    if (locked) setBankAccountId(currentRule!.bank_account_id!);
+    else if (currentRule?.bank_account_id) setBankAccountId(currentRule.bank_account_id);
+    else setBankAccountId("");
+  }, [locked, currentRule]);
 
   const priceFor = (p: Product) =>
     channel === "atacado" && Number(p.wholesale_price) > 0 ? Number(p.wholesale_price) : Number(p.sale_price);
@@ -171,6 +218,7 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
     }]);
   }
 
+
   // recalc prices when channel changes
   function changeChannel(c: "varejo" | "atacado") {
     setChannel(c);
@@ -193,6 +241,7 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
           customer_id: customerId || null,
           customer_name: selected?.name ?? (walkInName || null),
           channel, status, payment_method: method, total, discount,
+          bank_account_id: bankAccountId || null,
         } as any)
         .select().single();
       if (error) throw error;
@@ -249,9 +298,33 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
           <Select value={method} onValueChange={setMethod}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {PAYMENT_METHODS.map(m => <SelectItem key={m} value={m} className="capitalize">{m}</SelectItem>)}
+              {PAYMENT_METHODS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
             </SelectContent>
           </Select>
+        </div>
+        <div className="col-span-2 space-y-1.5">
+          <Label>Conta de destino {locked && <span className="text-xs text-muted-foreground">(automático)</span>}</Label>
+          {locked ? (
+            <Input value={accountName(bankAccountId)} disabled className="bg-muted" />
+          ) : (
+            <Select value={bankAccountId || "__none__"} onValueChange={(v) => setBankAccountId(v === "__none__" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="Selecione a conta" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Não vincular a uma conta</SelectItem>
+                {(bankAccounts ?? []).map(b => (
+                  <SelectItem key={b.id} value={b.id}>
+                    <span className="inline-flex items-center gap-2">
+                      <span className="size-2 rounded-full" style={{ background: b.color }} />
+                      {b.name} <span className="text-muted-foreground">— {b.bank}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <div className="text-xs text-muted-foreground">
+            {locked ? "Esta forma de pagamento cai automaticamente nesta conta." : "A entrada será lançada nesta conta ao confirmar o recebimento."}
+          </div>
         </div>
       </div>
 
