@@ -339,6 +339,7 @@ function ReceivePaymentForm({ receivable, onDone }: { receivable: Receivable; on
   const remaining = Number(receivable.amount) - Number(receivable.received_amount);
   const [amount, setAmount] = useState(remaining);
   const [received_at, setReceivedAt] = useState(new Date().toISOString().slice(0, 10));
+  const [payment_method, setPaymentMethod] = useState<string>(receivable.payment_method || "pix");
   const [bank_account_id, setBankAccountId] = useState<string>("");
 
   const { data: bankAccounts } = useQuery({
@@ -354,6 +355,23 @@ function ReceivePaymentForm({ receivable, onDone }: { receivable: Receivable; on
     },
   });
 
+  const { data: rules } = useQuery({
+    queryKey: ["routing-rules"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("payment_routing_rules" as any).select("payment_method,bank_account_id,fixo");
+      if (error) throw error;
+      return (data ?? []) as unknown as { payment_method: string; bank_account_id: string | null; fixo: boolean }[];
+    },
+  });
+
+  const currentRule = useMemo(() => (rules ?? []).find(r => r.payment_method === payment_method), [rules, payment_method]);
+  const locked = !!currentRule?.fixo && !!currentRule?.bank_account_id;
+
+  useEffect(() => {
+    if (locked) setBankAccountId(currentRule!.bank_account_id!);
+    else if (currentRule?.bank_account_id) setBankAccountId(currentRule.bank_account_id);
+  }, [locked, currentRule]);
+
   const save = useMutation({
     mutationFn: async () => {
       if (amount <= 0 || amount > remaining + 0.001) throw new Error("Valor inválido");
@@ -366,6 +384,7 @@ function ReceivePaymentForm({ receivable, onDone }: { receivable: Receivable; on
           received_amount: newReceived,
           received_at: fullyPaid ? new Date(received_at).toISOString() : receivable.received_at ?? new Date(received_at).toISOString(),
           status: fullyPaid ? "recebido" : "parcial",
+          payment_method,
           bank_account_id: bank_account_id || null,
         } as any)
         .eq("id", receivable.id);
@@ -374,6 +393,8 @@ function ReceivePaymentForm({ receivable, onDone }: { receivable: Receivable; on
     onSuccess: () => { toast.success(bank_account_id ? "Recebimento registrado na conta bancária" : "Recebimento registrado"); onDone(); },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const accountName = (id: string) => (bankAccounts ?? []).find(b => b.id === id)?.name ?? "";
 
   return (
     <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="space-y-3">
@@ -388,25 +409,46 @@ function ReceivePaymentForm({ receivable, onDone }: { receivable: Receivable; on
           <Input type="date" required value={received_at} onChange={(e) => setReceivedAt(e.target.value)} />
         </div>
         <div className="col-span-2 space-y-1.5">
-          <Label>Conta bancária utilizada</Label>
-          <Select value={bank_account_id || "__none__"} onValueChange={(v) => setBankAccountId(v === "__none__" ? "" : v)}>
-            <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
+          <Label>Forma de pagamento</Label>
+          <Select value={payment_method} onValueChange={setPaymentMethod}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="__none__">Não vincular a uma conta</SelectItem>
-              {(bankAccounts ?? []).length === 0 && (
-                <div className="px-2 py-1.5 text-xs text-muted-foreground">Cadastre uma conta em "Contas bancárias"</div>
-              )}
-              {(bankAccounts ?? []).map((b) => (
-                <SelectItem key={b.id} value={b.id}>
-                  <span className="inline-flex items-center gap-2">
-                    <span className="size-2 rounded-full" style={{ background: b.color }} />
-                    {b.name} <span className="text-muted-foreground">— {b.bank}</span>
-                  </span>
-                </SelectItem>
-              ))}
+              <SelectItem value="pix">PIX</SelectItem>
+              <SelectItem value="dinheiro">Dinheiro</SelectItem>
+              <SelectItem value="deposito">Depósito bancário</SelectItem>
+              <SelectItem value="transferencia">Transferência</SelectItem>
+              <SelectItem value="cartao_credito">Cartão de crédito</SelectItem>
+              <SelectItem value="cartao_debito">Cartão de débito</SelectItem>
+              <SelectItem value="cartao">Cartão (parcelado)</SelectItem>
+              <SelectItem value="mercado_livre">Venda Mercado Livre</SelectItem>
+              <SelectItem value="boleto">Boleto</SelectItem>
+              <SelectItem value="pix_prazo">PIX a prazo</SelectItem>
             </SelectContent>
           </Select>
-          <div className="text-xs text-muted-foreground">Quando informada, uma movimentação de entrada é registrada automaticamente.</div>
+        </div>
+        <div className="col-span-2 space-y-1.5">
+          <Label>Conta destino {locked && <span className="text-xs text-muted-foreground">(automático)</span>}</Label>
+          {locked ? (
+            <Input value={accountName(bank_account_id)} disabled className="bg-muted" />
+          ) : (
+            <Select value={bank_account_id || "__none__"} onValueChange={(v) => setBankAccountId(v === "__none__" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="Selecione a conta" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Não vincular a uma conta</SelectItem>
+                {(bankAccounts ?? []).map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    <span className="inline-flex items-center gap-2">
+                      <span className="size-2 rounded-full" style={{ background: b.color }} />
+                      {b.name} <span className="text-muted-foreground">— {b.bank}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <div className="text-xs text-muted-foreground">
+            {locked ? "Esta forma de pagamento é direcionada automaticamente." : "Escolha a conta que recebeu o valor."}
+          </div>
         </div>
       </div>
       <div className="flex gap-2">
