@@ -130,11 +130,11 @@ function ControleVendasPage() {
   }, [rows]);
 
   const summary = useMemo(() => {
-    // Fornecedor é uma dívida → sempre negativo
+    // Fornecedor é uma dívida → sempre negativo (vermelho)
     const fornecedor = -Math.abs(num(fornecedorInput));
     const investimento = totals.custo + totals.juros_ml + totals.frete_empresa;
-    // RATEIO = FORNECEDOR - CUSTO  (negativo = quanto ainda se deve)
-    const rateio = fornecedor - totals.custo;
+    // RATEIO = ABS(FORNECEDOR) - CUSTO  (positivo, verde)
+    const rateio = Math.abs(fornecedor) - totals.custo;
     // SALDO = RATEIO
     const saldo = rateio;
     const margem = calcMargem(totals.lucro, totals.receber);
