@@ -78,13 +78,32 @@ function Dashboard() {
     },
   });
 
+  const { data: bankData } = useQuery({
+    queryKey: ["dashboard-bank-balances"],
+    queryFn: async () => {
+      const [accountsRes, movsRes] = await Promise.all([
+        supabase.from("bank_accounts" as any).select("id,name,bank,color,initial_balance").eq("status", "ativa").order("name"),
+        supabase.from("bank_movements" as any).select("account_id,type,amount"),
+      ]);
+      const accounts = (accountsRes.data ?? []) as any[];
+      const movs = (movsRes.data ?? []) as any[];
+      const perAccount = accounts.map(a => {
+        const bal = movs
+          .filter(m => m.account_id === a.id)
+          .reduce((s, m) => s + (m.type === "entrada" ? Number(m.amount) : -Number(m.amount)), Number(a.initial_balance) || 0);
+        return { ...a, balance: bal };
+      });
+      const total = perAccount.reduce((s, a) => s + a.balance, 0);
+      return { perAccount, total };
+    },
+  });
+
   if (isLoading || !data) {
     return <div className="p-8 text-muted-foreground">Carregando…</div>;
   }
 
   const kpis = [
     { label: "Faturamento do mês", value: brl(data.totalRevenue), icon: TrendingUp, accent: "bg-gradient-primary text-primary-foreground" },
-    { label: "Saldo de caixa", value: brl(data.balance), icon: Wallet, accent: "bg-gradient-gold text-gold-foreground" },
     { label: "Ticket médio — Varejo", value: brl(data.ticketVarejo), icon: ShoppingBag, accent: "bg-accent text-accent-foreground" },
     { label: "Ticket médio — Atacado", value: brl(data.ticketAtacado), icon: ShoppingBag, accent: "bg-secondary text-secondary-foreground" },
   ];
@@ -94,6 +113,7 @@ function Dashboard() {
       <PageHeader title="Dashboard" subtitle="Visão geral do mês atual" />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <BankBalanceCard total={bankData?.total ?? 0} accounts={bankData?.perAccount ?? []} />
         {kpis.map(k => (
           <Card key={k.label} className="shadow-soft">
             <CardContent className="p-5">
