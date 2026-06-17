@@ -339,6 +339,20 @@ function ReceivePaymentForm({ receivable, onDone }: { receivable: Receivable; on
   const remaining = Number(receivable.amount) - Number(receivable.received_amount);
   const [amount, setAmount] = useState(remaining);
   const [received_at, setReceivedAt] = useState(new Date().toISOString().slice(0, 10));
+  const [bank_account_id, setBankAccountId] = useState<string>("");
+
+  const { data: bankAccounts } = useQuery({
+    queryKey: ["bank-accounts-active"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bank_accounts" as any)
+        .select("id,name,bank,color")
+        .eq("status", "ativa")
+        .order("name");
+      if (error) throw error;
+      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string }[];
+    },
+  });
 
   const save = useMutation({
     mutationFn: async () => {
@@ -352,11 +366,12 @@ function ReceivePaymentForm({ receivable, onDone }: { receivable: Receivable; on
           received_amount: newReceived,
           received_at: fullyPaid ? new Date(received_at).toISOString() : receivable.received_at ?? new Date(received_at).toISOString(),
           status: fullyPaid ? "recebido" : "parcial",
+          bank_account_id: bank_account_id || null,
         } as any)
         .eq("id", receivable.id);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Recebimento registrado"); onDone(); },
+    onSuccess: () => { toast.success(bank_account_id ? "Recebimento registrado na conta bancária" : "Recebimento registrado"); onDone(); },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -371,6 +386,27 @@ function ReceivePaymentForm({ receivable, onDone }: { receivable: Receivable; on
         <div className="space-y-1.5">
           <Label>Data</Label>
           <Input type="date" required value={received_at} onChange={(e) => setReceivedAt(e.target.value)} />
+        </div>
+        <div className="col-span-2 space-y-1.5">
+          <Label>Conta bancária utilizada</Label>
+          <Select value={bank_account_id || "__none__"} onValueChange={(v) => setBankAccountId(v === "__none__" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Não vincular a uma conta</SelectItem>
+              {(bankAccounts ?? []).length === 0 && (
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">Cadastre uma conta em "Contas bancárias"</div>
+              )}
+              {(bankAccounts ?? []).map((b) => (
+                <SelectItem key={b.id} value={b.id}>
+                  <span className="inline-flex items-center gap-2">
+                    <span className="size-2 rounded-full" style={{ background: b.color }} />
+                    {b.name} <span className="text-muted-foreground">— {b.bank}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="text-xs text-muted-foreground">Quando informada, uma movimentação de entrada é registrada automaticamente.</div>
         </div>
       </div>
       <div className="flex gap-2">

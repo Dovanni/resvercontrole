@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileSpreadsheet, FileText, ShoppingBag, Calculator, Package } from "lucide-react";
+import { FileSpreadsheet, FileText, ShoppingBag, Calculator, Package, Landmark } from "lucide-react";
 import { brl, dateBR } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/relatorios")({
@@ -67,6 +67,112 @@ function ReportsPage() {
       return data as any[];
     },
   });
+
+  const { data: bankAccounts } = useQuery({
+    queryKey: ["rep-bank-accounts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bank_accounts" as any)
+        .select("id,name,bank,color,initial_balance,status")
+        .order("name");
+      if (error) throw error;
+      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string; initial_balance: number; status: string }[];
+    },
+  });
+
+  const { data: bankMovements } = useQuery({
+    queryKey: ["rep-bank-movements", from, to],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bank_movements" as any)
+        .select("account_id,destination_account_id,type,category,description,amount,movement_date")
+        .gte("movement_date", from)
+        .lte("movement_date", to)
+        .order("movement_date");
+      if (error) throw error;
+      return (data ?? []) as unknown as { account_id: string; destination_account_id: string | null; type: string; category: string; description: string; amount: number; movement_date: string }[];
+    },
+  });
+
+  const bankBalances = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const a of bankAccounts ?? []) map[a.id] = Number(a.initial_balance);
+    // Need all movements to compute current balance; here we use only-period movements for simplicity of total
+    for (const m of bankMovements ?? []) {
+      const amt = Number(m.amount);
+      if (m.type === "entrada") map[m.account_id] = (map[m.account_id] ?? 0) + amt;
+      else if (m.type === "saida") map[m.account_id] = (map[m.account_id] ?? 0) - amt;
+      else if (m.type === "transferencia") {
+        map[m.account_id] = (map[m.account_id] ?? 0) - amt;
+        if (m.destination_account_id) map[m.destination_account_id] = (map[m.destination_account_id] ?? 0) + amt;
+      }
+    }
+    return map;
+  }, [bankAccounts, bankMovements]);
+
+  const totalBankBalance = useMemo(
+    () => (bankAccounts ?? []).filter(a => a.status === "ativa").reduce((s, a) => s + (bankBalances[a.id] ?? 0), 0),
+    [bankAccounts, bankBalances]
+  );
+
+  const exportBankXlsx = () => {
+    const wb = XLSX.utils.book_new();
+    // Sheet 1: posição das contas
+    const positions = (bankAccounts ?? []).map((a) => ({
+      Conta: a.name,
+      Banco: a.bank,
+      Status: a.status,
+      "Saldo inicial": Number(a.initial_balance),
+      "Saldo atual": bankBalances[a.id] ?? 0,
+    }));
+    positions.push({ Conta: "TOTAL CONSOLIDADO", Banco: "", Status: "", "Saldo inicial": 0, "Saldo atual": totalBankBalance });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(positions), "Posição");
+
+    // Sheet 2: movimentações por categoria
+    const byCategory: Record<string, { entrada: number; saida: number }> = {};
+    for (const m of bankMovements ?? []) {
+      byCategory[m.category] ??= { entrada: 0, saida: 0 };
+      if (m.type === "entrada") byCategory[m.category].entrada += Number(m.amount);
+      else if (m.type === "saida") byCategory[m.category].saida += Number(m.amount);
+    }
+    const catRows = Object.entries(byCategory).map(([cat, v]) => ({
+      Categoria: cat, Entradas: v.entrada, Saídas: v.saida, Líquido: v.entrada - v.saida,
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(catRows), "Por categoria");
+
+    // Sheet 3: movimentações detalhadas
+    const accNames = Object.fromEntries((bankAccounts ?? []).map((a) => [a.id, a.name]));
+    const detail = (bankMovements ?? []).map((m) => ({
+      Data: dateBR(m.movement_date),
+      Conta: accNames[m.account_id] ?? "",
+      Tipo: m.type,
+      Categoria: m.category,
+      Descrição: m.description,
+      Valor: Number(m.amount),
+      "Conta destino": m.destination_account_id ? (accNames[m.destination_account_id] ?? "") : "",
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detail), "Movimentações");
+
+    XLSX.writeFile(wb, `bancario_${from}_${to}.xlsx`);
+  };
+
+  const exportBankPdf = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("Relatório bancário", 14, 18);
+    doc.setFontSize(10);
+    doc.text(`Período: ${dateBR(from)} a ${dateBR(to)}  •  Total consolidado: ${brl(totalBankBalance)}`, 14, 26);
+    autoTable(doc, {
+      startY: 32,
+      head: [["Conta", "Banco", "Status", "Saldo atual"]],
+      body: (bankAccounts ?? []).map((a) => [a.name, a.bank, a.status, brl(bankBalances[a.id] ?? 0)]),
+      foot: [["", "", "TOTAL", brl(totalBankBalance)]],
+      headStyles: { fillColor: [219, 39, 119] },
+      footStyles: { fillColor: [243, 244, 246], textColor: 20, fontStyle: "bold" },
+      styles: { fontSize: 9 },
+    });
+    doc.save(`bancario_${from}_${to}.pdf`);
+  };
 
   const dre = useMemo(() => {
     const byMonth: Record<string, { income: Record<string, number>; expense: Record<string, number> }> = {};
@@ -271,6 +377,13 @@ function ReportsPage() {
           desc={`${(products ?? []).length} produtos • ${brl(stockValue)}`}
           onPdf={exportStockPdf}
           onXlsx={exportStockXlsx}
+        />
+        <ReportCard
+          icon={<Landmark className="size-5" />}
+          title="Bancário"
+          desc={`${(bankAccounts ?? []).filter(a => a.status === "ativa").length} contas • ${brl(totalBankBalance)}`}
+          onPdf={exportBankPdf}
+          onXlsx={exportBankXlsx}
         />
       </div>
     </div>
