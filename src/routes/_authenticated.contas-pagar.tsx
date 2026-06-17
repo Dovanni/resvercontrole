@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/contas-pagar")({
   component: PayablesPage,
 });
 
-const CATEGORIES = ["fornecedor", "logistica", "marketing", "aluguel", "impostos", "outros"];
+const FALLBACK_CATEGORIES = ["fornecedor", "logistica", "marketing", "aluguel", "impostos", "outros"];
 
 type Payable = {
   id: string; supplier_id: string | null; description: string; category: string;
