@@ -352,7 +352,7 @@ function ControleVendasPage() {
                 <th className="p-2 text-right">Frete Emp</th>
                 <th className="p-2 text-right">Frete Cli</th>
                 <th className="p-2 text-right">Receber</th>
-                <th className="p-2 text-right">Rateio</th>
+                <th className="p-2 text-right">Lucro</th>
                 <th className="p-2 w-24">Ações</th>
               </tr>
             </thead>
