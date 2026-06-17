@@ -182,20 +182,56 @@ function ControleVendasPage() {
     onError: (e: any) => toast.error(e.message ?? "Erro ao salvar"),
   });
 
+  const { data: historico = [] } = useQuery({
+    queryKey: ["controle-vendas-fornecedor-historico", YEAR, mes],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("controle_vendas_fornecedor_historico")
+        .select("*")
+        .eq("ano", YEAR)
+        .eq("mes", mes)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        id: string; valor_anterior: number; valor_novo: number;
+        motivo: string | null; created_at: string;
+      }>;
+    },
+  });
+
   const saveFornecedor = useMutation({
     mutationFn: async () => {
       const { data: userRes } = await supabase.auth.getUser();
       const user_id = userRes.user?.id;
       if (!user_id) throw new Error("Sem usuário");
-      const payload = { user_id, mes, ano: YEAR, valor_fornecedor: num(fornecedorInput) };
+      const novoValor = num(fornecedorInput);
+      const valorAnterior = Number(fornecedorRow?.valor_fornecedor ?? 0);
+      const isEdit = editingFornecedor && fornecedorRow && novoValor !== valorAnterior;
+
+      const payload = { user_id, mes, ano: YEAR, valor_fornecedor: novoValor };
       const { error } = await supabase
         .from("controle_vendas_fornecedor")
         .upsert(payload, { onConflict: "user_id,mes,ano" });
       if (error) throw error;
+
+      if (isEdit) {
+        const { error: hErr } = await supabase
+          .from("controle_vendas_fornecedor_historico")
+          .insert({
+            user_id, mes, ano: YEAR,
+            valor_anterior: valorAnterior,
+            valor_novo: novoValor,
+            motivo: motivoAlteracao || null,
+          });
+        if (hErr) throw hErr;
+      }
     },
     onSuccess: () => {
       toast.success("Fornecedor do mês salvo");
+      setEditingFornecedor(false);
+      setMotivoAlteracao("");
       qc.invalidateQueries({ queryKey: ["controle-vendas-fornecedor"] });
+      qc.invalidateQueries({ queryKey: ["controle-vendas-fornecedor-historico"] });
     },
     onError: (e: any) => toast.error(e.message ?? "Erro ao salvar"),
   });
