@@ -20,7 +20,6 @@ import { Route as AuthenticatedFornecedoresRouteImport } from './routes/_authent
 import { Route as AuthenticatedFluxoCaixaRouteImport } from './routes/_authenticated.fluxo-caixa'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated.financeiro'
 import { Route as AuthenticatedDespesasAnuaisRouteImport } from './routes/_authenticated.despesas-anuais'
-import { Route as AuthenticatedControleVendasRouteImport } from './routes/_authenticated.controle-vendas'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedControleVendasRouteImport } from './routes/_authenticated.controle-vendas'
 import { Route as AuthenticatedContasReceberRouteImport } from './routes/_authenticated.contas-receber'
@@ -83,12 +82,6 @@ const AuthenticatedDespesasAnuaisRoute =
   AuthenticatedDespesasAnuaisRouteImport.update({
     id: '/despesas-anuais',
     path: '/despesas-anuais',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedControleVendasRoute =
-  AuthenticatedControleVendasRouteImport.update({
-    id: '/controle-vendas',
-    path: '/controle-vendas',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -334,13 +327,6 @@ declare module '@tanstack/react-router' {
       path: '/despesas-anuais'
       fullPath: '/despesas-anuais'
       preLoaderRoute: typeof AuthenticatedDespesasAnuaisRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/controle-vendas': {
-      id: '/_authenticated/controle-vendas'
-      path: '/controle-vendas'
-      fullPath: '/controle-vendas'
-      preLoaderRoute: typeof AuthenticatedControleVendasRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/dashboard': {
