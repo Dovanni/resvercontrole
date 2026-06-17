@@ -374,7 +374,7 @@ function ControleVendasPage() {
                     <td className="p-2 text-right">{brl(r.frete_empresa)}</td>
                     <td className="p-2 text-right">{brl(r.frete_cliente)}</td>
                     <td className="p-2 text-right">{brl(r.receber)}</td>
-                    <td className={cn("p-2 text-right", r.rateio < 0 && "text-destructive")}>{brl(r.rateio)}</td>
+                    <td className={cn("p-2 text-right", r.lucro < 0 && "text-destructive")}>{brl(r.lucro)}</td>
                     <td className="p-2">
                       <div className="flex gap-1">
                         <Button size="icon" variant="ghost" onClick={() => onEdit(r)}><Pencil className="size-4" /></Button>
