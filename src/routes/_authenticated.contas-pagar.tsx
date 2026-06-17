@@ -15,13 +15,14 @@ import { toast } from "sonner";
 import { brl } from "@/lib/format";
 import { useConfirm } from "@/components/confirm-dialog";
 import { DataPagination, usePagination } from "@/components/data-pagination";
+import { CategoriasManagerDialog, useCategoriasContasPagar } from "@/components/categorias-contas-pagar-manager";
 
 export const Route = createFileRoute("/_authenticated/contas-pagar")({
   head: () => ({ meta: [{ title: "Contas a pagar — Rosé" }] }),
   component: PayablesPage,
 });
 
-const CATEGORIES = ["fornecedor", "logistica", "marketing", "aluguel", "impostos", "outros"];
+const FALLBACK_CATEGORIES = ["fornecedor", "logistica", "marketing", "aluguel", "impostos", "outros"];
 
 type Payable = {
   id: string; supplier_id: string | null; description: string; category: string;
@@ -293,6 +294,11 @@ function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: str
     payment_method: "pix", recurrence: "nenhuma" as "nenhuma" | "semanal" | "mensal",
   });
   const [repeatCount, setRepeatCount] = useState(1);
+  const [manageCatsOpen, setManageCatsOpen] = useState(false);
+  const { data: cats } = useCategoriasContasPagar();
+  const categoryOptions = (cats && cats.length > 0)
+    ? cats.map((c) => c.nome)
+    : FALLBACK_CATEGORIES;
 
   const addMonths = (iso: string, n: number) => {
     const [y, m, d] = iso.split("-").map(Number);
@@ -386,12 +392,22 @@ function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: str
         </div>
         <div className="space-y-1.5">
           <Label>Categoria</Label>
-          <Select value={f.category} onValueChange={(v) => setF({ ...f, category: v })}>
+          <Select
+            value={f.category}
+            onValueChange={(v) => {
+              if (v === "__manage__") { setManageCatsOpen(true); return; }
+              setF({ ...f, category: v });
+            }}
+          >
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {CATEGORIES.map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
+              {categoryOptions.map((c) => (
+                <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
+              ))}
+              <SelectItem value="__manage__">⚙️ Gerenciar categorias…</SelectItem>
             </SelectContent>
           </Select>
+          <CategoriasManagerDialog open={manageCatsOpen} onOpenChange={setManageCatsOpen} />
         </div>
         <div className="space-y-1.5">
           <Label>Valor (R$)</Label>

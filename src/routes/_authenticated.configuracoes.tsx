@@ -15,6 +15,7 @@ import { useAuth } from "@/lib/auth";
 import { isValidCNPJ, maskCNPJ } from "@/lib/validators";
 import { useConfirm } from "@/components/confirm-dialog";
 import { resetDemoData } from "@/lib/api/reset-demo.functions";
+import { CategoriasManagerInline } from "@/components/categorias-contas-pagar-manager";
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações — Rosé" }] }),
@@ -182,6 +183,19 @@ function SettingsPage() {
       </Card>
 
       <RoutingRulesSection />
+
+      <Card className="shadow-soft mt-6">
+        <CardContent className="p-6 space-y-3">
+          <div>
+            <h3 className="font-display text-lg">Categorias de despesas</h3>
+            <p className="text-sm text-muted-foreground">
+              Categorias usadas em Contas a pagar. As padrão não podem ser excluídas.
+            </p>
+          </div>
+          <CategoriasManagerInline />
+        </CardContent>
+      </Card>
+
 
       {role === "admin" && (
         <Card className="shadow-soft mt-6 border-destructive/30">
