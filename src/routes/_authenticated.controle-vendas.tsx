@@ -289,7 +289,7 @@ function ControleVendasPage() {
         <SummaryCard label="Investimento" value={brl(summary.investimento)} tone="neutral" />
         <SummaryCard label="Fornecedor" value={brl(summary.fornecedor)} tone="negative" />
         <SummaryCard label="Rateio" value={brl(summary.rateio)} tone="positive" />
-        <SummaryCard label="Saldo" value={brl(summary.saldo)} tone="positive" />
+        <SummaryCard label="Saldo" value={brl(summary.saldo)} tone="negative" />
       </div>
 
       {/* Form */}
