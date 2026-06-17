@@ -159,6 +159,39 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
   const [method, setMethod] = useState("dinheiro");
   const [discount, setDiscount] = useState(0);
   const [items, setItems] = useState<LineItem[]>([]);
+  const [bankAccountId, setBankAccountId] = useState<string>("");
+
+  const { data: bankAccounts } = useQuery({
+    queryKey: ["bank-accounts-active"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bank_accounts" as any)
+        .select("id,name,bank,color")
+        .eq("status", "ativa")
+        .order("name");
+      if (error) throw error;
+      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string }[];
+    },
+  });
+
+  const { data: rules } = useQuery({
+    queryKey: ["routing-rules"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("payment_routing_rules" as any).select("payment_method,bank_account_id,fixo");
+      if (error) throw error;
+      return (data ?? []) as unknown as { payment_method: string; bank_account_id: string | null; fixo: boolean }[];
+    },
+  });
+
+  const currentRule = useMemo(() => (rules ?? []).find(r => r.payment_method === method), [rules, method]);
+  const locked = !!currentRule?.fixo && !!currentRule?.bank_account_id;
+  const accountName = (id: string) => (bankAccounts ?? []).find(b => b.id === id)?.name ?? "";
+
+  useEffect(() => {
+    if (locked) setBankAccountId(currentRule!.bank_account_id!);
+    else if (currentRule?.bank_account_id) setBankAccountId(currentRule.bank_account_id);
+    else setBankAccountId("");
+  }, [locked, currentRule]);
 
   const priceFor = (p: Product) =>
     channel === "atacado" && Number(p.wholesale_price) > 0 ? Number(p.wholesale_price) : Number(p.sale_price);
@@ -184,6 +217,7 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
       unit_cost: Number(p.cost_price), name: p.name, max: p.stock,
     }]);
   }
+
 
   // recalc prices when channel changes
   function changeChannel(c: "varejo" | "atacado") {
