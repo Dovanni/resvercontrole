@@ -158,6 +158,7 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
   const [status, setStatus] = useState<typeof STATUSES[number]>("confirmado");
   const [method, setMethod] = useState("dinheiro");
   const [discount, setDiscount] = useState(0);
+  const [discountMode, setDiscountMode] = useState<"reais" | "percent">("reais");
   const [items, setItems] = useState<LineItem[]>([]);
   const [bankAccountId, setBankAccountId] = useState<string>("");
 
@@ -196,10 +197,12 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
   const priceFor = (p: Product) =>
     channel === "atacado" && Number(p.wholesale_price) > 0 ? Number(p.wholesale_price) : Number(p.sale_price);
 
-  const total = useMemo(
-    () => Math.max(0, items.reduce((s, i) => s + i.quantity * i.unit_price, 0) - discount),
-    [items, discount]
+  const subtotal = useMemo(() => items.reduce((s, i) => s + i.quantity * i.unit_price, 0), [items]);
+  const discountValue = useMemo(
+    () => discountMode === "percent" ? (subtotal * Math.min(100, Math.max(0, discount))) / 100 : discount,
+    [discountMode, discount, subtotal]
   );
+  const total = useMemo(() => Math.max(0, subtotal - discountValue), [subtotal, discountValue]);
 
   function pickCustomer(id: string) {
     setCustomerId(id);
@@ -240,7 +243,7 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
           user_id: user.id,
           customer_id: customerId || null,
           customer_name: selected?.name ?? (walkInName || null),
-          channel, status, payment_method: method, total, discount,
+          channel, status, payment_method: method, total, discount: discountValue,
           bank_account_id: bankAccountId || null,
         } as any)
         .select().single();
@@ -367,14 +370,26 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
 
       <div className="grid grid-cols-2 gap-3 items-end">
         <div className="space-y-1.5">
-          <Label>Desconto (R$)</Label>
-          <Input type="number" step="0.01" min={0} value={discount} onChange={(e) => setDiscount(Number(e.target.value))} />
+          <div className="flex items-center justify-between">
+            <Label>Desconto</Label>
+            <div className="inline-flex rounded-md border overflow-hidden text-xs">
+              <button type="button" onClick={() => setDiscountMode("reais")}
+                className={`px-2 py-1 ${discountMode === "reais" ? "bg-primary text-primary-foreground" : "bg-background"}`}>R$</button>
+              <button type="button" onClick={() => setDiscountMode("percent")}
+                className={`px-2 py-1 ${discountMode === "percent" ? "bg-primary text-primary-foreground" : "bg-background"}`}>%</button>
+            </div>
+          </div>
+          <Input type="number" step="0.01" min={0} max={discountMode === "percent" ? 100 : undefined}
+            value={discount} onChange={(e) => setDiscount(Number(e.target.value))} />
+          <div className="text-xs text-muted-foreground">Desconto: {brl(discountValue)}</div>
         </div>
         <div className="text-right">
+          <div className="text-xs text-muted-foreground">Subtotal: {brl(subtotal)}</div>
           <div className="text-xs text-muted-foreground">Total</div>
           <div className="font-display text-3xl">{brl(total)}</div>
         </div>
       </div>
+
 
       <Button onClick={() => submit.mutate()} disabled={submit.isPending || items.length === 0}
         className="w-full bg-gradient-primary text-primary-foreground">
