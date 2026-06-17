@@ -130,10 +130,13 @@ function ControleVendasPage() {
   }, [rows]);
 
   const summary = useMemo(() => {
-    const fornecedor = num(fornecedorInput);
+    // Fornecedor é uma dívida → sempre negativo
+    const fornecedor = -Math.abs(num(fornecedorInput));
     const investimento = totals.custo + totals.juros_ml + totals.frete_empresa;
-    const saldo = fornecedor - investimento;
+    // RATEIO = FORNECEDOR - CUSTO  (negativo = quanto ainda se deve)
     const rateio = fornecedor - totals.custo;
+    // SALDO = RATEIO
+    const saldo = rateio;
     const margem = calcMargem(totals.lucro, totals.receber);
     return { receber: totals.receber, lucro: totals.lucro, margem, rateio, fornecedor, investimento, saldo };
   }, [totals, fornecedorInput]);
@@ -283,10 +286,10 @@ function ControleVendasPage() {
         <SummaryCard label="Receber" value={brl(summary.receber)} tone="positive" />
         <SummaryCard label="Lucro" value={brl(summary.lucro)} tone={summary.lucro >= 0 ? "positive" : "negative"} />
         <SummaryCard label="Margem" value={`${summary.margem.toFixed(1)}%`} tone={summary.lucro >= 0 ? "positive" : "negative"} />
-        <SummaryCard label="Rateio" value={brl(summary.rateio)} tone={summary.rateio >= 0 ? "neutral" : "negative"} />
-        <SummaryCard label="Fornecedor" value={brl(summary.fornecedor)} tone="neutral" />
+        <SummaryCard label="Rateio" value={brl(summary.rateio)} tone="negative" />
+        <SummaryCard label="Fornecedor" value={brl(summary.fornecedor)} tone="negative" />
         <SummaryCard label="Investimento" value={brl(summary.investimento)} tone="neutral" />
-        <SummaryCard label="Saldo" value={brl(summary.saldo)} tone={summary.saldo >= 0 ? "positive" : "negative"} />
+        <SummaryCard label="Saldo" value={brl(summary.saldo)} tone="negative" />
       </div>
 
       {/* Form */}
