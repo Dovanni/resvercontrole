@@ -313,7 +313,7 @@ function ExtractView({ account, accounts, balance, onClose }: { account: BankAcc
   }, [movements, from, to, catFilter, typeFilter, account.id]);
 
   // Compute running balance
-  let running = Number(account.initial_balance);
+  let running = 0; // saldo inicial vem como movimento 'saldo_inicial'
   const rows = filtered.map((m) => {
     let delta = 0;
     const isIncoming = m.type === "transferencia" && m.destination_account_id === account.id;
