@@ -322,29 +322,69 @@ function ControleVendasPage() {
       </Card>
 
       {/* Fornecedor do mês */}
-      <Card>
-        <CardContent className="pt-6 space-y-3">
-          <div className="flex flex-col md:flex-row md:items-end gap-3">
-            <div className="flex-1">
-              <Label>Total devido a fornecedores em {MONTHS[mes - 1]}/{YEAR}</Label>
-              <Input
-                inputMode="decimal"
-                value={fornecedorInput}
-                onChange={(e) => setFornecedorInput(e.target.value)}
-                placeholder="0,00"
-              />
+      {(() => {
+        const hoje = new Date();
+        const diaAtual = hoje.getDate();
+        const mesAtual = hoje.getMonth() + 1;
+        const anoAtual = hoje.getFullYear();
+        let locked = false;
+        if (YEAR < anoAtual) locked = true;
+        else if (YEAR === anoAtual) {
+          if (mes < mesAtual) locked = true;
+          else if (mes === mesAtual && diaAtual > 1) locked = true;
+        }
+        const proxMesIdx = mes === 12 ? 0 : mes;
+        const proxMesNome = MONTHS[proxMesIdx];
+        const proxAno = mes === 12 ? YEAR + 1 : YEAR;
+        return (
+        <Card>
+          <CardContent className="pt-6 space-y-3">
+            <div className="flex flex-col md:flex-row md:items-end gap-3">
+              <div className="flex-1">
+                <Label className="flex items-center gap-1.5">
+                  {locked ? <Lock className="size-3.5" /> : <LockOpen className="size-3.5" />}
+                  Total devido a fornecedores em {MONTHS[mes - 1]}/{YEAR}
+                </Label>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Input
+                        inputMode="decimal"
+                        value={fornecedorInput}
+                        onChange={(e) => setFornecedorInput(e.target.value)}
+                        placeholder="0,00"
+                        readOnly={locked}
+                        className={cn(locked && "bg-muted cursor-not-allowed")}
+                      />
+                    </TooltipTrigger>
+                    {locked && (
+                      <TooltipContent>
+                        Este valor só pode ser alterado no primeiro dia do próximo mês
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
+                {locked && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    🔒 Bloqueado até 01/{proxMesNome}/{proxAno}
+                  </p>
+                )}
+              </div>
+              {!locked && (
+                <Button onClick={() => saveFornecedor.mutate()} disabled={saveFornecedor.isPending}>
+                  <Save className="size-4 mr-2" /> Salvar fornecedor
+                </Button>
+              )}
             </div>
-            <Button onClick={() => saveFornecedor.mutate()} disabled={saveFornecedor.isPending}>
-              <Save className="size-4 mr-2" /> Salvar fornecedor
-            </Button>
-          </div>
-          {num(fornecedorInput) <= 0 && (
-            <div className="text-sm rounded-md border border-amber-300 bg-amber-50 text-amber-900 px-3 py-2">
-              ⚠️ Preencha o total de fornecedores para calcular o Rateio e o Saldo corretamente
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            {!locked && num(fornecedorInput) <= 0 && (
+              <div className="text-sm rounded-md border border-amber-300 bg-amber-50 text-amber-900 px-3 py-2">
+                ⚠️ Preencha o total de fornecedores para calcular o Rateio e o Saldo corretamente
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        );
+      })()}
 
       {/* Table */}
       <Card>
