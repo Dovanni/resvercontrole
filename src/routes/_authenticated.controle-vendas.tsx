@@ -135,8 +135,8 @@ function ControleVendasPage() {
     const investimento = totals.custo + totals.juros_ml + totals.frete_empresa;
     // RATEIO = ABS(FORNECEDOR) - CUSTO  (positivo, verde)
     const rateio = Math.abs(fornecedor) - totals.custo;
-    // SALDO = RATEIO
-    const saldo = rateio;
+    // SALDO = FORNECEDOR - CUSTO  (negativo, vermelho)
+    const saldo = fornecedor - totals.custo;
     const margem = calcMargem(totals.lucro, totals.receber);
     return { receber: totals.receber, lucro: totals.lucro, margem, rateio, fornecedor, investimento, saldo };
   }, [totals, fornecedorInput]);
@@ -289,7 +289,7 @@ function ControleVendasPage() {
         <SummaryCard label="Investimento" value={brl(summary.investimento)} tone="neutral" />
         <SummaryCard label="Fornecedor" value={brl(summary.fornecedor)} tone="negative" />
         <SummaryCard label="Rateio" value={brl(summary.rateio)} tone="positive" />
-        <SummaryCard label="Saldo" value={brl(summary.saldo)} tone="positive" />
+        <SummaryCard label="Saldo" value={brl(summary.saldo)} tone="negative" />
       </div>
 
       {/* Form */}
