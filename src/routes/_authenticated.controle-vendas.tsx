@@ -104,18 +104,17 @@ function ControleVendasPage() {
     setFornecedorInput(fornecedorRow ? String(fornecedorRow.valor_fornecedor) : "");
   }, [fornecedorRow]);
 
-  // Preview calculations
+  // Prévia em tempo real
   const preview = useMemo(() => {
     const loja = num(form.loja);
     const custo = num(form.custo);
     const juros = num(form.juros_ml);
     const frete_emp = num(form.frete_empresa);
     const frete_cli = num(form.frete_cliente);
-    const receber = num(form.receber);
-    const rateio = loja - juros - frete_cli;
-    const lucro = receber - custo - juros - frete_emp;
-    const margem = receber > 0 ? (lucro / receber) * 100 : 0;
-    return { rateio, lucro, margem };
+    const receber = calcReceber(loja, juros, frete_cli);
+    const lucro = calcLucro(loja, custo, frete_emp, juros);
+    const margem = calcMargem(receber, loja);
+    return { receber, lucro, margem };
   }, [form]);
 
   const totals = useMemo(() => {
@@ -127,7 +126,6 @@ function ControleVendasPage() {
       frete_empresa: sum("frete_empresa"),
       frete_cliente: sum("frete_cliente"),
       receber: sum("receber"),
-      rateio: sum("rateio"),
       lucro: sum("lucro"),
     };
   }, [rows]);
@@ -136,8 +134,9 @@ function ControleVendasPage() {
     const fornecedor = num(fornecedorInput);
     const investimento = totals.custo + totals.juros_ml + totals.frete_empresa;
     const saldo = fornecedor - investimento;
-    const margem = totals.receber > 0 ? (totals.lucro / totals.receber) * 100 : 0;
-    return { receber: totals.receber, lucro: totals.lucro, margem, rateio: totals.rateio, fornecedor, investimento, saldo };
+    const rateio = fornecedor - totals.custo;
+    const margem = calcMargem(totals.receber, totals.loja);
+    return { receber: totals.receber, lucro: totals.lucro, margem, rateio, fornecedor, investimento, saldo };
   }, [totals, fornecedorInput]);
 
   const save = useMutation({
