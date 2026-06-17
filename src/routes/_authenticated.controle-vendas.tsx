@@ -48,13 +48,22 @@ const emptyForm = () => ({
   juros_ml: "",
   frete_empresa: "",
   frete_cliente: "",
-  receber: "",
 });
 
 const num = (s: string) => {
   const n = parseFloat(String(s).replace(",", "."));
   return isNaN(n) ? 0 : n;
 };
+
+// Fórmulas oficiais:
+// RECEBER = LOJA - JUROS_ML - FRETE_CLIENTE
+// LUCRO   = LOJA - CUSTO - FRETE_EMPRESA - JUROS_ML
+// MARGEM  = RECEBER * 100 / LOJA
+// RATEIO (mensal) = TOTAL_FORNECEDOR - SUM(CUSTO)
+const calcReceber = (loja: number, juros: number, freteCli: number) => loja - juros - freteCli;
+const calcLucro = (loja: number, custo: number, freteEmp: number, juros: number) =>
+  loja - custo - freteEmp - juros;
+const calcMargem = (receber: number, loja: number) => (loja > 0 ? (receber * 100) / loja : 0);
 
 function ControleVendasPage() {
   const qc = useQueryClient();
