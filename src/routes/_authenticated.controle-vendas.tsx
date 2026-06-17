@@ -227,19 +227,19 @@ function ControleVendasPage() {
 
   const exportXlsx = () => {
     const aoa: any[][] = [
-      ["Data", "Dia", "Loja", "Custo", "Juros ML", "Frete Emp", "Frete Cli", "Receber", "Rateio"],
+      ["Data", "Dia", "Loja", "Custo", "Juros ML", "Frete Emp", "Frete Cli", "Receber", "Lucro"],
     ];
     rows.forEach((r) => {
       const d = new Date(r.data + "T00:00:00");
       aoa.push([
         d.toLocaleDateString("pt-BR"),
         WEEKDAYS[d.getDay()],
-        r.loja, r.custo, r.juros_ml, r.frete_empresa, r.frete_cliente, r.receber, r.rateio,
+        r.loja, r.custo, r.juros_ml, r.frete_empresa, r.frete_cliente, r.receber, r.lucro,
       ]);
     });
     aoa.push([
       "TOTAL", "",
-      totals.loja, totals.custo, totals.juros_ml, totals.frete_empresa, totals.frete_cliente, totals.receber, totals.rateio,
+      totals.loja, totals.custo, totals.juros_ml, totals.frete_empresa, totals.frete_cliente, totals.receber, totals.lucro,
     ]);
     aoa.push([]);
     aoa.push(["Resumo do mês"]);
