@@ -197,10 +197,12 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
   const priceFor = (p: Product) =>
     channel === "atacado" && Number(p.wholesale_price) > 0 ? Number(p.wholesale_price) : Number(p.sale_price);
 
-  const total = useMemo(
-    () => Math.max(0, items.reduce((s, i) => s + i.quantity * i.unit_price, 0) - discount),
-    [items, discount]
+  const subtotal = useMemo(() => items.reduce((s, i) => s + i.quantity * i.unit_price, 0), [items]);
+  const discountValue = useMemo(
+    () => discountMode === "percent" ? (subtotal * Math.min(100, Math.max(0, discount))) / 100 : discount,
+    [discountMode, discount, subtotal]
   );
+  const total = useMemo(() => Math.max(0, subtotal - discountValue), [subtotal, discountValue]);
 
   function pickCustomer(id: string) {
     setCustomerId(id);
