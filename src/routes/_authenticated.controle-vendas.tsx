@@ -134,17 +134,27 @@ function ControleVendasPage() {
     };
   }, [rows]);
 
+  // Fornecedor (negativo) + saldo acumulado por linha (data ascendente)
+  const fornecedor = useMemo(() => -Math.abs(num(fornecedorInput)), [fornecedorInput]);
+  const rowsWithSaldo = useMemo(() => {
+    let acc = fornecedor;
+    return rows.map((r) => {
+      acc = acc + Number(r.custo ?? 0);
+      return { ...r, saldo_acumulado: acc };
+    });
+  }, [rows, fornecedor]);
+
   const summary = useMemo(() => {
-    // Fornecedor é uma dívida → sempre negativo (vermelho)
-    const fornecedor = -Math.abs(num(fornecedorInput));
     const investimento = totals.custo + totals.juros_ml + totals.frete_empresa;
-    // RATEIO = FORNECEDOR + CUSTO  (negativo, vermelho)
     const rateio = fornecedor + totals.custo;
-    // SALDO = RATEIO (mesmo valor, vermelho)
     const saldo = rateio;
+    const saldoAtual = rowsWithSaldo.length > 0
+      ? rowsWithSaldo[rowsWithSaldo.length - 1].saldo_acumulado
+      : fornecedor;
+    const quitado = saldoAtual >= 0 && fornecedor < 0;
     const margem = calcMargem(totals.lucro, totals.receber);
-    return { receber: totals.receber, lucro: totals.lucro, margem, rateio, fornecedor, investimento, custo: totals.custo, saldo };
-  }, [totals, fornecedorInput]);
+    return { receber: totals.receber, lucro: totals.lucro, margem, rateio, fornecedor, investimento, custo: totals.custo, saldo, saldoAtual, quitado };
+  }, [totals, fornecedor, rowsWithSaldo]);
 
   const save = useMutation({
     mutationFn: async () => {
@@ -323,7 +333,7 @@ function ControleVendasPage() {
       />
 
       {/* Summary */}
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-8">
         <SummaryCard label="Receber" value={brl(summary.receber)} tone="positive" />
         <SummaryCard label="Lucro" value={brl(summary.lucro)} tone="positive" />
         <SummaryCard label="Margem" value={`${summary.margem.toFixed(1)}%`} tone="info" />
@@ -331,6 +341,11 @@ function ControleVendasPage() {
         <SummaryCard label="Fornecedor" value={brl(summary.fornecedor)} tone="negative" />
         <SummaryCard label="Rateio" value={brl(summary.rateio)} tone="negative" />
         <SummaryCard label="Saldo" value={brl(summary.saldo)} tone="negative" />
+        <SummaryCard
+          label={summary.quitado ? "Saldo atual ✅ Quitado!" : "Saldo atual"}
+          value={brl(summary.saldoAtual)}
+          tone={summary.saldoAtual < 0 ? "negative" : summary.saldoAtual > 0 ? "positive" : "neutral"}
+        />
       </div>
 
       {/* Form */}
@@ -512,14 +527,15 @@ function ControleVendasPage() {
                 <th className="p-2 text-right">Frete Cli</th>
                 <th className="p-2 text-right">Receber</th>
                 <th className="p-2 text-right">Lucro</th>
+                <th className="p-2 text-right">Saldo</th>
                 <th className="p-2 w-24">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 && (
-                <tr><td colSpan={10} className="p-6 text-center text-muted-foreground">Nenhum lançamento neste mês.</td></tr>
+              {rowsWithSaldo.length === 0 && (
+                <tr><td colSpan={11} className="p-6 text-center text-muted-foreground">Nenhum lançamento neste mês.</td></tr>
               )}
-              {rows.map((r) => {
+              {rowsWithSaldo.map((r) => {
                 const d = new Date(r.data + "T00:00:00");
                 const dow = d.getDay();
                 const weekend = dow === 0 || dow === 6;
@@ -534,6 +550,12 @@ function ControleVendasPage() {
                     <td className="p-2 text-right">{brl(r.frete_cliente)}</td>
                     <td className="p-2 text-right">{brl(r.receber)}</td>
                     <td className={cn("p-2 text-right", r.lucro < 0 && "text-destructive")}>{brl(r.lucro)}</td>
+                    <td className={cn(
+                      "p-2 text-right font-medium",
+                      r.saldo_acumulado < 0 && "text-destructive",
+                      r.saldo_acumulado === 0 && "text-muted-foreground",
+                      r.saldo_acumulado > 0 && "text-emerald-600",
+                    )}>{brl(r.saldo_acumulado)}</td>
                     <td className="p-2">
                       <div className="flex gap-1">
                         <Button size="icon" variant="ghost" onClick={() => onEdit(r)}><Pencil className="size-4" /></Button>
@@ -554,6 +576,11 @@ function ControleVendasPage() {
                 <td className="p-2 text-right">{brl(totals.frete_cliente)}</td>
                 <td className="p-2 text-right">{brl(totals.receber)}</td>
                 <td className={cn("p-2 text-right", totals.lucro < 0 && "text-destructive")}>{brl(totals.lucro)}</td>
+                <td className={cn(
+                  "p-2 text-right",
+                  summary.saldoAtual < 0 && "text-destructive",
+                  summary.saldoAtual > 0 && "text-emerald-600",
+                )}>{brl(summary.saldoAtual)}</td>
                 <td />
               </tr>
             </tfoot>
