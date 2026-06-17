@@ -181,6 +181,8 @@ function SettingsPage() {
         </CardContent>
       </Card>
 
+      <RoutingRulesSection />
+
       {role === "admin" && (
         <Card className="shadow-soft mt-6 border-destructive/30">
           <CardContent className="p-6 space-y-3">
@@ -204,5 +206,109 @@ function SettingsPage() {
         </Card>
       )}
     </div>
+  );
+}
+
+const METHOD_LABELS: Record<string, string> = {
+  cartao_credito: "Cartão de crédito",
+  cartao_debito: "Cartão de débito",
+  cartao: "Cartão (parcelado)",
+  mercado_livre: "Venda Mercado Livre",
+  pix: "PIX",
+  pix_prazo: "PIX a prazo",
+  deposito: "Depósito bancário",
+  dinheiro: "Dinheiro",
+  transferencia: "Transferência",
+  boleto: "Boleto",
+  crediario: "Crediário",
+  prazo: "A prazo",
+};
+
+function RoutingRulesSection() {
+  const qc = useQueryClient();
+  const { data: rules } = useQuery({
+    queryKey: ["routing-rules"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payment_routing_rules" as any)
+        .select("id,payment_method,bank_account_id,fixo")
+        .order("payment_method");
+      if (error) throw error;
+      return (data ?? []) as unknown as { id: string; payment_method: string; bank_account_id: string | null; fixo: boolean }[];
+    },
+  });
+  const { data: accounts } = useQuery({
+    queryKey: ["bank-accounts-active"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("bank_accounts" as any).select("id,name,bank,color").eq("status", "ativa").order("name");
+      if (error) throw error;
+      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string }[];
+    },
+  });
+
+  const update = useMutation({
+    mutationFn: async ({ id, bank_account_id }: { id: string; bank_account_id: string | null }) => {
+      const { error } = await supabase.from("payment_routing_rules" as any).update({ bank_account_id }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Regra atualizada"); qc.invalidateQueries({ queryKey: ["routing-rules"] }); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <Card className="shadow-soft mt-6">
+      <CardContent className="p-6 space-y-3">
+        <div>
+          <h3 className="font-display text-lg">Regras de recebimento</h3>
+          <p className="text-sm text-muted-foreground">
+            Vincule cada forma de pagamento a uma conta bancária. Regras fixas (cartões e ML) são aplicadas automaticamente.
+          </p>
+        </div>
+        <div className="border rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
+              <tr>
+                <th className="text-left px-3 py-2">Forma de pagamento</th>
+                <th className="text-left px-3 py-2">Conta vinculada</th>
+                <th className="text-left px-3 py-2 w-24">Tipo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(rules ?? []).map((r) => (
+                <tr key={r.id} className="border-t">
+                  <td className="px-3 py-2">{METHOD_LABELS[r.payment_method] ?? r.payment_method}</td>
+                  <td className="px-3 py-2">
+                    <Select
+                      value={r.bank_account_id ?? "__none__"}
+                      onValueChange={(v) => update.mutate({ id: r.id, bank_account_id: v === "__none__" ? null : v })}
+                    >
+                      <SelectTrigger className="h-8"><SelectValue placeholder="Escolher no momento" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">Escolher no momento</SelectItem>
+                        {(accounts ?? []).map((a) => (
+                          <SelectItem key={a.id} value={a.id}>
+                            <span className="inline-flex items-center gap-2">
+                              <span className="size-2 rounded-full" style={{ background: a.color }} />{a.name}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </td>
+                  <td className="px-3 py-2">
+                    <span className={`text-xs px-2 py-1 rounded-full ${r.fixo ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                      {r.fixo ? "Fixo" : "Livre"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+              {(rules ?? []).length === 0 && (
+                <tr><td colSpan={3} className="px-3 py-6 text-center text-muted-foreground text-sm">Nenhuma regra cadastrada.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

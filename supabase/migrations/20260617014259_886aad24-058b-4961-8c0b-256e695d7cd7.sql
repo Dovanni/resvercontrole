@@ -1,0 +1,3 @@
+
+REVOKE EXECUTE ON FUNCTION public.ensure_default_routing(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
