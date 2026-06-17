@@ -158,6 +158,7 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
   const [status, setStatus] = useState<typeof STATUSES[number]>("confirmado");
   const [method, setMethod] = useState("dinheiro");
   const [discount, setDiscount] = useState(0);
+  const [discountMode, setDiscountMode] = useState<"reais" | "percent">("reais");
   const [items, setItems] = useState<LineItem[]>([]);
   const [bankAccountId, setBankAccountId] = useState<string>("");
 
