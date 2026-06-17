@@ -183,7 +183,33 @@ function CashFlowPage() {
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <PageHeader title="Fluxo de caixa" subtitle="Visão diária com projeção dos próximos 15 dias" />
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <Card className="shadow-soft mb-4"><CardContent className="p-4 flex flex-wrap items-end gap-3">
+        <div className="space-y-1.5 min-w-56">
+          <Label className="text-xs">Conta bancária</Label>
+          <Select value={accountFilter} onValueChange={setAccountFilter}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas as contas</SelectItem>
+              {(bankAccounts ?? []).map((a) => (
+                <SelectItem key={a.id} value={a.id}>
+                  <span className="inline-flex items-center gap-2">
+                    <span className="size-2 rounded-full" style={{ background: a.color }} />
+                    {a.name}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="ml-auto text-right">
+          <div className="text-xs text-muted-foreground">Saldo bancário consolidado</div>
+          <div className={`font-display text-2xl ${totalBankBalance < 0 ? "text-destructive" : ""}`}>
+            {brl(accountFilter === "todas" ? totalBankBalance : (bankBalances[accountFilter] ?? 0))}
+          </div>
+        </div>
+      </CardContent></Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <Card className="shadow-soft"><CardContent className="p-5">
           <div className="inline-flex size-10 rounded-xl bg-success/10 text-success items-center justify-center mb-3"><ArrowUpRight className="size-5" /></div>
           <div className="text-2xl font-display">{brl(totals.income)}</div>
@@ -198,6 +224,11 @@ function CashFlowPage() {
           <div className="inline-flex size-10 rounded-xl bg-primary/10 text-primary items-center justify-center mb-3"><Wallet className="size-5" /></div>
           <div className="text-2xl font-display">{brl(totals.balance)}</div>
           <div className="text-xs text-muted-foreground mt-1">Saldo período</div>
+        </CardContent></Card>
+        <Card className="shadow-soft"><CardContent className="p-5">
+          <div className="inline-flex size-10 rounded-xl bg-primary/10 text-primary items-center justify-center mb-3"><Landmark className="size-5" /></div>
+          <div className="text-2xl font-display">{(bankAccounts ?? []).length}</div>
+          <div className="text-xs text-muted-foreground mt-1">Contas ativas</div>
         </CardContent></Card>
       </div>
 
