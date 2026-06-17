@@ -403,6 +403,44 @@ export type Database = {
           },
         ]
       }
+      payment_routing_rules: {
+        Row: {
+          bank_account_id: string | null
+          created_at: string
+          fixo: boolean
+          id: string
+          payment_method: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bank_account_id?: string | null
+          created_at?: string
+          fixo?: boolean
+          id?: string
+          payment_method: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bank_account_id?: string | null
+          created_at?: string
+          fixo?: boolean
+          id?: string
+          payment_method?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_routing_rules_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           brand: string | null
@@ -729,6 +767,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      ensure_default_routing: { Args: { _user_id: string }; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
