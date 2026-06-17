@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileSpreadsheet, FileText, ShoppingBag, Calculator, Package } from "lucide-react";
+import { FileSpreadsheet, FileText, ShoppingBag, Calculator, Package, Landmark } from "lucide-react";
 import { brl, dateBR } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/relatorios")({
