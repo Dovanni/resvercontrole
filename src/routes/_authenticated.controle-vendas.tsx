@@ -255,7 +255,7 @@ function ControleVendasPage() {
       <PageHeader
         title="Controle de Vendas"
         subtitle="Lançamento diário e resumo mensal"
-        actions={
+        action={
           <div className="flex items-center gap-2">
             <Select value={String(mes)} onValueChange={(v) => setMes(Number(v))}>
               <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
