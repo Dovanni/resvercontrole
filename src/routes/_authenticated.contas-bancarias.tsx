@@ -22,8 +22,8 @@ export const Route = createFileRoute("/_authenticated/contas-bancarias")({
   component: BankAccountsPage,
 });
 
-const BANKS = ["Bradesco", "Itaú", "Banco do Brasil", "Caixa", "Nubank", "Inter", "Sicoob", "Santander", "Outro"];
-const COLORS = ["#ec4899", "#a855f7", "#3b82f6", "#10b981", "#f59e0b", "#06b6d4", "#6366f1", "#d946ef"];
+const BANKS = ["Bradesco", "Itaú", "Banco do Brasil", "Caixa", "Nubank", "Inter", "Sicoob", "Santander", "Mercado Pago", "Outro"];
+const COLORS = ["#ec4899", "#a855f7", "#3b82f6", "#10b981", "#f59e0b", "#06b6d4", "#6366f1", "#d946ef", "#00B1EA"];
 const ACCOUNT_TYPES = [
   { v: "corrente", l: "Conta Corrente" },
   { v: "poupanca", l: "Conta Poupança" },
