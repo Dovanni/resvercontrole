@@ -60,10 +60,10 @@ const num = (s: string) => {
 // LUCRO   = LOJA - CUSTO - FRETE_EMPRESA - JUROS_ML
 // MARGEM  = RECEBER * 100 / LOJA
 // RATEIO (mensal) = TOTAL_FORNECEDOR - SUM(CUSTO)
-const calcReceber = (loja: number, juros: number, freteCli: number) => loja - juros - freteCli;
+const calcReceber = (loja: number) => loja;
 const calcLucro = (loja: number, custo: number, freteEmp: number, juros: number) =>
   loja - custo - freteEmp - juros;
-const calcMargem = (receber: number, loja: number) => (loja > 0 ? (receber * 100) / loja : 0);
+const calcMargem = (lucro: number, receber: number) => (receber > 0 ? (lucro * 100) / receber : 0);
 
 function ControleVendasPage() {
   const qc = useQueryClient();
