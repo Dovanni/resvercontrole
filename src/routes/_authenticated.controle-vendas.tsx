@@ -286,10 +286,10 @@ function ControleVendasPage() {
         <SummaryCard label="Receber" value={brl(summary.receber)} tone="positive" />
         <SummaryCard label="Lucro" value={brl(summary.lucro)} tone={summary.lucro >= 0 ? "positive" : "negative"} />
         <SummaryCard label="Margem" value={`${summary.margem.toFixed(1)}%`} tone={summary.lucro >= 0 ? "positive" : "negative"} />
-        <SummaryCard label="Rateio" value={brl(summary.rateio)} tone={summary.rateio >= 0 ? "neutral" : "negative"} />
-        <SummaryCard label="Fornecedor" value={brl(summary.fornecedor)} tone="neutral" />
+        <SummaryCard label="Rateio" value={brl(summary.rateio)} tone="negative" />
+        <SummaryCard label="Fornecedor" value={brl(summary.fornecedor)} tone="negative" />
         <SummaryCard label="Investimento" value={brl(summary.investimento)} tone="neutral" />
-        <SummaryCard label="Saldo" value={brl(summary.saldo)} tone={summary.saldo >= 0 ? "positive" : "negative"} />
+        <SummaryCard label="Saldo" value={brl(summary.saldo)} tone="negative" />
       </div>
 
       {/* Form */}
