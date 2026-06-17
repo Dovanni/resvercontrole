@@ -41,6 +41,90 @@ export type Database = {
         }
         Relationships: []
       }
+      controle_vendas_diario: {
+        Row: {
+          ano: number
+          created_at: string
+          custo: number
+          data: string
+          frete_cliente: number
+          frete_empresa: number
+          id: string
+          juros_ml: number
+          loja: number
+          lucro: number
+          mes: number
+          rateio: number
+          receber: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ano: number
+          created_at?: string
+          custo?: number
+          data: string
+          frete_cliente?: number
+          frete_empresa?: number
+          id?: string
+          juros_ml?: number
+          loja?: number
+          lucro?: number
+          mes: number
+          rateio?: number
+          receber?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ano?: number
+          created_at?: string
+          custo?: number
+          data?: string
+          frete_cliente?: number
+          frete_empresa?: number
+          id?: string
+          juros_ml?: number
+          loja?: number
+          lucro?: number
+          mes?: number
+          rateio?: number
+          receber?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      controle_vendas_fornecedor: {
+        Row: {
+          ano: number
+          created_at: string
+          id: string
+          mes: number
+          updated_at: string
+          user_id: string
+          valor_fornecedor: number
+        }
+        Insert: {
+          ano: number
+          created_at?: string
+          id?: string
+          mes: number
+          updated_at?: string
+          user_id: string
+          valor_fornecedor?: number
+        }
+        Update: {
+          ano?: number
+          created_at?: string
+          id?: string
+          mes?: number
+          updated_at?: string
+          user_id?: string
+          valor_fornecedor?: number
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
