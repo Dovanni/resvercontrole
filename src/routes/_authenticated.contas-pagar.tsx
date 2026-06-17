@@ -86,21 +86,7 @@ function PayablesPage() {
     };
   }, [data]);
 
-  const markPaid = useMutation({
-    mutationFn: async (p: Payable) => {
-      const { error } = await supabase.from("payables").update({
-        status: "pago", paid_amount: p.amount, paid_at: new Date().toISOString(),
-      }).eq("id", p.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["payables"] });
-      qc.invalidateQueries({ queryKey: ["finance"] });
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
-      toast.success("Conta paga e registrada no financeiro");
-    },
-    onError: (e: any) => toast.error(e.message),
-  });
+  // markPaid is replaced by a dialog flow that requires picking a bank account
 
   const remove = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("payables").delete().eq("id", id); if (error) throw error; },
