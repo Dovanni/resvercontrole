@@ -421,7 +421,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function SummaryCard({ label, value, tone }: { label: string; value: string; tone: "positive" | "negative" | "neutral" }) {
+function SummaryCard({ label, value, tone }: { label: string; value: string; tone: "positive" | "negative" | "neutral" | "info" }) {
   return (
     <Card className="bg-primary/5">
       <CardContent className="pt-4 pb-3">
@@ -430,6 +430,7 @@ function SummaryCard({ label, value, tone }: { label: string; value: string; ton
           "font-display text-lg mt-1",
           tone === "positive" && "text-emerald-600",
           tone === "negative" && "text-destructive",
+          tone === "info" && "text-blue-600",
         )}>{value}</div>
       </CardContent>
     </Card>
