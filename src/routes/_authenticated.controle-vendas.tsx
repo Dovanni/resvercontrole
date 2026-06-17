@@ -134,17 +134,27 @@ function ControleVendasPage() {
     };
   }, [rows]);
 
+  // Fornecedor (negativo) + saldo acumulado por linha (data ascendente)
+  const fornecedor = useMemo(() => -Math.abs(num(fornecedorInput)), [fornecedorInput]);
+  const rowsWithSaldo = useMemo(() => {
+    let acc = fornecedor;
+    return rows.map((r) => {
+      acc = acc + Number(r.custo ?? 0);
+      return { ...r, saldo_acumulado: acc };
+    });
+  }, [rows, fornecedor]);
+
   const summary = useMemo(() => {
-    // Fornecedor é uma dívida → sempre negativo (vermelho)
-    const fornecedor = -Math.abs(num(fornecedorInput));
     const investimento = totals.custo + totals.juros_ml + totals.frete_empresa;
-    // RATEIO = FORNECEDOR + CUSTO  (negativo, vermelho)
     const rateio = fornecedor + totals.custo;
-    // SALDO = RATEIO (mesmo valor, vermelho)
     const saldo = rateio;
+    const saldoAtual = rowsWithSaldo.length > 0
+      ? rowsWithSaldo[rowsWithSaldo.length - 1].saldo_acumulado
+      : fornecedor;
+    const quitado = saldoAtual >= 0 && fornecedor < 0;
     const margem = calcMargem(totals.lucro, totals.receber);
-    return { receber: totals.receber, lucro: totals.lucro, margem, rateio, fornecedor, investimento, custo: totals.custo, saldo };
-  }, [totals, fornecedorInput]);
+    return { receber: totals.receber, lucro: totals.lucro, margem, rateio, fornecedor, investimento, custo: totals.custo, saldo, saldoAtual, quitado };
+  }, [totals, fornecedor, rowsWithSaldo]);
 
   const save = useMutation({
     mutationFn: async () => {
