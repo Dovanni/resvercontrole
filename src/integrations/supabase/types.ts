@@ -645,6 +645,7 @@ export type Database = {
       }
       sales: {
         Row: {
+          bank_account_id: string | null
           channel: string
           created_at: string
           customer_id: string | null
@@ -659,6 +660,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          bank_account_id?: string | null
           channel?: string
           created_at?: string
           customer_id?: string | null
@@ -673,6 +675,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          bank_account_id?: string | null
           channel?: string
           created_at?: string
           customer_id?: string | null
@@ -687,6 +690,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "sales_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sales_customer_id_fkey"
             columns: ["customer_id"]
