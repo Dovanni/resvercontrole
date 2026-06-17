@@ -276,6 +276,40 @@ function NewReceivableForm({ customers, onDone }: { customers: any[]; onDone: ()
   const [amount, setAmount] = useState(0);
   const [due_date, setDueDate] = useState(new Date().toISOString().slice(0, 10));
   const [payment_method, setPaymentMethod] = useState("boleto");
+  const [bank_account_id, setBankAccountId] = useState<string>("");
+
+  const { data: bankAccounts } = useQuery({
+    queryKey: ["bank-accounts-active"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bank_accounts" as any)
+        .select("id,name,bank,color")
+        .eq("status", "ativa")
+        .order("name");
+      if (error) throw error;
+      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string }[];
+    },
+  });
+
+  const { data: rules } = useQuery({
+    queryKey: ["routing-rules"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("payment_routing_rules" as any).select("payment_method,bank_account_id,fixo");
+      if (error) throw error;
+      return (data ?? []) as unknown as { payment_method: string; bank_account_id: string | null; fixo: boolean }[];
+    },
+  });
+
+  const currentRule = useMemo(() => (rules ?? []).find(r => r.payment_method === payment_method), [rules, payment_method]);
+  const locked = !!currentRule?.fixo && !!currentRule?.bank_account_id;
+
+  useEffect(() => {
+    if (locked) setBankAccountId(currentRule!.bank_account_id!);
+    else if (currentRule?.bank_account_id) setBankAccountId(currentRule.bank_account_id);
+    else setBankAccountId("");
+  }, [locked, currentRule]);
+
+  const accountName = (id: string) => (bankAccounts ?? []).find(b => b.id === id)?.name ?? "";
 
   const save = useMutation({
     mutationFn: async () => {
@@ -283,6 +317,7 @@ function NewReceivableForm({ customers, onDone }: { customers: any[]; onDone: ()
       if (!user) throw new Error("Não autenticado");
       const { error } = await supabase.from("receivables" as any).insert({
         user_id: user.id, customer_id: customer_id || null, description, amount, due_date, payment_method,
+        bank_account_id: bank_account_id || null,
       } as any);
       if (error) throw error;
     },
@@ -319,13 +354,44 @@ function NewReceivableForm({ customers, onDone }: { customers: any[]; onDone: ()
           <Select value={payment_method} onValueChange={setPaymentMethod}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
+              <SelectItem value="pix">PIX</SelectItem>
+              <SelectItem value="dinheiro">Dinheiro</SelectItem>
+              <SelectItem value="deposito">Depósito bancário</SelectItem>
+              <SelectItem value="transferencia">Transferência</SelectItem>
+              <SelectItem value="cartao_credito">Cartão de crédito</SelectItem>
+              <SelectItem value="cartao_debito">Cartão de débito</SelectItem>
+              <SelectItem value="cartao">Cartão (parcelado)</SelectItem>
+              <SelectItem value="mercado_livre">Venda Mercado Livre</SelectItem>
               <SelectItem value="boleto">Boleto</SelectItem>
               <SelectItem value="pix_prazo">PIX a prazo</SelectItem>
-              <SelectItem value="cartao">Cartão</SelectItem>
               <SelectItem value="crediario">Crediário</SelectItem>
               <SelectItem value="prazo">A prazo</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        <div className="col-span-2 space-y-1.5">
+          <Label>Conta de destino {locked && <span className="text-xs text-muted-foreground">(automático)</span>}</Label>
+          {locked ? (
+            <Input value={accountName(bank_account_id)} disabled className="bg-muted" />
+          ) : (
+            <Select value={bank_account_id || "__none__"} onValueChange={(v) => setBankAccountId(v === "__none__" ? "" : v)}>
+              <SelectTrigger><SelectValue placeholder="Selecione a conta" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">Não vincular a uma conta</SelectItem>
+                {(bankAccounts ?? []).map((b) => (
+                  <SelectItem key={b.id} value={b.id}>
+                    <span className="inline-flex items-center gap-2">
+                      <span className="size-2 rounded-full" style={{ background: b.color }} />
+                      {b.name} <span className="text-muted-foreground">— {b.bank}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <div className="text-xs text-muted-foreground">
+            {locked ? "Esta forma de pagamento é direcionada automaticamente." : "A movimentação será gerada nesta conta ao registrar o recebimento."}
+          </div>
         </div>
       </div>
       <Button type="submit" disabled={save.isPending} className="w-full bg-gradient-primary text-primary-foreground">
@@ -334,6 +400,7 @@ function NewReceivableForm({ customers, onDone }: { customers: any[]; onDone: ()
     </form>
   );
 }
+
 
 function ReceivePaymentForm({ receivable, onDone }: { receivable: Receivable; onDone: () => void }) {
   const remaining = Number(receivable.amount) - Number(receivable.received_amount);
