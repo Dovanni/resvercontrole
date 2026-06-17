@@ -24,6 +24,51 @@ function CashFlowPage() {
   const today = new Date();
   const startPast = new Date(today); startPast.setDate(today.getDate() - 30);
   const endFuture = new Date(today); endFuture.setDate(today.getDate() + 15);
+  const [accountFilter, setAccountFilter] = useState<string>("todas");
+
+  const { data: bankAccounts } = useQuery({
+    queryKey: ["bank-accounts-active"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bank_accounts" as any)
+        .select("id,name,bank,color,initial_balance,status")
+        .eq("status", "ativa")
+        .order("name");
+      if (error) throw error;
+      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string; initial_balance: number; status: string }[];
+    },
+  });
+
+  const { data: bankMovements } = useQuery({
+    queryKey: ["cashflow", "bank-movements"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bank_movements" as any)
+        .select("account_id,destination_account_id,type,amount,movement_date");
+      if (error) throw error;
+      return (data ?? []) as unknown as { account_id: string; destination_account_id: string | null; type: string; amount: number; movement_date: string }[];
+    },
+  });
+
+  const bankBalances = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const a of bankAccounts ?? []) map[a.id] = Number(a.initial_balance);
+    for (const m of bankMovements ?? []) {
+      const amt = Number(m.amount);
+      if (m.type === "entrada") map[m.account_id] = (map[m.account_id] ?? 0) + amt;
+      else if (m.type === "saida") map[m.account_id] = (map[m.account_id] ?? 0) - amt;
+      else if (m.type === "transferencia") {
+        map[m.account_id] = (map[m.account_id] ?? 0) - amt;
+        if (m.destination_account_id) map[m.destination_account_id] = (map[m.destination_account_id] ?? 0) + amt;
+      }
+    }
+    return map;
+  }, [bankAccounts, bankMovements]);
+
+  const totalBankBalance = useMemo(
+    () => (bankAccounts ?? []).reduce((s, a) => s + (bankBalances[a.id] ?? 0), 0),
+    [bankAccounts, bankBalances]
+  );
 
   const { data: finance } = useQuery({
     queryKey: ["cashflow", "finance"],
