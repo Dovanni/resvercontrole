@@ -216,3 +216,37 @@ function Row({ label, value, icon, strong }: { label: string; value: string; ico
     </div>
   );
 }
+
+function BankBalanceCard({ total, accounts }: { total: number; accounts: { id: string; name: string; bank: string; color: string; balance: number }[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <Card className="shadow-soft">
+      <CardContent className="p-5">
+        <button type="button" className="w-full text-left" onClick={() => setOpen(o => !o)}>
+          <div className="inline-flex size-10 rounded-xl items-center justify-center mb-3 bg-gradient-gold text-gold-foreground">
+            <Wallet className="size-5" />
+          </div>
+          <div className="flex items-center gap-1 text-2xl font-display">
+            <span className={total < 0 ? "text-destructive" : ""}>{brl(total)}</span>
+            <ChevronDown className={`size-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">Saldo de caixa (todas as contas)</div>
+        </button>
+        {open && (
+          <ul className="mt-4 space-y-2 border-t pt-3">
+            {accounts.length === 0 && <li className="text-xs text-muted-foreground">Nenhuma conta ativa.</li>}
+            {accounts.map(a => (
+              <li key={a.id} className="flex items-center justify-between text-sm">
+                <span className="inline-flex items-center gap-2 min-w-0">
+                  <span className="size-2 rounded-full shrink-0" style={{ background: a.color }} />
+                  <span className="truncate">{a.name}</span>
+                </span>
+                <span className={`font-medium ${a.balance < 0 ? "text-destructive" : ""}`}>{brl(a.balance)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
