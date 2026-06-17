@@ -36,6 +36,7 @@ function PayablesPage() {
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
+  const [payTarget, setPayTarget] = useState<Payable | null>(null);
 
   const { data } = useQuery({
     queryKey: ["payables"],
@@ -46,6 +47,19 @@ function PayablesPage() {
         .order("due_date", { ascending: true });
       if (error) throw error;
       return data as Payable[];
+    },
+  });
+
+  const { data: bankAccounts } = useQuery({
+    queryKey: ["bank-accounts-active"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bank_accounts" as any)
+        .select("id,name,bank,color")
+        .eq("status", "ativa")
+        .order("name");
+      if (error) throw error;
+      return (data ?? []) as { id: string; name: string; bank: string; color: string }[];
     },
   });
 
