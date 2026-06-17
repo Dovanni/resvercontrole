@@ -133,12 +133,12 @@ function ControleVendasPage() {
     // Fornecedor é uma dívida → sempre negativo (vermelho)
     const fornecedor = -Math.abs(num(fornecedorInput));
     const investimento = totals.custo + totals.juros_ml + totals.frete_empresa;
-    // RATEIO = ABS(FORNECEDOR) - CUSTO  (positivo, verde)
-    const rateio = Math.abs(fornecedor) - totals.custo;
-    // SALDO = FORNECEDOR - CUSTO  (negativo, vermelho)
-    const saldo = fornecedor - totals.custo;
+    // RATEIO = FORNECEDOR + CUSTO  (negativo, vermelho)
+    const rateio = fornecedor + totals.custo;
+    // SALDO = RATEIO (mesmo valor, vermelho)
+    const saldo = rateio;
     const margem = calcMargem(totals.lucro, totals.receber);
-    return { receber: totals.receber, lucro: totals.lucro, margem, rateio, fornecedor, investimento, saldo };
+    return { receber: totals.receber, lucro: totals.lucro, margem, rateio, fornecedor, investimento, custo: totals.custo, saldo };
   }, [totals, fornecedorInput]);
 
   const save = useMutation({
@@ -286,9 +286,9 @@ function ControleVendasPage() {
         <SummaryCard label="Receber" value={brl(summary.receber)} tone="positive" />
         <SummaryCard label="Lucro" value={brl(summary.lucro)} tone="positive" />
         <SummaryCard label="Margem" value={`${summary.margem.toFixed(1)}%`} tone="info" />
-        <SummaryCard label="Investimento" value={brl(summary.investimento)} tone="neutral" />
+        <SummaryCard label="Custo" value={brl(summary.custo)} tone="positive" />
         <SummaryCard label="Fornecedor" value={brl(summary.fornecedor)} tone="negative" />
-        <SummaryCard label="Rateio" value={brl(summary.rateio)} tone="positive" />
+        <SummaryCard label="Rateio" value={brl(summary.rateio)} tone="negative" />
         <SummaryCard label="Saldo" value={brl(summary.saldo)} tone="negative" />
       </div>
 
