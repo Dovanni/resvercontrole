@@ -110,10 +110,9 @@ function ControleVendasPage() {
     const custo = num(form.custo);
     const juros = num(form.juros_ml);
     const frete_emp = num(form.frete_empresa);
-    const frete_cli = num(form.frete_cliente);
-    const receber = calcReceber(loja, juros, frete_cli);
+    const receber = calcReceber(loja);
     const lucro = calcLucro(loja, custo, frete_emp, juros);
-    const margem = calcMargem(receber, loja);
+    const margem = calcMargem(lucro, receber);
     return { receber, lucro, margem };
   }, [form]);
 
