@@ -9,8 +9,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileSpreadsheet, Pencil, Trash2, Save, Eraser, Lock, LockOpen } from "lucide-react";
+import { FileSpreadsheet, Pencil, Trash2, Save, Eraser, Lock, LockOpen, History, ChevronDown, ChevronUp } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Textarea } from "@/components/ui/textarea";
 import { brl } from "@/lib/format";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/confirm-dialog";
@@ -72,6 +73,9 @@ function ControleVendasPage() {
   const [mes, setMes] = useState<number>(new Date().getMonth() + 1);
   const [form, setForm] = useState(emptyForm());
   const [fornecedorInput, setFornecedorInput] = useState("");
+  const [editingFornecedor, setEditingFornecedor] = useState(false);
+  const [motivoAlteracao, setMotivoAlteracao] = useState("");
+  const [showHistorico, setShowHistorico] = useState(false);
 
   const { data: rows = [] } = useQuery({
     queryKey: ["controle-vendas", YEAR, mes],
@@ -178,20 +182,56 @@ function ControleVendasPage() {
     onError: (e: any) => toast.error(e.message ?? "Erro ao salvar"),
   });
 
+  const { data: historico = [] } = useQuery({
+    queryKey: ["controle-vendas-fornecedor-historico", YEAR, mes],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("controle_vendas_fornecedor_historico")
+        .select("*")
+        .eq("ano", YEAR)
+        .eq("mes", mes)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        id: string; valor_anterior: number; valor_novo: number;
+        motivo: string | null; created_at: string;
+      }>;
+    },
+  });
+
   const saveFornecedor = useMutation({
     mutationFn: async () => {
       const { data: userRes } = await supabase.auth.getUser();
       const user_id = userRes.user?.id;
       if (!user_id) throw new Error("Sem usuário");
-      const payload = { user_id, mes, ano: YEAR, valor_fornecedor: num(fornecedorInput) };
+      const novoValor = num(fornecedorInput);
+      const valorAnterior = Number(fornecedorRow?.valor_fornecedor ?? 0);
+      const isEdit = editingFornecedor && fornecedorRow && novoValor !== valorAnterior;
+
+      const payload = { user_id, mes, ano: YEAR, valor_fornecedor: novoValor };
       const { error } = await supabase
         .from("controle_vendas_fornecedor")
         .upsert(payload, { onConflict: "user_id,mes,ano" });
       if (error) throw error;
+
+      if (isEdit) {
+        const { error: hErr } = await supabase
+          .from("controle_vendas_fornecedor_historico")
+          .insert({
+            user_id, mes, ano: YEAR,
+            valor_anterior: valorAnterior,
+            valor_novo: novoValor,
+            motivo: motivoAlteracao || null,
+          });
+        if (hErr) throw hErr;
+      }
     },
     onSuccess: () => {
       toast.success("Fornecedor do mês salvo");
+      setEditingFornecedor(false);
+      setMotivoAlteracao("");
       qc.invalidateQueries({ queryKey: ["controle-vendas-fornecedor"] });
+      qc.invalidateQueries({ queryKey: ["controle-vendas-fornecedor-historico"] });
     },
     onError: (e: any) => toast.error(e.message ?? "Erro ao salvar"),
   });
@@ -336,44 +376,115 @@ function ControleVendasPage() {
         const proxMesIdx = mes === 12 ? 0 : mes;
         const proxMesNome = MONTHS[proxMesIdx];
         const proxAno = mes === 12 ? YEAR + 1 : YEAR;
+        const isReadonly = locked && !editingFornecedor;
+        const showSaveBtn = !locked || editingFornecedor;
+        const handleRequestEdit = async () => {
+          const ok = await confirm({
+            title: "Editar valor do fornecedor?",
+            description: `Deseja alterar o valor do fornecedor de ${MONTHS[mes - 1]}/${YEAR}? Isso indica uma renegociação com o fornecedor.`,
+            confirmText: "Sim, editar",
+            cancelText: "Cancelar",
+            destructive: false,
+          });
+          if (ok) setEditingFornecedor(true);
+        };
         return (
         <Card>
           <CardContent className="pt-6 space-y-3">
             <div className="flex flex-col md:flex-row md:items-end gap-3">
               <div className="flex-1">
                 <Label className="flex items-center gap-1.5">
-                  {locked ? <Lock className="size-3.5" /> : <LockOpen className="size-3.5" />}
+                  {isReadonly ? <Lock className="size-3.5" /> : <LockOpen className="size-3.5" />}
                   Total devido a fornecedores em {MONTHS[mes - 1]}/{YEAR}
                 </Label>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Input
-                        inputMode="decimal"
-                        value={fornecedorInput}
-                        onChange={(e) => setFornecedorInput(e.target.value)}
-                        placeholder="0,00"
-                        readOnly={locked}
-                        className={cn(locked && "bg-muted cursor-not-allowed")}
-                      />
-                    </TooltipTrigger>
-                    {locked && (
-                      <TooltipContent>
-                        Este valor só pode ser alterado no primeiro dia do próximo mês
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                </TooltipProvider>
-                {locked && (
+                <div className="flex gap-2 items-center">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Input
+                          inputMode="decimal"
+                          value={fornecedorInput}
+                          onChange={(e) => setFornecedorInput(e.target.value)}
+                          placeholder="0,00"
+                          readOnly={isReadonly}
+                          className={cn(isReadonly && "bg-muted cursor-not-allowed")}
+                        />
+                      </TooltipTrigger>
+                      {isReadonly && (
+                        <TooltipContent>
+                          Este valor só pode ser alterado no primeiro dia do próximo mês — use "Editar" para renegociações
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
+                  {locked && !editingFornecedor && (
+                    <Button variant="outline" size="sm" onClick={handleRequestEdit}>
+                      <Pencil className="size-4 mr-1" /> Editar
+                    </Button>
+                  )}
+                </div>
+                {isReadonly && (
                   <p className="text-xs text-muted-foreground mt-1">
                     🔒 Bloqueado até 01/{proxMesNome}/{proxAno}
                   </p>
                 )}
+                {editingFornecedor && (
+                  <div className="mt-2 space-y-1">
+                    <Label className="text-xs">Motivo da alteração (opcional)</Label>
+                    <Textarea
+                      value={motivoAlteracao}
+                      onChange={(e) => setMotivoAlteracao(e.target.value)}
+                      placeholder="Ex: Renegociação, Desconto obtido, Erro de lançamento"
+                      rows={2}
+                    />
+                  </div>
+                )}
+                {historico.length > 0 && (
+                  <div className="mt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowHistorico((v) => !v)}
+                      className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                    >
+                      <History className="size-3" />
+                      Ver histórico de alterações ({historico.length})
+                      {showHistorico ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
+                    </button>
+                    {showHistorico && (
+                      <ul className="mt-2 space-y-1.5 text-xs border-l-2 border-muted pl-3">
+                        {historico.map((h) => (
+                          <li key={h.id} className="space-y-0.5">
+                            <div className="text-muted-foreground">
+                              {new Date(h.created_at).toLocaleString("pt-BR")}
+                            </div>
+                            <div>
+                              <span className="text-destructive line-through">{brl(h.valor_anterior)}</span>
+                              {" → "}
+                              <span className="font-medium">{brl(h.valor_novo)}</span>
+                            </div>
+                            {h.motivo && <div className="text-muted-foreground italic">"{h.motivo}"</div>}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </div>
-              {!locked && (
-                <Button onClick={() => saveFornecedor.mutate()} disabled={saveFornecedor.isPending}>
-                  <Save className="size-4 mr-2" /> Salvar fornecedor
-                </Button>
+              {showSaveBtn && (
+                <div className="flex gap-2">
+                  {editingFornecedor && (
+                    <Button variant="outline" onClick={() => {
+                      setEditingFornecedor(false);
+                      setMotivoAlteracao("");
+                      setFornecedorInput(fornecedorRow ? String(fornecedorRow.valor_fornecedor) : "");
+                    }}>
+                      Cancelar
+                    </Button>
+                  )}
+                  <Button onClick={() => saveFornecedor.mutate()} disabled={saveFornecedor.isPending}>
+                    <Save className="size-4 mr-2" /> {editingFornecedor ? "Salvar alteração" : "Salvar fornecedor"}
+                  </Button>
+                </div>
               )}
             </div>
             {!locked && num(fornecedorInput) <= 0 && (
