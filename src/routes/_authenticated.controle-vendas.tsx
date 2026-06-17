@@ -284,12 +284,12 @@ function ControleVendasPage() {
       {/* Summary */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
         <SummaryCard label="Receber" value={brl(summary.receber)} tone="positive" />
-        <SummaryCard label="Lucro" value={brl(summary.lucro)} tone={summary.lucro >= 0 ? "positive" : "negative"} />
-        <SummaryCard label="Margem" value={`${summary.margem.toFixed(1)}%`} tone={summary.lucro >= 0 ? "positive" : "negative"} />
-        <SummaryCard label="Rateio" value={brl(summary.rateio)} tone="negative" />
-        <SummaryCard label="Fornecedor" value={brl(summary.fornecedor)} tone="negative" />
+        <SummaryCard label="Lucro" value={brl(summary.lucro)} tone="positive" />
+        <SummaryCard label="Margem" value={`${summary.margem.toFixed(1)}%`} tone="info" />
         <SummaryCard label="Investimento" value={brl(summary.investimento)} tone="neutral" />
-        <SummaryCard label="Saldo" value={brl(summary.saldo)} tone="negative" />
+        <SummaryCard label="Fornecedor" value={brl(summary.fornecedor)} tone="negative" />
+        <SummaryCard label="Rateio" value={brl(summary.rateio)} tone="positive" />
+        <SummaryCard label="Saldo" value={brl(summary.saldo)} tone="positive" />
       </div>
 
       {/* Form */}
