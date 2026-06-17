@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { brl } from "@/lib/format";
 import { useConfirm } from "@/components/confirm-dialog";
 import { DataPagination, usePagination } from "@/components/data-pagination";
+import { CategoriasManagerDialog, useCategoriasContasPagar } from "@/components/categorias-contas-pagar-manager";
 
 export const Route = createFileRoute("/_authenticated/contas-pagar")({
   head: () => ({ meta: [{ title: "Contas a pagar — Rosé" }] }),
