@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { brl } from "@/lib/format";
-import { TrendingUp, TrendingDown, ShoppingBag, Wallet, AlertTriangle } from "lucide-react";
+import { TrendingUp, TrendingDown, ShoppingBag, Wallet, AlertTriangle, ChevronDown } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
