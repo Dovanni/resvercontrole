@@ -243,7 +243,7 @@ function NewSaleForm({ onDone }: { onDone: () => void }) {
           user_id: user.id,
           customer_id: customerId || null,
           customer_name: selected?.name ?? (walkInName || null),
-          channel, status, payment_method: method, total, discount,
+          channel, status, payment_method: method, total, discount: discountValue,
           bank_account_id: bankAccountId || null,
         } as any)
         .select().single();
