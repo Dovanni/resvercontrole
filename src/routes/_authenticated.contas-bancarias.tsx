@@ -375,6 +375,30 @@ function ExtractView({ account, accounts, balance, onClose }: { account: BankAcc
         </CardContent></Card>
       </div>
 
+      {account.bank === "Mercado Pago" && (() => {
+        const vendas = rows.filter(r => r.delta > 0).reduce((s, r) => s + r.delta, 0);
+        const taxas = rows.filter(r => r.delta < 0 && /taxa|juros|ml/i.test(r.category + " " + r.description)).reduce((s, r) => s + Math.abs(r.delta), 0);
+        return (
+          <Card className="mb-4 border-[#00B1EA]/40"><CardContent className="p-4 grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
+            <div>
+              <div className="text-xs text-muted-foreground">Vendas recebidas</div>
+              <div className="font-display text-lg text-success">{brl(vendas)}</div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Taxas / juros ML</div>
+              <div className="font-display text-lg text-destructive">{brl(taxas)}</div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground">Disponível p/ saque</div>
+              <div className="font-display text-lg" style={{ color: "#00B1EA" }}>{brl(balance)}</div>
+            </div>
+            <Button onClick={() => setOpenNew(true)} className="bg-[#00B1EA] hover:bg-[#0096c7] text-white">
+              <ArrowLeftRight className="size-4 mr-1" /> Registrar saque
+            </Button>
+          </CardContent></Card>
+        );
+      })()}
+
       <Card className="mb-3"><CardContent className="p-3 grid md:grid-cols-5 gap-2">
         <div><Label className="text-xs">De</Label><Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></div>
         <div><Label className="text-xs">Até</Label><Input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></div>
