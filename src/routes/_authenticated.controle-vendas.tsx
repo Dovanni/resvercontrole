@@ -155,8 +155,8 @@ function ControleVendasPage() {
         juros_ml: num(form.juros_ml),
         frete_empresa: num(form.frete_empresa),
         frete_cliente: num(form.frete_cliente),
-        receber: num(form.receber),
-        rateio: preview.rateio,
+        receber: preview.receber,
+        rateio: 0,
         lucro: preview.lucro,
       };
       if (form.id) {
