@@ -90,7 +90,7 @@ function Dashboard() {
       const perAccount = accounts.map(a => {
         const bal = movs
           .filter(m => m.account_id === a.id)
-          .reduce((s, m) => s + (m.type === "entrada" ? Number(m.amount) : -Number(m.amount)), Number(a.initial_balance) || 0);
+          .reduce((s, m) => s + (m.type === "entrada" ? Number(m.amount) : -Number(m.amount)), 0);
         return { ...a, balance: bal };
       });
       const total = perAccount.reduce((s, a) => s + a.balance, 0);

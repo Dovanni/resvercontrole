@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.bank_account_initial_balance_movement() FROM PUBLIC, anon, authenticated;

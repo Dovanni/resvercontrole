@@ -96,7 +96,7 @@ function ReportsPage() {
 
   const bankBalances = useMemo(() => {
     const map: Record<string, number> = {};
-    for (const a of bankAccounts ?? []) map[a.id] = Number(a.initial_balance);
+    for (const a of bankAccounts ?? []) map[a.id] = 0; // saldo inicial vem como movimento 'saldo_inicial'
     // Need all movements to compute current balance; here we use only-period movements for simplicity of total
     for (const m of bankMovements ?? []) {
       const amt = Number(m.amount);

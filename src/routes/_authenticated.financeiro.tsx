@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, TrendingDown, TrendingUp } from "lucide-react";
+import { Plus, Trash2, TrendingDown, TrendingUp, Landmark, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { brl, dateBR } from "@/lib/format";
 
@@ -24,6 +24,52 @@ const EXPENSE_CATS = ["estoque", "embalagem", "marketing", "frete", "operacional
 function FinancePage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [expandedBalance, setExpandedBalance] = useState(false);
+
+  const { data: bankAccounts } = useQuery({
+    queryKey: ["finance", "bank-accounts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bank_accounts" as any)
+        .select("id,name,bank,color,initial_balance,status")
+        .eq("status", "ativa")
+        .order("name");
+      if (error) throw error;
+      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string; initial_balance: number }[];
+    },
+  });
+
+  const { data: bankMovements } = useQuery({
+    queryKey: ["finance", "bank-movements-all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bank_movements" as any)
+        .select("account_id,destination_account_id,type,amount");
+      if (error) throw error;
+      return (data ?? []) as unknown as { account_id: string; destination_account_id: string | null; type: string; amount: number }[];
+    },
+  });
+
+  const bankBalances = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const a of bankAccounts ?? []) map[a.id] = 0; // saldo inicial já entra como movimento 'saldo_inicial'
+    for (const m of bankMovements ?? []) {
+      const amt = Number(m.amount);
+      if (m.type === "entrada") map[m.account_id] = (map[m.account_id] ?? 0) + amt;
+      else if (m.type === "saida") map[m.account_id] = (map[m.account_id] ?? 0) - amt;
+      else if (m.type === "transferencia") {
+        map[m.account_id] = (map[m.account_id] ?? 0) - amt;
+        if (m.destination_account_id) map[m.destination_account_id] = (map[m.destination_account_id] ?? 0) + amt;
+      }
+    }
+    return map;
+  }, [bankAccounts, bankMovements]);
+
+  const totalBankBalance = useMemo(
+    () => (bankAccounts ?? []).reduce((s, a) => s + (bankBalances[a.id] ?? 0), 0),
+    [bankAccounts, bankBalances]
+  );
+
 
   const { data } = useQuery({
     queryKey: ["finance"],
@@ -70,7 +116,43 @@ function FinancePage() {
         }
       />
 
+      <Card className="shadow-soft mb-4 cursor-pointer hover:shadow-md transition" onClick={() => setExpandedBalance((v) => !v)}>
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="inline-flex size-10 rounded-xl bg-primary/10 text-primary items-center justify-center"><Landmark className="size-5" /></div>
+              <div>
+                <div className="text-xs text-muted-foreground">Saldo em conta (consolidado)</div>
+                <div className={`text-2xl font-display ${totalBankBalance < 0 ? "text-destructive" : ""}`}>{brl(totalBankBalance)}</div>
+              </div>
+            </div>
+            {expandedBalance ? <ChevronUp className="size-5 text-muted-foreground" /> : <ChevronDown className="size-5 text-muted-foreground" />}
+          </div>
+          {expandedBalance && (
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2 border-t pt-4">
+              {(bankAccounts ?? []).length === 0 && (
+                <div className="text-sm text-muted-foreground">Nenhuma conta bancária ativa.</div>
+              )}
+              {(bankAccounts ?? []).map((a) => {
+                const b = bankBalances[a.id] ?? 0;
+                return (
+                  <div key={a.id} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-muted/40">
+                    <span className="inline-flex items-center gap-2 text-sm">
+                      <span className="size-2.5 rounded-full" style={{ background: a.color }} />
+                      {a.name}
+                      <span className="text-xs text-muted-foreground">({a.bank})</span>
+                    </span>
+                    <span className={`font-medium text-sm ${b < 0 ? "text-destructive" : ""}`}>{brl(b)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-3 gap-4 mb-6">
+
         <Card className="shadow-soft"><CardContent className="p-5">
           <div className="inline-flex size-10 rounded-xl bg-success/10 text-success items-center justify-center mb-3"><TrendingUp className="size-5" /></div>
           <div className="text-2xl font-display">{brl(totals.income)}</div>
