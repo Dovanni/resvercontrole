@@ -597,8 +597,17 @@ function CartaoSelector({ cartoes, value, onChange }: { cartoes: Cartao[]; value
 
 function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: Lancamento[] }) {
   const today = new Date();
-  const [mes, setMes] = useState(String(today.getMonth() + 1));
-  const [ano, setAno] = useState(String(today.getFullYear()));
+  const curMes = today.getMonth() + 1;
+  const curAno = today.getFullYear();
+  // Default to first fatura with lançamentos (current or future), else current month
+  const defaultFat = useMemo(() => {
+    const futuras = lancamentos
+      .filter((l) => l.ano_fatura > curAno || (l.ano_fatura === curAno && l.mes_fatura >= curMes))
+      .sort((a, b) => a.ano_fatura - b.ano_fatura || a.mes_fatura - b.mes_fatura);
+    return futuras[0] ? { mes: futuras[0].mes_fatura, ano: futuras[0].ano_fatura } : { mes: curMes, ano: curAno };
+  }, [lancamentos, curMes, curAno]);
+  const [mes, setMes] = useState(String(defaultFat.mes));
+  const [ano, setAno] = useState(String(defaultFat.ano));
   const mesN = Number(mes), anoN = Number(ano);
 
   const filtered = lancamentos.filter((l) => l.mes_fatura === mesN && l.ano_fatura === anoN);
