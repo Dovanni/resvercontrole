@@ -94,13 +94,28 @@ function PayablesPage() {
   const [editTarget, setEditTarget] = useState<Payable | null>(null);
 
   // filters
+  const [preset, setPreset] = useState<PeriodPreset>("all");
   const [fDateFrom, setFDateFrom] = useState("");
   const [fDateTo, setFDateTo] = useState("");
   const [fSupplier, setFSupplier] = useState("__all__");
   const [fCategory, setFCategory] = useState("__all__");
   const [fStatus, setFStatus] = useState("__all__");
   const [fSearch, setFSearch] = useState("");
+  const [groupBy, setGroupBy] = useState<GroupBy>("none");
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "due_date", dir: "asc" });
+
+  const applyPreset = (p: PeriodPreset) => {
+    setPreset(p);
+    if (p === "all") { setFDateFrom(""); setFDateTo(""); return; }
+    if (p === "custom") return;
+    const r = computePresetRange(p);
+    setFDateFrom(r.from); setFDateTo(r.to);
+  };
+  const clearFilters = () => {
+    setPreset("all"); setFDateFrom(""); setFDateTo("");
+    setFSupplier("__all__"); setFCategory("__all__"); setFStatus("__all__"); setFSearch("");
+  };
 
   const { data } = useQuery({
     queryKey: ["payables"],
