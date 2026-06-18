@@ -479,6 +479,31 @@ function BalancetePage() {
           </CardContent>
         </Card>
       )}
+
+      <Card className="shadow-soft mb-6 border-success/40 bg-success/5">
+        <CardContent className="p-5">
+          <h3 className="font-display text-lg mb-3 flex items-center gap-2">💰 Posição Bancária Atual</h3>
+          <div className="space-y-2">
+            {(bankAccounts ?? []).map((a) => {
+              const saldo = saldoPorConta[a.id] ?? 0;
+              return (
+                <div key={a.id} className="flex items-center justify-between text-sm border-b border-dashed pb-1">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="size-2.5 rounded-full" style={{ background: a.color }} />
+                    {a.name}
+                    <span className="text-xs text-muted-foreground">({a.bank})</span>
+                  </span>
+                  <span className={`font-medium ${saldo >= 0 ? "text-success" : "text-destructive"}`}>{brl(saldo)}</span>
+                </div>
+              );
+            })}
+            <div className="flex items-center justify-between pt-2 font-display text-lg">
+              <span>TOTAL EM CAIXA ✅</span>
+              <span className={totalSaldoAtual >= 0 ? "text-success" : "text-destructive"}>{brl(totalSaldoAtual)}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
