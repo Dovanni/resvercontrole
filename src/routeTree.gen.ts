@@ -31,6 +31,7 @@ import { Route as AuthenticatedComprasRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated.clientes'
 import { Route as AuthenticatedCartoesCreditoRouteImport } from './routes/_authenticated.cartoes-credito'
 import { Route as AuthenticatedBiRouteImport } from './routes/_authenticated.bi'
+import { Route as AuthenticatedBalanceteRouteImport } from './routes/_authenticated.balancete'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -149,10 +150,16 @@ const AuthenticatedBiRoute = AuthenticatedBiRouteImport.update({
   path: '/bi',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedBalanceteRoute = AuthenticatedBalanceteRouteImport.update({
+  id: '/balancete',
+  path: '/balancete',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/balancete': typeof AuthenticatedBalanceteRoute
   '/bi': typeof AuthenticatedBiRoute
   '/cartoes-credito': typeof AuthenticatedCartoesCreditoRoute
   '/clientes': typeof AuthenticatedClientesRoute
@@ -176,6 +183,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/balancete': typeof AuthenticatedBalanceteRoute
   '/bi': typeof AuthenticatedBiRoute
   '/cartoes-credito': typeof AuthenticatedCartoesCreditoRoute
   '/clientes': typeof AuthenticatedClientesRoute
@@ -201,6 +209,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/balancete': typeof AuthenticatedBalanceteRoute
   '/_authenticated/bi': typeof AuthenticatedBiRoute
   '/_authenticated/cartoes-credito': typeof AuthenticatedCartoesCreditoRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
@@ -226,6 +235,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/balancete'
     | '/bi'
     | '/cartoes-credito'
     | '/clientes'
@@ -249,6 +259,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/balancete'
     | '/bi'
     | '/cartoes-credito'
     | '/clientes'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/balancete'
     | '/_authenticated/bi'
     | '/_authenticated/cartoes-credito'
     | '/_authenticated/clientes'
@@ -456,10 +468,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBiRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/balancete': {
+      id: '/_authenticated/balancete'
+      path: '/balancete'
+      fullPath: '/balancete'
+      preLoaderRoute: typeof AuthenticatedBalanceteRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedBalanceteRoute: typeof AuthenticatedBalanceteRoute
   AuthenticatedBiRoute: typeof AuthenticatedBiRoute
   AuthenticatedCartoesCreditoRoute: typeof AuthenticatedCartoesCreditoRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
@@ -482,6 +502,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedBalanceteRoute: AuthenticatedBalanceteRoute,
   AuthenticatedBiRoute: AuthenticatedBiRoute,
   AuthenticatedCartoesCreditoRoute: AuthenticatedCartoesCreditoRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,

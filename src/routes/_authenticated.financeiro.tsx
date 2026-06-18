@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, TrendingDown, TrendingUp, Landmark, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Trash2, TrendingDown, TrendingUp, Landmark, ChevronDown, ChevronUp, Scale } from "lucide-react";
 import { toast } from "sonner";
 import { brl, dateBR } from "@/lib/format";
 
@@ -104,15 +104,18 @@ function FinancePage() {
         title="Financeiro"
         subtitle="Entradas e saídas do seu negócio"
         action={
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-primary text-primary-foreground"><Plus className="size-4 mr-1" /> Nova movimentação</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle className="font-display">Nova movimentação</DialogTitle></DialogHeader>
-              <EntryForm onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["finance"] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); }} />
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <Link to="/balancete"><Button variant="outline"><Scale className="size-4 mr-1" /> Balancete</Button></Link>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-primary text-primary-foreground"><Plus className="size-4 mr-1" /> Nova movimentação</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle className="font-display">Nova movimentação</DialogTitle></DialogHeader>
+                <EntryForm onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["finance"] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); }} />
+              </DialogContent>
+            </Dialog>
+          </div>
         }
       />
 
