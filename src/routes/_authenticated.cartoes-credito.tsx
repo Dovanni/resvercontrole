@@ -326,7 +326,35 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
             {alertaAtraso && <div className="flex items-center gap-1 text-xs text-destructive"><AlertTriangle className="size-3" /> Fatura vencida</div>}
           </div>
         )}
+        <div className="flex gap-2 pt-2 border-t">
+          <Button size="sm" variant="outline" className="flex-1" onClick={() => setEditOpen(true)}>
+            <Pencil className="size-3 mr-1" /> Editar
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1 text-destructive hover:text-destructive"
+            onClick={async () => {
+              const ok = await confirm({
+                title: "Excluir cartão",
+                description: "Excluir este cartão irá remover todos os lançamentos vinculados. Confirmar?",
+                confirmText: "Excluir cartão",
+                destructive: true,
+              });
+              if (!ok) return;
+              const { error } = await (supabase.from("cartoes_credito" as any).delete().eq("id", cartao.id));
+              if (error) { toast.error(error.message); return; }
+              toast.success("Cartão excluído");
+              onChanged();
+            }}
+          >
+            <Trash2 className="size-3 mr-1" /> Excluir
+          </Button>
+        </div>
       </CardContent>
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <CartaoDialog contas={contas} userId={cartao.id /* unused on edit */} cartao={cartao} onDone={() => { setEditOpen(false); onChanged(); }} />
+      </Dialog>
     </Card>
   );
 }
