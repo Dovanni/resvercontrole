@@ -17,8 +17,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { brl, dateBR } from "@/lib/format";
 import { toast } from "sonner";
-import { Plus, CreditCard as CCIcon, Fuel, Home, User, AlertTriangle, Clock, CheckCircle2 } from "lucide-react";
+import { Plus, CreditCard as CCIcon, Fuel, Home, User, AlertTriangle, Clock, CheckCircle2, Pencil, Trash2, Factory } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line } from "recharts";
+import { useConfirm } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_authenticated/cartoes-credito")({
   head: () => ({ meta: [{ title: "Cartões de Crédito — Rosé" }] }),
@@ -42,7 +43,7 @@ type Lancamento = {
   cartao_id: string;
   data: string;
   descricao: string;
-  categoria: "combustivel" | "casa" | "pessoal";
+  categoria: "combustivel" | "casa" | "pessoal" | "fornecedores";
   valor: number;
   parcelado: boolean;
   total_parcelas: number;
@@ -66,10 +67,14 @@ type Fatura = {
 const BANDEIRAS = ["Visa", "Mastercard", "Elo", "Amex", "Hipercard"];
 const COR_DEFAULTS = ["#7c3aed", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#ec4899"];
 
+type CatKey = "combustivel" | "casa" | "pessoal" | "fornecedores";
+const CAT_KEYS: CatKey[] = ["combustivel", "casa", "pessoal", "fornecedores"];
+
 const CAT_META = {
   combustivel: { label: "Combustível", icon: Fuel, color: "#3b82f6", emoji: "🚗" },
   casa: { label: "Casa", icon: Home, color: "#10b981", emoji: "🏠" },
   pessoal: { label: "Pessoal", icon: User, color: "#ec4899", emoji: "👤" },
+  fornecedores: { label: "Fornecedores", icon: Factory, color: "#F97316", emoji: "🏭" },
 } as const;
 
 function computeFatura(dataISO: string, diaFechamento: number) {
@@ -193,7 +198,7 @@ function CartoesPage() {
               </CardContent></Card>
             )}
             {cartoes.map((c) => (
-              <CartaoCard key={c.id} cartao={c} lancamentos={lancByCartao[c.id] ?? []} faturas={faturas.filter((f) => f.cartao_id === c.id)} curMes={curMes} curAno={curAno} onClick={() => setTab(c.id)} onPaga={invalidate} />
+              <CartaoCard key={c.id} cartao={c} contas={contas} lancamentos={lancByCartao[c.id] ?? []} faturas={faturas.filter((f) => f.cartao_id === c.id)} curMes={curMes} curAno={curAno} onClick={() => setTab(c.id)} onPaga={invalidate} onChanged={invalidate} />
             ))}
           </div>
         </TabsContent>
@@ -212,15 +217,17 @@ function CartoesPage() {
   );
 }
 
-function CartaoCard({ cartao, lancamentos, faturas, curMes, curAno, onClick, onPaga }: {
-  cartao: Cartao; lancamentos: Lancamento[]; faturas: Fatura[]; curMes: number; curAno: number;
-  onClick: () => void; onPaga: () => void;
+function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onClick, onPaga, onChanged }: {
+  cartao: Cartao; contas: { id: string; name: string }[]; lancamentos: Lancamento[]; faturas: Fatura[]; curMes: number; curAno: number;
+  onClick: () => void; onPaga: () => void; onChanged: () => void;
 }) {
   const qc = useQueryClient();
+  const confirm = useConfirm();
+  const [editOpen, setEditOpen] = useState(false);
   const usado = lancamentos.filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno).reduce((s, l) => s + Number(l.valor), 0);
   const disp = Math.max(0, Number(cartao.limite_total) - usado);
   const pct = cartao.limite_total > 0 ? Math.min(100, (usado / cartao.limite_total) * 100) : 0;
-  const catTotals = (["combustivel", "casa", "pessoal"] as const).map((k) => ({
+  const catTotals = CAT_KEYS.map((k) => ({
     k, total: lancamentos.filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno && l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
   }));
 
@@ -283,7 +290,7 @@ function CartaoCard({ cartao, lancamentos, faturas, curMes, curAno, onClick, onP
           <Progress value={pct} className={`h-2 transition-all ${alertaLimite ? "[&>div]:bg-destructive" : ""}`} />
           <div className="text-xs text-muted-foreground mt-1">{pct.toFixed(0)}% utilizado</div>
         </div>
-        <div className="grid grid-cols-3 gap-2 text-xs">
+        <div className="grid grid-cols-2 gap-2 text-xs">
           {catTotals.map(({ k, total }) => {
             const m = CAT_META[k];
             const Icon = m.icon;
@@ -319,22 +326,56 @@ function CartaoCard({ cartao, lancamentos, faturas, curMes, curAno, onClick, onP
             {alertaAtraso && <div className="flex items-center gap-1 text-xs text-destructive"><AlertTriangle className="size-3" /> Fatura vencida</div>}
           </div>
         )}
+        <div className="flex gap-2 pt-2 border-t">
+          <Button size="sm" variant="outline" className="flex-1" onClick={() => setEditOpen(true)}>
+            <Pencil className="size-3 mr-1" /> Editar
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1 text-destructive hover:text-destructive"
+            onClick={async () => {
+              const ok = await confirm({
+                title: "Excluir cartão",
+                description: "Excluir este cartão irá remover todos os lançamentos vinculados. Confirmar?",
+                confirmText: "Excluir cartão",
+                destructive: true,
+              });
+              if (!ok) return;
+              const { error } = await (supabase.from("cartoes_credito" as any).delete().eq("id", cartao.id));
+              if (error) { toast.error(error.message); return; }
+              toast.success("Cartão excluído");
+              onChanged();
+            }}
+          >
+            <Trash2 className="size-3 mr-1" /> Excluir
+          </Button>
+        </div>
       </CardContent>
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <CartaoDialog contas={contas} userId={cartao.id /* unused on edit */} cartao={cartao} onDone={() => { setEditOpen(false); onChanged(); }} />
+      </Dialog>
     </Card>
   );
 }
 
-function CartaoDialog({ contas, userId, onDone }: { contas: { id: string; name: string }[]; userId: string; onDone: () => void }) {
+function CartaoDialog({ contas, userId, cartao, onDone }: { contas: { id: string; name: string }[]; userId: string; cartao?: Cartao; onDone: () => void }) {
+  const isEdit = !!cartao;
   const [f, setF] = useState({
-    nome: "", bandeira: "Visa", limite_total: "", dia_vencimento: "10", dia_fechamento: "1",
-    cor: COR_DEFAULTS[0], conta_bancaria_id: "", status: "ativo",
+    nome: cartao?.nome ?? "",
+    bandeira: cartao?.bandeira ?? "Visa",
+    limite_total: cartao?.limite_total != null ? String(cartao.limite_total) : "",
+    dia_vencimento: String(cartao?.dia_vencimento ?? 10),
+    dia_fechamento: String(cartao?.dia_fechamento ?? 1),
+    cor: cartao?.cor ?? COR_DEFAULTS[0],
+    conta_bancaria_id: cartao?.conta_bancaria_id ?? "",
+    status: cartao?.status ?? "ativo",
   });
 
   const save = useMutation({
     mutationFn: async () => {
       if (!f.nome) throw new Error("Informe o nome");
-      const { error } = await (supabase.from("cartoes_credito" as any).insert({
-        user_id: userId,
+      const payload = {
         nome: f.nome, bandeira: f.bandeira,
         limite_total: Number(f.limite_total) || 0,
         dia_vencimento: Number(f.dia_vencimento),
@@ -342,16 +383,22 @@ function CartaoDialog({ contas, userId, onDone }: { contas: { id: string; name: 
         cor: f.cor,
         conta_bancaria_id: f.conta_bancaria_id || null,
         status: f.status,
-      }));
-      if (error) throw error;
+      };
+      if (isEdit) {
+        const { error } = await (supabase.from("cartoes_credito" as any).update(payload).eq("id", cartao!.id));
+        if (error) throw error;
+      } else {
+        const { error } = await (supabase.from("cartoes_credito" as any).insert({ user_id: userId, ...payload }));
+        if (error) throw error;
+      }
     },
-    onSuccess: () => { toast.success("Cartão criado"); onDone(); },
+    onSuccess: () => { toast.success(isEdit ? "Cartão atualizado" : "Cartão criado"); onDone(); },
     onError: (e: any) => toast.error(e.message),
   });
 
   return (
     <DialogContent className="max-w-md">
-      <DialogHeader><DialogTitle>Novo cartão</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>{isEdit ? "Editar cartão" : "Novo cartão"}</DialogTitle></DialogHeader>
       <div className="space-y-3">
         <div><Label>Nome</Label><Input value={f.nome} onChange={(e) => setF({ ...f, nome: e.target.value })} placeholder="Nubank Roxinho" /></div>
         <div className="grid grid-cols-2 gap-3">
@@ -404,7 +451,7 @@ function LancDialog({ cartoes, userId, onDone }: { cartoes: Cartao[]; userId: st
   const [f, setF] = useState({
     cartao_id: ativos[0]?.id ?? "",
     data: new Date().toISOString().slice(0, 10),
-    descricao: "", categoria: "pessoal" as "combustivel" | "casa" | "pessoal",
+    descricao: "", categoria: "pessoal" as CatKey,
     valor: "", parcelado: false, total_parcelas: 2, observacoes: "",
   });
 
@@ -422,6 +469,7 @@ function LancDialog({ cartoes, userId, onDone }: { cartoes: Cartao[]; userId: st
       const rows: any[] = [];
       const valorPorParcela = valorNum / parcelas;
       const baseFat = computeFatura(f.data, cartao.dia_fechamento);
+      console.log("[cartao-lancamento] cartao_id:", cartao.id, "data:", f.data, "fatura:", `${String(baseFat.mes).padStart(2,"0")}/${baseFat.ano}`, "parcelas:", parcelas);
       for (let i = 0; i < parcelas; i++) {
         let mes = baseFat.mes + i, ano = baseFat.ano;
         while (mes > 12) { mes -= 12; ano += 1; }
@@ -441,7 +489,7 @@ function LancDialog({ cartoes, userId, onDone }: { cartoes: Cartao[]; userId: st
         });
       }
       const { error } = await (supabase.from("cartoes_lancamentos" as any).insert(rows));
-      if (error) throw error;
+      if (error) { console.error("[cartao-lancamento] INSERT error:", error); throw error; }
     },
     onSuccess: () => { toast.success("Lançamento salvo"); onDone(); },
     onError: (e: any) => toast.error(e.message),
@@ -466,6 +514,7 @@ function LancDialog({ cartoes, userId, onDone }: { cartoes: Cartao[]; userId: st
               <SelectItem value="combustivel">🚗 Combustível</SelectItem>
               <SelectItem value="casa">🏠 Casa</SelectItem>
               <SelectItem value="pessoal">👤 Pessoal</SelectItem>
+              <SelectItem value="fornecedores">🏭 Fornecedores</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -490,7 +539,7 @@ function LancDialog({ cartoes, userId, onDone }: { cartoes: Cartao[]; userId: st
   );
 }
 
-function CatCard({ k, valor, pct }: { k: "combustivel" | "casa" | "pessoal"; valor: number; pct?: number }) {
+function CatCard({ k, valor, pct }: { k: CatKey; valor: number; pct?: number }) {
   const m = CAT_META[k];
   const Icon = m.icon;
   return (
@@ -552,7 +601,7 @@ function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: L
   const filtered = lancamentos.filter((l) => l.mes_fatura === mesN && l.ano_fatura === anoN);
   const total = filtered.reduce((s, l) => s + Number(l.valor), 0);
   const disp = Math.max(0, Number(cartao.limite_total) - total);
-  const catTotals = (["combustivel", "casa", "pessoal"] as const).map((k) => ({
+  const catTotals = CAT_KEYS.map((k) => ({
     k, valor: filtered.filter((l) => l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
   }));
   const pieData = catTotals.map(({ k, valor }) => ({ name: CAT_META[k].label, value: valor, color: CAT_META[k].color }));
@@ -574,7 +623,7 @@ function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: L
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {catTotals.map(({ k, valor }) => <CatCard key={k} k={k} valor={valor} pct={total ? (valor / total) * 100 : 0} />)}
       </div>
 
@@ -622,7 +671,7 @@ function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: L
   );
 }
 
-type SortKey = "nome" | "comb" | "casa" | "pess" | "tot" | "limite" | "pct" | "venc";
+type SortKey = "nome" | "comb" | "casa" | "pess" | "forn" | "tot" | "limite" | "pct" | "venc";
 
 function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes: Cartao[]; lancamentos: Lancamento[]; faturas: Fatura[]; curMes: number; curAno: number }) {
   const [busca, setBusca] = useState("");
@@ -634,7 +683,7 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
 
   const mesL = lancamentos.filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno);
   const total = mesL.reduce((s, l) => s + Number(l.valor), 0);
-  const catTotals = (["combustivel", "casa", "pessoal"] as const).map((k) => ({
+  const catTotals = CAT_KEYS.map((k) => ({
     k, valor: mesL.filter((l) => l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
   }));
 
@@ -677,8 +726,9 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
     const comb = cl.filter((l) => l.categoria === "combustivel").reduce((s, l) => s + Number(l.valor), 0);
     const casa = cl.filter((l) => l.categoria === "casa").reduce((s, l) => s + Number(l.valor), 0);
     const pess = cl.filter((l) => l.categoria === "pessoal").reduce((s, l) => s + Number(l.valor), 0);
-    const tot = comb + casa + pess;
-    return { c, comb, casa, pess, tot, limite: Number(c.limite_total), pct: c.limite_total > 0 ? (tot / Number(c.limite_total)) * 100 : 0, venc: c.dia_vencimento };
+    const forn = cl.filter((l) => l.categoria === "fornecedores").reduce((s, l) => s + Number(l.valor), 0);
+    const tot = comb + casa + pess + forn;
+    return { c, comb, casa, pess, forn, tot, limite: Number(c.limite_total), pct: c.limite_total > 0 ? (tot / Number(c.limite_total)) * 100 : 0, venc: c.dia_vencimento };
   });
 
   const sorted = [...tableData].sort((a, b) => {
@@ -689,10 +739,10 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
   });
 
   const totRow = sorted.reduce((acc, r) => ({
-    comb: acc.comb + r.comb, casa: acc.casa + r.casa, pess: acc.pess + r.pess, tot: acc.tot + r.tot, limite: acc.limite + r.limite,
-  }), { comb: 0, casa: 0, pess: 0, tot: 0, limite: 0 });
+    comb: acc.comb + r.comb, casa: acc.casa + r.casa, pess: acc.pess + r.pess, forn: acc.forn + r.forn, tot: acc.tot + r.tot, limite: acc.limite + r.limite,
+  }), { comb: 0, casa: 0, pess: 0, forn: 0, tot: 0, limite: 0 });
 
-  const chartData = sorted.map(({ c, comb, casa, pess }) => ({ name: c.nome, Combustível: comb, Casa: casa, Pessoal: pess }));
+  const chartData = sorted.map(({ c, comb, casa, pess, forn }) => ({ name: c.nome, Combustível: comb, Casa: casa, Pessoal: pess, Fornecedores: forn }));
 
   const toggleSort = (k: SortKey) => {
     if (sortBy === k) setSortDir(sortDir === "asc" ? "desc" : "asc");
@@ -719,7 +769,7 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
       )}
 
       {/* Total geral por categoria */}
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {catTotals.map(({ k, valor }) => <CatCard key={k} k={k} valor={valor} pct={total ? (valor / total) * 100 : 0} />)}
       </div>
 
@@ -748,7 +798,7 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
         <div><Label className="text-xs">Categoria</Label>
           <Select value={catF} onValueChange={setCatF}>
             <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="todas">Todas</SelectItem><SelectItem value="combustivel">🚗 Combustível</SelectItem><SelectItem value="casa">🏠 Casa</SelectItem><SelectItem value="pessoal">👤 Pessoal</SelectItem></SelectContent>
+            <SelectContent><SelectItem value="todas">Todas</SelectItem><SelectItem value="combustivel">🚗 Combustível</SelectItem><SelectItem value="casa">🏠 Casa</SelectItem><SelectItem value="pessoal">👤 Pessoal</SelectItem><SelectItem value="fornecedores">🏭 Fornecedores</SelectItem></SelectContent>
           </Select>
         </div>
       </CardContent></Card>
@@ -762,19 +812,21 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
               <SortHead k="comb" className="text-right">🚗 Combustível</SortHead>
               <SortHead k="casa" className="text-right">🏠 Casa</SortHead>
               <SortHead k="pess" className="text-right">👤 Pessoal</SortHead>
+              <SortHead k="forn" className="text-right">🏭 Fornecedores</SortHead>
               <SortHead k="tot" className="text-right">Total</SortHead>
               <SortHead k="limite" className="text-right">Limite</SortHead>
               <SortHead k="pct" className="text-right">% Usado</SortHead>
               <SortHead k="venc" className="text-right">Venc.</SortHead>
             </TableRow></TableHeader>
             <TableBody>
-              {sorted.length === 0 && <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Sem cartões.</TableCell></TableRow>}
-              {sorted.map(({ c, comb, casa, pess, tot, limite, pct, venc }) => (
+              {sorted.length === 0 && <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Sem cartões.</TableCell></TableRow>}
+              {sorted.map(({ c, comb, casa, pess, forn, tot, limite, pct, venc }) => (
                 <TableRow key={c.id}>
                   <TableCell className="sticky left-0 bg-background z-10"><span className="inline-block size-3 rounded-full mr-2 align-middle" style={{ background: c.cor }} />{c.nome}</TableCell>
                   <TableCell className="text-right">{brl(comb)}</TableCell>
                   <TableCell className="text-right">{brl(casa)}</TableCell>
                   <TableCell className="text-right">{brl(pess)}</TableCell>
+                  <TableCell className="text-right">{brl(forn)}</TableCell>
                   <TableCell className="text-right font-medium">{brl(tot)}</TableCell>
                   <TableCell className="text-right">{brl(limite)}</TableCell>
                   <TableCell className={`text-right ${pct >= 80 ? "text-destructive font-medium" : ""}`}>{pct.toFixed(0)}%</TableCell>
@@ -787,6 +839,7 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
                   <TableCell className="text-right">{brl(totRow.comb)}</TableCell>
                   <TableCell className="text-right">{brl(totRow.casa)}</TableCell>
                   <TableCell className="text-right">{brl(totRow.pess)}</TableCell>
+                  <TableCell className="text-right">{brl(totRow.forn)}</TableCell>
                   <TableCell className="text-right">{brl(totRow.tot)}</TableCell>
                   <TableCell className="text-right">{brl(totRow.limite)}</TableCell>
                   <TableCell className="text-right">{totRow.limite > 0 ? ((totRow.tot / totRow.limite) * 100).toFixed(0) : 0}%</TableCell>
@@ -811,6 +864,7 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
               <Bar dataKey="Combustível" stackId="a" fill={CAT_META.combustivel.color} />
               <Bar dataKey="Casa" stackId="a" fill={CAT_META.casa.color} />
               <Bar dataKey="Pessoal" stackId="a" fill={CAT_META.pessoal.color} />
+              <Bar dataKey="Fornecedores" stackId="a" fill={CAT_META.fornecedores.color} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -823,11 +877,11 @@ function HistoricoMensal({ cartoes, lancamentos }: { cartoes: Cartao[]; lancamen
   const [cartaoId, setCartaoId] = useState("todos");
 
   const filtered = cartaoId === "todos" ? lancamentos : lancamentos.filter((l) => l.cartao_id === cartaoId);
-  const map: Record<string, { mes: string; Combustível: number; Casa: number; Pessoal: number }> = {};
+  const map: Record<string, { mes: string; Combustível: number; Casa: number; Pessoal: number; Fornecedores: number }> = {};
   for (const l of filtered) {
     const k = `${l.ano_fatura}-${String(l.mes_fatura).padStart(2, "0")}`;
-    map[k] ??= { mes: k, Combustível: 0, Casa: 0, Pessoal: 0 };
-    const catKey = l.categoria === "combustivel" ? "Combustível" : l.categoria === "casa" ? "Casa" : "Pessoal";
+    map[k] ??= { mes: k, Combustível: 0, Casa: 0, Pessoal: 0, Fornecedores: 0 };
+    const catKey = l.categoria === "combustivel" ? "Combustível" : l.categoria === "casa" ? "Casa" : l.categoria === "fornecedores" ? "Fornecedores" : "Pessoal";
     map[k][catKey] += Number(l.valor);
   }
   const data = Object.values(map).sort((a, b) => a.mes.localeCompare(b.mes));
@@ -855,6 +909,7 @@ function HistoricoMensal({ cartoes, lancamentos }: { cartoes: Cartao[]; lancamen
             <Line type="monotone" dataKey="Combustível" stroke={CAT_META.combustivel.color} strokeWidth={2} />
             <Line type="monotone" dataKey="Casa" stroke={CAT_META.casa.color} strokeWidth={2} />
             <Line type="monotone" dataKey="Pessoal" stroke={CAT_META.pessoal.color} strokeWidth={2} />
+            <Line type="monotone" dataKey="Fornecedores" stroke={CAT_META.fornecedores.color} strokeWidth={2} />
           </LineChart>
         </ResponsiveContainer>
       </div>
