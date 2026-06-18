@@ -739,8 +739,11 @@ function CartaoDetalhe({ cartao, lancamentos, faturas }: { cartao: Cartao; lanca
         <Card className="shadow-soft md:col-span-1"><CardContent className="p-5">
           <div className="text-xs text-muted-foreground">Total gasto no mês</div>
           <div className="text-2xl font-display mt-1">{brl(total)}</div>
-          <div className="text-xs text-muted-foreground mt-3">Limite disponível</div>
-          <div className="text-lg font-medium text-success">{brl(disp)}</div>
+          <div className="text-xs text-muted-foreground mt-3">Limite usado (todas parcelas)</div>
+          <div className="text-base font-medium text-destructive">{brl(usadoTotal)}</div>
+          <div className="text-xs text-muted-foreground mt-2">Limite disponível</div>
+          <div className={`text-lg font-medium ${disp < 0 ? "text-destructive" : "text-success"}`}>{brl(disp)}</div>
+          <div className="text-xs text-muted-foreground mt-1">{pct.toFixed(0)}% utilizado {level === "estourado" && "⛔"}{level === "critico" && "⚠️"}</div>
         </CardContent></Card>
         <Card className="shadow-soft md:col-span-2"><CardContent className="p-5">
           <div className="font-display text-lg mb-2">Distribuição por categoria</div>
