@@ -517,6 +517,13 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
         </div>
       </div>
 
+      <div className="space-y-1.5">
+        <Label>Juros Mercado Pago (R$)</Label>
+        <Input type="number" step="0.01" min={0}
+          value={mercadoPagoFees} onChange={(e) => setMercadoPagoFees(Number(e.target.value))} />
+        <div className="text-xs text-muted-foreground">Valor dos juros cobrados pelo Mercado Pago a abater do total</div>
+      </div>
+
       <div className="rounded-md border p-3 space-y-1 text-right">
         <div className="text-xs text-muted-foreground flex justify-between"><span>Subtotal produtos</span><span>{brl(subtotal)}</span></div>
         <div className="text-xs text-muted-foreground flex justify-between"><span>Desconto</span><span>-{brl(discountValue)}</span></div>
