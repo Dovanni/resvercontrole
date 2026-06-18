@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, BarChartBig, FileText, Settings, CalendarDays, TrendingUp, Landmark } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, BarChartBig, FileText, Settings, CalendarDays, TrendingUp, Landmark, CreditCard } from "lucide-react";
 import { useAuth, type Permission } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { NotificationsBell } from "@/components/notifications";
@@ -20,6 +20,7 @@ const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
   { to: "/fluxo-caixa", label: "Fluxo de caixa", icon: LineChart, perm: "view:cashflow" },
   { to: "/financeiro", label: "Financeiro", icon: Wallet, perm: "view:finance" },
   { to: "/contas-bancarias", label: "Contas bancárias", icon: Landmark, perm: "view:finance" },
+  { to: "/cartoes-credito", label: "Cartões de crédito", icon: CreditCard, perm: "view:finance" },
   { to: "/relatorios", label: "Relatórios", icon: FileText, perm: "view:reports" },
   { to: "/configuracoes", label: "Configurações", icon: Settings, perm: "view:settings" },
 ];
