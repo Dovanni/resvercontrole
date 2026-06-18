@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { ArrowDownRight, ArrowUpRight, Wallet, Landmark } from "lucide-react";
 import { brl, dateBR } from "@/lib/format";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend } from "recharts";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { CashProjection } from "@/components/cash-projection";
 
 export const Route = createFileRoute("/_authenticated/fluxo-caixa")({
   head: () => ({ meta: [{ title: "Fluxo de caixa — Rosé" }] }),
