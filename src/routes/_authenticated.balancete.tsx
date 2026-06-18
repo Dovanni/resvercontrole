@@ -397,15 +397,15 @@ function BalancetePage() {
         <CardContent className="p-5">
           <h3 className="font-display text-lg mb-3">Resultado Financeiro</h3>
           <table className="w-full text-sm">
-            <thead><tr className="border-b text-muted-foreground text-left"><th className="py-2"></th><th className="text-right">Previsto</th><th className="text-right">Realizado</th></tr></thead>
             <tbody>
-              <tr className="border-b"><td className="py-2">(+) Total Receitas</td><td className="text-right text-success">{brl(totRec.previsto)}</td><td className="text-right text-success">{brl(totRec.realizado)}</td></tr>
-              <tr className="border-b"><td className="py-2">(−) Total Despesas</td><td className="text-right text-destructive">{brl(totDesp.previsto)}</td><td className="text-right text-destructive">{brl(totDesp.realizado)}</td></tr>
-              <tr className="border-b font-display text-lg"><td className="py-3">(=) RESULTADO</td>
-                <td className={`text-right ${resPrevisto >= 0 ? "text-success" : "text-destructive"}`}>{brl(resPrevisto)}</td>
+              <tr className="border-b"><td className="py-2">(+) Saldo atual contas bancárias</td><td className="text-right text-success">{brl(totalSaldoAtual)}</td></tr>
+              <tr className="border-b"><td className="py-2">(+) Entradas do período</td><td className="text-right text-success">{brl(totalEntradas)}</td></tr>
+              <tr className="border-b bg-success/5 font-medium"><td className="py-2">(=) TOTAL RECEITAS</td><td className="text-right text-success">{brl(receitasRealizadas)}</td></tr>
+              <tr className="border-b"><td className="py-2">(−) Total Despesas (pagas no período)</td><td className="text-right text-destructive">{brl(totDesp.realizado)}</td></tr>
+              <tr className="border-b font-display text-lg"><td className="py-3">(=) RESULTADO FINAL</td>
                 <td className={`text-right ${resRealizado >= 0 ? "text-success" : "text-destructive"}`}>{brl(resRealizado)}</td>
               </tr>
-              <tr><td className="py-2 text-muted-foreground">Margem %</td><td className="text-right">{margemPrev.toFixed(2)}%</td><td className="text-right">{margemReal.toFixed(2)}%</td></tr>
+              <tr><td className="py-2 text-muted-foreground">Margem %</td><td className="text-right">{margemReal.toFixed(2)}%</td></tr>
             </tbody>
           </table>
         </CardContent>
