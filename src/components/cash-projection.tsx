@@ -123,12 +123,12 @@ export function CashProjection({ compact = false }: { compact?: boolean }) {
 
         <div className={compact ? "grid grid-cols-2 sm:grid-cols-3 gap-2" : "flex flex-col items-center gap-0"}>
           <ProjCard label="ATUAL" value={saldoAtual} highlight compact={compact} />
-          {months.map((m, i) => (
-            <>
-              {!compact && <ArrowDown key={`a-${m.key}`} className="size-4 text-muted-foreground my-0.5" />}
-              <ProjCard key={m.key} label={`SALDO ${m.label.toUpperCase()}`} value={m.saldo} compact={compact}
+          {months.map((m) => (
+            <React.Fragment key={m.key}>
+              {!compact && <ArrowDown className="size-4 text-muted-foreground my-0.5" />}
+              <ProjCard label={`SALDO ${m.label.toUpperCase()}`} value={m.saldo} compact={compact}
                 hint={m.despesas > 0 ? `− ${brl(m.despesas)} despesas` : undefined} />
-            </>
+            </React.Fragment>
           ))}
         </div>
 
