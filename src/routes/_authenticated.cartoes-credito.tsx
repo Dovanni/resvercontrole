@@ -452,10 +452,7 @@ function LancDialog({ cartoes, userId, onDone }: { cartoes: Cartao[]; userId: st
       <DialogHeader><DialogTitle>Novo lançamento</DialogTitle></DialogHeader>
       <div className="space-y-3">
         <div><Label>Cartão</Label>
-          <Select value={f.cartao_id} onValueChange={(v) => setF({ ...f, cartao_id: v })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{ativos.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}</SelectContent>
-          </Select>
+          <CartaoSelector cartoes={ativos} value={f.cartao_id} onChange={(v) => setF({ ...f, cartao_id: v })} />
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div><Label>Data</Label><Input type="date" value={f.data} onChange={(e) => setF({ ...f, data: e.target.value })} /></div>
