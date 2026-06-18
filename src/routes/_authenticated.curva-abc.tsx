@@ -119,7 +119,7 @@ function CurvaABCPage() {
     queryFn: async () => {
       let q = supabase
         .from("sale_items")
-        .select("product_id, quantity, total, unit_price, products(name, category), sales!inner(sold_at, status, channel)")
+        .select("product_id, quantity, unit_price, products(name, category), sales!inner(sold_at, status, channel)")
         .gte("sales.sold_at", new Date(applied.from).toISOString())
         .lte("sales.sold_at", new Date(applied.to + "T23:59:59").toISOString())
         .neq("sales.status", "cancelado");
