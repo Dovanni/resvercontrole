@@ -502,10 +502,21 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
             value={discount} onChange={(e) => setDiscount(Number(e.target.value))} />
           <div className="text-xs text-muted-foreground">Desconto: {brl(discountValue)}</div>
         </div>
-        <div className="text-right">
-          <div className="text-xs text-muted-foreground">Subtotal: {brl(subtotal)}</div>
-          <div className="text-xs text-muted-foreground">Total</div>
-          <div className="font-display text-3xl">{brl(total)}</div>
+        <div className="space-y-1.5">
+          <Label>Frete cobrado do cliente (R$)</Label>
+          <Input type="number" step="0.01" min={0}
+            value={shipping} onChange={(e) => setShipping(Number(e.target.value))} />
+          <div className="text-xs text-muted-foreground">Valor do frete pago pelo cliente</div>
+        </div>
+      </div>
+
+      <div className="rounded-md border p-3 space-y-1 text-right">
+        <div className="text-xs text-muted-foreground flex justify-between"><span>Subtotal produtos</span><span>{brl(subtotal)}</span></div>
+        <div className="text-xs text-muted-foreground flex justify-between"><span>Desconto</span><span>-{brl(discountValue)}</span></div>
+        <div className="text-xs text-muted-foreground flex justify-between"><span>Frete cliente</span><span>+{brl(Number(shipping) || 0)}</span></div>
+        <div className="border-t pt-1 flex items-end justify-between">
+          <span className="text-xs text-muted-foreground">TOTAL</span>
+          <span className="font-display text-3xl">{brl(total)}</span>
         </div>
       </div>
 
