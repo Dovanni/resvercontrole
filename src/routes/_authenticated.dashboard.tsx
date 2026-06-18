@@ -204,6 +204,25 @@ function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <Link to="/balancete" className="block mt-6">
+        <Card className="shadow-soft hover:shadow-md transition border-primary/30 bg-gradient-rose/40 cursor-pointer">
+          <CardContent className="p-5 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                <LineChartIcon className="size-5" />
+              </div>
+              <div>
+                <div className="font-display text-lg">Projeção de caixa</div>
+                <div className="text-xs text-muted-foreground">Veja como ficará seu saldo nos próximos meses</div>
+              </div>
+            </div>
+            <div className="inline-flex items-center gap-1 text-primary font-medium">
+              Ver projeção <ArrowRight className="size-4" />
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
     </div>
   );
 }
