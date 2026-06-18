@@ -56,10 +56,11 @@ function BalancetePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bank_accounts" as any)
-        .select("id, name, bank, color")
+        .select("id, name, bank, color, status")
+        .eq("status", "ativa")
         .order("name");
       if (error) throw error;
-      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string }[];
+      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string; status: string }[];
     },
   });
 
@@ -77,6 +78,44 @@ function BalancetePage() {
     },
   });
 
+  // Saldo atual: todas as movimentações (sem filtro de período) por conta
+  const { data: allMovs } = useQuery({
+    queryKey: ["balancete-allmovs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bank_movements" as any)
+        .select("account_id, type, amount");
+      if (error) throw error;
+      return (data ?? []) as unknown as { account_id: string; type: string; amount: number }[];
+    },
+  });
+
+  const saldoPorConta = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const m of allMovs ?? []) {
+      const v = Number(m.amount || 0);
+      map[m.account_id] = (map[m.account_id] ?? 0) + (m.type === "entrada" ? v : -v);
+    }
+    return map;
+  }, [allMovs]);
+
+  // Receitas agrupadas por conta bancária → categoria (todas as contas ativas, mesmo sem movimentação)
+  const receitasPorConta = useMemo(() => {
+    const accounts = bankAccounts ?? [];
+    const grouped: Record<string, { account: { id: string; name: string; bank: string; color: string }; cats: Record<string, number>; subtotal: number }> = {};
+    for (const a of accounts) grouped[a.id] = { account: a, cats: {}, subtotal: 0 };
+    for (const m of bankMovs ?? []) {
+      if (m.type !== "entrada") continue;
+      const g = grouped[m.account_id];
+      if (!g) continue;
+      const cat = m.category || "Outros";
+      const v = Number(m.amount || 0);
+      g.cats[cat] = (g.cats[cat] ?? 0) + v;
+      g.subtotal += v;
+    }
+    return Object.values(grouped).sort((a, b) => a.account.name.localeCompare(b.account.name));
+  }, [bankAccounts, bankMovs]);
+
   const { data: payables } = useQuery({
     queryKey: ["balancete-pay", from, to],
     queryFn: async () => {
@@ -89,23 +128,6 @@ function BalancetePage() {
     },
   });
 
-  // Receitas agrupadas por conta bancária → categoria (somente entradas)
-  const receitasPorConta = useMemo(() => {
-    const accIdx: Record<string, { id: string; name: string; bank: string; color: string }> = {};
-    for (const a of bankAccounts ?? []) accIdx[a.id] = a;
-    const grouped: Record<string, { account: { id: string; name: string; bank: string; color: string }; cats: Record<string, number>; subtotal: number }> = {};
-    for (const m of bankMovs ?? []) {
-      if (m.type !== "entrada") continue;
-      const acc = accIdx[m.account_id];
-      if (!acc) continue;
-      const cat = m.category || "Outros";
-      if (!grouped[acc.id]) grouped[acc.id] = { account: acc, cats: {}, subtotal: 0 };
-      const v = Number(m.amount || 0);
-      grouped[acc.id].cats[cat] = (grouped[acc.id].cats[cat] ?? 0) + v;
-      grouped[acc.id].subtotal += v;
-    }
-    return Object.values(grouped).sort((a, b) => a.account.name.localeCompare(b.account.name));
-  }, [bankAccounts, bankMovs]);
 
   const totalEntradas = useMemo(
     () => (bankMovs ?? []).filter((m) => m.type === "entrada").reduce((s, m) => s + Number(m.amount || 0), 0),
@@ -311,37 +333,44 @@ function BalancetePage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b text-muted-foreground text-left">
-                <th className="py-2">Conta Bancária</th><th>Categoria</th><th className="text-right">Valor</th>
+                <th className="py-2">Conta Bancária</th><th>Categoria</th><th className="text-right">Entradas período</th><th className="text-right">Saldo atual</th>
               </tr></thead>
               <tbody>
                 {receitasPorConta.length === 0 && (
-                  <tr><td colSpan={3} className="py-6 text-center text-muted-foreground">Sem entradas bancárias no período.</td></tr>
+                  <tr><td colSpan={4} className="py-6 text-center text-muted-foreground">Nenhuma conta bancária ativa.</td></tr>
                 )}
-                {receitasPorConta.map((g) => (
-                  <React.Fragment key={g.account.id}>
-                    {Object.entries(g.cats).sort((a, b) => b[1] - a[1]).map(([cat, val], i) => (
-                      <tr key={`${g.account.id}-${cat}`} className="border-b">
-                        <td className="py-2">
-                          {i === 0 ? (
-                            <span className="inline-flex items-center gap-2">
-                              <span className="size-2.5 rounded-full" style={{ background: g.account.color }} />
-                              {g.account.name}
-                              <span className="text-xs text-muted-foreground">({g.account.bank})</span>
-                            </span>
-                          ) : null}
-                        </td>
-                        <td className="text-muted-foreground">{cat}</td>
-                        <td className="text-right text-success">{brl(val)}</td>
+                {receitasPorConta.map((g) => {
+                  const cats = Object.entries(g.cats).sort((a, b) => b[1] - a[1]);
+                  const rows = cats.length > 0 ? cats : [["Sem movimentações no período", 0] as [string, number]];
+                  const saldo = saldoPorConta[g.account.id] ?? 0;
+                  return (
+                    <React.Fragment key={g.account.id}>
+                      {rows.map(([cat, val], i) => (
+                        <tr key={`${g.account.id}-${cat}`} className="border-b">
+                          <td className="py-2">
+                            {i === 0 ? (
+                              <span className="inline-flex items-center gap-2">
+                                <span className="size-2.5 rounded-full" style={{ background: g.account.color }} />
+                                {g.account.name}
+                                <span className="text-xs text-muted-foreground">({g.account.bank})</span>
+                              </span>
+                            ) : null}
+                          </td>
+                          <td className="text-muted-foreground">{cat}</td>
+                          <td className="text-right text-success">{brl(Number(val))}</td>
+                          <td className="text-right">{i === 0 ? <span className={saldo >= 0 ? "text-success font-medium" : "text-destructive font-medium"}>{brl(saldo)}</span> : null}</td>
+                        </tr>
+                      ))}
+                      <tr className="bg-success/5 border-b">
+                        <td className="py-2 text-xs text-muted-foreground" colSpan={2}>Subtotal {g.account.name}</td>
+                        <td className="text-right font-medium text-success">{brl(g.subtotal)}</td>
+                        <td />
                       </tr>
-                    ))}
-                    <tr className="bg-success/5 border-b">
-                      <td className="py-2 text-xs text-muted-foreground" colSpan={2}>Subtotal {g.account.name}</td>
-                      <td className="text-right font-medium text-success">{brl(g.subtotal)}</td>
-                    </tr>
-                  </React.Fragment>
-                ))}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
-              <tfoot><tr className="bg-success/10 font-medium"><td className="py-2" colSpan={2}>TOTAL ENTRADAS</td><td className="text-right">{brl(totalEntradas)}</td></tr></tfoot>
+              <tfoot><tr className="bg-success/10 font-medium"><td className="py-2" colSpan={2}>TOTAL ENTRADAS</td><td className="text-right">{brl(totalEntradas)}</td><td /></tr></tfoot>
             </table>
           </div>
         </CardContent>
