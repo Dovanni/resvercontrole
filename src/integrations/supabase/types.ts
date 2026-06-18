@@ -125,6 +125,171 @@ export type Database = {
           },
         ]
       }
+      cartoes_credito: {
+        Row: {
+          bandeira: string
+          conta_bancaria_id: string | null
+          cor: string
+          created_at: string
+          dia_fechamento: number
+          dia_vencimento: number
+          id: string
+          limite_total: number
+          nome: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bandeira: string
+          conta_bancaria_id?: string | null
+          cor?: string
+          created_at?: string
+          dia_fechamento: number
+          dia_vencimento: number
+          id?: string
+          limite_total?: number
+          nome: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bandeira?: string
+          conta_bancaria_id?: string | null
+          cor?: string
+          created_at?: string
+          dia_fechamento?: number
+          dia_vencimento?: number
+          id?: string
+          limite_total?: number
+          nome?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cartoes_credito_conta_bancaria_id_fkey"
+            columns: ["conta_bancaria_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cartoes_faturas: {
+        Row: {
+          ano: number
+          cartao_id: string
+          created_at: string
+          data_pagamento: string | null
+          id: string
+          mes: number
+          status: string
+          updated_at: string
+          user_id: string
+          valor_total: number
+        }
+        Insert: {
+          ano: number
+          cartao_id: string
+          created_at?: string
+          data_pagamento?: string | null
+          id?: string
+          mes: number
+          status?: string
+          updated_at?: string
+          user_id: string
+          valor_total?: number
+        }
+        Update: {
+          ano?: number
+          cartao_id?: string
+          created_at?: string
+          data_pagamento?: string | null
+          id?: string
+          mes?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+          valor_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cartoes_faturas_cartao_id_fkey"
+            columns: ["cartao_id"]
+            isOneToOne: false
+            referencedRelation: "cartoes_credito"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cartoes_lancamentos: {
+        Row: {
+          ano_fatura: number
+          cartao_id: string
+          categoria: string
+          created_at: string
+          data: string
+          descricao: string
+          grupo_parcela: string | null
+          id: string
+          mes_fatura: number
+          observacoes: string | null
+          parcela_atual: number
+          parcelado: boolean
+          total_parcelas: number
+          updated_at: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          ano_fatura: number
+          cartao_id: string
+          categoria: string
+          created_at?: string
+          data: string
+          descricao: string
+          grupo_parcela?: string | null
+          id?: string
+          mes_fatura: number
+          observacoes?: string | null
+          parcela_atual?: number
+          parcelado?: boolean
+          total_parcelas?: number
+          updated_at?: string
+          user_id: string
+          valor: number
+        }
+        Update: {
+          ano_fatura?: number
+          cartao_id?: string
+          categoria?: string
+          created_at?: string
+          data?: string
+          descricao?: string
+          grupo_parcela?: string | null
+          id?: string
+          mes_fatura?: number
+          observacoes?: string | null
+          parcela_atual?: number
+          parcelado?: boolean
+          total_parcelas?: number
+          updated_at?: string
+          user_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cartoes_lancamentos_cartao_id_fkey"
+            columns: ["cartao_id"]
+            isOneToOne: false
+            referencedRelation: "cartoes_credito"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categorias_contas_pagar: {
         Row: {
           created_at: string
