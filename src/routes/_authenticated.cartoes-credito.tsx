@@ -539,7 +539,7 @@ function LancDialog({ cartoes, userId, onDone }: { cartoes: Cartao[]; userId: st
   );
 }
 
-function CatCard({ k, valor, pct }: { k: "combustivel" | "casa" | "pessoal"; valor: number; pct?: number }) {
+function CatCard({ k, valor, pct }: { k: CatKey; valor: number; pct?: number }) {
   const m = CAT_META[k];
   const Icon = m.icon;
   return (
