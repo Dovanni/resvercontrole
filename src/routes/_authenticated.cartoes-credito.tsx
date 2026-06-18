@@ -802,6 +802,56 @@ function CartaoDetalhe({ cartao, lancamentos, faturas }: { cartao: Cartao; lanca
 }
 
 type SortKey = "nome" | "comb" | "casa" | "pess" | "forn" | "tot" | "limite" | "pct" | "venc";
+type PeriodPreset = "este_mes" | "mes_anterior" | "ultimos_3" | "ultimos_6" | "ano_atual" | "personalizado";
+
+function getPeriodRange(preset: PeriodPreset, customStart: string, customEnd: string): { start: string; end: string; label: string } {
+  const today = new Date();
+  const y = today.getFullYear(), m = today.getMonth();
+  const toISO = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  let start: Date, end: Date, label: string;
+  switch (preset) {
+    case "mes_anterior": start = new Date(y, m - 1, 1); end = new Date(y, m, 0); label = "Mês anterior"; break;
+    case "ultimos_3": start = new Date(y, m - 2, 1); end = new Date(y, m + 1, 0); label = "Últimos 3 meses"; break;
+    case "ultimos_6": start = new Date(y, m - 5, 1); end = new Date(y, m + 1, 0); label = "Últimos 6 meses"; break;
+    case "ano_atual": start = new Date(y, 0, 1); end = new Date(y, 11, 31); label = "Ano atual"; break;
+    case "personalizado":
+      start = customStart ? new Date(customStart + "T00:00:00") : new Date(y, m, 1);
+      end = customEnd ? new Date(customEnd + "T00:00:00") : new Date(y, m + 1, 0);
+      label = "Personalizado"; break;
+    default: start = new Date(y, m, 1); end = new Date(y, m + 1, 0); label = "Este mês";
+  }
+  return { start: toISO(start), end: toISO(end), label };
+}
+
+function PeriodoFiltro({ preset, setPreset, customStart, setCustomStart, customEnd, setCustomEnd }: {
+  preset: PeriodPreset; setPreset: (p: PeriodPreset) => void;
+  customStart: string; setCustomStart: (v: string) => void;
+  customEnd: string; setCustomEnd: (v: string) => void;
+}) {
+  const opts: { v: PeriodPreset; label: string }[] = [
+    { v: "este_mes", label: "Este mês" },
+    { v: "mes_anterior", label: "Mês anterior" },
+    { v: "ultimos_3", label: "Últimos 3 meses" },
+    { v: "ultimos_6", label: "Últimos 6 meses" },
+    { v: "ano_atual", label: "Ano atual" },
+    { v: "personalizado", label: "Personalizado" },
+  ];
+  return (
+    <Card className="shadow-soft"><CardContent className="p-4 space-y-3">
+      <div className="flex flex-wrap gap-2">
+        {opts.map((o) => (
+          <Button key={o.v} size="sm" variant={preset === o.v ? "default" : "outline"} onClick={() => setPreset(o.v)}>{o.label}</Button>
+        ))}
+      </div>
+      {preset === "personalizado" && (
+        <div className="grid grid-cols-2 gap-3 max-w-md">
+          <div><Label className="text-xs">Data inicial</Label><Input type="date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} /></div>
+          <div><Label className="text-xs">Data final</Label><Input type="date" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} /></div>
+        </div>
+      )}
+    </CardContent></Card>
+  );
+}
 
 function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes: Cartao[]; lancamentos: Lancamento[]; faturas: Fatura[]; curMes: number; curAno: number }) {
   const [busca, setBusca] = useState("");
@@ -810,8 +860,16 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
   const [catF, setCatF] = useState("todas");
   const [sortBy, setSortBy] = useState<SortKey>("tot");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [preset, setPreset] = useState<PeriodPreset>("este_mes");
+  const today0 = new Date();
+  const defStart = `${today0.getFullYear()}-${String(today0.getMonth() + 1).padStart(2, "0")}-01`;
+  const defEnd = `${today0.getFullYear()}-${String(today0.getMonth() + 1).padStart(2, "0")}-${String(new Date(today0.getFullYear(), today0.getMonth() + 1, 0).getDate()).padStart(2, "0")}`;
+  const [customStart, setCustomStart] = useState(defStart);
+  const [customEnd, setCustomEnd] = useState(defEnd);
+  const { start, end, label: periodoLabel } = getPeriodRange(preset, customStart, customEnd);
 
-  const mesL = lancamentos.filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno);
+  // Lançamentos do período (pela data da compra/parcela)
+  const mesL = lancamentos.filter((l) => l.data >= start && l.data <= end);
   const total = mesL.reduce((s, l) => s + Number(l.valor), 0);
   const catTotals = CAT_KEYS.map((k) => ({
     k, valor: mesL.filter((l) => l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
@@ -819,7 +877,7 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
 
   // Consolidated totals
   const limiteTotalGeral = cartoes.reduce((s, c) => s + Number(c.limite_total), 0);
-  const limiteDisponivel = Math.max(0, limiteTotalGeral - total);
+  const limiteDisponivel = limiteTotalGeral - total;
 
   // Filter cartoes
   const cartoesFiltrados = cartoes.filter((c) => {
@@ -833,11 +891,12 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
     return true;
   });
 
-  // Alertas
+  // Alertas (sempre baseados no mês corrente p/ não distorcer)
   const today = new Date();
+  const mesAtualL = lancamentos.filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno);
   let acima80 = 0, vencendo5 = 0, atrasadas = 0, totalVencer = 0;
   cartoes.forEach((c) => {
-    const usado = mesL.filter((l) => l.cartao_id === c.id).reduce((s, l) => s + Number(l.valor), 0);
+    const usado = mesAtualL.filter((l) => l.cartao_id === c.id).reduce((s, l) => s + Number(l.valor), 0);
     const pct = c.limite_total > 0 ? (usado / Number(c.limite_total)) * 100 : 0;
     if (pct >= 80) acima80++;
     const fat = faturas.find((f) => f.cartao_id === c.id && f.mes === curMes && f.ano === curAno);
@@ -886,6 +945,16 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
 
   return (
     <div className="space-y-4">
+      {/* Filtro de período */}
+      <PeriodoFiltro
+        preset={preset} setPreset={setPreset}
+        customStart={customStart} setCustomStart={setCustomStart}
+        customEnd={customEnd} setCustomEnd={setCustomEnd}
+      />
+      <div className="text-xs text-muted-foreground">
+        Período: <strong>{periodoLabel}</strong> · {dateBR(start)} → {dateBR(end)}
+      </div>
+
       {/* Alertas consolidados */}
       {(acima80 > 0 || vencendo5 > 0 || atrasadas > 0 || totalVencer > 0) && (
         <Card className="shadow-soft border-amber-200 bg-amber-50/40">
@@ -898,15 +967,15 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
         </Card>
       )}
 
-      {/* Total geral por categoria */}
+      {/* Total geral por categoria — todos cartões no período */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {catTotals.map(({ k, valor }) => <CatCard key={k} k={k} valor={valor} pct={total ? (valor / total) * 100 : 0} />)}
       </div>
 
       {/* Consolidado geral */}
       <div className="grid md:grid-cols-3 gap-4">
-        <Card className="shadow-soft"><CardContent className="p-5"><div className="text-xs text-muted-foreground">Total gasto (mês)</div><div className="text-2xl font-display mt-1">{brl(total)}</div></CardContent></Card>
-        <Card className="shadow-soft"><CardContent className="p-5"><div className="text-xs text-muted-foreground">Limite disponível consolidado</div><div className="text-2xl font-display mt-1 text-success">{brl(limiteDisponivel)}</div><div className="text-xs text-muted-foreground">de {brl(limiteTotalGeral)}</div></CardContent></Card>
+        <Card className="shadow-soft"><CardContent className="p-5"><div className="text-xs text-muted-foreground">Total gasto (período)</div><div className="text-2xl font-display mt-1">{brl(total)}</div></CardContent></Card>
+        <Card className="shadow-soft"><CardContent className="p-5"><div className="text-xs text-muted-foreground">Limite disponível consolidado</div><div className={`text-2xl font-display mt-1 ${limiteDisponivel < 0 ? "text-destructive" : "text-success"}`}>{brl(limiteDisponivel)}</div><div className="text-xs text-muted-foreground">de {brl(limiteTotalGeral)}</div></CardContent></Card>
         <Card className="shadow-soft"><CardContent className="p-5"><div className="text-xs text-muted-foreground">Faturas a vencer no mês</div><div className="text-2xl font-display mt-1 text-destructive">{brl(totalVencer)}</div></CardContent></Card>
       </div>
 
@@ -933,9 +1002,9 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
         </div>
       </CardContent></Card>
 
-      {/* Resumo de limites — usado real considerando todas parcelas pendentes */}
+      {/* Resumo de limites — usado = soma das 4 categorias no período */}
       <Card className="shadow-soft"><CardContent className="p-5">
-        <div className="font-display text-lg mb-3">Resumo de limites</div>
+        <div className="font-display text-lg mb-3">Resumo de limites <span className="text-xs font-normal text-muted-foreground">({periodoLabel})</span></div>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader><TableRow>
@@ -949,7 +1018,7 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
             <TableBody>
               {(() => {
                 const rows = cartoes.map((c) => {
-                  const u = calcUsado(c.id, lancamentos, faturas);
+                  const u = mesL.filter((l) => l.cartao_id === c.id).reduce((s, l) => s + Number(l.valor), 0);
                   const st = limiteStatus(Number(c.limite_total), u);
                   return { c, usado: u, ...st };
                 });
