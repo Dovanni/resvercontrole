@@ -1003,6 +1003,7 @@ export type Database = {
           customer_name: string | null
           discount: number
           id: string
+          mercado_pago_fees: number | null
           notes: string | null
           payment_method: string
           sold_at: string
@@ -1018,6 +1019,7 @@ export type Database = {
           customer_name?: string | null
           discount?: number
           id?: string
+          mercado_pago_fees?: number | null
           notes?: string | null
           payment_method?: string
           sold_at?: string
@@ -1033,6 +1035,7 @@ export type Database = {
           customer_name?: string | null
           discount?: number
           id?: string
+          mercado_pago_fees?: number | null
           notes?: string | null
           payment_method?: string
           sold_at?: string
