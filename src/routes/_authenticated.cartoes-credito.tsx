@@ -67,10 +67,14 @@ type Fatura = {
 const BANDEIRAS = ["Visa", "Mastercard", "Elo", "Amex", "Hipercard"];
 const COR_DEFAULTS = ["#7c3aed", "#0ea5e9", "#10b981", "#f59e0b", "#ef4444", "#ec4899"];
 
+type CatKey = "combustivel" | "casa" | "pessoal" | "fornecedores";
+const CAT_KEYS: CatKey[] = ["combustivel", "casa", "pessoal", "fornecedores"];
+
 const CAT_META = {
   combustivel: { label: "Combustível", icon: Fuel, color: "#3b82f6", emoji: "🚗" },
   casa: { label: "Casa", icon: Home, color: "#10b981", emoji: "🏠" },
   pessoal: { label: "Pessoal", icon: User, color: "#ec4899", emoji: "👤" },
+  fornecedores: { label: "Fornecedores", icon: Factory, color: "#F97316", emoji: "🏭" },
 } as const;
 
 function computeFatura(dataISO: string, diaFechamento: number) {
