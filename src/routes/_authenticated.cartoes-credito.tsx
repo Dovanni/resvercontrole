@@ -586,54 +586,180 @@ function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: L
   );
 }
 
-function VisaoGeral({ cartoes, lancamentos, curMes, curAno }: { cartoes: Cartao[]; lancamentos: Lancamento[]; curMes: number; curAno: number }) {
+type SortKey = "nome" | "comb" | "casa" | "pess" | "tot" | "limite" | "pct" | "venc";
+
+function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes: Cartao[]; lancamentos: Lancamento[]; faturas: Fatura[]; curMes: number; curAno: number }) {
+  const [busca, setBusca] = useState("");
+  const [bandeira, setBandeira] = useState("todas");
+  const [statusF, setStatusF] = useState("todos");
+  const [catF, setCatF] = useState("todas");
+  const [sortBy, setSortBy] = useState<SortKey>("tot");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
   const mesL = lancamentos.filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno);
   const total = mesL.reduce((s, l) => s + Number(l.valor), 0);
   const catTotals = (["combustivel", "casa", "pessoal"] as const).map((k) => ({
     k, valor: mesL.filter((l) => l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
   }));
 
-  const tableData = cartoes.map((c) => {
+  // Consolidated totals
+  const limiteTotalGeral = cartoes.reduce((s, c) => s + Number(c.limite_total), 0);
+  const limiteDisponivel = Math.max(0, limiteTotalGeral - total);
+
+  // Filter cartoes
+  const cartoesFiltrados = cartoes.filter((c) => {
+    if (busca && !c.nome.toLowerCase().includes(busca.toLowerCase())) return false;
+    if (bandeira !== "todas" && c.bandeira !== bandeira) return false;
+    if (statusF !== "todos" && c.status !== statusF) return false;
+    if (catF !== "todas") {
+      const has = mesL.some((l) => l.cartao_id === c.id && l.categoria === catF);
+      if (!has) return false;
+    }
+    return true;
+  });
+
+  // Alertas
+  const today = new Date();
+  let acima80 = 0, vencendo5 = 0, atrasadas = 0, totalVencer = 0;
+  cartoes.forEach((c) => {
+    const usado = mesL.filter((l) => l.cartao_id === c.id).reduce((s, l) => s + Number(l.valor), 0);
+    const pct = c.limite_total > 0 ? (usado / Number(c.limite_total)) * 100 : 0;
+    if (pct >= 80) acima80++;
+    const fat = faturas.find((f) => f.cartao_id === c.id && f.mes === curMes && f.ano === curAno);
+    const venc = vencimentoDate(curAno, curMes, c.dia_vencimento);
+    const dias = Math.ceil((venc.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const paga = fat?.status === "paga";
+    if (!paga && usado > 0) {
+      totalVencer += usado;
+      if (dias >= 0 && dias <= 5) vencendo5++;
+      if (dias < 0) atrasadas++;
+    }
+  });
+
+  const tableData = cartoesFiltrados.map((c) => {
     const cl = mesL.filter((l) => l.cartao_id === c.id);
     const comb = cl.filter((l) => l.categoria === "combustivel").reduce((s, l) => s + Number(l.valor), 0);
     const casa = cl.filter((l) => l.categoria === "casa").reduce((s, l) => s + Number(l.valor), 0);
     const pess = cl.filter((l) => l.categoria === "pessoal").reduce((s, l) => s + Number(l.valor), 0);
     const tot = comb + casa + pess;
-    return { c, comb, casa, pess, tot, pct: c.limite_total > 0 ? (tot / Number(c.limite_total)) * 100 : 0 };
+    return { c, comb, casa, pess, tot, limite: Number(c.limite_total), pct: c.limite_total > 0 ? (tot / Number(c.limite_total)) * 100 : 0, venc: c.dia_vencimento };
   });
 
-  const chartData = tableData.map(({ c, comb, casa, pess }) => ({ name: c.nome, Combustível: comb, Casa: casa, Pessoal: pess }));
+  const sorted = [...tableData].sort((a, b) => {
+    const dir = sortDir === "asc" ? 1 : -1;
+    if (sortBy === "nome") return a.c.nome.localeCompare(b.c.nome) * dir;
+    const av = (a as any)[sortBy] ?? 0, bv = (b as any)[sortBy] ?? 0;
+    return (av - bv) * dir;
+  });
+
+  const totRow = sorted.reduce((acc, r) => ({
+    comb: acc.comb + r.comb, casa: acc.casa + r.casa, pess: acc.pess + r.pess, tot: acc.tot + r.tot, limite: acc.limite + r.limite,
+  }), { comb: 0, casa: 0, pess: 0, tot: 0, limite: 0 });
+
+  const chartData = sorted.map(({ c, comb, casa, pess }) => ({ name: c.nome, Combustível: comb, Casa: casa, Pessoal: pess }));
+
+  const toggleSort = (k: SortKey) => {
+    if (sortBy === k) setSortDir(sortDir === "asc" ? "desc" : "asc");
+    else { setSortBy(k); setSortDir("desc"); }
+  };
+  const SortHead = ({ k, children, className = "" }: { k: SortKey; children: React.ReactNode; className?: string }) => (
+    <TableHead className={`cursor-pointer select-none ${className}`} onClick={() => toggleSort(k)}>
+      {children}{sortBy === k ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
+    </TableHead>
+  );
 
   return (
     <div className="space-y-4">
+      {/* Alertas consolidados */}
+      {(acima80 > 0 || vencendo5 > 0 || atrasadas > 0 || totalVencer > 0) && (
+        <Card className="shadow-soft border-amber-200 bg-amber-50/40">
+          <CardContent className="p-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+            <div className="flex items-center gap-2"><AlertTriangle className="size-4 text-destructive" /><div><div className="font-medium">{acima80}</div><div className="text-xs text-muted-foreground">Acima de 80% limite</div></div></div>
+            <div className="flex items-center gap-2"><Clock className="size-4 text-amber-600" /><div><div className="font-medium">{vencendo5}</div><div className="text-xs text-muted-foreground">Vencem em ≤5 dias</div></div></div>
+            <div className="flex items-center gap-2"><AlertTriangle className="size-4 text-destructive" /><div><div className="font-medium">{atrasadas}</div><div className="text-xs text-muted-foreground">Faturas em atraso</div></div></div>
+            <div className="flex items-center gap-2"><CCIcon className="size-4 text-primary" /><div><div className="font-medium">{brl(totalVencer)}</div><div className="text-xs text-muted-foreground">Total a vencer no mês</div></div></div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Total geral por categoria */}
       <div className="grid md:grid-cols-3 gap-4">
         {catTotals.map(({ k, valor }) => <CatCard key={k} k={k} valor={valor} pct={total ? (valor / total) * 100 : 0} />)}
       </div>
 
+      {/* Consolidado geral */}
+      <div className="grid md:grid-cols-3 gap-4">
+        <Card className="shadow-soft"><CardContent className="p-5"><div className="text-xs text-muted-foreground">Total gasto (mês)</div><div className="text-2xl font-display mt-1">{brl(total)}</div></CardContent></Card>
+        <Card className="shadow-soft"><CardContent className="p-5"><div className="text-xs text-muted-foreground">Limite disponível consolidado</div><div className="text-2xl font-display mt-1 text-success">{brl(limiteDisponivel)}</div><div className="text-xs text-muted-foreground">de {brl(limiteTotalGeral)}</div></CardContent></Card>
+        <Card className="shadow-soft"><CardContent className="p-5"><div className="text-xs text-muted-foreground">Faturas a vencer no mês</div><div className="text-2xl font-display mt-1 text-destructive">{brl(totalVencer)}</div></CardContent></Card>
+      </div>
+
+      {/* Filtros */}
+      <Card className="shadow-soft"><CardContent className="p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div><Label className="text-xs">Buscar cartão</Label><Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Nome..." /></div>
+        <div><Label className="text-xs">Bandeira</Label>
+          <Select value={bandeira} onValueChange={setBandeira}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="todas">Todas</SelectItem>{BANDEIRAS.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div><Label className="text-xs">Status</Label>
+          <Select value={statusF} onValueChange={setStatusF}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="todos">Todos</SelectItem><SelectItem value="ativo">Ativo</SelectItem><SelectItem value="inativo">Inativo</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div><Label className="text-xs">Categoria</Label>
+          <Select value={catF} onValueChange={setCatF}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent><SelectItem value="todas">Todas</SelectItem><SelectItem value="combustivel">🚗 Combustível</SelectItem><SelectItem value="casa">🏠 Casa</SelectItem><SelectItem value="pessoal">👤 Pessoal</SelectItem></SelectContent>
+          </Select>
+        </div>
+      </CardContent></Card>
+
+      {/* Tabela comparativa */}
       <Card className="shadow-soft"><CardContent className="p-0">
-        <Table>
-          <TableHeader><TableRow>
-            <TableHead>Cartão</TableHead>
-            <TableHead className="text-right">🚗 Combustível</TableHead>
-            <TableHead className="text-right">🏠 Casa</TableHead>
-            <TableHead className="text-right">👤 Pessoal</TableHead>
-            <TableHead className="text-right">Total</TableHead>
-            <TableHead className="text-right">% Limite</TableHead>
-          </TableRow></TableHeader>
-          <TableBody>
-            {tableData.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Sem cartões.</TableCell></TableRow>}
-            {tableData.map(({ c, comb, casa, pess, tot, pct }) => (
-              <TableRow key={c.id}>
-                <TableCell><span className="inline-block size-3 rounded-full mr-2 align-middle" style={{ background: c.cor }} />{c.nome}</TableCell>
-                <TableCell className="text-right">{brl(comb)}</TableCell>
-                <TableCell className="text-right">{brl(casa)}</TableCell>
-                <TableCell className="text-right">{brl(pess)}</TableCell>
-                <TableCell className="text-right font-medium">{brl(tot)}</TableCell>
-                <TableCell className={`text-right ${pct >= 80 ? "text-destructive font-medium" : ""}`}>{pct.toFixed(0)}%</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader><TableRow>
+              <SortHead k="nome" className="sticky left-0 bg-background z-10 min-w-[180px]">Cartão</SortHead>
+              <SortHead k="comb" className="text-right">🚗 Combustível</SortHead>
+              <SortHead k="casa" className="text-right">🏠 Casa</SortHead>
+              <SortHead k="pess" className="text-right">👤 Pessoal</SortHead>
+              <SortHead k="tot" className="text-right">Total</SortHead>
+              <SortHead k="limite" className="text-right">Limite</SortHead>
+              <SortHead k="pct" className="text-right">% Usado</SortHead>
+              <SortHead k="venc" className="text-right">Venc.</SortHead>
+            </TableRow></TableHeader>
+            <TableBody>
+              {sorted.length === 0 && <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Sem cartões.</TableCell></TableRow>}
+              {sorted.map(({ c, comb, casa, pess, tot, limite, pct, venc }) => (
+                <TableRow key={c.id}>
+                  <TableCell className="sticky left-0 bg-background z-10"><span className="inline-block size-3 rounded-full mr-2 align-middle" style={{ background: c.cor }} />{c.nome}</TableCell>
+                  <TableCell className="text-right">{brl(comb)}</TableCell>
+                  <TableCell className="text-right">{brl(casa)}</TableCell>
+                  <TableCell className="text-right">{brl(pess)}</TableCell>
+                  <TableCell className="text-right font-medium">{brl(tot)}</TableCell>
+                  <TableCell className="text-right">{brl(limite)}</TableCell>
+                  <TableCell className={`text-right ${pct >= 80 ? "text-destructive font-medium" : ""}`}>{pct.toFixed(0)}%</TableCell>
+                  <TableCell className="text-right">dia {venc}</TableCell>
+                </TableRow>
+              ))}
+              {sorted.length > 0 && (
+                <TableRow className="font-medium bg-muted/40">
+                  <TableCell className="sticky left-0 bg-muted/40 z-10">TOTAL</TableCell>
+                  <TableCell className="text-right">{brl(totRow.comb)}</TableCell>
+                  <TableCell className="text-right">{brl(totRow.casa)}</TableCell>
+                  <TableCell className="text-right">{brl(totRow.pess)}</TableCell>
+                  <TableCell className="text-right">{brl(totRow.tot)}</TableCell>
+                  <TableCell className="text-right">{brl(totRow.limite)}</TableCell>
+                  <TableCell className="text-right">{totRow.limite > 0 ? ((totRow.tot / totRow.limite) * 100).toFixed(0) : 0}%</TableCell>
+                  <TableCell />
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent></Card>
 
       <Card className="shadow-soft"><CardContent className="p-5">
