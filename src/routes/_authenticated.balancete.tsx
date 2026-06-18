@@ -161,13 +161,19 @@ function BalancetePage() {
     return map;
   }, [receitasPorConta]);
 
-  const totRec = useMemo(() => ({ previsto: totalEntradas, realizado: totalEntradas }), [totalEntradas]);
+  const totalSaldoAtual = useMemo(
+    () => Object.values(saldoPorConta).reduce((s, v) => s + v, 0),
+    [saldoPorConta]
+  );
+  const receitasRealizadas = totalSaldoAtual + totalEntradas;
+
+  const totRec = useMemo(() => ({ previsto: totalEntradas, realizado: receitasRealizadas }), [totalEntradas, receitasRealizadas]);
   const totDesp = useMemo(() => Object.values(despesas).reduce((a, v) => ({ previsto: a.previsto + v.previsto, realizado: a.realizado + v.realizado }), { previsto: 0, realizado: 0 }), [despesas]);
 
-  const resPrevisto = totalEntradas - totalSaidasBank;
-  const resRealizado = totalEntradas - totalSaidasBank;
+  const resPrevisto = totalEntradas - totDesp.previsto;
+  const resRealizado = receitasRealizadas - totDesp.realizado;
   const margemPrev = totalEntradas ? (resPrevisto / totalEntradas) * 100 : 0;
-  const margemReal = margemPrev;
+  const margemReal = receitasRealizadas ? (resRealizado / receitasRealizadas) * 100 : 0;
 
   const monthly = useMemo(() => {
     const f = new Date(from), t = new Date(to);
