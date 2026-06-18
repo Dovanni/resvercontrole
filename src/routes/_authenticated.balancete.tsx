@@ -339,44 +339,34 @@ function BalancetePage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b text-muted-foreground text-left">
-                <th className="py-2">Conta Bancária</th><th>Categoria</th><th className="text-right">Entradas período</th><th className="text-right">Saldo atual</th>
+                <th className="py-2">Conta Bancária</th><th className="text-right">Entradas período</th><th className="text-right">Saldo atual</th>
               </tr></thead>
               <tbody>
                 {receitasPorConta.length === 0 && (
-                  <tr><td colSpan={4} className="py-6 text-center text-muted-foreground">Nenhuma conta bancária ativa.</td></tr>
+                  <tr><td colSpan={3} className="py-6 text-center text-muted-foreground">Nenhuma conta bancária ativa.</td></tr>
                 )}
                 {receitasPorConta.map((g) => {
-                  const cats = Object.entries(g.cats).sort((a, b) => b[1] - a[1]);
-                  const rows = cats.length > 0 ? cats : [["Sem movimentações no período", 0] as [string, number]];
                   const saldo = saldoPorConta[g.account.id] ?? 0;
                   return (
-                    <React.Fragment key={g.account.id}>
-                      {rows.map(([cat, val], i) => (
-                        <tr key={`${g.account.id}-${cat}`} className="border-b">
-                          <td className="py-2">
-                            {i === 0 ? (
-                              <span className="inline-flex items-center gap-2">
-                                <span className="size-2.5 rounded-full" style={{ background: g.account.color }} />
-                                {g.account.name}
-                                <span className="text-xs text-muted-foreground">({g.account.bank})</span>
-                              </span>
-                            ) : null}
-                          </td>
-                          <td className="text-muted-foreground">{cat}</td>
-                          <td className="text-right text-success">{brl(Number(val))}</td>
-                          <td className="text-right">{i === 0 ? <span className={saldo >= 0 ? "text-success font-medium" : "text-destructive font-medium"}>{brl(saldo)}</span> : null}</td>
-                        </tr>
-                      ))}
-                      <tr className="bg-success/5 border-b">
-                        <td className="py-2 text-xs text-muted-foreground" colSpan={2}>Subtotal {g.account.name}</td>
-                        <td className="text-right font-medium text-success">{brl(g.subtotal)}</td>
-                        <td />
-                      </tr>
-                    </React.Fragment>
+                    <tr key={g.account.id} className="border-b">
+                      <td className="py-2">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="size-2.5 rounded-full" style={{ background: g.account.color }} />
+                          {g.account.name}
+                          <span className="text-xs text-muted-foreground">({g.account.bank})</span>
+                        </span>
+                      </td>
+                      <td className="text-right text-success">{brl(g.subtotal)}</td>
+                      <td className={`text-right font-medium ${saldo >= 0 ? "text-success" : "text-destructive"}`}>{brl(saldo)}</td>
+                    </tr>
                   );
                 })}
               </tbody>
-              <tfoot><tr className="bg-success/10 font-medium"><td className="py-2" colSpan={2}>TOTAL ENTRADAS</td><td className="text-right">{brl(totalEntradas)}</td><td /></tr></tfoot>
+              <tfoot><tr className="bg-success/10 font-medium">
+                <td className="py-2">TOTAL</td>
+                <td className="text-right">{brl(totalEntradas)}</td>
+                <td className="text-right">{brl(totalSaldoAtual)}</td>
+              </tr></tfoot>
             </table>
           </div>
         </CardContent>
