@@ -683,7 +683,7 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
 
   const mesL = lancamentos.filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno);
   const total = mesL.reduce((s, l) => s + Number(l.valor), 0);
-  const catTotals = (["combustivel", "casa", "pessoal"] as const).map((k) => ({
+  const catTotals = CAT_KEYS.map((k) => ({
     k, valor: mesL.filter((l) => l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
   }));
 
