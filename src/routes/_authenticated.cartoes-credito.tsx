@@ -290,7 +290,7 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
           <Progress value={pct} className={`h-2 transition-all ${alertaLimite ? "[&>div]:bg-destructive" : ""}`} />
           <div className="text-xs text-muted-foreground mt-1">{pct.toFixed(0)}% utilizado</div>
         </div>
-        <div className="grid grid-cols-3 gap-2 text-xs">
+        <div className="grid grid-cols-2 gap-2 text-xs">
           {catTotals.map(({ k, total }) => {
             const m = CAT_META[k];
             const Icon = m.icon;
