@@ -726,8 +726,9 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
     const comb = cl.filter((l) => l.categoria === "combustivel").reduce((s, l) => s + Number(l.valor), 0);
     const casa = cl.filter((l) => l.categoria === "casa").reduce((s, l) => s + Number(l.valor), 0);
     const pess = cl.filter((l) => l.categoria === "pessoal").reduce((s, l) => s + Number(l.valor), 0);
-    const tot = comb + casa + pess;
-    return { c, comb, casa, pess, tot, limite: Number(c.limite_total), pct: c.limite_total > 0 ? (tot / Number(c.limite_total)) * 100 : 0, venc: c.dia_vencimento };
+    const forn = cl.filter((l) => l.categoria === "fornecedores").reduce((s, l) => s + Number(l.valor), 0);
+    const tot = comb + casa + pess + forn;
+    return { c, comb, casa, pess, forn, tot, limite: Number(c.limite_total), pct: c.limite_total > 0 ? (tot / Number(c.limite_total)) * 100 : 0, venc: c.dia_vencimento };
   });
 
   const sorted = [...tableData].sort((a, b) => {
@@ -738,10 +739,10 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
   });
 
   const totRow = sorted.reduce((acc, r) => ({
-    comb: acc.comb + r.comb, casa: acc.casa + r.casa, pess: acc.pess + r.pess, tot: acc.tot + r.tot, limite: acc.limite + r.limite,
-  }), { comb: 0, casa: 0, pess: 0, tot: 0, limite: 0 });
+    comb: acc.comb + r.comb, casa: acc.casa + r.casa, pess: acc.pess + r.pess, forn: acc.forn + r.forn, tot: acc.tot + r.tot, limite: acc.limite + r.limite,
+  }), { comb: 0, casa: 0, pess: 0, forn: 0, tot: 0, limite: 0 });
 
-  const chartData = sorted.map(({ c, comb, casa, pess }) => ({ name: c.nome, Combustível: comb, Casa: casa, Pessoal: pess }));
+  const chartData = sorted.map(({ c, comb, casa, pess, forn }) => ({ name: c.nome, Combustível: comb, Casa: casa, Pessoal: pess, Fornecedores: forn }));
 
   const toggleSort = (k: SortKey) => {
     if (sortBy === k) setSortDir(sortDir === "asc" ? "desc" : "asc");
