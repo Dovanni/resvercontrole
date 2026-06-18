@@ -318,7 +318,7 @@ function BalancetePage() {
                   <tr><td colSpan={3} className="py-6 text-center text-muted-foreground">Sem entradas bancárias no período.</td></tr>
                 )}
                 {receitasPorConta.map((g) => (
-                  <>
+                  <React.Fragment key={g.account.id}>
                     {Object.entries(g.cats).sort((a, b) => b[1] - a[1]).map(([cat, val], i) => (
                       <tr key={`${g.account.id}-${cat}`} className="border-b">
                         <td className="py-2">
@@ -334,11 +334,11 @@ function BalancetePage() {
                         <td className="text-right text-success">{brl(val)}</td>
                       </tr>
                     ))}
-                    <tr key={`${g.account.id}-sub`} className="bg-success/5 border-b">
+                    <tr className="bg-success/5 border-b">
                       <td className="py-2 text-xs text-muted-foreground" colSpan={2}>Subtotal {g.account.name}</td>
                       <td className="text-right font-medium text-success">{brl(g.subtotal)}</td>
                     </tr>
-                  </>
+                  </React.Fragment>
                 ))}
               </tbody>
               <tfoot><tr className="bg-success/10 font-medium"><td className="py-2" colSpan={2}>TOTAL ENTRADAS</td><td className="text-right">{brl(totalEntradas)}</td></tr></tfoot>
