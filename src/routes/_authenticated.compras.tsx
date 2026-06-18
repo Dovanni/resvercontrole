@@ -140,12 +140,13 @@ function ComprasPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const onCancelar = (c: Compra) => {
-    confirm({
+  const onCancelar = async (c: Compra) => {
+    const ok = await confirm({
       title: "Cancelar compra?",
       description: "Estoque será estornado e parcelas pendentes serão canceladas.",
-      onConfirm: () => cancelar.mutate(c),
+      confirmText: "Cancelar compra",
     });
+    if (ok) cancelar.mutate(c);
   };
 
   return (
