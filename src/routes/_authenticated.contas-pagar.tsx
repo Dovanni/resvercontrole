@@ -1,16 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Plus, Trash2, CheckCircle2, AlertCircle, Pencil, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
 import { useConfirm } from "@/components/confirm-dialog";
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/_authenticated/contas-pagar")({
 });
 
 const FALLBACK_CATEGORIES = ["fornecedor", "logistica", "marketing", "aluguel", "impostos", "outros"];
+const PAYMENT_METHODS = ["pix", "boleto", "transferência", "dinheiro", "cartão"];
 
 type Payable = {
   id: string; supplier_id: string | null; description: string; category: string;
@@ -33,11 +35,41 @@ type Payable = {
   suppliers?: { name: string } | null;
 };
 
+// Series detection: descriptions like "DAS MEI (3/7)"
+const SERIES_RE = /^(.*?)\s*\((\d+)\/(\d+)\)\s*$/;
+function parseSeries(desc: string) {
+  const m = desc.match(SERIES_RE);
+  if (!m) return null;
+  return { base: m[1].trim(), index: Number(m[2]), total: Number(m[3]) };
+}
+function findSeriesItems(all: Payable[], target: Payable) {
+  const s = parseSeries(target.description);
+  if (!s) return null;
+  const items = all
+    .map((p) => ({ p, s: parseSeries(p.description) }))
+    .filter((x) => x.s && x.s.base === s.base && x.s.total === s.total)
+    .map((x) => ({ ...x.p, _idx: x.s!.index }))
+    .sort((a, b) => a._idx - b._idx);
+  return items.length > 1 ? { base: s.base, total: s.total, current: s.index, items } : null;
+}
+
+type SortKey = "due_date" | "description" | "supplier" | "category" | "status" | "amount";
+
 function PayablesPage() {
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [payTarget, setPayTarget] = useState<Payable | null>(null);
+  const [editTarget, setEditTarget] = useState<Payable | null>(null);
+
+  // filters
+  const [fDateFrom, setFDateFrom] = useState("");
+  const [fDateTo, setFDateTo] = useState("");
+  const [fSupplier, setFSupplier] = useState("__all__");
+  const [fCategory, setFCategory] = useState("__all__");
+  const [fStatus, setFStatus] = useState("__all__");
+  const [fSearch, setFSearch] = useState("");
+  const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "due_date", dir: "asc" });
 
   const { data } = useQuery({
     queryKey: ["payables"],
@@ -68,14 +100,14 @@ function PayablesPage() {
     queryKey: ["suppliers-light"],
     queryFn: async () => {
       const { data, error } = await supabase.from("suppliers").select("id,name").order("name");
-      console.log("[suppliers dropdown] data:", data, "error:", error);
       if (error) throw error;
       return data as { id: string; name: string }[];
     },
   });
 
+  const today = new Date().toISOString().slice(0, 10);
+
   const totals = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
     const pending = (data ?? []).filter(p => p.status === "pendente");
     const overdue = pending.filter(p => p.due_date < today);
     return {
@@ -85,17 +117,65 @@ function PayablesPage() {
         .filter(p => p.status === "pago" && p.paid_at?.slice(0, 7) === new Date().toISOString().slice(0, 7))
         .reduce((s, p) => s + Number(p.paid_amount || p.amount), 0),
     };
-  }, [data]);
+  }, [data, today]);
 
-  // markPaid is replaced by a dialog flow that requires picking a bank account
+  const filtered = useMemo(() => {
+    let rows = (data ?? []).slice();
+    if (fDateFrom) rows = rows.filter(p => p.due_date >= fDateFrom);
+    if (fDateTo) rows = rows.filter(p => p.due_date <= fDateTo);
+    if (fSupplier !== "__all__") rows = rows.filter(p => (p.supplier_id ?? "__none__") === fSupplier);
+    if (fCategory !== "__all__") rows = rows.filter(p => p.category === fCategory);
+    if (fStatus !== "__all__") {
+      if (fStatus === "atrasado") rows = rows.filter(p => p.status === "pendente" && p.due_date < today);
+      else rows = rows.filter(p => p.status === fStatus);
+    }
+    if (fSearch.trim()) {
+      const q = fSearch.toLowerCase();
+      rows = rows.filter(p => p.description.toLowerCase().includes(q));
+    }
+    const dir = sort.dir === "asc" ? 1 : -1;
+    rows.sort((a, b) => {
+      let av: any, bv: any;
+      switch (sort.key) {
+        case "due_date": av = a.due_date; bv = b.due_date; break;
+        case "description": av = a.description; bv = b.description; break;
+        case "supplier": av = a.suppliers?.name ?? ""; bv = b.suppliers?.name ?? ""; break;
+        case "category": av = a.category; bv = b.category; break;
+        case "status": av = a.status; bv = b.status; break;
+        case "amount": av = Number(a.amount); bv = Number(b.amount); break;
+      }
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    });
+    return rows;
+  }, [data, fDateFrom, fDateTo, fSupplier, fCategory, fStatus, fSearch, sort, today]);
 
   const remove = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("payables").delete().eq("id", id); if (error) throw error; },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["payables"] }); toast.success("Removido"); },
   });
 
-  const today = new Date().toISOString().slice(0, 10);
-  const { page, setPage, totalPages, total, pageItems } = usePagination(data);
+  const { page, setPage, totalPages, total, pageItems } = usePagination(filtered);
+
+  const toggleSort = (key: SortKey) => {
+    setSort((s) => s.key === key ? { key, dir: s.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" });
+  };
+
+  const SortableHead = ({ k, children, align }: { k: SortKey; children: React.ReactNode; align?: "right" }) => (
+    <TableHead className={align === "right" ? "text-right" : ""}>
+      <button className="inline-flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort(k)}>
+        {children}
+        <ArrowUpDown className={`size-3 ${sort.key === k ? "text-foreground" : "opacity-40"}`} />
+      </button>
+    </TableHead>
+  );
+
+  const categoryOptions = useMemo(() => {
+    const set = new Set<string>();
+    (data ?? []).forEach(p => set.add(p.category));
+    return Array.from(set).sort();
+  }, [data]);
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
@@ -133,39 +213,111 @@ function PayablesPage() {
         </CardContent></Card>
       </div>
 
+      <Card className="shadow-soft mb-4">
+        <CardContent className="p-4 grid grid-cols-2 md:grid-cols-6 gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs">De</Label>
+            <Input type="date" value={fDateFrom} onChange={(e) => setFDateFrom(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Até</Label>
+            <Input type="date" value={fDateTo} onChange={(e) => setFDateTo(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Fornecedor</Label>
+            <Select value={fSupplier} onValueChange={setFSupplier}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">Todos</SelectItem>
+                <SelectItem value="__none__">Sem fornecedor</SelectItem>
+                {(suppliers ?? []).map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Categoria</Label>
+            <Select value={fCategory} onValueChange={setFCategory}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">Todas</SelectItem>
+                {categoryOptions.map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Status</Label>
+            <Select value={fStatus} onValueChange={setFStatus}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__all__">Todos</SelectItem>
+                <SelectItem value="pendente">Pendente</SelectItem>
+                <SelectItem value="pago">Pago</SelectItem>
+                <SelectItem value="atrasado">Atrasado</SelectItem>
+                <SelectItem value="cancelado">Cancelado</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Buscar descrição</Label>
+            <Input value={fSearch} onChange={(e) => setFSearch(e.target.value)} placeholder="Buscar…" />
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="shadow-soft">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Vencimento</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Fornecedor</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Valor</TableHead>
+                <SortableHead k="due_date">Vencimento</SortableHead>
+                <SortableHead k="description">Descrição</SortableHead>
+                <SortableHead k="supplier">Fornecedor</SortableHead>
+                <SortableHead k="category">Categoria</SortableHead>
+                <SortableHead k="status">Status</SortableHead>
+                <SortableHead k="amount" align="right">Valor</SortableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data?.length === 0 && (
-                <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Nenhuma conta cadastrada.</TableCell></TableRow>
+              {filtered.length === 0 && (
+                <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Nenhuma conta encontrada.</TableCell></TableRow>
               )}
               {pageItems.map(p => {
                 const overdue = p.status === "pendente" && p.due_date < today;
                 return (
                   <TableRow key={p.id}>
                     <TableCell className={overdue ? "text-destructive font-medium" : "text-muted-foreground"}>
-                      {new Date(p.due_date + "T00:00").toLocaleDateString("pt-BR")}
+                      <InlineDate value={p.due_date} onSave={async (v) => {
+                        const { error } = await supabase.from("payables").update({ due_date: v }).eq("id", p.id);
+                        if (error) throw error;
+                        qc.invalidateQueries({ queryKey: ["payables"] });
+                      }} />
                     </TableCell>
-                    <TableCell className="font-medium">{p.description}</TableCell>
+                    <TableCell className="font-medium">
+                      <InlineText value={p.description} onSave={async (v) => {
+                        if (!v.trim()) throw new Error("Descrição obrigatória");
+                        const { error } = await supabase.from("payables").update({ description: v.trim() }).eq("id", p.id);
+                        if (error) throw error;
+                        qc.invalidateQueries({ queryKey: ["payables"] });
+                      }} />
+                    </TableCell>
                     <TableCell className="text-muted-foreground text-sm">{p.suppliers?.name ?? "—"}</TableCell>
                     <TableCell className="capitalize text-muted-foreground text-sm">{p.category}</TableCell>
                     <TableCell>
                       <StatusBadge status={overdue ? "atrasado" : p.status} />
                     </TableCell>
-                    <TableCell className="text-right font-medium">{brl(Number(p.amount))}</TableCell>
+                    <TableCell className="text-right font-medium">
+                      <InlineNumber value={Number(p.amount)} onSave={async (v) => {
+                        if (v <= 0) throw new Error("Informe um valor maior que zero");
+                        const { error } = await supabase.from("payables").update({ amount: v }).eq("id", p.id);
+                        if (error) throw error;
+                        qc.invalidateQueries({ queryKey: ["payables"] });
+                      }} />
+                    </TableCell>
                     <TableCell className="text-right whitespace-nowrap">
+                      <Button variant="ghost" size="icon" title="Editar" onClick={() => setEditTarget(p)}>
+                        <Pencil className="size-4" />
+                      </Button>
                       {p.status !== "pago" && p.status !== "cancelado" && (
                         <Button variant="ghost" size="icon" title="Marcar como pago" onClick={() => setPayTarget(p)}>
                           <CheckCircle2 className="size-4 text-success" />
@@ -204,7 +356,261 @@ function PayablesPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!editTarget} onOpenChange={(o) => !o && setEditTarget(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle className="font-display">Editar conta a pagar</DialogTitle></DialogHeader>
+          {editTarget && (
+            <EditPayableForm
+              payable={editTarget}
+              all={data ?? []}
+              suppliers={suppliers ?? []}
+              onDone={() => { setEditTarget(null); qc.invalidateQueries({ queryKey: ["payables"] }); }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+// ===== Inline edit components =====
+
+function InlineText({ value, onSave }: { value: string; onSave: (v: string) => Promise<void> }) {
+  const [editing, setEditing] = useState(false);
+  const [v, setV] = useState(value);
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => { setV(value); }, [value]);
+  useEffect(() => { if (editing) ref.current?.focus(); }, [editing]);
+  if (!editing) return <span className="cursor-pointer hover:underline decoration-dotted" onClick={() => setEditing(true)}>{value || <em className="text-muted-foreground">(sem descrição)</em>}</span>;
+  return (
+    <Input
+      ref={ref}
+      value={v}
+      onChange={(e) => setV(e.target.value)}
+      onKeyDown={async (e) => {
+        if (e.key === "Enter") { try { await onSave(v); setEditing(false); toast.success("Salvo"); } catch (err: any) { toast.error(err.message); } }
+        if (e.key === "Escape") { setV(value); setEditing(false); }
+      }}
+      onBlur={() => { setV(value); setEditing(false); }}
+      className="h-8"
+    />
+  );
+}
+
+function InlineNumber({ value, onSave }: { value: number; onSave: (v: number) => Promise<void> }) {
+  const [editing, setEditing] = useState(false);
+  const [v, setV] = useState(String(value));
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => { setV(String(value)); }, [value]);
+  useEffect(() => { if (editing) ref.current?.focus(); }, [editing]);
+  if (!editing) return <span className="cursor-pointer hover:underline decoration-dotted" onClick={() => setEditing(true)}>{brl(value)}</span>;
+  return (
+    <Input
+      ref={ref}
+      type="number"
+      step="0.01"
+      value={v}
+      onChange={(e) => setV(e.target.value)}
+      onKeyDown={async (e) => {
+        if (e.key === "Enter") { try { await onSave(Number(v)); setEditing(false); toast.success("Salvo"); } catch (err: any) { toast.error(err.message); } }
+        if (e.key === "Escape") { setV(String(value)); setEditing(false); }
+      }}
+      onBlur={() => { setV(String(value)); setEditing(false); }}
+      className="h-8 text-right"
+    />
+  );
+}
+
+function InlineDate({ value, onSave }: { value: string; onSave: (v: string) => Promise<void> }) {
+  const [editing, setEditing] = useState(false);
+  const [v, setV] = useState(value);
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => { setV(value); }, [value]);
+  useEffect(() => { if (editing) ref.current?.focus(); }, [editing]);
+  if (!editing) return <span className="cursor-pointer hover:underline decoration-dotted" onClick={() => setEditing(true)}>{new Date(value + "T00:00").toLocaleDateString("pt-BR")}</span>;
+  return (
+    <Input
+      ref={ref}
+      type="date"
+      value={v}
+      onChange={(e) => setV(e.target.value)}
+      onKeyDown={async (e) => {
+        if (e.key === "Enter") { try { await onSave(v); setEditing(false); toast.success("Salvo"); } catch (err: any) { toast.error(err.message); } }
+        if (e.key === "Escape") { setV(value); setEditing(false); }
+      }}
+      onBlur={() => { setV(value); setEditing(false); }}
+      className="h-8"
+    />
+  );
+}
+
+// ===== Edit Form =====
+
+function EditPayableForm({ payable, all, suppliers, onDone }: { payable: Payable; all: Payable[]; suppliers: { id: string; name: string }[]; onDone: () => void }) {
+  const series = useMemo(() => findSeriesItems(all, payable), [all, payable]);
+  const [scope, setScope] = useState<"one" | "forward" | "all">("one");
+  const [manageCatsOpen, setManageCatsOpen] = useState(false);
+  const { data: cats } = useCategoriasContasPagar();
+  const categoryOptions = (cats && cats.length > 0) ? cats.map(c => c.nome) : FALLBACK_CATEGORIES;
+
+  const [f, setF] = useState({
+    supplier_id: payable.supplier_id ?? "",
+    description: payable.description,
+    category: payable.category,
+    amount: Number(payable.amount),
+    due_date: payable.due_date,
+    payment_method: payable.payment_method ?? "pix",
+    recurrence: payable.recurrence,
+  });
+
+  const addMonths = (iso: string, n: number) => { const [y,m,d] = iso.split("-").map(Number); return new Date(y, m - 1 + n, d).toISOString().slice(0,10); };
+  const addWeeks = (iso: string, n: number) => { const dt = new Date(iso + "T00:00"); dt.setDate(dt.getDate() + 7 * n); return dt.toISOString().slice(0, 10); };
+
+  const save = useMutation({
+    mutationFn: async () => {
+      if (f.amount <= 0) throw new Error("Informe um valor maior que zero");
+      if (!f.description.trim()) throw new Error("Descrição obrigatória");
+
+      // Single-row update (no series, or scope === "one")
+      if (!series || scope === "one") {
+        // Preserve series suffix in description if exists
+        let desc = f.description.trim();
+        const s = parseSeries(payable.description);
+        const newHasSuffix = parseSeries(desc);
+        if (s && !newHasSuffix) desc = `${desc} (${s.index}/${s.total})`;
+        const { error } = await supabase.from("payables").update({
+          supplier_id: f.supplier_id || null,
+          description: desc,
+          category: f.category,
+          amount: f.amount,
+          due_date: f.due_date,
+          payment_method: f.payment_method,
+          recurrence: f.recurrence,
+        }).eq("id", payable.id);
+        if (error) throw error;
+        return 1;
+      }
+
+      // Series bulk update
+      const cur = parseSeries(payable.description)!;
+      const dueChanged = f.due_date !== payable.due_date;
+      const targets = series.items.filter(it => scope === "all" ? true : it._idx >= cur.index);
+
+      // Strip series suffix the user may have left in description
+      const baseDesc = (parseSeries(f.description.trim())?.base ?? f.description.trim());
+
+      let count = 0;
+      for (const it of targets) {
+        const itS = parseSeries(it.description)!;
+        const newDesc = `${baseDesc} (${itS.index}/${itS.total})`;
+        let newDue = it.due_date;
+        if (dueChanged) {
+          const offset = itS.index - cur.index;
+          newDue = f.recurrence === "semanal" ? addWeeks(f.due_date, offset)
+                : f.recurrence === "mensal" ? addMonths(f.due_date, offset)
+                : addMonths(f.due_date, offset);
+        }
+        const { error } = await supabase.from("payables").update({
+          supplier_id: f.supplier_id || null,
+          description: newDesc,
+          category: f.category,
+          amount: f.amount,
+          due_date: newDue,
+          payment_method: f.payment_method,
+          recurrence: f.recurrence,
+        }).eq("id", it.id);
+        if (error) throw error;
+        count++;
+      }
+      return count;
+    },
+    onSuccess: (n) => { toast.success(n > 1 ? `${n} lançamentos atualizados` : "Lançamento atualizado"); onDone(); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="space-y-3">
+      {series && (
+        <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
+          <div className="text-sm font-medium">Este lançamento faz parte de uma série ({series.current}/{series.total}). O que deseja editar?</div>
+          <RadioGroup value={scope} onValueChange={(v: any) => setScope(v)} className="space-y-1">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <RadioGroupItem value="one" /> Somente este lançamento
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <RadioGroupItem value="forward" /> Este e todos os próximos
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <RadioGroupItem value="all" /> Todos os lançamentos da série
+            </label>
+          </RadioGroup>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="col-span-2 space-y-1.5">
+          <Label>Descrição</Label>
+          <Input required value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Fornecedor</Label>
+          <Select value={f.supplier_id || "__none__"} onValueChange={(v) => setF({ ...f, supplier_id: v === "__none__" ? "" : v })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Sem fornecedor</SelectItem>
+              {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Categoria</Label>
+          <Select value={f.category} onValueChange={(v) => { if (v === "__manage__") { setManageCatsOpen(true); return; } setF({ ...f, category: v }); }}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {categoryOptions.map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
+              {!categoryOptions.includes(f.category) && <SelectItem value={f.category} className="capitalize">{f.category}</SelectItem>}
+              <SelectItem value="__manage__">⚙️ Gerenciar categorias…</SelectItem>
+            </SelectContent>
+          </Select>
+          <CategoriasManagerDialog open={manageCatsOpen} onOpenChange={setManageCatsOpen} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Valor (R$)</Label>
+          <Input type="number" step="0.01" required min={0.01} value={f.amount} onChange={(e) => setF({ ...f, amount: Number(e.target.value) })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Vencimento</Label>
+          <Input type="date" required value={f.due_date} onChange={(e) => setF({ ...f, due_date: e.target.value })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Forma de pagamento</Label>
+          <Select value={f.payment_method} onValueChange={(v) => setF({ ...f, payment_method: v })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {PAYMENT_METHODS.map(m => <SelectItem key={m} value={m} className="capitalize">{m}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Recorrência</Label>
+          <Select value={f.recurrence} onValueChange={(v: any) => setF({ ...f, recurrence: v })}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="nenhuma">Não se repete</SelectItem>
+              <SelectItem value="semanal">Semanal</SelectItem>
+              <SelectItem value="mensal">Mensal</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <DialogFooter className="gap-2">
+        <Button type="button" variant="outline" onClick={onDone}>Cancelar</Button>
+        <Button type="submit" disabled={save.isPending} className="bg-gradient-primary text-primary-foreground">
+          {save.isPending ? "Salvando…" : "Salvar alterações"}
+        </Button>
+      </DialogFooter>
+    </form>
   );
 }
 
@@ -215,6 +621,7 @@ function PayPayableForm({ payable, bankAccounts, onDone }: { payable: Payable; b
 
   const save = useMutation({
     mutationFn: async () => {
+      if (amount <= 0) throw new Error("Informe um valor maior que zero");
       const { error } = await supabase.from("payables").update({
         status: "pago",
         paid_amount: amount,
@@ -261,7 +668,6 @@ function PayPayableForm({ payable, bankAccounts, onDone }: { payable: Payable; b
               ))}
             </SelectContent>
           </Select>
-          <div className="text-xs text-muted-foreground">Quando informada, uma movimentação de saída é registrada automaticamente.</div>
         </div>
       </div>
       <Button type="submit" disabled={save.isPending} className="w-full bg-gradient-primary text-primary-foreground">
@@ -296,23 +702,14 @@ function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: str
   const [repeatCount, setRepeatCount] = useState(1);
   const [manageCatsOpen, setManageCatsOpen] = useState(false);
   const { data: cats } = useCategoriasContasPagar();
-  const categoryOptions = (cats && cats.length > 0)
-    ? cats.map((c) => c.nome)
-    : FALLBACK_CATEGORIES;
+  const categoryOptions = (cats && cats.length > 0) ? cats.map((c) => c.nome) : FALLBACK_CATEGORIES;
 
-  const addMonths = (iso: string, n: number) => {
-    const [y, m, d] = iso.split("-").map(Number);
-    const dt = new Date(y, m - 1 + n, d);
-    return dt.toISOString().slice(0, 10);
-  };
-  const addWeeks = (iso: string, n: number) => {
-    const dt = new Date(iso + "T00:00");
-    dt.setDate(dt.getDate() + 7 * n);
-    return dt.toISOString().slice(0, 10);
-  };
+  const addMonths = (iso: string, n: number) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1 + n, d).toISOString().slice(0, 10); };
+  const addWeeks = (iso: string, n: number) => { const dt = new Date(iso + "T00:00"); dt.setDate(dt.getDate() + 7 * n); return dt.toISOString().slice(0, 10); };
 
   const save = useMutation({
     mutationFn: async () => {
+      if (f.amount <= 0) throw new Error("Informe um valor maior que zero");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
       const isRecurring = f.recurrence !== "nenhuma" && repeatCount > 1;
@@ -343,6 +740,7 @@ function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: str
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (f.amount <= 0) { toast.error("Informe um valor maior que zero"); return; }
     const isRecurring = f.recurrence !== "nenhuma" && repeatCount > 1;
     if (isRecurring) {
       const ok = await confirm({
@@ -368,42 +766,27 @@ function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: str
           <Select
             value={f.supplier_id || "__none__"}
             onValueChange={(v) => {
-              if (v === "__none__") {
-                setF({ ...f, supplier_id: "" });
-              } else {
+              if (v === "__none__") setF({ ...f, supplier_id: "" });
+              else {
                 const sup = suppliers.find((s) => s.id === v);
-                setF({
-                  ...f,
-                  supplier_id: v,
-                  description: sup && !f.description ? sup.name : (sup ? sup.name : f.description),
-                });
+                setF({ ...f, supplier_id: v, description: sup && !f.description ? sup.name : (sup ? sup.name : f.description) });
               }
             }}
           >
             <SelectTrigger><SelectValue placeholder="Opcional — sem fornecedor" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="__none__">Sem fornecedor (opcional)</SelectItem>
-              {suppliers.length === 0 && (
-                <div className="px-2 py-1.5 text-xs text-muted-foreground">Nenhum fornecedor cadastrado</div>
-              )}
+              {suppliers.length === 0 && <div className="px-2 py-1.5 text-xs text-muted-foreground">Nenhum fornecedor cadastrado</div>}
               {suppliers.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-1.5">
           <Label>Categoria</Label>
-          <Select
-            value={f.category}
-            onValueChange={(v) => {
-              if (v === "__manage__") { setManageCatsOpen(true); return; }
-              setF({ ...f, category: v });
-            }}
-          >
+          <Select value={f.category} onValueChange={(v) => { if (v === "__manage__") { setManageCatsOpen(true); return; } setF({ ...f, category: v }); }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {categoryOptions.map((c) => (
-                <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>
-              ))}
+              {categoryOptions.map((c) => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
               <SelectItem value="__manage__">⚙️ Gerenciar categorias…</SelectItem>
             </SelectContent>
           </Select>
@@ -422,7 +805,7 @@ function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: str
           <Select value={f.payment_method} onValueChange={(v) => setF({ ...f, payment_method: v })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              {["pix", "boleto", "transferência", "dinheiro", "cartão"].map(m => <SelectItem key={m} value={m} className="capitalize">{m}</SelectItem>)}
+              {PAYMENT_METHODS.map(m => <SelectItem key={m} value={m} className="capitalize">{m}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -440,16 +823,8 @@ function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: str
         {f.recurrence !== "nenhuma" && (
           <div className="space-y-1.5">
             <Label>Repetir por quantos {f.recurrence === "mensal" ? "meses" : "semanas"}?</Label>
-            <Input
-              type="number"
-              min={1}
-              max={60}
-              value={repeatCount}
-              onChange={(e) => setRepeatCount(Math.max(1, Math.min(60, Number(e.target.value) || 1)))}
-            />
-            <div className="text-xs text-muted-foreground">
-              Serão criadas {repeatCount} {repeatCount === 1 ? "conta" : "contas"} no total.
-            </div>
+            <Input type="number" min={1} max={60} value={repeatCount} onChange={(e) => setRepeatCount(Math.max(1, Math.min(60, Number(e.target.value) || 1)))} />
+            <div className="text-xs text-muted-foreground">Serão criadas {repeatCount} {repeatCount === 1 ? "conta" : "contas"} no total.</div>
           </div>
         )}
       </div>
