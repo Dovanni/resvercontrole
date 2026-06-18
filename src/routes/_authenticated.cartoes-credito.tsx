@@ -451,7 +451,7 @@ function LancDialog({ cartoes, userId, onDone }: { cartoes: Cartao[]; userId: st
   const [f, setF] = useState({
     cartao_id: ativos[0]?.id ?? "",
     data: new Date().toISOString().slice(0, 10),
-    descricao: "", categoria: "pessoal" as "combustivel" | "casa" | "pessoal",
+    descricao: "", categoria: "pessoal" as CatKey,
     valor: "", parcelado: false, total_parcelas: 2, observacoes: "",
   });
 
