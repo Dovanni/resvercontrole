@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, FileText, Settings, CalendarDays, TrendingUp, Landmark } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, BarChartBig, FileText, Settings, CalendarDays, TrendingUp, Landmark } from "lucide-react";
 import { useAuth, type Permission } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { NotificationsBell } from "@/components/notifications";
@@ -8,6 +8,7 @@ import type { ReactNode } from "react";
 const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, perm: "view:dashboard" },
   { to: "/bi", label: "BI", icon: BarChart3, perm: "view:bi" },
+  { to: "/curva-abc", label: "Curva ABC", icon: BarChartBig, perm: "view:bi" },
   { to: "/clientes", label: "Clientes", icon: Users, perm: "view:clients" },
   { to: "/fornecedores", label: "Fornecedores", icon: Truck, perm: "view:suppliers" },
   { to: "/produtos", label: "Produtos", icon: Package, perm: "view:products" },
