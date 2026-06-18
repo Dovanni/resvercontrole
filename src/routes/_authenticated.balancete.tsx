@@ -128,23 +128,6 @@ function BalancetePage() {
     },
   });
 
-  // Receitas agrupadas por conta bancária → categoria (somente entradas)
-  const receitasPorConta = useMemo(() => {
-    const accIdx: Record<string, { id: string; name: string; bank: string; color: string }> = {};
-    for (const a of bankAccounts ?? []) accIdx[a.id] = a;
-    const grouped: Record<string, { account: { id: string; name: string; bank: string; color: string }; cats: Record<string, number>; subtotal: number }> = {};
-    for (const m of bankMovs ?? []) {
-      if (m.type !== "entrada") continue;
-      const acc = accIdx[m.account_id];
-      if (!acc) continue;
-      const cat = m.category || "Outros";
-      if (!grouped[acc.id]) grouped[acc.id] = { account: acc, cats: {}, subtotal: 0 };
-      const v = Number(m.amount || 0);
-      grouped[acc.id].cats[cat] = (grouped[acc.id].cats[cat] ?? 0) + v;
-      grouped[acc.id].subtotal += v;
-    }
-    return Object.values(grouped).sort((a, b) => a.account.name.localeCompare(b.account.name));
-  }, [bankAccounts, bankMovs]);
 
   const totalEntradas = useMemo(
     () => (bankMovs ?? []).filter((m) => m.type === "entrada").reduce((s, m) => s + Number(m.amount || 0), 0),
