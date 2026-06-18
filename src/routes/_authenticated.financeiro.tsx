@@ -104,15 +104,18 @@ function FinancePage() {
         title="Financeiro"
         subtitle="Entradas e saídas do seu negócio"
         action={
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-primary text-primary-foreground"><Plus className="size-4 mr-1" /> Nova movimentação</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle className="font-display">Nova movimentação</DialogTitle></DialogHeader>
-              <EntryForm onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["finance"] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); }} />
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <Link to="/balancete"><Button variant="outline"><Scale className="size-4 mr-1" /> Balancete</Button></Link>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-primary text-primary-foreground"><Plus className="size-4 mr-1" /> Nova movimentação</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle className="font-display">Nova movimentação</DialogTitle></DialogHeader>
+                <EntryForm onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["finance"] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); }} />
+              </DialogContent>
+            </Dialog>
+          </div>
         }
       />
 
