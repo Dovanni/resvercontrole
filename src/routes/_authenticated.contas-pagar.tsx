@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -11,12 +11,43 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Plus, Trash2, CheckCircle2, AlertCircle, Pencil, ArrowUpDown } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, AlertCircle, Pencil, ArrowUpDown, Download, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
 import { useConfirm } from "@/components/confirm-dialog";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { CategoriasManagerDialog, useCategoriasContasPagar } from "@/components/categorias-contas-pagar-manager";
+import * as XLSX from "xlsx";
+
+type PeriodPreset = "all" | "today" | "week" | "month" | "next30" | "next90" | "custom";
+type GroupBy = "none" | "month" | "supplier" | "category";
+
+function computePresetRange(preset: PeriodPreset): { from: string; to: string } {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  if (preset === "today") return { from: iso(today), to: iso(today) };
+  if (preset === "week") {
+    const day = today.getDay(); const start = new Date(today); start.setDate(today.getDate() - day);
+    const end = new Date(start); end.setDate(start.getDate() + 6);
+    return { from: iso(start), to: iso(end) };
+  }
+  if (preset === "month") {
+    const start = new Date(today.getFullYear(), today.getMonth(), 1);
+    const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    return { from: iso(start), to: iso(end) };
+  }
+  if (preset === "next30") {
+    const end = new Date(today); end.setDate(today.getDate() + 30);
+    return { from: iso(today), to: iso(end) };
+  }
+  if (preset === "next90") {
+    const end = new Date(today); end.setDate(today.getDate() + 90);
+    return { from: iso(today), to: iso(end) };
+  }
+  return { from: "", to: "" };
+}
+
+const MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
 export const Route = createFileRoute("/_authenticated/contas-pagar")({
   head: () => ({ meta: [{ title: "Contas a pagar — Rosé" }] }),
@@ -63,13 +94,28 @@ function PayablesPage() {
   const [editTarget, setEditTarget] = useState<Payable | null>(null);
 
   // filters
+  const [preset, setPreset] = useState<PeriodPreset>("all");
   const [fDateFrom, setFDateFrom] = useState("");
   const [fDateTo, setFDateTo] = useState("");
   const [fSupplier, setFSupplier] = useState("__all__");
   const [fCategory, setFCategory] = useState("__all__");
   const [fStatus, setFStatus] = useState("__all__");
   const [fSearch, setFSearch] = useState("");
+  const [groupBy, setGroupBy] = useState<GroupBy>("none");
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [sort, setSort] = useState<{ key: SortKey; dir: "asc" | "desc" }>({ key: "due_date", dir: "asc" });
+
+  const applyPreset = (p: PeriodPreset) => {
+    setPreset(p);
+    if (p === "all") { setFDateFrom(""); setFDateTo(""); return; }
+    if (p === "custom") return;
+    const r = computePresetRange(p);
+    setFDateFrom(r.from); setFDateTo(r.to);
+  };
+  const clearFilters = () => {
+    setPreset("all"); setFDateFrom(""); setFDateTo("");
+    setFSupplier("__all__"); setFCategory("__all__"); setFStatus("__all__"); setFSearch("");
+  };
 
   const { data } = useQuery({
     queryKey: ["payables"],
@@ -107,18 +153,6 @@ function PayablesPage() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const totals = useMemo(() => {
-    const pending = (data ?? []).filter(p => p.status === "pendente");
-    const overdue = pending.filter(p => p.due_date < today);
-    return {
-      pendingAmount: pending.reduce((s, p) => s + Number(p.amount), 0),
-      overdueCount: overdue.length,
-      paidThisMonth: (data ?? [])
-        .filter(p => p.status === "pago" && p.paid_at?.slice(0, 7) === new Date().toISOString().slice(0, 7))
-        .reduce((s, p) => s + Number(p.paid_amount || p.amount), 0),
-    };
-  }, [data, today]);
-
   const filtered = useMemo(() => {
     let rows = (data ?? []).slice();
     if (fDateFrom) rows = rows.filter(p => p.due_date >= fDateFrom);
@@ -151,6 +185,50 @@ function PayablesPage() {
     return rows;
   }, [data, fDateFrom, fDateTo, fSupplier, fCategory, fStatus, fSearch, sort, today]);
 
+  const totals = useMemo(() => {
+    const in7 = new Date(); in7.setDate(in7.getDate() + 7);
+    const in7s = in7.toISOString().slice(0, 10);
+    const pending = filtered.filter(p => p.status === "pendente");
+    const overdue = pending.filter(p => p.due_date < today);
+    const paidPeriod = filtered.filter(p => p.status === "pago");
+    const next7 = filtered.filter(p => p.status === "pendente" && p.due_date >= today && p.due_date <= in7s);
+    return {
+      pendingAmount: pending.reduce((s, p) => s + Number(p.amount), 0),
+      overdueCount: overdue.length,
+      paidPeriodAmount: paidPeriod.reduce((s, p) => s + Number(p.paid_amount || p.amount), 0),
+      totalAmount: filtered.reduce((s, p) => s + Number(p.amount), 0),
+      next7Amount: next7.reduce((s, p) => s + Number(p.amount), 0),
+      count: filtered.length,
+    };
+  }, [filtered, today]);
+
+  const grouped = useMemo(() => {
+    if (groupBy === "none") return null;
+    const map = new Map<string, { label: string; items: Payable[]; sortKey: string }>();
+    for (const p of filtered) {
+      let key: string, label: string, sortKey: string;
+      if (groupBy === "month") {
+        key = p.due_date.slice(0, 7);
+        const [y, m] = key.split("-");
+        label = `${MONTH_NAMES[Number(m) - 1]}/${y}`;
+        sortKey = key;
+      } else if (groupBy === "supplier") {
+        key = p.supplier_id ?? "__none__";
+        label = p.suppliers?.name ?? "Sem fornecedor";
+        sortKey = label.toLowerCase();
+      } else {
+        key = p.category;
+        label = p.category;
+        sortKey = key;
+      }
+      if (!map.has(key)) map.set(key, { label, items: [], sortKey });
+      map.get(key)!.items.push(p);
+    }
+    return Array.from(map.entries())
+      .map(([key, v]) => ({ key, ...v, subtotal: v.items.reduce((s, p) => s + Number(p.amount), 0) }))
+      .sort((a, b) => a.sortKey < b.sortKey ? -1 : 1);
+  }, [filtered, groupBy]);
+
   const remove = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("payables").delete().eq("id", id); if (error) throw error; },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["payables"] }); toast.success("Removido"); },
@@ -177,6 +255,85 @@ function PayablesPage() {
     return Array.from(set).sort();
   }, [data]);
 
+  const periodLabel = () => {
+    if (preset === "today") return "hoje";
+    if (preset === "week") return "semana";
+    if (preset === "month") return "mes";
+    if (preset === "next30") return "prox30dias";
+    if (preset === "next90") return "prox3meses";
+    if (fDateFrom || fDateTo) return `${fDateFrom || "inicio"}_a_${fDateTo || "fim"}`;
+    return "todos";
+  };
+
+  const exportXlsx = () => {
+    const rows: any[] = filtered.map(p => ({
+      Vencimento: p.due_date,
+      Descrição: p.description,
+      Fornecedor: p.suppliers?.name ?? "",
+      Categoria: p.category,
+      Status: p.status === "pendente" && p.due_date < today ? "atrasado" : p.status,
+      Valor: Number(p.amount),
+    }));
+    rows.push({ Vencimento: "", Descrição: "TOTAL", Fornecedor: "", Categoria: "", Status: "", Valor: totals.totalAmount });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Contas a Pagar");
+    XLSX.writeFile(wb, `contas_pagar_${periodLabel()}.xlsx`);
+  };
+
+  const renderRow = (p: Payable) => {
+    const overdue = p.status === "pendente" && p.due_date < today;
+    return (
+      <TableRow key={p.id}>
+        <TableCell className={overdue ? "text-destructive font-medium" : "text-muted-foreground"}>
+          <InlineDate value={p.due_date} onSave={async (v) => {
+            const { error } = await supabase.from("payables").update({ due_date: v }).eq("id", p.id);
+            if (error) throw error;
+            qc.invalidateQueries({ queryKey: ["payables"] });
+          }} />
+        </TableCell>
+        <TableCell className="font-medium">
+          <InlineText value={p.description} onSave={async (v) => {
+            if (!v.trim()) throw new Error("Descrição obrigatória");
+            const { error } = await supabase.from("payables").update({ description: v.trim() }).eq("id", p.id);
+            if (error) throw error;
+            qc.invalidateQueries({ queryKey: ["payables"] });
+          }} />
+        </TableCell>
+        <TableCell className="text-muted-foreground text-sm">{p.suppliers?.name ?? "—"}</TableCell>
+        <TableCell className="capitalize text-muted-foreground text-sm">{p.category}</TableCell>
+        <TableCell><StatusBadge status={overdue ? "atrasado" : p.status} /></TableCell>
+        <TableCell className="text-right font-medium">
+          <InlineNumber value={Number(p.amount)} onSave={async (v) => {
+            if (v <= 0) throw new Error("Informe um valor maior que zero");
+            const { error } = await supabase.from("payables").update({ amount: v }).eq("id", p.id);
+            if (error) throw error;
+            qc.invalidateQueries({ queryKey: ["payables"] });
+          }} />
+        </TableCell>
+        <TableCell className="text-right whitespace-nowrap">
+          <Button variant="ghost" size="icon" title="Editar" onClick={() => setEditTarget(p)}>
+            <Pencil className="size-4" />
+          </Button>
+          {p.status !== "pago" && p.status !== "cancelado" && (
+            <Button variant="ghost" size="icon" title="Marcar como pago" onClick={() => setPayTarget(p)}>
+              <CheckCircle2 className="size-4 text-success" />
+            </Button>
+          )}
+          <Button variant="ghost" size="icon" onClick={async () => {
+            if (await confirm({ title: "Excluir conta?", description: `A conta "${p.description}" será removida permanentemente.` })) remove.mutate(p.id);
+          }}>
+            <Trash2 className="size-4 text-destructive" />
+          </Button>
+        </TableCell>
+      </TableRow>
+    );
+  };
+
+  const footerTotalPending = filtered.filter(p => p.status === "pendente").reduce((s, p) => s + Number(p.amount), 0);
+  const footerTotalPaid = filtered.filter(p => p.status === "pago").reduce((s, p) => s + Number(p.paid_amount || p.amount), 0);
+
+
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <PageHeader
@@ -198,7 +355,7 @@ function PayablesPage() {
         }
       />
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <Card className="shadow-soft"><CardContent className="p-5">
           <div className="text-2xl font-display">{brl(totals.pendingAmount)}</div>
           <div className="text-xs text-muted-foreground mt-1">Em aberto</div>
@@ -208,58 +365,90 @@ function PayablesPage() {
           <div className="text-xs text-muted-foreground mt-1">Em atraso</div>
         </CardContent></Card>
         <Card className="shadow-soft"><CardContent className="p-5">
-          <div className="text-2xl font-display">{brl(totals.paidThisMonth)}</div>
-          <div className="text-xs text-muted-foreground mt-1">Pago este mês</div>
+          <div className="text-2xl font-display">{brl(totals.paidPeriodAmount)}</div>
+          <div className="text-xs text-muted-foreground mt-1">Pago no período</div>
+        </CardContent></Card>
+        <Card className="shadow-soft"><CardContent className="p-5">
+          <div className="text-2xl font-display">{brl(totals.totalAmount)}</div>
+          <div className="text-xs text-muted-foreground mt-1">Total do período</div>
+        </CardContent></Card>
+        <Card className="shadow-soft"><CardContent className="p-5">
+          <div className="text-2xl font-display">{brl(totals.next7Amount)}</div>
+          <div className="text-xs text-muted-foreground mt-1">Vence em 7 dias</div>
         </CardContent></Card>
       </div>
 
       <Card className="shadow-soft mb-4">
-        <CardContent className="p-4 grid grid-cols-2 md:grid-cols-6 gap-3">
-          <div className="space-y-1">
-            <Label className="text-xs">De</Label>
-            <Input type="date" value={fDateFrom} onChange={(e) => setFDateFrom(e.target.value)} />
+        <CardContent className="p-4 space-y-3">
+          <div className="flex flex-wrap gap-2 items-center">
+            {([
+              ["all", "Todos"], ["today", "Hoje"], ["week", "Esta semana"], ["month", "Este mês"],
+              ["next30", "Próximos 30 dias"], ["next90", "Próximos 3 meses"], ["custom", "Personalizado"],
+            ] as [PeriodPreset, string][]).map(([k, l]) => (
+              <Button key={k} size="sm" variant={preset === k ? "default" : "outline"} onClick={() => applyPreset(k)}>{l}</Button>
+            ))}
+            {preset === "custom" && (
+              <>
+                <Input type="date" className="w-auto" value={fDateFrom} onChange={(e) => setFDateFrom(e.target.value)} />
+                <Input type="date" className="w-auto" value={fDateTo} onChange={(e) => setFDateTo(e.target.value)} />
+              </>
+            )}
           </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Até</Label>
-            <Input type="date" value={fDateTo} onChange={(e) => setFDateTo(e.target.value)} />
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+            <div className="space-y-1 md:col-span-2">
+              <Label className="text-xs">Buscar descrição</Label>
+              <Input value={fSearch} onChange={(e) => setFSearch(e.target.value)} placeholder="Buscar…" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Fornecedor</Label>
+              <Select value={fSupplier} onValueChange={setFSupplier}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Todos</SelectItem>
+                  <SelectItem value="__none__">Sem fornecedor</SelectItem>
+                  {(suppliers ?? []).map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Categoria</Label>
+              <Select value={fCategory} onValueChange={setFCategory}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Todas</SelectItem>
+                  {categoryOptions.map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Status</Label>
+              <Select value={fStatus} onValueChange={setFStatus}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Todos</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="pago">Pago</SelectItem>
+                  <SelectItem value="atrasado">Atrasado</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Agrupar por</Label>
+              <Select value={groupBy} onValueChange={(v) => setGroupBy(v as GroupBy)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem agrupamento</SelectItem>
+                  <SelectItem value="month">Por mês</SelectItem>
+                  <SelectItem value="supplier">Por fornecedor</SelectItem>
+                  <SelectItem value="category">Por categoria</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Fornecedor</Label>
-            <Select value={fSupplier} onValueChange={setFSupplier}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">Todos</SelectItem>
-                <SelectItem value="__none__">Sem fornecedor</SelectItem>
-                {(suppliers ?? []).map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Categoria</Label>
-            <Select value={fCategory} onValueChange={setFCategory}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">Todas</SelectItem>
-                {categoryOptions.map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Status</Label>
-            <Select value={fStatus} onValueChange={setFStatus}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">Todos</SelectItem>
-                <SelectItem value="pendente">Pendente</SelectItem>
-                <SelectItem value="pago">Pago</SelectItem>
-                <SelectItem value="atrasado">Atrasado</SelectItem>
-                <SelectItem value="cancelado">Cancelado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Buscar descrição</Label>
-            <Input value={fSearch} onChange={(e) => setFSearch(e.target.value)} placeholder="Buscar…" />
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" size="sm" onClick={clearFilters}>Limpar filtros</Button>
+            <Button variant="outline" size="sm" onClick={exportXlsx}><Download className="size-4 mr-1" />Exportar Excel</Button>
           </div>
         </CardContent>
       </Card>
@@ -282,61 +471,43 @@ function PayablesPage() {
               {filtered.length === 0 && (
                 <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Nenhuma conta encontrada.</TableCell></TableRow>
               )}
-              {pageItems.map(p => {
-                const overdue = p.status === "pendente" && p.due_date < today;
+              {grouped === null && pageItems.map(renderRow)}
+              {grouped !== null && grouped.map(g => {
+                const isCollapsed = collapsed[g.key];
                 return (
-                  <TableRow key={p.id}>
-                    <TableCell className={overdue ? "text-destructive font-medium" : "text-muted-foreground"}>
-                      <InlineDate value={p.due_date} onSave={async (v) => {
-                        const { error } = await supabase.from("payables").update({ due_date: v }).eq("id", p.id);
-                        if (error) throw error;
-                        qc.invalidateQueries({ queryKey: ["payables"] });
-                      }} />
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      <InlineText value={p.description} onSave={async (v) => {
-                        if (!v.trim()) throw new Error("Descrição obrigatória");
-                        const { error } = await supabase.from("payables").update({ description: v.trim() }).eq("id", p.id);
-                        if (error) throw error;
-                        qc.invalidateQueries({ queryKey: ["payables"] });
-                      }} />
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{p.suppliers?.name ?? "—"}</TableCell>
-                    <TableCell className="capitalize text-muted-foreground text-sm">{p.category}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={overdue ? "atrasado" : p.status} />
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      <InlineNumber value={Number(p.amount)} onSave={async (v) => {
-                        if (v <= 0) throw new Error("Informe um valor maior que zero");
-                        const { error } = await supabase.from("payables").update({ amount: v }).eq("id", p.id);
-                        if (error) throw error;
-                        qc.invalidateQueries({ queryKey: ["payables"] });
-                      }} />
-                    </TableCell>
-                    <TableCell className="text-right whitespace-nowrap">
-                      <Button variant="ghost" size="icon" title="Editar" onClick={() => setEditTarget(p)}>
-                        <Pencil className="size-4" />
-                      </Button>
-                      {p.status !== "pago" && p.status !== "cancelado" && (
-                        <Button variant="ghost" size="icon" title="Marcar como pago" onClick={() => setPayTarget(p)}>
-                          <CheckCircle2 className="size-4 text-success" />
-                        </Button>
-                      )}
-                      <Button variant="ghost" size="icon" onClick={async () => {
-                        if (await confirm({ title: "Excluir conta?", description: `A conta "${p.description}" será removida permanentemente.` })) remove.mutate(p.id);
-                      }}>
-                        <Trash2 className="size-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                  <React.Fragment key={g.key}>
+                    <TableRow className="bg-muted/40">
+                      <TableCell colSpan={7}>
+                        <button className="inline-flex items-center gap-2 font-medium" onClick={() => setCollapsed(c => ({ ...c, [g.key]: !c[g.key] }))}>
+                          {isCollapsed ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
+                          <span className="capitalize">{g.label}</span>
+                          <span className="text-muted-foreground text-xs">({g.items.length} · {brl(g.subtotal)})</span>
+                        </button>
+                      </TableCell>
+                    </TableRow>
+                    {!isCollapsed && g.items.map(renderRow)}
+                    {!isCollapsed && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-right text-xs text-muted-foreground">Subtotal</TableCell>
+                        <TableCell className="text-right font-medium">{brl(g.subtotal)}</TableCell>
+                        <TableCell />
+                      </TableRow>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </TableBody>
           </Table>
-          <DataPagination page={page} totalPages={totalPages} total={total} onChange={setPage} />
+          <div className="border-t p-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm bg-muted/30">
+            <div><span className="text-muted-foreground">Lançamentos:</span> <strong>{totals.count}</strong></div>
+            <div><span className="text-muted-foreground">Total filtrado:</span> <strong>{brl(totals.totalAmount)}</strong></div>
+            <div><span className="text-muted-foreground">Pendente:</span> <strong>{brl(footerTotalPending)}</strong></div>
+            <div><span className="text-muted-foreground">Pago:</span> <strong>{brl(footerTotalPaid)}</strong></div>
+          </div>
+          {grouped === null && <DataPagination page={page} totalPages={totalPages} total={total} onChange={setPage} />}
         </CardContent>
       </Card>
+
 
       <Dialog open={!!payTarget} onOpenChange={(o) => !o && setPayTarget(null)}>
         <DialogContent>
