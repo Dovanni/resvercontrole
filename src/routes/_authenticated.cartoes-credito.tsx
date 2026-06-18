@@ -224,7 +224,10 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [editOpen, setEditOpen] = useState(false);
-  const usado = lancamentos.filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno).reduce((s, l) => s + Number(l.valor), 0);
+  // Limite usado = todas as parcelas pendentes (fatura atual + futuras)
+  const usado = lancamentos
+    .filter((l) => l.ano_fatura > curAno || (l.ano_fatura === curAno && l.mes_fatura >= curMes))
+    .reduce((s, l) => s + Number(l.valor), 0);
   const disp = Math.max(0, Number(cartao.limite_total) - usado);
   const pct = cartao.limite_total > 0 ? Math.min(100, (usado / cartao.limite_total) * 100) : 0;
   const catTotals = CAT_KEYS.map((k) => ({
