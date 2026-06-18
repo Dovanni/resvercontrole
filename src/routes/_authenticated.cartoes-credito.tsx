@@ -43,7 +43,7 @@ type Lancamento = {
   cartao_id: string;
   data: string;
   descricao: string;
-  categoria: "combustivel" | "casa" | "pessoal";
+  categoria: "combustivel" | "casa" | "pessoal" | "fornecedores";
   valor: number;
   parcelado: boolean;
   total_parcelas: number;
