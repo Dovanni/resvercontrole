@@ -601,7 +601,7 @@ function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: L
   const filtered = lancamentos.filter((l) => l.mes_fatura === mesN && l.ano_fatura === anoN);
   const total = filtered.reduce((s, l) => s + Number(l.valor), 0);
   const disp = Math.max(0, Number(cartao.limite_total) - total);
-  const catTotals = (["combustivel", "casa", "pessoal"] as const).map((k) => ({
+  const catTotals = CAT_KEYS.map((k) => ({
     k, valor: filtered.filter((l) => l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
   }));
   const pieData = catTotals.map(({ k, valor }) => ({ name: CAT_META[k].label, value: valor, color: CAT_META[k].color }));
