@@ -864,6 +864,7 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
               <Bar dataKey="Combustível" stackId="a" fill={CAT_META.combustivel.color} />
               <Bar dataKey="Casa" stackId="a" fill={CAT_META.casa.color} />
               <Bar dataKey="Pessoal" stackId="a" fill={CAT_META.pessoal.color} />
+              <Bar dataKey="Fornecedores" stackId="a" fill={CAT_META.fornecedores.color} />
             </BarChart>
           </ResponsiveContainer>
         </div>
