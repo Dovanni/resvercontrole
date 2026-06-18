@@ -909,6 +909,7 @@ function HistoricoMensal({ cartoes, lancamentos }: { cartoes: Cartao[]; lancamen
             <Line type="monotone" dataKey="Combustível" stroke={CAT_META.combustivel.color} strokeWidth={2} />
             <Line type="monotone" dataKey="Casa" stroke={CAT_META.casa.color} strokeWidth={2} />
             <Line type="monotone" dataKey="Pessoal" stroke={CAT_META.pessoal.color} strokeWidth={2} />
+            <Line type="monotone" dataKey="Fornecedores" stroke={CAT_META.fornecedores.color} strokeWidth={2} />
           </LineChart>
         </ResponsiveContainer>
       </div>
