@@ -193,7 +193,7 @@ function CartoesPage() {
               <Plus className="size-4 mr-1" /> Novo lançamento
             </Button>
           </DialogTrigger>
-          <LancDialog cartoes={cartoes} userId={user?.id ?? ""} onDone={() => { setOpenLanc(false); invalidate(); }} />
+          <LancDialog cartoes={cartoes} lancamentos={lancamentos} faturas={faturas} userId={user?.id ?? ""} onDone={() => { setOpenLanc(false); invalidate(); }} />
         </Dialog>
       </div>
 
