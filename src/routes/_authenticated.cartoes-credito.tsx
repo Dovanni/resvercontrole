@@ -150,13 +150,13 @@ function CartoesPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
-      <PageHeader title="Cartões de Crédito" subtitle="Gerencie até 6 cartões com categorias Combustível, Casa e Pessoal" />
+      <PageHeader title="Cartões de Crédito" subtitle="Gestão de cartões com categorias Combustível, Casa e Pessoal" />
 
       <div className="flex flex-wrap gap-2 mb-6">
         <Dialog open={openCartao} onOpenChange={setOpenCartao}>
           <DialogTrigger asChild>
-            <Button variant="outline" disabled={cartoes.length >= 6}>
-              <Plus className="size-4 mr-1" /> Novo cartão {cartoes.length >= 6 && "(limite 6)"}
+            <Button variant="outline">
+              <Plus className="size-4 mr-1" /> Novo cartão
             </Button>
           </DialogTrigger>
           <CartaoDialog contas={contas} userId={user?.id ?? ""} onDone={() => { setOpenCartao(false); invalidate(); }} />
@@ -171,20 +171,10 @@ function CartoesPage() {
         </Dialog>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        {cartoes.length === 0 && (
-          <Card className="shadow-soft col-span-full"><CardContent className="p-8 text-center text-muted-foreground">
-            Nenhum cartão cadastrado. Clique em "Novo cartão" para começar.
-          </CardContent></Card>
-        )}
-        {cartoes.map((c) => (
-          <CartaoCard key={c.id} cartao={c} lancamentos={lancByCartao[c.id] ?? []} faturas={faturas.filter((f) => f.cartao_id === c.id)} curMes={curMes} curAno={curAno} onClick={() => setTab(c.id)} onPaga={invalidate} />
-        ))}
-      </div>
-
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex flex-wrap h-auto">
           <TabsTrigger value="geral">Visão Geral</TabsTrigger>
+          <TabsTrigger value="cartoes">Meus Cartões</TabsTrigger>
           <TabsTrigger value="historico">Histórico Mensal</TabsTrigger>
           {cartoes.map((c) => (
             <TabsTrigger key={c.id} value={c.id}>{c.nome}</TabsTrigger>
@@ -192,7 +182,20 @@ function CartoesPage() {
         </TabsList>
 
         <TabsContent value="geral" className="mt-4">
-          <VisaoGeral cartoes={cartoes} lancamentos={lancamentos} curMes={curMes} curAno={curAno} />
+          <VisaoGeral cartoes={cartoes} lancamentos={lancamentos} faturas={faturas} curMes={curMes} curAno={curAno} />
+        </TabsContent>
+
+        <TabsContent value="cartoes" className="mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[80vh] overflow-y-auto pr-1">
+            {cartoes.length === 0 && (
+              <Card className="shadow-soft col-span-full"><CardContent className="p-8 text-center text-muted-foreground">
+                Nenhum cartão cadastrado. Clique em "Novo cartão" para começar.
+              </CardContent></Card>
+            )}
+            {cartoes.map((c) => (
+              <CartaoCard key={c.id} cartao={c} lancamentos={lancByCartao[c.id] ?? []} faturas={faturas.filter((f) => f.cartao_id === c.id)} curMes={curMes} curAno={curAno} onClick={() => setTab(c.id)} onPaga={invalidate} />
+            ))}
+          </div>
         </TabsContent>
 
         <TabsContent value="historico" className="mt-4">
