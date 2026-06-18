@@ -359,17 +359,23 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
   );
 }
 
-function CartaoDialog({ contas, userId, onDone }: { contas: { id: string; name: string }[]; userId: string; onDone: () => void }) {
+function CartaoDialog({ contas, userId, cartao, onDone }: { contas: { id: string; name: string }[]; userId: string; cartao?: Cartao; onDone: () => void }) {
+  const isEdit = !!cartao;
   const [f, setF] = useState({
-    nome: "", bandeira: "Visa", limite_total: "", dia_vencimento: "10", dia_fechamento: "1",
-    cor: COR_DEFAULTS[0], conta_bancaria_id: "", status: "ativo",
+    nome: cartao?.nome ?? "",
+    bandeira: cartao?.bandeira ?? "Visa",
+    limite_total: cartao?.limite_total != null ? String(cartao.limite_total) : "",
+    dia_vencimento: String(cartao?.dia_vencimento ?? 10),
+    dia_fechamento: String(cartao?.dia_fechamento ?? 1),
+    cor: cartao?.cor ?? COR_DEFAULTS[0],
+    conta_bancaria_id: cartao?.conta_bancaria_id ?? "",
+    status: cartao?.status ?? "ativo",
   });
 
   const save = useMutation({
     mutationFn: async () => {
       if (!f.nome) throw new Error("Informe o nome");
-      const { error } = await (supabase.from("cartoes_credito" as any).insert({
-        user_id: userId,
+      const payload = {
         nome: f.nome, bandeira: f.bandeira,
         limite_total: Number(f.limite_total) || 0,
         dia_vencimento: Number(f.dia_vencimento),
@@ -377,16 +383,22 @@ function CartaoDialog({ contas, userId, onDone }: { contas: { id: string; name: 
         cor: f.cor,
         conta_bancaria_id: f.conta_bancaria_id || null,
         status: f.status,
-      }));
-      if (error) throw error;
+      };
+      if (isEdit) {
+        const { error } = await (supabase.from("cartoes_credito" as any).update(payload).eq("id", cartao!.id));
+        if (error) throw error;
+      } else {
+        const { error } = await (supabase.from("cartoes_credito" as any).insert({ user_id: userId, ...payload }));
+        if (error) throw error;
+      }
     },
-    onSuccess: () => { toast.success("Cartão criado"); onDone(); },
+    onSuccess: () => { toast.success(isEdit ? "Cartão atualizado" : "Cartão criado"); onDone(); },
     onError: (e: any) => toast.error(e.message),
   });
 
   return (
     <DialogContent className="max-w-md">
-      <DialogHeader><DialogTitle>Novo cartão</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>{isEdit ? "Editar cartão" : "Novo cartão"}</DialogTitle></DialogHeader>
       <div className="space-y-3">
         <div><Label>Nome</Label><Input value={f.nome} onChange={(e) => setF({ ...f, nome: e.target.value })} placeholder="Nubank Roxinho" /></div>
         <div className="grid grid-cols-2 gap-3">
