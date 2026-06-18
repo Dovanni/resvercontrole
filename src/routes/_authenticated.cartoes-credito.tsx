@@ -224,7 +224,10 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [editOpen, setEditOpen] = useState(false);
-  const usado = lancamentos.filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno).reduce((s, l) => s + Number(l.valor), 0);
+  // Limite usado = todas as parcelas pendentes (fatura atual + futuras)
+  const usado = lancamentos
+    .filter((l) => l.ano_fatura > curAno || (l.ano_fatura === curAno && l.mes_fatura >= curMes))
+    .reduce((s, l) => s + Number(l.valor), 0);
   const disp = Math.max(0, Number(cartao.limite_total) - usado);
   const pct = cartao.limite_total > 0 ? Math.min(100, (usado / cartao.limite_total) * 100) : 0;
   const catTotals = CAT_KEYS.map((k) => ({
@@ -594,8 +597,17 @@ function CartaoSelector({ cartoes, value, onChange }: { cartoes: Cartao[]; value
 
 function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: Lancamento[] }) {
   const today = new Date();
-  const [mes, setMes] = useState(String(today.getMonth() + 1));
-  const [ano, setAno] = useState(String(today.getFullYear()));
+  const curMes = today.getMonth() + 1;
+  const curAno = today.getFullYear();
+  // Default to first fatura with lançamentos (current or future), else current month
+  const defaultFat = useMemo(() => {
+    const futuras = lancamentos
+      .filter((l) => l.ano_fatura > curAno || (l.ano_fatura === curAno && l.mes_fatura >= curMes))
+      .sort((a, b) => a.ano_fatura - b.ano_fatura || a.mes_fatura - b.mes_fatura);
+    return futuras[0] ? { mes: futuras[0].mes_fatura, ano: futuras[0].ano_fatura } : { mes: curMes, ano: curAno };
+  }, [lancamentos, curMes, curAno]);
+  const [mes, setMes] = useState(String(defaultFat.mes));
+  const [ano, setAno] = useState(String(defaultFat.ano));
   const mesN = Number(mes), anoN = Number(ano);
 
   const filtered = lancamentos.filter((l) => l.mes_fatura === mesN && l.ano_fatura === anoN);
