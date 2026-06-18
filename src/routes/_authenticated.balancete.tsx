@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FileSpreadsheet, FileText, TrendingUp, TrendingDown, Scale } from "lucide-react";
 import { brl, dateBR } from "@/lib/format";
+import { CashProjection } from "@/components/cash-projection";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell, Line, ComposedChart, CartesianGrid,
