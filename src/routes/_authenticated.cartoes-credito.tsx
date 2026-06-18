@@ -94,6 +94,27 @@ function vencimentoDate(ano: number, mes: number, diaVenc: number) {
   return new Date(ano, mes - 1, Math.min(diaVenc, last));
 }
 
+// Limite usado = soma de TODAS as parcelas cujas faturas ainda não foram pagas.
+// Ao quitar uma fatura, as parcelas daquele mês são liberadas do limite.
+function calcUsado(cartaoId: string, lancs: Lancamento[], faturas: Fatura[]) {
+  const pagas = new Set(
+    faturas
+      .filter((f) => f.cartao_id === cartaoId && f.status === "paga")
+      .map((f) => `${f.ano}-${f.mes}`),
+  );
+  return lancs
+    .filter((l) => l.cartao_id === cartaoId && !pagas.has(`${l.ano_fatura}-${l.mes_fatura}`))
+    .reduce((s, l) => s + Number(l.valor), 0);
+}
+
+function limiteStatus(limite: number, usado: number) {
+  const disp = Number(limite) - usado;
+  const pct = limite > 0 ? (usado / limite) * 100 : 0;
+  if (disp < 0) return { disp, pct, level: "estourado" as const };
+  if (pct >= 80) return { disp, pct, level: "critico" as const };
+  return { disp, pct, level: "ok" as const };
+}
+
 function CartoesPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -172,7 +193,7 @@ function CartoesPage() {
               <Plus className="size-4 mr-1" /> Novo lançamento
             </Button>
           </DialogTrigger>
-          <LancDialog cartoes={cartoes} userId={user?.id ?? ""} onDone={() => { setOpenLanc(false); invalidate(); }} />
+          <LancDialog cartoes={cartoes} lancamentos={lancamentos} faturas={faturas} userId={user?.id ?? ""} onDone={() => { setOpenLanc(false); invalidate(); }} />
         </Dialog>
       </div>
 
@@ -209,7 +230,7 @@ function CartoesPage() {
 
         {cartoes.map((c) => (
           <TabsContent key={c.id} value={c.id} className="mt-4">
-            <CartaoDetalhe cartao={c} lancamentos={lancByCartao[c.id] ?? []} />
+            <CartaoDetalhe cartao={c} lancamentos={lancByCartao[c.id] ?? []} faturas={faturas.filter((f) => f.cartao_id === c.id)} />
           </TabsContent>
         ))}
       </Tabs>
@@ -224,12 +245,10 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [editOpen, setEditOpen] = useState(false);
-  // Limite usado = todas as parcelas pendentes (fatura atual + futuras)
-  const usado = lancamentos
-    .filter((l) => l.ano_fatura > curAno || (l.ano_fatura === curAno && l.mes_fatura >= curMes))
-    .reduce((s, l) => s + Number(l.valor), 0);
-  const disp = Math.max(0, Number(cartao.limite_total) - usado);
-  const pct = cartao.limite_total > 0 ? Math.min(100, (usado / cartao.limite_total) * 100) : 0;
+  // Limite usado = todas parcelas pendentes (fatura não paga)
+  const usado = calcUsado(cartao.id, lancamentos, faturas);
+  const { disp, pct, level } = limiteStatus(Number(cartao.limite_total), usado);
+  const pctVisual = Math.min(100, pct);
   const catTotals = CAT_KEYS.map((k) => ({
     k, total: lancamentos.filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno && l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
   }));
@@ -237,9 +256,12 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
   const vencDate = vencimentoDate(curAno, curMes, cartao.dia_vencimento);
   const diasVenc = Math.ceil((vencDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
   const fat = faturas.find((f) => f.mes === curMes && f.ano === curAno);
+  const totalMesAtual = lancamentos
+    .filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno)
+    .reduce((s, l) => s + Number(l.valor), 0);
   const status: "aberta" | "fechada" | "paga" | "atrasada" =
     fat?.status === "paga" ? "paga"
-    : diasVenc < 0 && usado > 0 ? "atrasada"
+    : diasVenc < 0 && totalMesAtual > 0 ? "atrasada"
     : new Date().getDate() > cartao.dia_fechamento ? "fechada" : "aberta";
 
   const marcarPaga = useMutation({
@@ -247,11 +269,11 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
       const { error } = await (supabase.from("cartoes_faturas" as any).upsert({
         cartao_id: cartao.id,
         user_id: (await supabase.auth.getUser()).data.user?.id,
-        mes: curMes, ano: curAno, valor_total: usado, status: "paga",
+        mes: curMes, ano: curAno, valor_total: totalMesAtual, status: "paga",
         data_pagamento: new Date().toISOString().slice(0, 10),
       }, { onConflict: "cartao_id,ano,mes" }));
       if (error) throw error;
-      if (cartao.conta_bancaria_id && usado > 0) {
+      if (cartao.conta_bancaria_id && totalMesAtual > 0) {
         await supabase.from("bank_movements").insert({
           user_id: (await supabase.auth.getUser()).data.user!.id,
           account_id: cartao.conta_bancaria_id,
@@ -259,7 +281,7 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
           type: "saida",
           category: "Cartão de crédito",
           description: `Fatura ${cartao.nome} — ${String(curMes).padStart(2, "0")}/${curAno}`,
-          amount: usado,
+          amount: totalMesAtual,
           origin: "cartao_fatura",
           reference_id: cartao.id,
         });
@@ -269,12 +291,20 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
     onError: (e: any) => toast.error(e.message),
   });
 
-  const alertaLimite = pct >= 80;
   const alertaVenc = diasVenc >= 0 && diasVenc <= 5 && status !== "paga";
   const alertaAtraso = status === "atrasada";
 
+  const cardBg =
+    level === "estourado" ? "bg-destructive/5 border-destructive/40"
+    : level === "critico" ? "bg-amber-50 border-amber-300"
+    : "";
+  const progressClass =
+    level === "estourado" ? "[&>div]:bg-destructive"
+    : level === "critico" ? "[&>div]:bg-amber-500"
+    : "[&>div]:bg-success";
+
   return (
-    <Card className="shadow-soft overflow-hidden">
+    <Card className={`shadow-soft overflow-hidden ${cardBg}`}>
       <div className="p-5 text-white cursor-pointer" style={{ background: `linear-gradient(135deg, ${cartao.cor}, ${cartao.cor}dd)` }} onClick={onClick}>
         <div className="flex items-center justify-between">
           <CCIcon className="size-6" />
@@ -284,14 +314,24 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
         <div className="text-xs opacity-80 mt-1">Venc. dia {cartao.dia_vencimento} · Fecha dia {cartao.dia_fechamento}</div>
       </div>
       <CardContent className="p-5 space-y-3">
+        {level === "estourado" && (
+          <div className="rounded-md bg-destructive text-destructive-foreground text-xs font-medium px-2 py-1 text-center">
+            ⛔ LIMITE ESTOURADO — Acima em {brl(Math.abs(disp))}
+          </div>
+        )}
+        {level === "critico" && (
+          <div className="rounded-md bg-amber-500 text-white text-xs font-medium px-2 py-1 text-center">
+            ⚠️ LIMITE CRÍTICO — {pct.toFixed(0)}% utilizado
+          </div>
+        )}
         <div className="grid grid-cols-3 gap-2 text-center text-xs">
           <div><div className="text-muted-foreground">Limite</div><div className="font-medium">{brl(cartao.limite_total)}</div></div>
           <div><div className="text-muted-foreground">Usado</div><div className="font-medium text-destructive">{brl(usado)}</div></div>
-          <div><div className="text-muted-foreground">Disponível</div><div className="font-medium text-success">{brl(disp)}</div></div>
+          <div><div className="text-muted-foreground">Disponível</div><div className={`font-medium ${disp < 0 ? "text-destructive" : "text-success"}`}>{brl(disp)}</div></div>
         </div>
         <div>
-          <Progress value={pct} className={`h-2 transition-all ${alertaLimite ? "[&>div]:bg-destructive" : ""}`} />
-          <div className="text-xs text-muted-foreground mt-1">{pct.toFixed(0)}% utilizado</div>
+          <Progress value={pctVisual} className={`h-2 transition-all ${progressClass}`} />
+          <div className={`text-xs mt-1 ${level === "estourado" ? "text-destructive font-medium" : "text-muted-foreground"}`}>{pct.toFixed(0)}% utilizado</div>
         </div>
         <div className="grid grid-cols-2 gap-2 text-xs">
           {catTotals.map(({ k, total }) => {
@@ -313,18 +353,17 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
               : <Badge variant="outline">Aberta</Badge>}
             <div className="text-muted-foreground mt-1">
               {status === "paga" ? `Paga em ${fat?.data_pagamento ? dateBR(fat.data_pagamento) : "-"}`
-                : diasVenc >= 0 ? `Vence em ${diasVenc} dias — ${brl(usado)}` : `Venceu há ${Math.abs(diasVenc)} dias`}
+                : diasVenc >= 0 ? `Vence em ${diasVenc} dias — ${brl(totalMesAtual)}` : `Venceu há ${Math.abs(diasVenc)} dias`}
             </div>
           </div>
-          {status !== "paga" && usado > 0 && (
+          {status !== "paga" && totalMesAtual > 0 && (
             <Button size="sm" variant="outline" onClick={() => marcarPaga.mutate()} disabled={marcarPaga.isPending}>
               <CheckCircle2 className="size-3 mr-1" /> Pagar
             </Button>
           )}
         </div>
-        {(alertaLimite || alertaVenc || alertaAtraso) && (
+        {(alertaVenc || alertaAtraso) && (
           <div className="space-y-1 pt-2 border-t">
-            {alertaLimite && <div className="flex items-center gap-1 text-xs text-destructive"><AlertTriangle className="size-3" /> Limite acima de 80%</div>}
             {alertaVenc && <div className="flex items-center gap-1 text-xs text-amber-600"><Clock className="size-3" /> Vence em {diasVenc} dia(s)</div>}
             {alertaAtraso && <div className="flex items-center gap-1 text-xs text-destructive"><AlertTriangle className="size-3" /> Fatura vencida</div>}
           </div>
@@ -449,7 +488,8 @@ function CartaoDialog({ contas, userId, cartao, onDone }: { contas: { id: string
   );
 }
 
-function LancDialog({ cartoes, userId, onDone }: { cartoes: Cartao[]; userId: string; onDone: () => void }) {
+function LancDialog({ cartoes, lancamentos, faturas, userId, onDone }: { cartoes: Cartao[]; lancamentos: Lancamento[]; faturas: Fatura[]; userId: string; onDone: () => void }) {
+  const confirm = useConfirm();
   const ativos = cartoes.filter((c) => c.status === "ativo");
   const [f, setF] = useState({
     cartao_id: ativos[0]?.id ?? "",
@@ -461,6 +501,10 @@ function LancDialog({ cartoes, userId, onDone }: { cartoes: Cartao[]; userId: st
   const cartao = cartoes.find((c) => c.id === f.cartao_id);
   const valorNum = Number(f.valor) || 0;
   const valorParcela = f.parcelado && f.total_parcelas > 0 ? valorNum / f.total_parcelas : valorNum;
+  const usadoAtual = cartao ? calcUsado(cartao.id, lancamentos, faturas) : 0;
+  const limiteTotal = cartao ? Number(cartao.limite_total) : 0;
+  const novoUsado = usadoAtual + valorNum;
+  const vaiEstourar = !!cartao && novoUsado > limiteTotal;
 
   const save = useMutation({
     mutationFn: async () => {
@@ -536,8 +580,37 @@ function LancDialog({ cartoes, userId, onDone }: { cartoes: Cartao[]; userId: st
           <div className="text-sm text-muted-foreground">{f.total_parcelas}x de <strong>{brl(valorParcela)}</strong></div>
         )}
         <div><Label>Observações</Label><Textarea value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} /></div>
+        {vaiEstourar && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-xs space-y-1">
+            <div className="flex items-center gap-1 font-medium text-destructive"><AlertTriangle className="size-3" /> Este lançamento vai estourar o limite do cartão</div>
+            <div className="grid grid-cols-2 gap-x-3">
+              <span className="text-muted-foreground">Limite total:</span><span className="text-right">{brl(limiteTotal)}</span>
+              <span className="text-muted-foreground">Limite já usado:</span><span className="text-right">{brl(usadoAtual)}</span>
+              <span className="text-muted-foreground">Este lançamento:</span><span className="text-right">{brl(valorNum)}</span>
+              <span className="font-medium">Saldo após:</span><span className="text-right font-medium text-destructive">{brl(limiteTotal - novoUsado)}</span>
+            </div>
+          </div>
+        )}
       </div>
-      <DialogFooter><Button onClick={() => save.mutate()} disabled={save.isPending}>Salvar</Button></DialogFooter>
+      <DialogFooter>
+        <Button
+          onClick={async () => {
+            if (vaiEstourar) {
+              const ok = await confirm({
+                title: "Limite vai estourar",
+                description: `Limite total: ${brl(limiteTotal)}\nLimite já usado: ${brl(usadoAtual)}\nEste lançamento: ${brl(valorNum)}\nSaldo após: ${brl(limiteTotal - novoUsado)}\n\nDeseja continuar mesmo assim?`,
+                confirmText: "Confirmar mesmo assim",
+                destructive: true,
+              });
+              if (!ok) return;
+            }
+            save.mutate();
+          }}
+          disabled={save.isPending}
+        >
+          Salvar
+        </Button>
+      </DialogFooter>
     </DialogContent>
   );
 }
@@ -595,7 +668,7 @@ function CartaoSelector({ cartoes, value, onChange }: { cartoes: Cartao[]; value
   );
 }
 
-function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: Lancamento[] }) {
+function CartaoDetalhe({ cartao, lancamentos, faturas }: { cartao: Cartao; lancamentos: Lancamento[]; faturas: Fatura[] }) {
   const today = new Date();
   const curMes = today.getMonth() + 1;
   const curAno = today.getFullYear();
@@ -609,7 +682,6 @@ function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: L
   const [mes, setMes] = useState(String(defaultFat.mes));
   const [ano, setAno] = useState(String(defaultFat.ano));
   const touchedRef = useRef(false);
-  // Auto-sync month/year to first fatura with data when lançamentos arrive (until user changes it)
   useEffect(() => {
     if (touchedRef.current) return;
     setMes(String(defaultFat.mes));
@@ -621,15 +693,26 @@ function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: L
 
   const filtered = lancamentos.filter((l) => l.mes_fatura === mesN && l.ano_fatura === anoN);
   const total = filtered.reduce((s, l) => s + Number(l.valor), 0);
-  // Limite usado = soma de TODAS as parcelas pendentes (do mês atual em diante)
-  const usadoTotal = lancamentos
-    .filter((l) => l.ano_fatura > curAno || (l.ano_fatura === curAno && l.mes_fatura >= curMes))
-    .reduce((s, l) => s + Number(l.valor), 0);
-  const disp = Math.max(0, Number(cartao.limite_total) - usadoTotal);
+  // Limite usado = todas parcelas com fatura ainda não paga
+  const usadoTotal = calcUsado(cartao.id, lancamentos, faturas);
+  const { disp, pct, level } = limiteStatus(Number(cartao.limite_total), usadoTotal);
   const catTotals = CAT_KEYS.map((k) => ({
     k, valor: filtered.filter((l) => l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
   }));
   const pieData = catTotals.map(({ k, valor }) => ({ name: CAT_META[k].label, value: valor, color: CAT_META[k].color }));
+
+  // Próximas faturas — agrupa lançamentos pendentes por (ano,mes), apenas futuras (incluindo o mês atual)
+  const pagasSet = new Set(faturas.filter((f) => f.status === "paga").map((f) => `${f.ano}-${f.mes}`));
+  const proximasMap: Record<string, { ano: number; mes: number; valor: number; parcelas: number }> = {};
+  for (const l of lancamentos) {
+    const k = `${l.ano_fatura}-${l.mes_fatura}`;
+    if (pagasSet.has(k)) continue;
+    if (l.ano_fatura < curAno || (l.ano_fatura === curAno && l.mes_fatura < curMes)) continue;
+    proximasMap[k] ??= { ano: l.ano_fatura, mes: l.mes_fatura, valor: 0, parcelas: 0 };
+    proximasMap[k].valor += Number(l.valor);
+    proximasMap[k].parcelas += 1;
+  }
+  const proximas = Object.values(proximasMap).sort((a, b) => a.ano - b.ano || a.mes - b.mes);
 
   return (
     <div className="space-y-4">
@@ -656,8 +739,11 @@ function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: L
         <Card className="shadow-soft md:col-span-1"><CardContent className="p-5">
           <div className="text-xs text-muted-foreground">Total gasto no mês</div>
           <div className="text-2xl font-display mt-1">{brl(total)}</div>
-          <div className="text-xs text-muted-foreground mt-3">Limite disponível</div>
-          <div className="text-lg font-medium text-success">{brl(disp)}</div>
+          <div className="text-xs text-muted-foreground mt-3">Limite usado (todas parcelas)</div>
+          <div className="text-base font-medium text-destructive">{brl(usadoTotal)}</div>
+          <div className="text-xs text-muted-foreground mt-2">Limite disponível</div>
+          <div className={`text-lg font-medium ${disp < 0 ? "text-destructive" : "text-success"}`}>{brl(disp)}</div>
+          <div className="text-xs text-muted-foreground mt-1">{pct.toFixed(0)}% utilizado {level === "estourado" && "⛔"}{level === "critico" && "⚠️"}</div>
         </CardContent></Card>
         <Card className="shadow-soft md:col-span-2"><CardContent className="p-5">
           <div className="font-display text-lg mb-2">Distribuição por categoria</div>
@@ -687,6 +773,23 @@ function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: L
                 <TableCell>{CAT_META[l.categoria].emoji} {CAT_META[l.categoria].label}</TableCell>
                 <TableCell>{l.parcelado ? `${l.parcela_atual}/${l.total_parcelas}` : "—"}</TableCell>
                 <TableCell className="text-right font-medium">{brl(Number(l.valor))}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent></Card>
+
+      <Card className="shadow-soft"><CardContent className="p-5">
+        <div className="font-display text-lg mb-3">Próximas faturas</div>
+        <Table>
+          <TableHeader><TableRow><TableHead>Mês</TableHead><TableHead className="text-right">Valor da fatura</TableHead><TableHead className="text-right">Parcelas previstas</TableHead></TableRow></TableHeader>
+          <TableBody>
+            {proximas.length === 0 && <TableRow><TableCell colSpan={3} className="text-center py-6 text-muted-foreground">Sem faturas pendentes.</TableCell></TableRow>}
+            {proximas.map((p) => (
+              <TableRow key={`${p.ano}-${p.mes}`}>
+                <TableCell>{String(p.mes).padStart(2, "0")}/{p.ano}</TableCell>
+                <TableCell className="text-right font-medium">{brl(p.valor)}</TableCell>
+                <TableCell className="text-right">{p.parcelas}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -827,6 +930,58 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
           </Select>
         </div>
       </CardContent></Card>
+
+      {/* Resumo de limites — usado real considerando todas parcelas pendentes */}
+      <Card className="shadow-soft"><CardContent className="p-5">
+        <div className="font-display text-lg mb-3">Resumo de limites</div>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader><TableRow>
+              <TableHead>Cartão</TableHead>
+              <TableHead className="text-right">Limite</TableHead>
+              <TableHead className="text-right">Usado</TableHead>
+              <TableHead className="text-right">Disponível</TableHead>
+              <TableHead className="text-right">% Usado</TableHead>
+              <TableHead className="text-center">Status</TableHead>
+            </TableRow></TableHeader>
+            <TableBody>
+              {(() => {
+                const rows = cartoes.map((c) => {
+                  const u = calcUsado(c.id, lancamentos, faturas);
+                  const st = limiteStatus(Number(c.limite_total), u);
+                  return { c, usado: u, ...st };
+                });
+                const tot = rows.reduce((a, r) => ({ limite: a.limite + Number(r.c.limite_total), usado: a.usado + r.usado }), { limite: 0, usado: 0 });
+                return (
+                  <>
+                    {rows.map(({ c, usado: u, disp, pct, level }) => (
+                      <TableRow key={c.id} className={level === "estourado" ? "bg-destructive/5" : level === "critico" ? "bg-amber-50" : ""}>
+                        <TableCell><span className="inline-block size-3 rounded-full mr-2 align-middle" style={{ background: c.cor }} />{c.nome}</TableCell>
+                        <TableCell className="text-right">{brl(Number(c.limite_total))}</TableCell>
+                        <TableCell className="text-right">{brl(u)}</TableCell>
+                        <TableCell className={`text-right font-medium ${disp < 0 ? "text-destructive" : "text-success"}`}>{brl(disp)}</TableCell>
+                        <TableCell className={`text-right ${level === "estourado" ? "text-destructive font-medium" : level === "critico" ? "text-amber-600 font-medium" : ""}`}>{pct.toFixed(0)}%</TableCell>
+                        <TableCell className="text-center">{level === "estourado" ? "⛔" : level === "critico" ? "⚠️" : "✅"}</TableCell>
+                      </TableRow>
+                    ))}
+                    {rows.length > 0 && (
+                      <TableRow className="font-medium bg-muted/40">
+                        <TableCell>TOTAL</TableCell>
+                        <TableCell className="text-right">{brl(tot.limite)}</TableCell>
+                        <TableCell className="text-right">{brl(tot.usado)}</TableCell>
+                        <TableCell className={`text-right ${tot.limite - tot.usado < 0 ? "text-destructive" : "text-success"}`}>{brl(tot.limite - tot.usado)}</TableCell>
+                        <TableCell className="text-right">{tot.limite > 0 ? ((tot.usado / tot.limite) * 100).toFixed(0) : 0}%</TableCell>
+                        <TableCell />
+                      </TableRow>
+                    )}
+                  </>
+                );
+              })()}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent></Card>
+
 
       {/* Tabela comparativa */}
       <Card className="shadow-soft"><CardContent className="p-0">
