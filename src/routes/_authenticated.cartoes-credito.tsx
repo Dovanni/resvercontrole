@@ -94,6 +94,27 @@ function vencimentoDate(ano: number, mes: number, diaVenc: number) {
   return new Date(ano, mes - 1, Math.min(diaVenc, last));
 }
 
+// Limite usado = soma de TODAS as parcelas cujas faturas ainda não foram pagas.
+// Ao quitar uma fatura, as parcelas daquele mês são liberadas do limite.
+function calcUsado(cartaoId: string, lancs: Lancamento[], faturas: Fatura[]) {
+  const pagas = new Set(
+    faturas
+      .filter((f) => f.cartao_id === cartaoId && f.status === "paga")
+      .map((f) => `${f.ano}-${f.mes}`),
+  );
+  return lancs
+    .filter((l) => l.cartao_id === cartaoId && !pagas.has(`${l.ano_fatura}-${l.mes_fatura}`))
+    .reduce((s, l) => s + Number(l.valor), 0);
+}
+
+function limiteStatus(limite: number, usado: number) {
+  const disp = Number(limite) - usado;
+  const pct = limite > 0 ? (usado / limite) * 100 : 0;
+  if (disp < 0) return { disp, pct, level: "estourado" as const };
+  if (pct >= 80) return { disp, pct, level: "critico" as const };
+  return { disp, pct, level: "ok" as const };
+}
+
 function CartoesPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
