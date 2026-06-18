@@ -349,6 +349,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
         customer_id: customerId || null,
         customer_name: selected?.name ?? (walkInName || null),
         channel, status, payment_method: method, total, discount: discountValue,
+        mercado_pago_fees: Number(mercadoPagoFees) || 0,
         bank_account_id: bankAccountId || null,
       };
 
