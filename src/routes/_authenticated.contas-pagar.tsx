@@ -266,7 +266,7 @@ function PayablesPage() {
   };
 
   const exportXlsx = () => {
-    const rows = filtered.map(p => ({
+    const rows: any[] = filtered.map(p => ({
       Vencimento: p.due_date,
       Descrição: p.description,
       Fornecedor: p.suppliers?.name ?? "",
