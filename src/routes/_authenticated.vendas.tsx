@@ -240,6 +240,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
   const [method, setMethod] = useState("dinheiro");
   const [discount, setDiscount] = useState(0);
   const [discountMode, setDiscountMode] = useState<"reais" | "percent">("reais");
+  const [shipping, setShipping] = useState(0);
   const [items, setItems] = useState<LineItem[]>([]);
   const [bankAccountId, setBankAccountId] = useState<string>("");
   const [loaded, setLoaded] = useState(false);
@@ -281,14 +282,18 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     setDiscount(Number(existing.discount ?? 0));
     setDiscountMode("reais");
     setBankAccountId(existing.bank_account_id ?? "");
-    setItems((existing.sale_items ?? []).map((it: any) => ({
+    const hydratedItems = (existing.sale_items ?? []).map((it: any) => ({
       product_id: it.product_id,
       quantity: Number(it.quantity),
       unit_price: Number(it.unit_price),
       unit_cost: Number(it.unit_cost ?? 0),
       name: it.products?.name ?? "",
       max: Number(it.products?.stock ?? 0) + Number(it.quantity),
-    })));
+    }));
+    setItems(hydratedItems);
+    const sub = hydratedItems.reduce((s: number, i: any) => s + i.quantity * i.unit_price, 0);
+    const inferredShipping = Math.max(0, Number(existing.total ?? 0) - sub + Number(existing.discount ?? 0));
+    setShipping(inferredShipping);
     setLoaded(true);
   }, [editing, existing, loaded]);
 
@@ -305,7 +310,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     () => discountMode === "percent" ? (subtotal * Math.min(100, Math.max(0, discount))) / 100 : discount,
     [discountMode, discount, subtotal]
   );
-  const total = useMemo(() => Math.max(0, subtotal - discountValue), [subtotal, discountValue]);
+  const total = useMemo(() => Math.max(0, subtotal - discountValue + (Number(shipping) || 0)), [subtotal, discountValue, shipping]);
 
   function pickCustomer(id: string) {
     setCustomerId(id);
@@ -501,10 +506,21 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
             value={discount} onChange={(e) => setDiscount(Number(e.target.value))} />
           <div className="text-xs text-muted-foreground">Desconto: {brl(discountValue)}</div>
         </div>
-        <div className="text-right">
-          <div className="text-xs text-muted-foreground">Subtotal: {brl(subtotal)}</div>
-          <div className="text-xs text-muted-foreground">Total</div>
-          <div className="font-display text-3xl">{brl(total)}</div>
+        <div className="space-y-1.5">
+          <Label>Frete cobrado do cliente (R$)</Label>
+          <Input type="number" step="0.01" min={0}
+            value={shipping} onChange={(e) => setShipping(Number(e.target.value))} />
+          <div className="text-xs text-muted-foreground">Valor do frete pago pelo cliente</div>
+        </div>
+      </div>
+
+      <div className="rounded-md border p-3 space-y-1 text-right">
+        <div className="text-xs text-muted-foreground flex justify-between"><span>Subtotal produtos</span><span>{brl(subtotal)}</span></div>
+        <div className="text-xs text-muted-foreground flex justify-between"><span>Desconto</span><span>-{brl(discountValue)}</span></div>
+        <div className="text-xs text-muted-foreground flex justify-between"><span>Frete cliente</span><span>+{brl(Number(shipping) || 0)}</span></div>
+        <div className="border-t pt-1 flex items-end justify-between">
+          <span className="text-xs text-muted-foreground">TOTAL</span>
+          <span className="font-display text-3xl">{brl(total)}</span>
         </div>
       </div>
 
