@@ -56,10 +56,11 @@ function BalancetePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bank_accounts" as any)
-        .select("id, name, bank, color")
+        .select("id, name, bank, color, status")
+        .eq("status", "ativa")
         .order("name");
       if (error) throw error;
-      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string }[];
+      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string; status: string }[];
     },
   });
 
@@ -76,6 +77,44 @@ function BalancetePage() {
       return (data ?? []) as unknown as { account_id: string; movement_date: string; type: string; category: string | null; amount: number }[];
     },
   });
+
+  // Saldo atual: todas as movimentações (sem filtro de período) por conta
+  const { data: allMovs } = useQuery({
+    queryKey: ["balancete-allmovs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bank_movements" as any)
+        .select("account_id, type, amount");
+      if (error) throw error;
+      return (data ?? []) as unknown as { account_id: string; type: string; amount: number }[];
+    },
+  });
+
+  const saldoPorConta = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const m of allMovs ?? []) {
+      const v = Number(m.amount || 0);
+      map[m.account_id] = (map[m.account_id] ?? 0) + (m.type === "entrada" ? v : -v);
+    }
+    return map;
+  }, [allMovs]);
+
+  // Receitas agrupadas por conta bancária → categoria (todas as contas ativas, mesmo sem movimentação)
+  const receitasPorConta = useMemo(() => {
+    const accounts = bankAccounts ?? [];
+    const grouped: Record<string, { account: { id: string; name: string; bank: string; color: string }; cats: Record<string, number>; subtotal: number }> = {};
+    for (const a of accounts) grouped[a.id] = { account: a, cats: {}, subtotal: 0 };
+    for (const m of bankMovs ?? []) {
+      if (m.type !== "entrada") continue;
+      const g = grouped[m.account_id];
+      if (!g) continue;
+      const cat = m.category || "Outros";
+      const v = Number(m.amount || 0);
+      g.cats[cat] = (g.cats[cat] ?? 0) + v;
+      g.subtotal += v;
+    }
+    return Object.values(grouped).sort((a, b) => a.account.name.localeCompare(b.account.name));
+  }, [bankAccounts, bankMovs]);
 
   const { data: payables } = useQuery({
     queryKey: ["balancete-pay", from, to],
