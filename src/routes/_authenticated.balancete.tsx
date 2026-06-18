@@ -286,15 +286,15 @@ function BalancetePage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card className="shadow-soft"><CardContent className="p-5">
           <div className="inline-flex size-10 rounded-xl bg-success/10 text-success items-center justify-center mb-3"><TrendingUp className="size-5" /></div>
-          <div className="text-xs text-muted-foreground">Receitas (realizado)</div>
-          <div className="text-2xl font-display text-success">{brl(totRec.realizado)}</div>
-          <div className="text-xs text-muted-foreground mt-1">Previsto: {brl(totRec.previsto)}</div>
+          <div className="text-xs text-muted-foreground">Entradas (bancário)</div>
+          <div className="text-2xl font-display text-success">{brl(totalEntradas)}</div>
+          <div className="text-xs text-muted-foreground mt-1">Somatório de movimentações de entrada</div>
         </CardContent></Card>
         <Card className="shadow-soft"><CardContent className="p-5">
           <div className="inline-flex size-10 rounded-xl bg-destructive/10 text-destructive items-center justify-center mb-3"><TrendingDown className="size-5" /></div>
-          <div className="text-xs text-muted-foreground">Despesas (realizado)</div>
-          <div className="text-2xl font-display text-destructive">{brl(totDesp.realizado)}</div>
-          <div className="text-xs text-muted-foreground mt-1">Previsto: {brl(totDesp.previsto)}</div>
+          <div className="text-xs text-muted-foreground">Saídas (bancário)</div>
+          <div className="text-2xl font-display text-destructive">{brl(totalSaidasBank)}</div>
+          <div className="text-xs text-muted-foreground mt-1">Somatório de movimentações de saída</div>
         </CardContent></Card>
         <Card className={`shadow-soft ${resRealizado >= 0 ? "bg-success/5" : "bg-destructive/5"}`}><CardContent className="p-5">
           <div className="text-xs text-muted-foreground">Resultado</div>
@@ -307,22 +307,46 @@ function BalancetePage() {
 
       <Card className="shadow-soft mb-6">
         <CardContent className="p-5">
-          <h3 className="font-display text-lg mb-3 text-success">Receitas — Contas a Receber</h3>
+          <h3 className="font-display text-lg mb-3 text-success">Receitas — Contas Bancárias</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b text-muted-foreground text-left">
-                <th className="py-2">Categoria</th><th className="text-right">Previsto</th><th className="text-right">Realizado</th><th className="text-right">Diferença</th>
+                <th className="py-2">Conta Bancária</th><th>Categoria</th><th className="text-right">Valor</th>
               </tr></thead>
               <tbody>
-                {Object.entries(receitas).map(([c, v]) => (
-                  <tr key={c} className="border-b"><td className="py-2">{c}</td><td className="text-right">{brl(v.previsto)}</td><td className="text-right text-success">{brl(v.realizado)}</td><td className="text-right">{brl(v.realizado - v.previsto)}</td></tr>
+                {receitasPorConta.length === 0 && (
+                  <tr><td colSpan={3} className="py-6 text-center text-muted-foreground">Sem entradas bancárias no período.</td></tr>
+                )}
+                {receitasPorConta.map((g) => (
+                  <>
+                    {Object.entries(g.cats).sort((a, b) => b[1] - a[1]).map(([cat, val], i) => (
+                      <tr key={`${g.account.id}-${cat}`} className="border-b">
+                        <td className="py-2">
+                          {i === 0 ? (
+                            <span className="inline-flex items-center gap-2">
+                              <span className="size-2.5 rounded-full" style={{ background: g.account.color }} />
+                              {g.account.name}
+                              <span className="text-xs text-muted-foreground">({g.account.bank})</span>
+                            </span>
+                          ) : null}
+                        </td>
+                        <td className="text-muted-foreground">{cat}</td>
+                        <td className="text-right text-success">{brl(val)}</td>
+                      </tr>
+                    ))}
+                    <tr key={`${g.account.id}-sub`} className="bg-success/5 border-b">
+                      <td className="py-2 text-xs text-muted-foreground" colSpan={2}>Subtotal {g.account.name}</td>
+                      <td className="text-right font-medium text-success">{brl(g.subtotal)}</td>
+                    </tr>
+                  </>
                 ))}
               </tbody>
-              <tfoot><tr className="bg-success/10 font-medium"><td className="py-2">TOTAL RECEITAS</td><td className="text-right">{brl(totRec.previsto)}</td><td className="text-right">{brl(totRec.realizado)}</td><td className="text-right">{brl(totRec.realizado - totRec.previsto)}</td></tr></tfoot>
+              <tfoot><tr className="bg-success/10 font-medium"><td className="py-2" colSpan={2}>TOTAL ENTRADAS</td><td className="text-right">{brl(totalEntradas)}</td></tr></tfoot>
             </table>
           </div>
         </CardContent>
       </Card>
+
 
       <Card className="shadow-soft mb-6">
         <CardContent className="p-5">
