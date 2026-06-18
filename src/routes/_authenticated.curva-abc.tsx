@@ -151,7 +151,7 @@ function CurvaABCPage() {
       const cat = it.products?.category ?? "—";
       m[key] ??= { key, label: name, meta: cat, qty: 0, value: 0, orders: 0, unit: 0, n: 0 };
       m[key].qty += Number(it.quantity);
-      m[key].value += Number(it.total);
+      m[key].value += Number(it.quantity) * Number(it.unit_price ?? 0);
       m[key].unit += Number(it.unit_price ?? 0);
       m[key].n += 1;
     }
