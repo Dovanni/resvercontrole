@@ -64,9 +64,24 @@ function BalancetePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("receivables")
-        .select("id, amount, received_amount, status, due_date, received_at, sale_id, sales(channel)")
+        .select("id, amount, received_amount, status, description, due_date, received_at, sale_id")
         .gte("due_date", from).lte("due_date", to);
-      if (error) throw error;
+      if (error) { console.error("[balancete] receivables error", error); throw error; }
+      console.log("[balancete] receivables:", data?.length, "período:", from, "→", to);
+      return data ?? [];
+    },
+  });
+
+  const { data: salesData } = useQuery({
+    queryKey: ["balancete-sales", from, to],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sales")
+        .select("id, total, status, channel, sold_at")
+        .gte("sold_at", from).lte("sold_at", `${to}T23:59:59`)
+        .not("status", "in", "(cancelado,orcamento)");
+      if (error) { console.error("[balancete] sales error", error); throw error; }
+      console.log("[balancete] sales:", data?.length);
       return data ?? [];
     },
   });
@@ -86,16 +101,28 @@ function BalancetePage() {
   const receitas = useMemo(() => {
     const map: Record<string, { previsto: number; realizado: number }> = {};
     for (const c of RECEITA_CATS) map[c] = { previsto: 0, realizado: 0 };
+
+    // Fonte 1: vendas (pedidos) — categorizadas por canal
+    for (const s of (salesData ?? []) as any[]) {
+      const ch = String(s.channel || "").toLowerCase();
+      const cat = CHANNEL_TO_CAT[ch] || "Outros";
+      const v = Number(s.total || 0);
+      map[cat].previsto += v;
+      if (s.status === "entregue") map[cat].realizado += v;
+    }
+
+    // Fonte 2: contas a receber — manuais (sem sale_id) ou Mercado Livre
     for (const r of (receivables ?? []) as any[]) {
-      const ch = r.sales?.channel as string | undefined;
-      const cat = (ch && CHANNEL_TO_CAT[ch]) || "Outros";
-      map[cat] = map[cat] ?? { previsto: 0, realizado: 0 };
+      if (r.sale_id) continue; // já contabilizado via sales
+      const desc = String(r.description || "").toLowerCase();
+      const isML = desc.includes("ml") || desc.includes("mercado livre");
+      const cat = isML ? "Mercado Livre" : "Outros";
       map[cat].previsto += Number(r.amount || 0);
       if (r.status === "recebido") map[cat].realizado += Number(r.received_amount || r.amount || 0);
       else map[cat].realizado += Number(r.received_amount || 0);
     }
     return map;
-  }, [receivables]);
+  }, [receivables, salesData]);
 
   const despesas = useMemo(() => {
     const map: Record<string, { previsto: number; realizado: number }> = {};
