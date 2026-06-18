@@ -27,6 +27,7 @@ import { Route as AuthenticatedContasReceberRouteImport } from './routes/_authen
 import { Route as AuthenticatedContasPagarRouteImport } from './routes/_authenticated.contas-pagar'
 import { Route as AuthenticatedContasBancariasRouteImport } from './routes/_authenticated.contas-bancarias'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated.configuracoes'
+import { Route as AuthenticatedComprasRouteImport } from './routes/_authenticated.compras'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated.clientes'
 import { Route as AuthenticatedCartoesCreditoRouteImport } from './routes/_authenticated.cartoes-credito'
 import { Route as AuthenticatedBiRouteImport } from './routes/_authenticated.bi'
@@ -127,6 +128,11 @@ const AuthenticatedConfiguracoesRoute =
     path: '/configuracoes',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedComprasRoute = AuthenticatedComprasRouteImport.update({
+  id: '/compras',
+  path: '/compras',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   id: '/clientes',
   path: '/clientes',
@@ -150,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/bi': typeof AuthenticatedBiRoute
   '/cartoes-credito': typeof AuthenticatedCartoesCreditoRoute
   '/clientes': typeof AuthenticatedClientesRoute
+  '/compras': typeof AuthenticatedComprasRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/contas-bancarias': typeof AuthenticatedContasBancariasRoute
   '/contas-pagar': typeof AuthenticatedContasPagarRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/bi': typeof AuthenticatedBiRoute
   '/cartoes-credito': typeof AuthenticatedCartoesCreditoRoute
   '/clientes': typeof AuthenticatedClientesRoute
+  '/compras': typeof AuthenticatedComprasRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/contas-bancarias': typeof AuthenticatedContasBancariasRoute
   '/contas-pagar': typeof AuthenticatedContasPagarRoute
@@ -196,6 +204,7 @@ export interface FileRoutesById {
   '/_authenticated/bi': typeof AuthenticatedBiRoute
   '/_authenticated/cartoes-credito': typeof AuthenticatedCartoesCreditoRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
+  '/_authenticated/compras': typeof AuthenticatedComprasRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/contas-bancarias': typeof AuthenticatedContasBancariasRoute
   '/_authenticated/contas-pagar': typeof AuthenticatedContasPagarRoute
@@ -220,6 +229,7 @@ export interface FileRouteTypes {
     | '/bi'
     | '/cartoes-credito'
     | '/clientes'
+    | '/compras'
     | '/configuracoes'
     | '/contas-bancarias'
     | '/contas-pagar'
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
     | '/bi'
     | '/cartoes-credito'
     | '/clientes'
+    | '/compras'
     | '/configuracoes'
     | '/contas-bancarias'
     | '/contas-pagar'
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/_authenticated/bi'
     | '/_authenticated/cartoes-credito'
     | '/_authenticated/clientes'
+    | '/_authenticated/compras'
     | '/_authenticated/configuracoes'
     | '/_authenticated/contas-bancarias'
     | '/_authenticated/contas-pagar'
@@ -416,6 +428,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/compras': {
+      id: '/_authenticated/compras'
+      path: '/compras'
+      fullPath: '/compras'
+      preLoaderRoute: typeof AuthenticatedComprasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/clientes': {
       id: '/_authenticated/clientes'
       path: '/clientes'
@@ -444,6 +463,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedBiRoute: typeof AuthenticatedBiRoute
   AuthenticatedCartoesCreditoRoute: typeof AuthenticatedCartoesCreditoRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
+  AuthenticatedComprasRoute: typeof AuthenticatedComprasRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedContasBancariasRoute: typeof AuthenticatedContasBancariasRoute
   AuthenticatedContasPagarRoute: typeof AuthenticatedContasPagarRoute
@@ -465,6 +485,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBiRoute: AuthenticatedBiRoute,
   AuthenticatedCartoesCreditoRoute: AuthenticatedCartoesCreditoRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
+  AuthenticatedComprasRoute: AuthenticatedComprasRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedContasBancariasRoute: AuthenticatedContasBancariasRoute,
   AuthenticatedContasPagarRoute: AuthenticatedContasPagarRoute,

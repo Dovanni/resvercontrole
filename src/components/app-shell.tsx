@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, BarChartBig, FileText, Settings, CalendarDays, TrendingUp, Landmark, CreditCard } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, BarChartBig, FileText, Settings, CalendarDays, TrendingUp, Landmark, CreditCard, ShoppingCart } from "lucide-react";
 import { useAuth, type Permission } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { NotificationsBell } from "@/components/notifications";
@@ -14,6 +14,7 @@ const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
   { to: "/produtos", label: "Produtos", icon: Package, perm: "view:products" },
   { to: "/vendas", label: "Vendas", icon: ShoppingBag, perm: "view:sales" },
   { to: "/controle-vendas", label: "Controle de vendas", icon: TrendingUp, perm: "view:sales" },
+  { to: "/compras", label: "Compras", icon: ShoppingCart, perm: "view:payables" },
   { to: "/contas-pagar", label: "Contas a pagar", icon: Receipt, perm: "view:payables" },
   { to: "/despesas-anuais", label: "Despesas anuais", icon: CalendarDays, perm: "view:payables" },
   { to: "/contas-receber", label: "Contas a receber", icon: HandCoins, perm: "view:receivables" },

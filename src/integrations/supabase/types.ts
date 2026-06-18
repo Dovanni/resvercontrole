@@ -341,6 +341,135 @@ export type Database = {
         }
         Relationships: []
       }
+      compras: {
+        Row: {
+          bank_account_id: string | null
+          condicao_pagamento: string
+          created_at: string
+          data_compra: string
+          data_vencimento: string | null
+          desconto: number
+          dia_vencimento: number | null
+          forma_pagamento: string | null
+          fornecedor_id: string | null
+          frete: number
+          id: string
+          numero_nf: string | null
+          observacoes: string | null
+          parcelas: number
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bank_account_id?: string | null
+          condicao_pagamento?: string
+          created_at?: string
+          data_compra?: string
+          data_vencimento?: string | null
+          desconto?: number
+          dia_vencimento?: number | null
+          forma_pagamento?: string | null
+          fornecedor_id?: string | null
+          frete?: number
+          id?: string
+          numero_nf?: string | null
+          observacoes?: string | null
+          parcelas?: number
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bank_account_id?: string | null
+          condicao_pagamento?: string
+          created_at?: string
+          data_compra?: string
+          data_vencimento?: string | null
+          desconto?: number
+          dia_vencimento?: number | null
+          forma_pagamento?: string | null
+          fornecedor_id?: string | null
+          frete?: number
+          id?: string
+          numero_nf?: string | null
+          observacoes?: string | null
+          parcelas?: number
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compras_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compras_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compras_itens: {
+        Row: {
+          compra_id: string
+          created_at: string
+          id: string
+          preco_unitario: number
+          produto_id: string
+          quantidade: number
+          subtotal: number
+          user_id: string
+        }
+        Insert: {
+          compra_id: string
+          created_at?: string
+          id?: string
+          preco_unitario: number
+          produto_id: string
+          quantidade: number
+          subtotal: number
+          user_id: string
+        }
+        Update: {
+          compra_id?: string
+          created_at?: string
+          id?: string
+          preco_unitario?: number
+          produto_id?: string
+          quantidade?: number
+          subtotal?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compras_itens_compra_id_fkey"
+            columns: ["compra_id"]
+            isOneToOne: false
+            referencedRelation: "compras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compras_itens_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       controle_vendas_diario: {
         Row: {
           ano: number
