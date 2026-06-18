@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { ArrowDownRight, ArrowUpRight, Wallet, Landmark } from "lucide-react";
 import { brl, dateBR } from "@/lib/format";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend } from "recharts";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { CashProjection } from "@/components/cash-projection";
 
 export const Route = createFileRoute("/_authenticated/fluxo-caixa")({
   head: () => ({ meta: [{ title: "Fluxo de caixa — Rosé" }] }),
@@ -217,6 +219,16 @@ function CashFlowPage() {
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <PageHeader title="Fluxo de caixa" subtitle="Visão diária com projeção dos próximos 15 dias" />
 
+      <Tabs defaultValue="diario" className="mb-4">
+        <TabsList>
+          <TabsTrigger value="diario">Diário</TabsTrigger>
+          <TabsTrigger value="projecao">Projeção</TabsTrigger>
+        </TabsList>
+        <TabsContent value="projecao" className="mt-4">
+          <CashProjection />
+        </TabsContent>
+        <TabsContent value="diario" className="mt-4 space-y-6">
+
       <Card className="shadow-soft mb-4"><CardContent className="p-4 flex flex-wrap items-end gap-3">
         <div className="space-y-1.5 min-w-56">
           <Label className="text-xs">Conta bancária</Label>
@@ -322,6 +334,8 @@ function CashFlowPage() {
           </Table>
         </CardContent>
       </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
