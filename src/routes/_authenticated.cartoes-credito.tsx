@@ -488,7 +488,8 @@ function CartaoDialog({ contas, userId, cartao, onDone }: { contas: { id: string
   );
 }
 
-function LancDialog({ cartoes, userId, onDone }: { cartoes: Cartao[]; userId: string; onDone: () => void }) {
+function LancDialog({ cartoes, lancamentos, faturas, userId, onDone }: { cartoes: Cartao[]; lancamentos: Lancamento[]; faturas: Fatura[]; userId: string; onDone: () => void }) {
+  const confirm = useConfirm();
   const ativos = cartoes.filter((c) => c.status === "ativo");
   const [f, setF] = useState({
     cartao_id: ativos[0]?.id ?? "",
@@ -500,6 +501,10 @@ function LancDialog({ cartoes, userId, onDone }: { cartoes: Cartao[]; userId: st
   const cartao = cartoes.find((c) => c.id === f.cartao_id);
   const valorNum = Number(f.valor) || 0;
   const valorParcela = f.parcelado && f.total_parcelas > 0 ? valorNum / f.total_parcelas : valorNum;
+  const usadoAtual = cartao ? calcUsado(cartao.id, lancamentos, faturas) : 0;
+  const limiteTotal = cartao ? Number(cartao.limite_total) : 0;
+  const novoUsado = usadoAtual + valorNum;
+  const vaiEstourar = !!cartao && novoUsado > limiteTotal;
 
   const save = useMutation({
     mutationFn: async () => {
