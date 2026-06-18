@@ -798,7 +798,7 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
         <div><Label className="text-xs">Categoria</Label>
           <Select value={catF} onValueChange={setCatF}>
             <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent><SelectItem value="todas">Todas</SelectItem><SelectItem value="combustivel">🚗 Combustível</SelectItem><SelectItem value="casa">🏠 Casa</SelectItem><SelectItem value="pessoal">👤 Pessoal</SelectItem></SelectContent>
+            <SelectContent><SelectItem value="todas">Todas</SelectItem><SelectItem value="combustivel">🚗 Combustível</SelectItem><SelectItem value="casa">🏠 Casa</SelectItem><SelectItem value="pessoal">👤 Pessoal</SelectItem><SelectItem value="fornecedores">🏭 Fornecedores</SelectItem></SelectContent>
           </Select>
         </div>
       </CardContent></Card>
