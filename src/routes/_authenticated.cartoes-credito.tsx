@@ -245,12 +245,10 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [editOpen, setEditOpen] = useState(false);
-  // Limite usado = todas as parcelas pendentes (fatura atual + futuras)
-  const usado = lancamentos
-    .filter((l) => l.ano_fatura > curAno || (l.ano_fatura === curAno && l.mes_fatura >= curMes))
-    .reduce((s, l) => s + Number(l.valor), 0);
-  const disp = Math.max(0, Number(cartao.limite_total) - usado);
-  const pct = cartao.limite_total > 0 ? Math.min(100, (usado / cartao.limite_total) * 100) : 0;
+  // Limite usado = todas parcelas pendentes (fatura não paga)
+  const usado = calcUsado(cartao.id, lancamentos, faturas);
+  const { disp, pct, level } = limiteStatus(Number(cartao.limite_total), usado);
+  const pctVisual = Math.min(100, pct);
   const catTotals = CAT_KEYS.map((k) => ({
     k, total: lancamentos.filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno && l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
   }));
@@ -258,9 +256,12 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
   const vencDate = vencimentoDate(curAno, curMes, cartao.dia_vencimento);
   const diasVenc = Math.ceil((vencDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
   const fat = faturas.find((f) => f.mes === curMes && f.ano === curAno);
+  const totalMesAtual = lancamentos
+    .filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno)
+    .reduce((s, l) => s + Number(l.valor), 0);
   const status: "aberta" | "fechada" | "paga" | "atrasada" =
     fat?.status === "paga" ? "paga"
-    : diasVenc < 0 && usado > 0 ? "atrasada"
+    : diasVenc < 0 && totalMesAtual > 0 ? "atrasada"
     : new Date().getDate() > cartao.dia_fechamento ? "fechada" : "aberta";
 
   const marcarPaga = useMutation({
@@ -268,11 +269,11 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
       const { error } = await (supabase.from("cartoes_faturas" as any).upsert({
         cartao_id: cartao.id,
         user_id: (await supabase.auth.getUser()).data.user?.id,
-        mes: curMes, ano: curAno, valor_total: usado, status: "paga",
+        mes: curMes, ano: curAno, valor_total: totalMesAtual, status: "paga",
         data_pagamento: new Date().toISOString().slice(0, 10),
       }, { onConflict: "cartao_id,ano,mes" }));
       if (error) throw error;
-      if (cartao.conta_bancaria_id && usado > 0) {
+      if (cartao.conta_bancaria_id && totalMesAtual > 0) {
         await supabase.from("bank_movements").insert({
           user_id: (await supabase.auth.getUser()).data.user!.id,
           account_id: cartao.conta_bancaria_id,
@@ -280,7 +281,7 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
           type: "saida",
           category: "Cartão de crédito",
           description: `Fatura ${cartao.nome} — ${String(curMes).padStart(2, "0")}/${curAno}`,
-          amount: usado,
+          amount: totalMesAtual,
           origin: "cartao_fatura",
           reference_id: cartao.id,
         });
@@ -290,12 +291,20 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
     onError: (e: any) => toast.error(e.message),
   });
 
-  const alertaLimite = pct >= 80;
   const alertaVenc = diasVenc >= 0 && diasVenc <= 5 && status !== "paga";
   const alertaAtraso = status === "atrasada";
 
+  const cardBg =
+    level === "estourado" ? "bg-destructive/5 border-destructive/40"
+    : level === "critico" ? "bg-amber-50 border-amber-300"
+    : "";
+  const progressClass =
+    level === "estourado" ? "[&>div]:bg-destructive"
+    : level === "critico" ? "[&>div]:bg-amber-500"
+    : "[&>div]:bg-success";
+
   return (
-    <Card className="shadow-soft overflow-hidden">
+    <Card className={`shadow-soft overflow-hidden ${cardBg}`}>
       <div className="p-5 text-white cursor-pointer" style={{ background: `linear-gradient(135deg, ${cartao.cor}, ${cartao.cor}dd)` }} onClick={onClick}>
         <div className="flex items-center justify-between">
           <CCIcon className="size-6" />
@@ -305,14 +314,24 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
         <div className="text-xs opacity-80 mt-1">Venc. dia {cartao.dia_vencimento} · Fecha dia {cartao.dia_fechamento}</div>
       </div>
       <CardContent className="p-5 space-y-3">
+        {level === "estourado" && (
+          <div className="rounded-md bg-destructive text-destructive-foreground text-xs font-medium px-2 py-1 text-center">
+            ⛔ LIMITE ESTOURADO — Acima em {brl(Math.abs(disp))}
+          </div>
+        )}
+        {level === "critico" && (
+          <div className="rounded-md bg-amber-500 text-white text-xs font-medium px-2 py-1 text-center">
+            ⚠️ LIMITE CRÍTICO — {pct.toFixed(0)}% utilizado
+          </div>
+        )}
         <div className="grid grid-cols-3 gap-2 text-center text-xs">
           <div><div className="text-muted-foreground">Limite</div><div className="font-medium">{brl(cartao.limite_total)}</div></div>
           <div><div className="text-muted-foreground">Usado</div><div className="font-medium text-destructive">{brl(usado)}</div></div>
-          <div><div className="text-muted-foreground">Disponível</div><div className="font-medium text-success">{brl(disp)}</div></div>
+          <div><div className="text-muted-foreground">Disponível</div><div className={`font-medium ${disp < 0 ? "text-destructive" : "text-success"}`}>{brl(disp)}</div></div>
         </div>
         <div>
-          <Progress value={pct} className={`h-2 transition-all ${alertaLimite ? "[&>div]:bg-destructive" : ""}`} />
-          <div className="text-xs text-muted-foreground mt-1">{pct.toFixed(0)}% utilizado</div>
+          <Progress value={pctVisual} className={`h-2 transition-all ${progressClass}`} />
+          <div className={`text-xs mt-1 ${level === "estourado" ? "text-destructive font-medium" : "text-muted-foreground"}`}>{pct.toFixed(0)}% utilizado</div>
         </div>
         <div className="grid grid-cols-2 gap-2 text-xs">
           {catTotals.map(({ k, total }) => {
@@ -334,18 +353,17 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
               : <Badge variant="outline">Aberta</Badge>}
             <div className="text-muted-foreground mt-1">
               {status === "paga" ? `Paga em ${fat?.data_pagamento ? dateBR(fat.data_pagamento) : "-"}`
-                : diasVenc >= 0 ? `Vence em ${diasVenc} dias — ${brl(usado)}` : `Venceu há ${Math.abs(diasVenc)} dias`}
+                : diasVenc >= 0 ? `Vence em ${diasVenc} dias — ${brl(totalMesAtual)}` : `Venceu há ${Math.abs(diasVenc)} dias`}
             </div>
           </div>
-          {status !== "paga" && usado > 0 && (
+          {status !== "paga" && totalMesAtual > 0 && (
             <Button size="sm" variant="outline" onClick={() => marcarPaga.mutate()} disabled={marcarPaga.isPending}>
               <CheckCircle2 className="size-3 mr-1" /> Pagar
             </Button>
           )}
         </div>
-        {(alertaLimite || alertaVenc || alertaAtraso) && (
+        {(alertaVenc || alertaAtraso) && (
           <div className="space-y-1 pt-2 border-t">
-            {alertaLimite && <div className="flex items-center gap-1 text-xs text-destructive"><AlertTriangle className="size-3" /> Limite acima de 80%</div>}
             {alertaVenc && <div className="flex items-center gap-1 text-xs text-amber-600"><Clock className="size-3" /> Vence em {diasVenc} dia(s)</div>}
             {alertaAtraso && <div className="flex items-center gap-1 text-xs text-destructive"><AlertTriangle className="size-3" /> Fatura vencida</div>}
           </div>
