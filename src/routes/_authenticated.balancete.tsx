@@ -505,6 +505,10 @@ function BalancetePage() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="mb-6">
+        <CashProjection />
+      </div>
     </div>
   );
 }
