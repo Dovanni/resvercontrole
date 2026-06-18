@@ -812,19 +812,21 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
               <SortHead k="comb" className="text-right">🚗 Combustível</SortHead>
               <SortHead k="casa" className="text-right">🏠 Casa</SortHead>
               <SortHead k="pess" className="text-right">👤 Pessoal</SortHead>
+              <SortHead k="forn" className="text-right">🏭 Fornecedores</SortHead>
               <SortHead k="tot" className="text-right">Total</SortHead>
               <SortHead k="limite" className="text-right">Limite</SortHead>
               <SortHead k="pct" className="text-right">% Usado</SortHead>
               <SortHead k="venc" className="text-right">Venc.</SortHead>
             </TableRow></TableHeader>
             <TableBody>
-              {sorted.length === 0 && <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Sem cartões.</TableCell></TableRow>}
-              {sorted.map(({ c, comb, casa, pess, tot, limite, pct, venc }) => (
+              {sorted.length === 0 && <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Sem cartões.</TableCell></TableRow>}
+              {sorted.map(({ c, comb, casa, pess, forn, tot, limite, pct, venc }) => (
                 <TableRow key={c.id}>
                   <TableCell className="sticky left-0 bg-background z-10"><span className="inline-block size-3 rounded-full mr-2 align-middle" style={{ background: c.cor }} />{c.nome}</TableCell>
                   <TableCell className="text-right">{brl(comb)}</TableCell>
                   <TableCell className="text-right">{brl(casa)}</TableCell>
                   <TableCell className="text-right">{brl(pess)}</TableCell>
+                  <TableCell className="text-right">{brl(forn)}</TableCell>
                   <TableCell className="text-right font-medium">{brl(tot)}</TableCell>
                   <TableCell className="text-right">{brl(limite)}</TableCell>
                   <TableCell className={`text-right ${pct >= 80 ? "text-destructive font-medium" : ""}`}>{pct.toFixed(0)}%</TableCell>
@@ -837,6 +839,7 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
                   <TableCell className="text-right">{brl(totRow.comb)}</TableCell>
                   <TableCell className="text-right">{brl(totRow.casa)}</TableCell>
                   <TableCell className="text-right">{brl(totRow.pess)}</TableCell>
+                  <TableCell className="text-right">{brl(totRow.forn)}</TableCell>
                   <TableCell className="text-right">{brl(totRow.tot)}</TableCell>
                   <TableCell className="text-right">{brl(totRow.limite)}</TableCell>
                   <TableCell className="text-right">{totRow.limite > 0 ? ((totRow.tot / totRow.limite) * 100).toFixed(0) : 0}%</TableCell>
