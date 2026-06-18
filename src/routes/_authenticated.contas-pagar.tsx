@@ -355,7 +355,7 @@ function PayablesPage() {
         }
       />
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <Card className="shadow-soft"><CardContent className="p-5">
           <div className="text-2xl font-display">{brl(totals.pendingAmount)}</div>
           <div className="text-xs text-muted-foreground mt-1">Em aberto</div>
@@ -365,58 +365,90 @@ function PayablesPage() {
           <div className="text-xs text-muted-foreground mt-1">Em atraso</div>
         </CardContent></Card>
         <Card className="shadow-soft"><CardContent className="p-5">
-          <div className="text-2xl font-display">{brl(totals.paidThisMonth)}</div>
-          <div className="text-xs text-muted-foreground mt-1">Pago este mês</div>
+          <div className="text-2xl font-display">{brl(totals.paidPeriodAmount)}</div>
+          <div className="text-xs text-muted-foreground mt-1">Pago no período</div>
+        </CardContent></Card>
+        <Card className="shadow-soft"><CardContent className="p-5">
+          <div className="text-2xl font-display">{brl(totals.totalAmount)}</div>
+          <div className="text-xs text-muted-foreground mt-1">Total do período</div>
+        </CardContent></Card>
+        <Card className="shadow-soft"><CardContent className="p-5">
+          <div className="text-2xl font-display">{brl(totals.next7Amount)}</div>
+          <div className="text-xs text-muted-foreground mt-1">Vence em 7 dias</div>
         </CardContent></Card>
       </div>
 
       <Card className="shadow-soft mb-4">
-        <CardContent className="p-4 grid grid-cols-2 md:grid-cols-6 gap-3">
-          <div className="space-y-1">
-            <Label className="text-xs">De</Label>
-            <Input type="date" value={fDateFrom} onChange={(e) => setFDateFrom(e.target.value)} />
+        <CardContent className="p-4 space-y-3">
+          <div className="flex flex-wrap gap-2 items-center">
+            {([
+              ["all", "Todos"], ["today", "Hoje"], ["week", "Esta semana"], ["month", "Este mês"],
+              ["next30", "Próximos 30 dias"], ["next90", "Próximos 3 meses"], ["custom", "Personalizado"],
+            ] as [PeriodPreset, string][]).map(([k, l]) => (
+              <Button key={k} size="sm" variant={preset === k ? "default" : "outline"} onClick={() => applyPreset(k)}>{l}</Button>
+            ))}
+            {preset === "custom" && (
+              <>
+                <Input type="date" className="w-auto" value={fDateFrom} onChange={(e) => setFDateFrom(e.target.value)} />
+                <Input type="date" className="w-auto" value={fDateTo} onChange={(e) => setFDateTo(e.target.value)} />
+              </>
+            )}
           </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Até</Label>
-            <Input type="date" value={fDateTo} onChange={(e) => setFDateTo(e.target.value)} />
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+            <div className="space-y-1 md:col-span-2">
+              <Label className="text-xs">Buscar descrição</Label>
+              <Input value={fSearch} onChange={(e) => setFSearch(e.target.value)} placeholder="Buscar…" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Fornecedor</Label>
+              <Select value={fSupplier} onValueChange={setFSupplier}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Todos</SelectItem>
+                  <SelectItem value="__none__">Sem fornecedor</SelectItem>
+                  {(suppliers ?? []).map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Categoria</Label>
+              <Select value={fCategory} onValueChange={setFCategory}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Todas</SelectItem>
+                  {categoryOptions.map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Status</Label>
+              <Select value={fStatus} onValueChange={setFStatus}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Todos</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="pago">Pago</SelectItem>
+                  <SelectItem value="atrasado">Atrasado</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Agrupar por</Label>
+              <Select value={groupBy} onValueChange={(v) => setGroupBy(v as GroupBy)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sem agrupamento</SelectItem>
+                  <SelectItem value="month">Por mês</SelectItem>
+                  <SelectItem value="supplier">Por fornecedor</SelectItem>
+                  <SelectItem value="category">Por categoria</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Fornecedor</Label>
-            <Select value={fSupplier} onValueChange={setFSupplier}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">Todos</SelectItem>
-                <SelectItem value="__none__">Sem fornecedor</SelectItem>
-                {(suppliers ?? []).map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Categoria</Label>
-            <Select value={fCategory} onValueChange={setFCategory}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">Todas</SelectItem>
-                {categoryOptions.map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Status</Label>
-            <Select value={fStatus} onValueChange={setFStatus}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__all__">Todos</SelectItem>
-                <SelectItem value="pendente">Pendente</SelectItem>
-                <SelectItem value="pago">Pago</SelectItem>
-                <SelectItem value="atrasado">Atrasado</SelectItem>
-                <SelectItem value="cancelado">Cancelado</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs">Buscar descrição</Label>
-            <Input value={fSearch} onChange={(e) => setFSearch(e.target.value)} placeholder="Buscar…" />
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" size="sm" onClick={clearFilters}>Limpar filtros</Button>
+            <Button variant="outline" size="sm" onClick={exportXlsx}><Download className="size-4 mr-1" />Exportar Excel</Button>
           </div>
         </CardContent>
       </Card>
@@ -439,61 +471,43 @@ function PayablesPage() {
               {filtered.length === 0 && (
                 <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Nenhuma conta encontrada.</TableCell></TableRow>
               )}
-              {pageItems.map(p => {
-                const overdue = p.status === "pendente" && p.due_date < today;
+              {grouped === null && pageItems.map(renderRow)}
+              {grouped !== null && grouped.map(g => {
+                const isCollapsed = collapsed[g.key];
                 return (
-                  <TableRow key={p.id}>
-                    <TableCell className={overdue ? "text-destructive font-medium" : "text-muted-foreground"}>
-                      <InlineDate value={p.due_date} onSave={async (v) => {
-                        const { error } = await supabase.from("payables").update({ due_date: v }).eq("id", p.id);
-                        if (error) throw error;
-                        qc.invalidateQueries({ queryKey: ["payables"] });
-                      }} />
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      <InlineText value={p.description} onSave={async (v) => {
-                        if (!v.trim()) throw new Error("Descrição obrigatória");
-                        const { error } = await supabase.from("payables").update({ description: v.trim() }).eq("id", p.id);
-                        if (error) throw error;
-                        qc.invalidateQueries({ queryKey: ["payables"] });
-                      }} />
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{p.suppliers?.name ?? "—"}</TableCell>
-                    <TableCell className="capitalize text-muted-foreground text-sm">{p.category}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={overdue ? "atrasado" : p.status} />
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      <InlineNumber value={Number(p.amount)} onSave={async (v) => {
-                        if (v <= 0) throw new Error("Informe um valor maior que zero");
-                        const { error } = await supabase.from("payables").update({ amount: v }).eq("id", p.id);
-                        if (error) throw error;
-                        qc.invalidateQueries({ queryKey: ["payables"] });
-                      }} />
-                    </TableCell>
-                    <TableCell className="text-right whitespace-nowrap">
-                      <Button variant="ghost" size="icon" title="Editar" onClick={() => setEditTarget(p)}>
-                        <Pencil className="size-4" />
-                      </Button>
-                      {p.status !== "pago" && p.status !== "cancelado" && (
-                        <Button variant="ghost" size="icon" title="Marcar como pago" onClick={() => setPayTarget(p)}>
-                          <CheckCircle2 className="size-4 text-success" />
-                        </Button>
-                      )}
-                      <Button variant="ghost" size="icon" onClick={async () => {
-                        if (await confirm({ title: "Excluir conta?", description: `A conta "${p.description}" será removida permanentemente.` })) remove.mutate(p.id);
-                      }}>
-                        <Trash2 className="size-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                  <React.Fragment key={g.key}>
+                    <TableRow className="bg-muted/40">
+                      <TableCell colSpan={7}>
+                        <button className="inline-flex items-center gap-2 font-medium" onClick={() => setCollapsed(c => ({ ...c, [g.key]: !c[g.key] }))}>
+                          {isCollapsed ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
+                          <span className="capitalize">{g.label}</span>
+                          <span className="text-muted-foreground text-xs">({g.items.length} · {brl(g.subtotal)})</span>
+                        </button>
+                      </TableCell>
+                    </TableRow>
+                    {!isCollapsed && g.items.map(renderRow)}
+                    {!isCollapsed && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-right text-xs text-muted-foreground">Subtotal</TableCell>
+                        <TableCell className="text-right font-medium">{brl(g.subtotal)}</TableCell>
+                        <TableCell />
+                      </TableRow>
+                    )}
+                  </React.Fragment>
                 );
               })}
             </TableBody>
           </Table>
-          <DataPagination page={page} totalPages={totalPages} total={total} onChange={setPage} />
+          <div className="border-t p-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm bg-muted/30">
+            <div><span className="text-muted-foreground">Lançamentos:</span> <strong>{totals.count}</strong></div>
+            <div><span className="text-muted-foreground">Total filtrado:</span> <strong>{brl(totals.totalAmount)}</strong></div>
+            <div><span className="text-muted-foreground">Pendente:</span> <strong>{brl(footerTotalPending)}</strong></div>
+            <div><span className="text-muted-foreground">Pago:</span> <strong>{brl(footerTotalPaid)}</strong></div>
+          </div>
+          {grouped === null && <DataPagination page={page} totalPages={totalPages} total={total} onChange={setPage} />}
         </CardContent>
       </Card>
+
 
       <Dialog open={!!payTarget} onOpenChange={(o) => !o && setPayTarget(null)}>
         <DialogContent>
