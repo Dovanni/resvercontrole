@@ -671,7 +671,7 @@ function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: L
   );
 }
 
-type SortKey = "nome" | "comb" | "casa" | "pess" | "tot" | "limite" | "pct" | "venc";
+type SortKey = "nome" | "comb" | "casa" | "pess" | "forn" | "tot" | "limite" | "pct" | "venc";
 
 function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes: Cartao[]; lancamentos: Lancamento[]; faturas: Fatura[]; curMes: number; curAno: number }) {
   const [busca, setBusca] = useState("");
