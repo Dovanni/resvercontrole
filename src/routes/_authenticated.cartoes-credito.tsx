@@ -623,7 +623,7 @@ function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: L
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {catTotals.map(({ k, valor }) => <CatCard key={k} k={k} valor={valor} pct={total ? (valor / total) * 100 : 0} />)}
       </div>
 
