@@ -514,6 +514,7 @@ function LancDialog({ cartoes, userId, onDone }: { cartoes: Cartao[]; userId: st
               <SelectItem value="combustivel">🚗 Combustível</SelectItem>
               <SelectItem value="casa">🏠 Casa</SelectItem>
               <SelectItem value="pessoal">👤 Pessoal</SelectItem>
+              <SelectItem value="fornecedores">🏭 Fornecedores</SelectItem>
             </SelectContent>
           </Select>
         </div>
