@@ -22,14 +22,6 @@ export const Route = createFileRoute("/_authenticated/balancete")({
   component: BalancetePage,
 });
 
-const RECEITA_CATS = ["Venda Loja", "Venda Atacado", "Venda Varejo", "Mercado Livre", "Outros"];
-const CHANNEL_TO_CAT: Record<string, string> = {
-  loja: "Venda Loja",
-  atacado: "Venda Atacado",
-  varejo: "Venda Varejo",
-  mercado_livre: "Mercado Livre",
-};
-
 const COLORS = ["#ec4899", "#f43f5e", "#f59e0b", "#10b981", "#3b82f6", "#8b5cf6", "#06b6d4", "#84cc16", "#f97316"];
 
 type Period = "este_mes" | "mes_anterior" | "3m" | "6m" | "ano" | "custom";
