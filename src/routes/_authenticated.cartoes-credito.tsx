@@ -580,8 +580,37 @@ function LancDialog({ cartoes, lancamentos, faturas, userId, onDone }: { cartoes
           <div className="text-sm text-muted-foreground">{f.total_parcelas}x de <strong>{brl(valorParcela)}</strong></div>
         )}
         <div><Label>Observações</Label><Textarea value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} /></div>
+        {vaiEstourar && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/5 p-3 text-xs space-y-1">
+            <div className="flex items-center gap-1 font-medium text-destructive"><AlertTriangle className="size-3" /> Este lançamento vai estourar o limite do cartão</div>
+            <div className="grid grid-cols-2 gap-x-3">
+              <span className="text-muted-foreground">Limite total:</span><span className="text-right">{brl(limiteTotal)}</span>
+              <span className="text-muted-foreground">Limite já usado:</span><span className="text-right">{brl(usadoAtual)}</span>
+              <span className="text-muted-foreground">Este lançamento:</span><span className="text-right">{brl(valorNum)}</span>
+              <span className="font-medium">Saldo após:</span><span className="text-right font-medium text-destructive">{brl(limiteTotal - novoUsado)}</span>
+            </div>
+          </div>
+        )}
       </div>
-      <DialogFooter><Button onClick={() => save.mutate()} disabled={save.isPending}>Salvar</Button></DialogFooter>
+      <DialogFooter>
+        <Button
+          onClick={async () => {
+            if (vaiEstourar) {
+              const ok = await confirm({
+                title: "Limite vai estourar",
+                description: `Limite total: ${brl(limiteTotal)}\nLimite já usado: ${brl(usadoAtual)}\nEste lançamento: ${brl(valorNum)}\nSaldo após: ${brl(limiteTotal - novoUsado)}\n\nDeseja continuar mesmo assim?`,
+                confirmText: "Confirmar mesmo assim",
+                destructive: true,
+              });
+              if (!ok) return;
+            }
+            save.mutate();
+          }}
+          disabled={save.isPending}
+        >
+          Salvar
+        </Button>
+      </DialogFooter>
     </DialogContent>
   );
 }
