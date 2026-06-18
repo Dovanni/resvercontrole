@@ -314,9 +314,9 @@ function BalancetePage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card className="shadow-soft"><CardContent className="p-5">
           <div className="inline-flex size-10 rounded-xl bg-success/10 text-success items-center justify-center mb-3"><TrendingUp className="size-5" /></div>
-          <div className="text-xs text-muted-foreground">Entradas (bancário)</div>
-          <div className="text-2xl font-display text-success">{brl(totalEntradas)}</div>
-          <div className="text-xs text-muted-foreground mt-1">Somatório de movimentações de entrada</div>
+          <div className="text-xs text-muted-foreground">Entradas (realizado)</div>
+          <div className="text-2xl font-display text-success">{brl(receitasRealizadas)}</div>
+          <div className="text-xs text-muted-foreground mt-1">Saldo atual ({brl(totalSaldoAtual)}) + entradas do período ({brl(totalEntradas)})</div>
         </CardContent></Card>
         <Card className="shadow-soft"><CardContent className="p-5">
           <div className="inline-flex size-10 rounded-xl bg-destructive/10 text-destructive items-center justify-center mb-3"><TrendingDown className="size-5" /></div>
