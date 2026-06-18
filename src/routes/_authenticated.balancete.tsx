@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -21,14 +21,6 @@ export const Route = createFileRoute("/_authenticated/balancete")({
   head: () => ({ meta: [{ title: "Balancete — Rosé" }] }),
   component: BalancetePage,
 });
-
-const RECEITA_CATS = ["Venda Loja", "Venda Atacado", "Venda Varejo", "Mercado Livre", "Outros"];
-const CHANNEL_TO_CAT: Record<string, string> = {
-  loja: "Venda Loja",
-  atacado: "Venda Atacado",
-  varejo: "Venda Varejo",
-  mercado_livre: "Mercado Livre",
-};
 
 const COLORS = ["#ec4899", "#f43f5e", "#f59e0b", "#10b981", "#3b82f6", "#8b5cf6", "#06b6d4", "#84cc16", "#f97316"];
 
@@ -59,30 +51,29 @@ function BalancetePage() {
     if (p !== "custom") { const r = rangeFor(p); setFrom(r.from); setTo(r.to); }
   };
 
-  const { data: receivables } = useQuery({
-    queryKey: ["balancete-rec", from, to],
+  const { data: bankAccounts } = useQuery({
+    queryKey: ["balancete-accounts"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("receivables")
-        .select("id, amount, received_amount, status, description, due_date, received_at, sale_id")
-        .gte("due_date", from).lte("due_date", to);
-      if (error) { console.error("[balancete] receivables error", error); throw error; }
-      console.log("[balancete] receivables:", data?.length, "período:", from, "→", to);
-      return data ?? [];
+        .from("bank_accounts" as any)
+        .select("id, name, bank, color")
+        .order("name");
+      if (error) throw error;
+      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string }[];
     },
   });
 
-  const { data: salesData } = useQuery({
-    queryKey: ["balancete-sales", from, to],
+  const { data: bankMovs } = useQuery({
+    queryKey: ["balancete-bankmovs", from, to],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("sales")
-        .select("id, total, status, channel, sold_at")
-        .gte("sold_at", from).lte("sold_at", `${to}T23:59:59`)
-        .not("status", "in", "(cancelado,orcamento)");
-      if (error) { console.error("[balancete] sales error", error); throw error; }
-      console.log("[balancete] sales:", data?.length);
-      return data ?? [];
+        .from("bank_movements" as any)
+        .select("account_id, movement_date, type, category, amount, origin")
+        .gte("movement_date", from).lte("movement_date", to)
+        .neq("origin", "saldo_inicial");
+      if (error) { console.error("[balancete] bank_movements error", error); throw error; }
+      console.log("[balancete] bank_movements:", data?.length, "período:", from, "→", to);
+      return (data ?? []) as unknown as { account_id: string; movement_date: string; type: string; category: string | null; amount: number }[];
     },
   });
 
@@ -98,31 +89,32 @@ function BalancetePage() {
     },
   });
 
-  const receitas = useMemo(() => {
-    const map: Record<string, { previsto: number; realizado: number }> = {};
-    for (const c of RECEITA_CATS) map[c] = { previsto: 0, realizado: 0 };
-
-    // Fonte 1: vendas (pedidos) — categorizadas por canal
-    for (const s of (salesData ?? []) as any[]) {
-      const ch = String(s.channel || "").toLowerCase();
-      const cat = CHANNEL_TO_CAT[ch] || "Outros";
-      const v = Number(s.total || 0);
-      map[cat].previsto += v;
-      if (s.status === "entregue") map[cat].realizado += v;
+  // Receitas agrupadas por conta bancária → categoria (somente entradas)
+  const receitasPorConta = useMemo(() => {
+    const accIdx: Record<string, { id: string; name: string; bank: string; color: string }> = {};
+    for (const a of bankAccounts ?? []) accIdx[a.id] = a;
+    const grouped: Record<string, { account: { id: string; name: string; bank: string; color: string }; cats: Record<string, number>; subtotal: number }> = {};
+    for (const m of bankMovs ?? []) {
+      if (m.type !== "entrada") continue;
+      const acc = accIdx[m.account_id];
+      if (!acc) continue;
+      const cat = m.category || "Outros";
+      if (!grouped[acc.id]) grouped[acc.id] = { account: acc, cats: {}, subtotal: 0 };
+      const v = Number(m.amount || 0);
+      grouped[acc.id].cats[cat] = (grouped[acc.id].cats[cat] ?? 0) + v;
+      grouped[acc.id].subtotal += v;
     }
+    return Object.values(grouped).sort((a, b) => a.account.name.localeCompare(b.account.name));
+  }, [bankAccounts, bankMovs]);
 
-    // Fonte 2: contas a receber — manuais (sem sale_id) ou Mercado Livre
-    for (const r of (receivables ?? []) as any[]) {
-      if (r.sale_id) continue; // já contabilizado via sales
-      const desc = String(r.description || "").toLowerCase();
-      const isML = desc.includes("ml") || desc.includes("mercado livre");
-      const cat = isML ? "Mercado Livre" : "Outros";
-      map[cat].previsto += Number(r.amount || 0);
-      if (r.status === "recebido") map[cat].realizado += Number(r.received_amount || r.amount || 0);
-      else map[cat].realizado += Number(r.received_amount || 0);
-    }
-    return map;
-  }, [receivables, salesData]);
+  const totalEntradas = useMemo(
+    () => (bankMovs ?? []).filter((m) => m.type === "entrada").reduce((s, m) => s + Number(m.amount || 0), 0),
+    [bankMovs]
+  );
+  const totalSaidasBank = useMemo(
+    () => (bankMovs ?? []).filter((m) => m.type === "saida").reduce((s, m) => s + Number(m.amount || 0), 0),
+    [bankMovs]
+  );
 
   const despesas = useMemo(() => {
     const map: Record<string, { previsto: number; realizado: number }> = {};
@@ -135,13 +127,25 @@ function BalancetePage() {
     return map;
   }, [payables]);
 
-  const totRec = useMemo(() => Object.values(receitas).reduce((a, v) => ({ previsto: a.previsto + v.previsto, realizado: a.realizado + v.realizado }), { previsto: 0, realizado: 0 }), [receitas]);
+  // Para compatibilidade com PDF/Excel e tabela Resultado, mantemos receitas como mapa categoria→valor
+  const receitas = useMemo(() => {
+    const map: Record<string, { previsto: number; realizado: number }> = {};
+    for (const g of receitasPorConta) {
+      for (const [cat, v] of Object.entries(g.cats)) {
+        const key = `${g.account.name} — ${cat}`;
+        map[key] = { previsto: v, realizado: v };
+      }
+    }
+    return map;
+  }, [receitasPorConta]);
+
+  const totRec = useMemo(() => ({ previsto: totalEntradas, realizado: totalEntradas }), [totalEntradas]);
   const totDesp = useMemo(() => Object.values(despesas).reduce((a, v) => ({ previsto: a.previsto + v.previsto, realizado: a.realizado + v.realizado }), { previsto: 0, realizado: 0 }), [despesas]);
 
-  const resPrevisto = totRec.previsto - totDesp.previsto;
-  const resRealizado = totRec.realizado - totDesp.realizado;
-  const margemPrev = totRec.previsto ? (resPrevisto / totRec.previsto) * 100 : 0;
-  const margemReal = totRec.realizado ? (resRealizado / totRec.realizado) * 100 : 0;
+  const resPrevisto = totalEntradas - totalSaidasBank;
+  const resRealizado = totalEntradas - totalSaidasBank;
+  const margemPrev = totalEntradas ? (resPrevisto / totalEntradas) * 100 : 0;
+  const margemReal = margemPrev;
 
   const monthly = useMemo(() => {
     const f = new Date(from), t = new Date(to);
@@ -154,32 +158,22 @@ function BalancetePage() {
     }
     const idx: Record<string, number> = {};
     months.forEach((m, i) => (idx[m.key] = i));
-    for (const r of (receivables ?? []) as any[]) {
-      if (r.sale_id) continue;
-      if (r.status !== "recebido") continue;
-      const d = new Date(r.received_at || r.due_date);
+    for (const m of bankMovs ?? []) {
+      const d = new Date(m.movement_date);
       const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      if (idx[k] != null) months[idx[k]].receitas += Number(r.received_amount || r.amount || 0);
-    }
-    for (const s of (salesData ?? []) as any[]) {
-      if (s.status !== "entregue") continue;
-      const d = new Date(s.sold_at);
-      const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      if (idx[k] != null) months[idx[k]].receitas += Number(s.total || 0);
-    }
-    for (const p of (payables ?? []) as any[]) {
-      if (p.status !== "pago") continue;
-      const d = new Date(p.paid_at || p.due_date);
-      const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      if (idx[k] != null) months[idx[k]].despesas += Number(p.paid_amount || p.amount || 0);
+      if (idx[k] == null) continue;
+      const v = Number(m.amount || 0);
+      if (m.type === "entrada") months[idx[k]].receitas += v;
+      else if (m.type === "saida") months[idx[k]].despesas += v;
     }
     months.forEach((m) => (m.resultado = m.receitas - m.despesas));
     return months;
-  }, [from, to, receivables, salesData, payables]);
+  }, [from, to, bankMovs]);
 
   const pieData = useMemo(() =>
     Object.entries(despesas).map(([name, v]) => ({ name, value: v.realizado })).filter(x => x.value > 0)
   , [despesas]);
+
 
   const exportPdf = () => {
     const doc = new jsPDF();
@@ -292,15 +286,15 @@ function BalancetePage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card className="shadow-soft"><CardContent className="p-5">
           <div className="inline-flex size-10 rounded-xl bg-success/10 text-success items-center justify-center mb-3"><TrendingUp className="size-5" /></div>
-          <div className="text-xs text-muted-foreground">Receitas (realizado)</div>
-          <div className="text-2xl font-display text-success">{brl(totRec.realizado)}</div>
-          <div className="text-xs text-muted-foreground mt-1">Previsto: {brl(totRec.previsto)}</div>
+          <div className="text-xs text-muted-foreground">Entradas (bancário)</div>
+          <div className="text-2xl font-display text-success">{brl(totalEntradas)}</div>
+          <div className="text-xs text-muted-foreground mt-1">Somatório de movimentações de entrada</div>
         </CardContent></Card>
         <Card className="shadow-soft"><CardContent className="p-5">
           <div className="inline-flex size-10 rounded-xl bg-destructive/10 text-destructive items-center justify-center mb-3"><TrendingDown className="size-5" /></div>
-          <div className="text-xs text-muted-foreground">Despesas (realizado)</div>
-          <div className="text-2xl font-display text-destructive">{brl(totDesp.realizado)}</div>
-          <div className="text-xs text-muted-foreground mt-1">Previsto: {brl(totDesp.previsto)}</div>
+          <div className="text-xs text-muted-foreground">Saídas (bancário)</div>
+          <div className="text-2xl font-display text-destructive">{brl(totalSaidasBank)}</div>
+          <div className="text-xs text-muted-foreground mt-1">Somatório de movimentações de saída</div>
         </CardContent></Card>
         <Card className={`shadow-soft ${resRealizado >= 0 ? "bg-success/5" : "bg-destructive/5"}`}><CardContent className="p-5">
           <div className="text-xs text-muted-foreground">Resultado</div>
@@ -313,22 +307,46 @@ function BalancetePage() {
 
       <Card className="shadow-soft mb-6">
         <CardContent className="p-5">
-          <h3 className="font-display text-lg mb-3 text-success">Receitas — Contas a Receber</h3>
+          <h3 className="font-display text-lg mb-3 text-success">Receitas — Contas Bancárias</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b text-muted-foreground text-left">
-                <th className="py-2">Categoria</th><th className="text-right">Previsto</th><th className="text-right">Realizado</th><th className="text-right">Diferença</th>
+                <th className="py-2">Conta Bancária</th><th>Categoria</th><th className="text-right">Valor</th>
               </tr></thead>
               <tbody>
-                {Object.entries(receitas).map(([c, v]) => (
-                  <tr key={c} className="border-b"><td className="py-2">{c}</td><td className="text-right">{brl(v.previsto)}</td><td className="text-right text-success">{brl(v.realizado)}</td><td className="text-right">{brl(v.realizado - v.previsto)}</td></tr>
+                {receitasPorConta.length === 0 && (
+                  <tr><td colSpan={3} className="py-6 text-center text-muted-foreground">Sem entradas bancárias no período.</td></tr>
+                )}
+                {receitasPorConta.map((g) => (
+                  <React.Fragment key={g.account.id}>
+                    {Object.entries(g.cats).sort((a, b) => b[1] - a[1]).map(([cat, val], i) => (
+                      <tr key={`${g.account.id}-${cat}`} className="border-b">
+                        <td className="py-2">
+                          {i === 0 ? (
+                            <span className="inline-flex items-center gap-2">
+                              <span className="size-2.5 rounded-full" style={{ background: g.account.color }} />
+                              {g.account.name}
+                              <span className="text-xs text-muted-foreground">({g.account.bank})</span>
+                            </span>
+                          ) : null}
+                        </td>
+                        <td className="text-muted-foreground">{cat}</td>
+                        <td className="text-right text-success">{brl(val)}</td>
+                      </tr>
+                    ))}
+                    <tr className="bg-success/5 border-b">
+                      <td className="py-2 text-xs text-muted-foreground" colSpan={2}>Subtotal {g.account.name}</td>
+                      <td className="text-right font-medium text-success">{brl(g.subtotal)}</td>
+                    </tr>
+                  </React.Fragment>
                 ))}
               </tbody>
-              <tfoot><tr className="bg-success/10 font-medium"><td className="py-2">TOTAL RECEITAS</td><td className="text-right">{brl(totRec.previsto)}</td><td className="text-right">{brl(totRec.realizado)}</td><td className="text-right">{brl(totRec.realizado - totRec.previsto)}</td></tr></tfoot>
+              <tfoot><tr className="bg-success/10 font-medium"><td className="py-2" colSpan={2}>TOTAL ENTRADAS</td><td className="text-right">{brl(totalEntradas)}</td></tr></tfoot>
             </table>
           </div>
         </CardContent>
       </Card>
+
 
       <Card className="shadow-soft mb-6">
         <CardContent className="p-5">
