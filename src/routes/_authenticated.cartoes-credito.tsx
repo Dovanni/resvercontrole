@@ -778,6 +778,23 @@ function CartaoDetalhe({ cartao, lancamentos, faturas }: { cartao: Cartao; lanca
           </TableBody>
         </Table>
       </CardContent></Card>
+
+      <Card className="shadow-soft"><CardContent className="p-5">
+        <div className="font-display text-lg mb-3">Próximas faturas</div>
+        <Table>
+          <TableHeader><TableRow><TableHead>Mês</TableHead><TableHead className="text-right">Valor da fatura</TableHead><TableHead className="text-right">Parcelas previstas</TableHead></TableRow></TableHeader>
+          <TableBody>
+            {proximas.length === 0 && <TableRow><TableCell colSpan={3} className="text-center py-6 text-muted-foreground">Sem faturas pendentes.</TableCell></TableRow>}
+            {proximas.map((p) => (
+              <TableRow key={`${p.ano}-${p.mes}`}>
+                <TableCell>{String(p.mes).padStart(2, "0")}/{p.ano}</TableCell>
+                <TableCell className="text-right font-medium">{brl(p.valor)}</TableCell>
+                <TableCell className="text-right">{p.parcelas}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent></Card>
     </div>
   );
 }
