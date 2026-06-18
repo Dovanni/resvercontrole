@@ -230,7 +230,7 @@ function CartoesPage() {
 
         {cartoes.map((c) => (
           <TabsContent key={c.id} value={c.id} className="mt-4">
-            <CartaoDetalhe cartao={c} lancamentos={lancByCartao[c.id] ?? []} />
+            <CartaoDetalhe cartao={c} lancamentos={lancByCartao[c.id] ?? []} faturas={faturas.filter((f) => f.cartao_id === c.id)} />
           </TabsContent>
         ))}
       </Tabs>
