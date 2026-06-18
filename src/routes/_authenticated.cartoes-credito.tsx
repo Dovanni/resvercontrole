@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { PageHeader } from "@/components/app-shell";
@@ -608,11 +608,24 @@ function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: L
   }, [lancamentos, curMes, curAno]);
   const [mes, setMes] = useState(String(defaultFat.mes));
   const [ano, setAno] = useState(String(defaultFat.ano));
+  const touchedRef = useRef(false);
+  // Auto-sync month/year to first fatura with data when lançamentos arrive (until user changes it)
+  useEffect(() => {
+    if (touchedRef.current) return;
+    setMes(String(defaultFat.mes));
+    setAno(String(defaultFat.ano));
+  }, [defaultFat.mes, defaultFat.ano]);
+  const onChangeMes = (v: string) => { touchedRef.current = true; setMes(v); };
+  const onChangeAno = (v: string) => { touchedRef.current = true; setAno(v); };
   const mesN = Number(mes), anoN = Number(ano);
 
   const filtered = lancamentos.filter((l) => l.mes_fatura === mesN && l.ano_fatura === anoN);
   const total = filtered.reduce((s, l) => s + Number(l.valor), 0);
-  const disp = Math.max(0, Number(cartao.limite_total) - total);
+  // Limite usado = soma de TODAS as parcelas pendentes (do mês atual em diante)
+  const usadoTotal = lancamentos
+    .filter((l) => l.ano_fatura > curAno || (l.ano_fatura === curAno && l.mes_fatura >= curMes))
+    .reduce((s, l) => s + Number(l.valor), 0);
+  const disp = Math.max(0, Number(cartao.limite_total) - usadoTotal);
   const catTotals = CAT_KEYS.map((k) => ({
     k, valor: filtered.filter((l) => l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
   }));
@@ -622,15 +635,15 @@ function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: L
     <div className="space-y-4">
       <div className="flex gap-2 items-end">
         <div><Label className="text-xs">Mês</Label>
-          <Select value={mes} onValueChange={setMes}>
+          <Select value={mes} onValueChange={onChangeMes}>
             <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
             <SelectContent>{Array.from({ length: 12 }, (_, i) => i + 1).map((m) => <SelectItem key={m} value={String(m)}>{String(m).padStart(2, "0")}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div><Label className="text-xs">Ano</Label>
-          <Select value={ano} onValueChange={setAno}>
+          <Select value={ano} onValueChange={onChangeAno}>
             <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
-            <SelectContent>{[today.getFullYear() - 1, today.getFullYear(), today.getFullYear() + 1].map((a) => <SelectItem key={a} value={String(a)}>{a}</SelectItem>)}</SelectContent>
+            <SelectContent>{[today.getFullYear() - 1, today.getFullYear(), today.getFullYear() + 1, today.getFullYear() + 2].map((a) => <SelectItem key={a} value={String(a)}>{a}</SelectItem>)}</SelectContent>
           </Select>
         </div>
       </div>
