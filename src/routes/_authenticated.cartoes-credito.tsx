@@ -877,11 +877,11 @@ function HistoricoMensal({ cartoes, lancamentos }: { cartoes: Cartao[]; lancamen
   const [cartaoId, setCartaoId] = useState("todos");
 
   const filtered = cartaoId === "todos" ? lancamentos : lancamentos.filter((l) => l.cartao_id === cartaoId);
-  const map: Record<string, { mes: string; Combustível: number; Casa: number; Pessoal: number }> = {};
+  const map: Record<string, { mes: string; Combustível: number; Casa: number; Pessoal: number; Fornecedores: number }> = {};
   for (const l of filtered) {
     const k = `${l.ano_fatura}-${String(l.mes_fatura).padStart(2, "0")}`;
-    map[k] ??= { mes: k, Combustível: 0, Casa: 0, Pessoal: 0 };
-    const catKey = l.categoria === "combustivel" ? "Combustível" : l.categoria === "casa" ? "Casa" : "Pessoal";
+    map[k] ??= { mes: k, Combustível: 0, Casa: 0, Pessoal: 0, Fornecedores: 0 };
+    const catKey = l.categoria === "combustivel" ? "Combustível" : l.categoria === "casa" ? "Casa" : l.categoria === "fornecedores" ? "Fornecedores" : "Pessoal";
     map[k][catKey] += Number(l.valor);
   }
   const data = Object.values(map).sort((a, b) => a.mes.localeCompare(b.mes));
