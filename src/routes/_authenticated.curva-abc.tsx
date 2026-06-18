@@ -119,7 +119,7 @@ function CurvaABCPage() {
     queryFn: async () => {
       let q = supabase
         .from("sale_items")
-        .select("product_id, quantity, total, unit_price, products(name, category), sales!inner(sold_at, status, channel)")
+        .select("product_id, quantity, unit_price, products(name, category), sales!inner(sold_at, status, channel)")
         .gte("sales.sold_at", new Date(applied.from).toISOString())
         .lte("sales.sold_at", new Date(applied.to + "T23:59:59").toISOString())
         .neq("sales.status", "cancelado");
@@ -151,7 +151,7 @@ function CurvaABCPage() {
       const cat = it.products?.category ?? "—";
       m[key] ??= { key, label: name, meta: cat, qty: 0, value: 0, orders: 0, unit: 0, n: 0 };
       m[key].qty += Number(it.quantity);
-      m[key].value += Number(it.total);
+      m[key].value += Number(it.quantity) * Number(it.unit_price ?? 0);
       m[key].unit += Number(it.unit_price ?? 0);
       m[key].n += 1;
     }
