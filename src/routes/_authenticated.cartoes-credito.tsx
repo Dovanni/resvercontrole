@@ -931,6 +931,58 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
         </div>
       </CardContent></Card>
 
+      {/* Resumo de limites — usado real considerando todas parcelas pendentes */}
+      <Card className="shadow-soft"><CardContent className="p-5">
+        <div className="font-display text-lg mb-3">Resumo de limites</div>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader><TableRow>
+              <TableHead>Cartão</TableHead>
+              <TableHead className="text-right">Limite</TableHead>
+              <TableHead className="text-right">Usado</TableHead>
+              <TableHead className="text-right">Disponível</TableHead>
+              <TableHead className="text-right">% Usado</TableHead>
+              <TableHead className="text-center">Status</TableHead>
+            </TableRow></TableHeader>
+            <TableBody>
+              {(() => {
+                const rows = cartoes.map((c) => {
+                  const u = calcUsado(c.id, lancamentos, faturas);
+                  const st = limiteStatus(Number(c.limite_total), u);
+                  return { c, usado: u, ...st };
+                });
+                const tot = rows.reduce((a, r) => ({ limite: a.limite + Number(r.c.limite_total), usado: a.usado + r.usado }), { limite: 0, usado: 0 });
+                return (
+                  <>
+                    {rows.map(({ c, usado: u, disp, pct, level }) => (
+                      <TableRow key={c.id} className={level === "estourado" ? "bg-destructive/5" : level === "critico" ? "bg-amber-50" : ""}>
+                        <TableCell><span className="inline-block size-3 rounded-full mr-2 align-middle" style={{ background: c.cor }} />{c.nome}</TableCell>
+                        <TableCell className="text-right">{brl(Number(c.limite_total))}</TableCell>
+                        <TableCell className="text-right">{brl(u)}</TableCell>
+                        <TableCell className={`text-right font-medium ${disp < 0 ? "text-destructive" : "text-success"}`}>{brl(disp)}</TableCell>
+                        <TableCell className={`text-right ${level === "estourado" ? "text-destructive font-medium" : level === "critico" ? "text-amber-600 font-medium" : ""}`}>{pct.toFixed(0)}%</TableCell>
+                        <TableCell className="text-center">{level === "estourado" ? "⛔" : level === "critico" ? "⚠️" : "✅"}</TableCell>
+                      </TableRow>
+                    ))}
+                    {rows.length > 0 && (
+                      <TableRow className="font-medium bg-muted/40">
+                        <TableCell>TOTAL</TableCell>
+                        <TableCell className="text-right">{brl(tot.limite)}</TableCell>
+                        <TableCell className="text-right">{brl(tot.usado)}</TableCell>
+                        <TableCell className={`text-right ${tot.limite - tot.usado < 0 ? "text-destructive" : "text-success"}`}>{brl(tot.limite - tot.usado)}</TableCell>
+                        <TableCell className="text-right">{tot.limite > 0 ? ((tot.usado / tot.limite) * 100).toFixed(0) : 0}%</TableCell>
+                        <TableCell />
+                      </TableRow>
+                    )}
+                  </>
+                );
+              })()}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent></Card>
+
+
       {/* Tabela comparativa */}
       <Card className="shadow-soft"><CardContent className="p-0">
         <div className="overflow-x-auto">
