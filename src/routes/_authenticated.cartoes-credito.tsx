@@ -469,6 +469,7 @@ function LancDialog({ cartoes, userId, onDone }: { cartoes: Cartao[]; userId: st
       const rows: any[] = [];
       const valorPorParcela = valorNum / parcelas;
       const baseFat = computeFatura(f.data, cartao.dia_fechamento);
+      console.log("[cartao-lancamento] cartao_id:", cartao.id, "data:", f.data, "fatura:", `${String(baseFat.mes).padStart(2,"0")}/${baseFat.ano}`, "parcelas:", parcelas);
       for (let i = 0; i < parcelas; i++) {
         let mes = baseFat.mes + i, ano = baseFat.ano;
         while (mes > 12) { mes -= 12; ano += 1; }
@@ -488,7 +489,7 @@ function LancDialog({ cartoes, userId, onDone }: { cartoes: Cartao[]; userId: st
         });
       }
       const { error } = await (supabase.from("cartoes_lancamentos" as any).insert(rows));
-      if (error) throw error;
+      if (error) { console.error("[cartao-lancamento] INSERT error:", error); throw error; }
     },
     onSuccess: () => { toast.success("Lançamento salvo"); onDone(); },
     onError: (e: any) => toast.error(e.message),
