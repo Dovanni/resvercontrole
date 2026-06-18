@@ -240,6 +240,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
   const [method, setMethod] = useState("dinheiro");
   const [discount, setDiscount] = useState(0);
   const [discountMode, setDiscountMode] = useState<"reais" | "percent">("reais");
+  const [shipping, setShipping] = useState(0);
   const [items, setItems] = useState<LineItem[]>([]);
   const [bankAccountId, setBankAccountId] = useState<string>("");
   const [loaded, setLoaded] = useState(false);
