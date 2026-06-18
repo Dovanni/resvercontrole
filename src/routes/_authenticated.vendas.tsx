@@ -282,14 +282,18 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     setDiscount(Number(existing.discount ?? 0));
     setDiscountMode("reais");
     setBankAccountId(existing.bank_account_id ?? "");
-    setItems((existing.sale_items ?? []).map((it: any) => ({
+    const hydratedItems = (existing.sale_items ?? []).map((it: any) => ({
       product_id: it.product_id,
       quantity: Number(it.quantity),
       unit_price: Number(it.unit_price),
       unit_cost: Number(it.unit_cost ?? 0),
       name: it.products?.name ?? "",
       max: Number(it.products?.stock ?? 0) + Number(it.quantity),
-    })));
+    }));
+    setItems(hydratedItems);
+    const sub = hydratedItems.reduce((s: number, i: any) => s + i.quantity * i.unit_price, 0);
+    const inferredShipping = Math.max(0, Number(existing.total ?? 0) - sub + Number(existing.discount ?? 0));
+    setShipping(inferredShipping);
     setLoaded(true);
   }, [editing, existing, loaded]);
 
