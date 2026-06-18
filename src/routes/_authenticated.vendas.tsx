@@ -306,7 +306,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     () => discountMode === "percent" ? (subtotal * Math.min(100, Math.max(0, discount))) / 100 : discount,
     [discountMode, discount, subtotal]
   );
-  const total = useMemo(() => Math.max(0, subtotal - discountValue), [subtotal, discountValue]);
+  const total = useMemo(() => Math.max(0, subtotal - discountValue + (Number(shipping) || 0)), [subtotal, discountValue, shipping]);
 
   function pickCustomer(id: string) {
     setCustomerId(id);
