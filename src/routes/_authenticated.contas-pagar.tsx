@@ -153,18 +153,6 @@ function PayablesPage() {
 
   const today = new Date().toISOString().slice(0, 10);
 
-  const totals = useMemo(() => {
-    const pending = (data ?? []).filter(p => p.status === "pendente");
-    const overdue = pending.filter(p => p.due_date < today);
-    return {
-      pendingAmount: pending.reduce((s, p) => s + Number(p.amount), 0),
-      overdueCount: overdue.length,
-      paidThisMonth: (data ?? [])
-        .filter(p => p.status === "pago" && p.paid_at?.slice(0, 7) === new Date().toISOString().slice(0, 7))
-        .reduce((s, p) => s + Number(p.paid_amount || p.amount), 0),
-    };
-  }, [data, today]);
-
   const filtered = useMemo(() => {
     let rows = (data ?? []).slice();
     if (fDateFrom) rows = rows.filter(p => p.due_date >= fDateFrom);
@@ -197,6 +185,50 @@ function PayablesPage() {
     return rows;
   }, [data, fDateFrom, fDateTo, fSupplier, fCategory, fStatus, fSearch, sort, today]);
 
+  const totals = useMemo(() => {
+    const in7 = new Date(); in7.setDate(in7.getDate() + 7);
+    const in7s = in7.toISOString().slice(0, 10);
+    const pending = filtered.filter(p => p.status === "pendente");
+    const overdue = pending.filter(p => p.due_date < today);
+    const paidPeriod = filtered.filter(p => p.status === "pago");
+    const next7 = filtered.filter(p => p.status === "pendente" && p.due_date >= today && p.due_date <= in7s);
+    return {
+      pendingAmount: pending.reduce((s, p) => s + Number(p.amount), 0),
+      overdueCount: overdue.length,
+      paidPeriodAmount: paidPeriod.reduce((s, p) => s + Number(p.paid_amount || p.amount), 0),
+      totalAmount: filtered.reduce((s, p) => s + Number(p.amount), 0),
+      next7Amount: next7.reduce((s, p) => s + Number(p.amount), 0),
+      count: filtered.length,
+    };
+  }, [filtered, today]);
+
+  const grouped = useMemo(() => {
+    if (groupBy === "none") return null;
+    const map = new Map<string, { label: string; items: Payable[]; sortKey: string }>();
+    for (const p of filtered) {
+      let key: string, label: string, sortKey: string;
+      if (groupBy === "month") {
+        key = p.due_date.slice(0, 7);
+        const [y, m] = key.split("-");
+        label = `${MONTH_NAMES[Number(m) - 1]}/${y}`;
+        sortKey = key;
+      } else if (groupBy === "supplier") {
+        key = p.supplier_id ?? "__none__";
+        label = p.suppliers?.name ?? "Sem fornecedor";
+        sortKey = label.toLowerCase();
+      } else {
+        key = p.category;
+        label = p.category;
+        sortKey = key;
+      }
+      if (!map.has(key)) map.set(key, { label, items: [], sortKey });
+      map.get(key)!.items.push(p);
+    }
+    return Array.from(map.entries())
+      .map(([key, v]) => ({ key, ...v, subtotal: v.items.reduce((s, p) => s + Number(p.amount), 0) }))
+      .sort((a, b) => a.sortKey < b.sortKey ? -1 : 1);
+  }, [filtered, groupBy]);
+
   const remove = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("payables").delete().eq("id", id); if (error) throw error; },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["payables"] }); toast.success("Removido"); },
@@ -222,6 +254,85 @@ function PayablesPage() {
     (data ?? []).forEach(p => set.add(p.category));
     return Array.from(set).sort();
   }, [data]);
+
+  const periodLabel = () => {
+    if (preset === "today") return "hoje";
+    if (preset === "week") return "semana";
+    if (preset === "month") return "mes";
+    if (preset === "next30") return "prox30dias";
+    if (preset === "next90") return "prox3meses";
+    if (fDateFrom || fDateTo) return `${fDateFrom || "inicio"}_a_${fDateTo || "fim"}`;
+    return "todos";
+  };
+
+  const exportXlsx = () => {
+    const rows = filtered.map(p => ({
+      Vencimento: p.due_date,
+      Descrição: p.description,
+      Fornecedor: p.suppliers?.name ?? "",
+      Categoria: p.category,
+      Status: p.status === "pendente" && p.due_date < today ? "atrasado" : p.status,
+      Valor: Number(p.amount),
+    }));
+    rows.push({ Vencimento: "", Descrição: "TOTAL", Fornecedor: "", Categoria: "", Status: "", Valor: totals.totalAmount });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Contas a Pagar");
+    XLSX.writeFile(wb, `contas_pagar_${periodLabel()}.xlsx`);
+  };
+
+  const renderRow = (p: Payable) => {
+    const overdue = p.status === "pendente" && p.due_date < today;
+    return (
+      <TableRow key={p.id}>
+        <TableCell className={overdue ? "text-destructive font-medium" : "text-muted-foreground"}>
+          <InlineDate value={p.due_date} onSave={async (v) => {
+            const { error } = await supabase.from("payables").update({ due_date: v }).eq("id", p.id);
+            if (error) throw error;
+            qc.invalidateQueries({ queryKey: ["payables"] });
+          }} />
+        </TableCell>
+        <TableCell className="font-medium">
+          <InlineText value={p.description} onSave={async (v) => {
+            if (!v.trim()) throw new Error("Descrição obrigatória");
+            const { error } = await supabase.from("payables").update({ description: v.trim() }).eq("id", p.id);
+            if (error) throw error;
+            qc.invalidateQueries({ queryKey: ["payables"] });
+          }} />
+        </TableCell>
+        <TableCell className="text-muted-foreground text-sm">{p.suppliers?.name ?? "—"}</TableCell>
+        <TableCell className="capitalize text-muted-foreground text-sm">{p.category}</TableCell>
+        <TableCell><StatusBadge status={overdue ? "atrasado" : p.status} /></TableCell>
+        <TableCell className="text-right font-medium">
+          <InlineNumber value={Number(p.amount)} onSave={async (v) => {
+            if (v <= 0) throw new Error("Informe um valor maior que zero");
+            const { error } = await supabase.from("payables").update({ amount: v }).eq("id", p.id);
+            if (error) throw error;
+            qc.invalidateQueries({ queryKey: ["payables"] });
+          }} />
+        </TableCell>
+        <TableCell className="text-right whitespace-nowrap">
+          <Button variant="ghost" size="icon" title="Editar" onClick={() => setEditTarget(p)}>
+            <Pencil className="size-4" />
+          </Button>
+          {p.status !== "pago" && p.status !== "cancelado" && (
+            <Button variant="ghost" size="icon" title="Marcar como pago" onClick={() => setPayTarget(p)}>
+              <CheckCircle2 className="size-4 text-success" />
+            </Button>
+          )}
+          <Button variant="ghost" size="icon" onClick={async () => {
+            if (await confirm({ title: "Excluir conta?", description: `A conta "${p.description}" será removida permanentemente.` })) remove.mutate(p.id);
+          }}>
+            <Trash2 className="size-4 text-destructive" />
+          </Button>
+        </TableCell>
+      </TableRow>
+    );
+  };
+
+  const footerTotalPending = filtered.filter(p => p.status === "pendente").reduce((s, p) => s + Number(p.amount), 0);
+  const footerTotalPaid = filtered.filter(p => p.status === "pago").reduce((s, p) => s + Number(p.paid_amount || p.amount), 0);
+
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
