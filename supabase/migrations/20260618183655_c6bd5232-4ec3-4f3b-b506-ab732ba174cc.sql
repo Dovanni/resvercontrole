@@ -1,0 +1,2 @@
+ALTER TABLE public.cartoes_lancamentos DROP CONSTRAINT IF EXISTS cartoes_lancamentos_categoria_check;
+ALTER TABLE public.cartoes_lancamentos ADD CONSTRAINT cartoes_lancamentos_categoria_check CHECK (categoria = ANY (ARRAY['combustivel'::text, 'casa'::text, 'pessoal'::text, 'fornecedores'::text]));
