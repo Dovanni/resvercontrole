@@ -155,10 +155,17 @@ function BalancetePage() {
     const idx: Record<string, number> = {};
     months.forEach((m, i) => (idx[m.key] = i));
     for (const r of (receivables ?? []) as any[]) {
+      if (r.sale_id) continue;
       if (r.status !== "recebido") continue;
       const d = new Date(r.received_at || r.due_date);
       const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
       if (idx[k] != null) months[idx[k]].receitas += Number(r.received_amount || r.amount || 0);
+    }
+    for (const s of (salesData ?? []) as any[]) {
+      if (s.status !== "entregue") continue;
+      const d = new Date(s.sold_at);
+      const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      if (idx[k] != null) months[idx[k]].receitas += Number(s.total || 0);
     }
     for (const p of (payables ?? []) as any[]) {
       if (p.status !== "pago") continue;
@@ -168,7 +175,7 @@ function BalancetePage() {
     }
     months.forEach((m) => (m.resultado = m.receitas - m.despesas));
     return months;
-  }, [from, to, receivables, payables]);
+  }, [from, to, receivables, salesData, payables]);
 
   const pieData = useMemo(() =>
     Object.entries(despesas).map(([name, v]) => ({ name, value: v.realizado })).filter(x => x.value > 0)
