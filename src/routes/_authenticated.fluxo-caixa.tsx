@@ -334,6 +334,8 @@ function CashFlowPage() {
           </Table>
         </CardContent>
       </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
