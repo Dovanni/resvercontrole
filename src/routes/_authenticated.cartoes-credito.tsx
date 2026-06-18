@@ -504,6 +504,45 @@ function CatCard({ k, valor, pct }: { k: "combustivel" | "casa" | "pessoal"; val
   );
 }
 
+function CartaoSelector({ cartoes, value, onChange }: { cartoes: Cartao[]; value: string; onChange: (v: string) => void }) {
+  const [busca, setBusca] = useState("");
+  const [open, setOpen] = useState(false);
+  const selected = cartoes.find((c) => c.id === value);
+  const filtered = cartoes.filter((c) => c.nome.toLowerCase().includes(busca.toLowerCase()));
+  const grupos: Record<string, Cartao[]> = {};
+  for (const c of filtered) (grupos[c.bandeira] ??= []).push(c);
+
+  return (
+    <div className="relative">
+      <button type="button" onClick={() => setOpen(!open)} className="w-full flex items-center justify-between rounded-md border bg-background px-3 py-2 text-sm">
+        {selected ? (
+          <span className="flex items-center gap-2"><span className="inline-block size-3 rounded-full" style={{ background: selected.cor }} />{selected.nome} <span className="text-xs text-muted-foreground">· {selected.bandeira}</span></span>
+        ) : <span className="text-muted-foreground">Selecione um cartão</span>}
+        <span className="text-xs">▼</span>
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg max-h-72 overflow-auto">
+          <div className="p-2 sticky top-0 bg-popover border-b">
+            <Input autoFocus value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar..." className="h-8" />
+          </div>
+          {Object.keys(grupos).length === 0 && <div className="p-3 text-sm text-muted-foreground">Nenhum cartão.</div>}
+          {Object.entries(grupos).map(([band, list]) => (
+            <div key={band}>
+              <div className="px-3 py-1 text-xs font-medium text-muted-foreground bg-muted/50">{band}</div>
+              {list.map((c) => (
+                <button key={c.id} type="button" onClick={() => { onChange(c.id); setOpen(false); setBusca(""); }} className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-accent ${c.id === value ? "bg-accent" : ""}`}>
+                  <span className="inline-block size-3 rounded-full" style={{ background: c.cor }} />
+                  <span className="flex-1">{c.nome}</span>
+                </button>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: Lancamento[] }) {
   const today = new Date();
   const [mes, setMes] = useState(String(today.getMonth() + 1));
