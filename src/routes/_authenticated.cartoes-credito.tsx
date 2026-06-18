@@ -668,7 +668,7 @@ function CartaoSelector({ cartoes, value, onChange }: { cartoes: Cartao[]; value
   );
 }
 
-function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: Lancamento[] }) {
+function CartaoDetalhe({ cartao, lancamentos, faturas }: { cartao: Cartao; lancamentos: Lancamento[]; faturas: Fatura[] }) {
   const today = new Date();
   const curMes = today.getMonth() + 1;
   const curAno = today.getFullYear();
@@ -682,7 +682,6 @@ function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: L
   const [mes, setMes] = useState(String(defaultFat.mes));
   const [ano, setAno] = useState(String(defaultFat.ano));
   const touchedRef = useRef(false);
-  // Auto-sync month/year to first fatura with data when lançamentos arrive (until user changes it)
   useEffect(() => {
     if (touchedRef.current) return;
     setMes(String(defaultFat.mes));
@@ -694,15 +693,26 @@ function CartaoDetalhe({ cartao, lancamentos }: { cartao: Cartao; lancamentos: L
 
   const filtered = lancamentos.filter((l) => l.mes_fatura === mesN && l.ano_fatura === anoN);
   const total = filtered.reduce((s, l) => s + Number(l.valor), 0);
-  // Limite usado = soma de TODAS as parcelas pendentes (do mês atual em diante)
-  const usadoTotal = lancamentos
-    .filter((l) => l.ano_fatura > curAno || (l.ano_fatura === curAno && l.mes_fatura >= curMes))
-    .reduce((s, l) => s + Number(l.valor), 0);
-  const disp = Math.max(0, Number(cartao.limite_total) - usadoTotal);
+  // Limite usado = todas parcelas com fatura ainda não paga
+  const usadoTotal = calcUsado(cartao.id, lancamentos, faturas);
+  const { disp, pct, level } = limiteStatus(Number(cartao.limite_total), usadoTotal);
   const catTotals = CAT_KEYS.map((k) => ({
     k, valor: filtered.filter((l) => l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
   }));
   const pieData = catTotals.map(({ k, valor }) => ({ name: CAT_META[k].label, value: valor, color: CAT_META[k].color }));
+
+  // Próximas faturas — agrupa lançamentos pendentes por (ano,mes), apenas futuras (incluindo o mês atual)
+  const pagasSet = new Set(faturas.filter((f) => f.status === "paga").map((f) => `${f.ano}-${f.mes}`));
+  const proximasMap: Record<string, { ano: number; mes: number; valor: number; parcelas: number }> = {};
+  for (const l of lancamentos) {
+    const k = `${l.ano_fatura}-${l.mes_fatura}`;
+    if (pagasSet.has(k)) continue;
+    if (l.ano_fatura < curAno || (l.ano_fatura === curAno && l.mes_fatura < curMes)) continue;
+    proximasMap[k] ??= { ano: l.ano_fatura, mes: l.mes_fatura, valor: 0, parcelas: 0 };
+    proximasMap[k].valor += Number(l.valor);
+    proximasMap[k].parcelas += 1;
+  }
+  const proximas = Object.values(proximasMap).sort((a, b) => a.ano - b.ano || a.mes - b.mes);
 
   return (
     <div className="space-y-4">
