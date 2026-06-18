@@ -293,8 +293,9 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     }));
     setItems(hydratedItems);
     const sub = hydratedItems.reduce((s: number, i: any) => s + i.quantity * i.unit_price, 0);
-    const inferredShipping = Math.max(0, Number(existing.total ?? 0) - sub + Number(existing.discount ?? 0));
+    const inferredShipping = Math.max(0, Number(existing.total ?? 0) - sub + Number(existing.discount ?? 0) + Number(existing.mercado_pago_fees ?? 0));
     setShipping(inferredShipping);
+    setMercadoPagoFees(Number(existing.mercado_pago_fees ?? 0));
     setLoaded(true);
   }, [editing, existing, loaded]);
 
