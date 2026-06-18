@@ -11,12 +11,43 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Plus, Trash2, CheckCircle2, AlertCircle, Pencil, ArrowUpDown } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, AlertCircle, Pencil, ArrowUpDown, Download, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
 import { useConfirm } from "@/components/confirm-dialog";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { CategoriasManagerDialog, useCategoriasContasPagar } from "@/components/categorias-contas-pagar-manager";
+import * as XLSX from "xlsx";
+
+type PeriodPreset = "all" | "today" | "week" | "month" | "next30" | "next90" | "custom";
+type GroupBy = "none" | "month" | "supplier" | "category";
+
+function computePresetRange(preset: PeriodPreset): { from: string; to: string } {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  if (preset === "today") return { from: iso(today), to: iso(today) };
+  if (preset === "week") {
+    const day = today.getDay(); const start = new Date(today); start.setDate(today.getDate() - day);
+    const end = new Date(start); end.setDate(start.getDate() + 6);
+    return { from: iso(start), to: iso(end) };
+  }
+  if (preset === "month") {
+    const start = new Date(today.getFullYear(), today.getMonth(), 1);
+    const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    return { from: iso(start), to: iso(end) };
+  }
+  if (preset === "next30") {
+    const end = new Date(today); end.setDate(today.getDate() + 30);
+    return { from: iso(today), to: iso(end) };
+  }
+  if (preset === "next90") {
+    const end = new Date(today); end.setDate(today.getDate() + 90);
+    return { from: iso(today), to: iso(end) };
+  }
+  return { from: "", to: "" };
+}
+
+const MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
 export const Route = createFileRoute("/_authenticated/contas-pagar")({
   head: () => ({ meta: [{ title: "Contas a pagar — Rosé" }] }),
