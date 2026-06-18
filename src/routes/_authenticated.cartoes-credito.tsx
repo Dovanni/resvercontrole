@@ -595,6 +595,7 @@ function LancDialog({ cartoes, lancamentos, faturas, userId, onDone }: { cartoes
       <DialogFooter>
         <Button
           onClick={async () => {
+            if (save.isPending) return;
             if (vaiEstourar) {
               const ok = await confirm({
                 title: "Limite vai estourar",
@@ -604,11 +605,12 @@ function LancDialog({ cartoes, lancamentos, faturas, userId, onDone }: { cartoes
               });
               if (!ok) return;
             }
+            if (save.isPending) return;
             save.mutate();
           }}
           disabled={save.isPending}
         >
-          Salvar
+          {save.isPending ? "Salvando..." : "Salvar"}
         </Button>
       </DialogFooter>
     </DialogContent>
