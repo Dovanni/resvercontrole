@@ -241,6 +241,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
   const [discount, setDiscount] = useState(0);
   const [discountMode, setDiscountMode] = useState<"reais" | "percent">("reais");
   const [shipping, setShipping] = useState(0);
+  const [mercadoPagoFees, setMercadoPagoFees] = useState(0);
   const [items, setItems] = useState<LineItem[]>([]);
   const [bankAccountId, setBankAccountId] = useState<string>("");
   const [loaded, setLoaded] = useState(false);
@@ -292,8 +293,9 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     }));
     setItems(hydratedItems);
     const sub = hydratedItems.reduce((s: number, i: any) => s + i.quantity * i.unit_price, 0);
-    const inferredShipping = Math.max(0, Number(existing.total ?? 0) - sub + Number(existing.discount ?? 0));
+    const inferredShipping = Math.max(0, Number(existing.total ?? 0) - sub + Number(existing.discount ?? 0) + Number(existing.mercado_pago_fees ?? 0));
     setShipping(inferredShipping);
+    setMercadoPagoFees(Number(existing.mercado_pago_fees ?? 0));
     setLoaded(true);
   }, [editing, existing, loaded]);
 
@@ -310,7 +312,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     () => discountMode === "percent" ? (subtotal * Math.min(100, Math.max(0, discount))) / 100 : discount,
     [discountMode, discount, subtotal]
   );
-  const total = useMemo(() => Math.max(0, subtotal - discountValue + (Number(shipping) || 0)), [subtotal, discountValue, shipping]);
+  const total = useMemo(() => Math.max(0, subtotal - discountValue + (Number(shipping) || 0) - (Number(mercadoPagoFees) || 0)), [subtotal, discountValue, shipping, mercadoPagoFees]);
 
   function pickCustomer(id: string) {
     setCustomerId(id);
@@ -347,6 +349,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
         customer_id: customerId || null,
         customer_name: selected?.name ?? (walkInName || null),
         channel, status, payment_method: method, total, discount: discountValue,
+        mercado_pago_fees: Number(mercadoPagoFees) || 0,
         bank_account_id: bankAccountId || null,
       };
 
@@ -514,10 +517,18 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
         </div>
       </div>
 
+      <div className="space-y-1.5">
+        <Label>Juros Mercado Pago (R$)</Label>
+        <Input type="number" step="0.01" min={0}
+          value={mercadoPagoFees} onChange={(e) => setMercadoPagoFees(Number(e.target.value))} />
+        <div className="text-xs text-muted-foreground">Valor dos juros cobrados pelo Mercado Pago a abater do total</div>
+      </div>
+
       <div className="rounded-md border p-3 space-y-1 text-right">
         <div className="text-xs text-muted-foreground flex justify-between"><span>Subtotal produtos</span><span>{brl(subtotal)}</span></div>
         <div className="text-xs text-muted-foreground flex justify-between"><span>Desconto</span><span>-{brl(discountValue)}</span></div>
         <div className="text-xs text-muted-foreground flex justify-between"><span>Frete cliente</span><span>+{brl(Number(shipping) || 0)}</span></div>
+        <div className="text-xs text-muted-foreground flex justify-between"><span>Juros Mercado Pago</span><span>-{brl(Number(mercadoPagoFees) || 0)}</span></div>
         <div className="border-t pt-1 flex items-end justify-between">
           <span className="text-xs text-muted-foreground">TOTAL</span>
           <span className="font-display text-3xl">{brl(total)}</span>

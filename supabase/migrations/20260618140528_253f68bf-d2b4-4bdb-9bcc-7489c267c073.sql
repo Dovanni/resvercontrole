@@ -1,0 +1,1 @@
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS mercado_pago_fees NUMERIC DEFAULT 0;
