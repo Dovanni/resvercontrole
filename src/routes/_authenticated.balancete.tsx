@@ -161,13 +161,19 @@ function BalancetePage() {
     return map;
   }, [receitasPorConta]);
 
-  const totRec = useMemo(() => ({ previsto: totalEntradas, realizado: totalEntradas }), [totalEntradas]);
+  const totalSaldoAtual = useMemo(
+    () => Object.values(saldoPorConta).reduce((s, v) => s + v, 0),
+    [saldoPorConta]
+  );
+  const receitasRealizadas = totalSaldoAtual + totalEntradas;
+
+  const totRec = useMemo(() => ({ previsto: totalEntradas, realizado: receitasRealizadas }), [totalEntradas, receitasRealizadas]);
   const totDesp = useMemo(() => Object.values(despesas).reduce((a, v) => ({ previsto: a.previsto + v.previsto, realizado: a.realizado + v.realizado }), { previsto: 0, realizado: 0 }), [despesas]);
 
-  const resPrevisto = totalEntradas - totalSaidasBank;
-  const resRealizado = totalEntradas - totalSaidasBank;
+  const resPrevisto = totalEntradas - totDesp.previsto;
+  const resRealizado = receitasRealizadas - totDesp.realizado;
   const margemPrev = totalEntradas ? (resPrevisto / totalEntradas) * 100 : 0;
-  const margemReal = margemPrev;
+  const margemReal = receitasRealizadas ? (resRealizado / receitasRealizadas) * 100 : 0;
 
   const monthly = useMemo(() => {
     const f = new Date(from), t = new Date(to);
@@ -308,9 +314,9 @@ function BalancetePage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card className="shadow-soft"><CardContent className="p-5">
           <div className="inline-flex size-10 rounded-xl bg-success/10 text-success items-center justify-center mb-3"><TrendingUp className="size-5" /></div>
-          <div className="text-xs text-muted-foreground">Entradas (bancário)</div>
-          <div className="text-2xl font-display text-success">{brl(totalEntradas)}</div>
-          <div className="text-xs text-muted-foreground mt-1">Somatório de movimentações de entrada</div>
+          <div className="text-xs text-muted-foreground">Entradas (realizado)</div>
+          <div className="text-2xl font-display text-success">{brl(receitasRealizadas)}</div>
+          <div className="text-xs text-muted-foreground mt-1">Saldo atual ({brl(totalSaldoAtual)}) + entradas do período ({brl(totalEntradas)})</div>
         </CardContent></Card>
         <Card className="shadow-soft"><CardContent className="p-5">
           <div className="inline-flex size-10 rounded-xl bg-destructive/10 text-destructive items-center justify-center mb-3"><TrendingDown className="size-5" /></div>
@@ -333,44 +339,34 @@ function BalancetePage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b text-muted-foreground text-left">
-                <th className="py-2">Conta Bancária</th><th>Categoria</th><th className="text-right">Entradas período</th><th className="text-right">Saldo atual</th>
+                <th className="py-2">Conta Bancária</th><th className="text-right">Entradas período</th><th className="text-right">Saldo atual</th>
               </tr></thead>
               <tbody>
                 {receitasPorConta.length === 0 && (
-                  <tr><td colSpan={4} className="py-6 text-center text-muted-foreground">Nenhuma conta bancária ativa.</td></tr>
+                  <tr><td colSpan={3} className="py-6 text-center text-muted-foreground">Nenhuma conta bancária ativa.</td></tr>
                 )}
                 {receitasPorConta.map((g) => {
-                  const cats = Object.entries(g.cats).sort((a, b) => b[1] - a[1]);
-                  const rows = cats.length > 0 ? cats : [["Sem movimentações no período", 0] as [string, number]];
                   const saldo = saldoPorConta[g.account.id] ?? 0;
                   return (
-                    <React.Fragment key={g.account.id}>
-                      {rows.map(([cat, val], i) => (
-                        <tr key={`${g.account.id}-${cat}`} className="border-b">
-                          <td className="py-2">
-                            {i === 0 ? (
-                              <span className="inline-flex items-center gap-2">
-                                <span className="size-2.5 rounded-full" style={{ background: g.account.color }} />
-                                {g.account.name}
-                                <span className="text-xs text-muted-foreground">({g.account.bank})</span>
-                              </span>
-                            ) : null}
-                          </td>
-                          <td className="text-muted-foreground">{cat}</td>
-                          <td className="text-right text-success">{brl(Number(val))}</td>
-                          <td className="text-right">{i === 0 ? <span className={saldo >= 0 ? "text-success font-medium" : "text-destructive font-medium"}>{brl(saldo)}</span> : null}</td>
-                        </tr>
-                      ))}
-                      <tr className="bg-success/5 border-b">
-                        <td className="py-2 text-xs text-muted-foreground" colSpan={2}>Subtotal {g.account.name}</td>
-                        <td className="text-right font-medium text-success">{brl(g.subtotal)}</td>
-                        <td />
-                      </tr>
-                    </React.Fragment>
+                    <tr key={g.account.id} className="border-b">
+                      <td className="py-2">
+                        <span className="inline-flex items-center gap-2">
+                          <span className="size-2.5 rounded-full" style={{ background: g.account.color }} />
+                          {g.account.name}
+                          <span className="text-xs text-muted-foreground">({g.account.bank})</span>
+                        </span>
+                      </td>
+                      <td className="text-right text-success">{brl(g.subtotal)}</td>
+                      <td className={`text-right font-medium ${saldo >= 0 ? "text-success" : "text-destructive"}`}>{brl(saldo)}</td>
+                    </tr>
                   );
                 })}
               </tbody>
-              <tfoot><tr className="bg-success/10 font-medium"><td className="py-2" colSpan={2}>TOTAL ENTRADAS</td><td className="text-right">{brl(totalEntradas)}</td><td /></tr></tfoot>
+              <tfoot><tr className="bg-success/10 font-medium">
+                <td className="py-2">TOTAL</td>
+                <td className="text-right">{brl(totalEntradas)}</td>
+                <td className="text-right">{brl(totalSaldoAtual)}</td>
+              </tr></tfoot>
             </table>
           </div>
         </CardContent>
@@ -401,15 +397,15 @@ function BalancetePage() {
         <CardContent className="p-5">
           <h3 className="font-display text-lg mb-3">Resultado Financeiro</h3>
           <table className="w-full text-sm">
-            <thead><tr className="border-b text-muted-foreground text-left"><th className="py-2"></th><th className="text-right">Previsto</th><th className="text-right">Realizado</th></tr></thead>
             <tbody>
-              <tr className="border-b"><td className="py-2">(+) Total Receitas</td><td className="text-right text-success">{brl(totRec.previsto)}</td><td className="text-right text-success">{brl(totRec.realizado)}</td></tr>
-              <tr className="border-b"><td className="py-2">(−) Total Despesas</td><td className="text-right text-destructive">{brl(totDesp.previsto)}</td><td className="text-right text-destructive">{brl(totDesp.realizado)}</td></tr>
-              <tr className="border-b font-display text-lg"><td className="py-3">(=) RESULTADO</td>
-                <td className={`text-right ${resPrevisto >= 0 ? "text-success" : "text-destructive"}`}>{brl(resPrevisto)}</td>
+              <tr className="border-b"><td className="py-2">(+) Saldo atual contas bancárias</td><td className="text-right text-success">{brl(totalSaldoAtual)}</td></tr>
+              <tr className="border-b"><td className="py-2">(+) Entradas do período</td><td className="text-right text-success">{brl(totalEntradas)}</td></tr>
+              <tr className="border-b bg-success/5 font-medium"><td className="py-2">(=) TOTAL RECEITAS</td><td className="text-right text-success">{brl(receitasRealizadas)}</td></tr>
+              <tr className="border-b"><td className="py-2">(−) Total Despesas (pagas no período)</td><td className="text-right text-destructive">{brl(totDesp.realizado)}</td></tr>
+              <tr className="border-b font-display text-lg"><td className="py-3">(=) RESULTADO FINAL</td>
                 <td className={`text-right ${resRealizado >= 0 ? "text-success" : "text-destructive"}`}>{brl(resRealizado)}</td>
               </tr>
-              <tr><td className="py-2 text-muted-foreground">Margem %</td><td className="text-right">{margemPrev.toFixed(2)}%</td><td className="text-right">{margemReal.toFixed(2)}%</td></tr>
+              <tr><td className="py-2 text-muted-foreground">Margem %</td><td className="text-right">{margemReal.toFixed(2)}%</td></tr>
             </tbody>
           </table>
         </CardContent>
@@ -483,6 +479,31 @@ function BalancetePage() {
           </CardContent>
         </Card>
       )}
+
+      <Card className="shadow-soft mb-6 border-success/40 bg-success/5">
+        <CardContent className="p-5">
+          <h3 className="font-display text-lg mb-3 flex items-center gap-2">💰 Posição Bancária Atual</h3>
+          <div className="space-y-2">
+            {(bankAccounts ?? []).map((a) => {
+              const saldo = saldoPorConta[a.id] ?? 0;
+              return (
+                <div key={a.id} className="flex items-center justify-between text-sm border-b border-dashed pb-1">
+                  <span className="inline-flex items-center gap-2">
+                    <span className="size-2.5 rounded-full" style={{ background: a.color }} />
+                    {a.name}
+                    <span className="text-xs text-muted-foreground">({a.bank})</span>
+                  </span>
+                  <span className={`font-medium ${saldo >= 0 ? "text-success" : "text-destructive"}`}>{brl(saldo)}</span>
+                </div>
+              );
+            })}
+            <div className="flex items-center justify-between pt-2 font-display text-lg">
+              <span>TOTAL EM CAIXA ✅</span>
+              <span className={totalSaldoAtual >= 0 ? "text-success" : "text-destructive"}>{brl(totalSaldoAtual)}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
