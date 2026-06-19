@@ -55,12 +55,14 @@ const STATUS_STYLE: Record<string, string> = {
 
 function ReceivablesPage() {
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const [statusFilter, setStatusFilter] = useState<string>("todos");
   const [customerFilter, setCustomerFilter] = useState<string>("todos");
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
   const [openNew, setOpenNew] = useState(false);
   const [payTarget, setPayTarget] = useState<Receivable | null>(null);
+  const [editTarget, setEditTarget] = useState<Receivable | null>(null);
 
   const { data: customers } = useQuery({
     queryKey: ["customers-min"],
