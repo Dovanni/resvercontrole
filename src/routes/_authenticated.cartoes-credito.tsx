@@ -279,22 +279,38 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [editOpen, setEditOpen] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
   // Limite usado = todas parcelas pendentes (fatura não paga)
   const usado = calcUsado(cartao.id, lancamentos, faturas);
   const { disp, pct, level } = limiteStatus(Number(cartao.limite_total), usado);
   const pctVisual = Math.min(100, pct);
-  const catTotals = CAT_KEYS.map((k) => ({
-    k, total: lancamentos.filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno && l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
-  }));
 
   const { fechamento: proxFech, vencimento: proxVenc } = proximoCiclo(cartao.dia_fechamento, cartao.dia_vencimento);
+  const mesV = proxVenc.getMonth() + 1;
+  const anoV = proxVenc.getFullYear();
   const hojeD = new Date();
   const hojeMid = new Date(hojeD.getFullYear(), hojeD.getMonth(), hojeD.getDate());
   const diasVenc = Math.ceil((proxVenc.getTime() - hojeMid.getTime()) / (1000 * 60 * 60 * 24));
-  const fat = faturas.find((f) => f.mes === curMes && f.ano === curAno);
-  const totalMesAtual = lancamentos
-    .filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno)
-    .reduce((s, l) => s + Number(l.valor), 0);
+
+  // Fatura corrente baseada no vencimento próximo (não no mês calendário)
+  const fat = faturas.find((f) => f.mes === mesV && f.ano === anoV);
+
+  // Lançamentos pendentes = não estão em nenhuma fatura paga
+  const faturasPagasKeys = new Set(
+    faturas.filter((f) => f.status === "paga").map((f) => `${f.ano}-${f.mes}`),
+  );
+  const ativos = lancamentos.filter((l) => (l as any).status !== "cancelado");
+  const pendentes = ativos.filter(
+    (l) => !faturasPagasKeys.has(`${l.ano_fatura}-${l.mes_fatura}`),
+  );
+  const totalFatura = pendentes.reduce((s, l) => s + Number(l.valor), 0);
+
+  // Categorias: TODOS os lançamentos ativos do cartão (sem filtro de mês)
+  const catTotals = CAT_KEYS.map((k) => ({
+    k,
+    total: ativos.filter((l) => l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
+  }));
+
   // Status: ABERTA até o fechamento; FECHADA entre fechamento e vencimento; VENCIDA após vencimento.
   const hojeMs = hojeMid.getTime();
   const status: "aberta" | "fechada" | "paga" | "atrasada" =
@@ -303,44 +319,6 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
     : hojeMs > proxFech.getTime() ? "fechada"
     : "aberta";
 
-
-
-  const marcarPaga = useMutation({
-    mutationFn: async () => {
-      const uid = (await supabase.auth.getUser()).data.user?.id;
-      if (!uid) throw new Error("Sessão inválida");
-      const hoje = new Date().toISOString().slice(0, 10);
-      const desc = `Fatura ${cartao.nome} — ${String(curMes).padStart(2, "0")}/${curAno}`;
-      const { data: upserted, error } = await (supabase.from("cartoes_faturas" as any).upsert({
-        cartao_id: cartao.id, user_id: uid,
-        mes: curMes, ano: curAno, valor_total: totalMesAtual, status: "paga",
-        data_pagamento: hoje,
-      }, { onConflict: "cartao_id,ano,mes" }).select().single());
-      if (error) throw error;
-      const faturaId = (upserted as any)?.id;
-      if (cartao.conta_bancaria_id && totalMesAtual > 0) {
-        const { error: bmErr } = await supabase.from("bank_movements").insert({
-          user_id: uid, account_id: cartao.conta_bancaria_id, movement_date: hoje,
-          type: "saida", category: "Cartão de Crédito",
-          description: `Pagamento ${desc}`, amount: totalMesAtual,
-          origin: "cartao_fatura", reference_id: faturaId,
-        });
-        if (bmErr) throw bmErr;
-      }
-      if (totalMesAtual > 0) {
-        const venc = vencimentoDate(curAno, curMes, cartao.dia_vencimento).toISOString().slice(0, 10);
-        const { error: pErr } = await supabase.from("payables").insert({
-          user_id: uid, description: desc, category: "Cartão de Crédito",
-          amount: totalMesAtual, due_date: venc, status: "pago",
-          paid_amount: totalMesAtual, paid_at: new Date().toISOString(),
-          bank_account_id: cartao.conta_bancaria_id, payment_method: "cartao",
-        });
-        if (pErr) throw pErr;
-      }
-    },
-    onSuccess: () => { toast.success("Fatura paga"); qc.invalidateQueries({ queryKey: ["cartoes_faturas"] }); qc.invalidateQueries({ queryKey: ["bank_movements"] }); qc.invalidateQueries({ queryKey: ["payables"] }); onPaga(); },
-    onError: (e: any) => toast.error(e.message),
-  });
 
   const estornarPaga = useMutation({
     mutationFn: async () => {
