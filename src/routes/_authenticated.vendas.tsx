@@ -312,6 +312,12 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     setDiscount(Number(existing.discount ?? 0));
     setDiscountMode("reais");
     setBankAccountId(existing.bank_account_id ?? "");
+    if (existing.channel === "recursos_financeiros") {
+      setAporteType(existing.aporte_type ?? "investidor");
+      setAporteAmount(Number(existing.total ?? 0));
+      setAporteNotes(existing.notes ?? "");
+      setAporteDate((existing.sold_at ?? new Date().toISOString()).slice(0, 10));
+    }
     const hydratedItems = (existing.sale_items ?? []).map((it: any) => ({
       product_id: it.product_id,
       quantity: Number(it.quantity),
