@@ -109,7 +109,7 @@ function Dashboard() {
   }
 
   const kpis = [
-    { label: "Faturamento do mês", value: brl(data.totalRevenue), icon: TrendingUp, accent: "bg-gradient-primary text-primary-foreground" },
+    { label: "Faturamento do mês (Atacado + Varejo)", value: brl(data.totalRevenue), icon: TrendingUp, accent: "bg-gradient-primary text-primary-foreground" },
     { label: "Ticket médio — Varejo", value: brl(data.ticketVarejo), icon: ShoppingBag, accent: "bg-accent text-accent-foreground" },
     { label: "Ticket médio — Atacado", value: brl(data.ticketAtacado), icon: ShoppingBag, accent: "bg-secondary text-secondary-foreground" },
   ];
@@ -132,6 +132,23 @@ function Dashboard() {
           </Card>
         ))}
       </div>
+
+      {data.totalAportes > 0 && (
+        <Card className="shadow-soft mb-6 border-primary/30 bg-gradient-rose/30">
+          <CardContent className="p-5 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="size-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
+                <Wallet className="size-5" />
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground">Recursos aportados no mês</div>
+                <div className="font-display text-2xl">{brl(data.totalAportes)}</div>
+                <div className="text-xs text-muted-foreground">{data.aporteCount} aporte(s) · não soma com faturamento</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-6 mb-6">
         <Card className="lg:col-span-2 shadow-soft">
