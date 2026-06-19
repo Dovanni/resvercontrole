@@ -91,17 +91,21 @@ function BalancetePage() {
     },
   });
 
-  // Data de corte para o cálculo do saldo no período
-  const cutoffDate = useMemo(() => {
-    const todayStr = new Date().toISOString().slice(0, 10);
-    if (period === "mes_anterior") return to;
-    if (period === "custom") {
-      const datasNoPeriodo = (bankMovs ?? []).map((m) => m.movement_date).filter((d) => d >= from && d <= to);
-      if (datasNoPeriodo.length === 0) return to;
-      return datasNoPeriodo.reduce((max, d) => (d > max ? d : max), datasNoPeriodo[0]);
+  // Data de corte: última data com movimento dentro do período;
+  // se não houver movimento no período, usa a última data com movimento ANTES do período.
+  const { cutoffDate, periodoSemMovimento } = useMemo(() => {
+    const movs = allMovs ?? [];
+    let maxIn = "";
+    let maxBefore = "";
+    for (const m of movs) {
+      const d = m.movement_date;
+      if (d >= from && d <= to) { if (d > maxIn) maxIn = d; }
+      else if (d < from) { if (d > maxBefore) maxBefore = d; }
     }
-    return todayStr;
-  }, [period, from, to, bankMovs]);
+    if (maxIn) return { cutoffDate: maxIn, periodoSemMovimento: false };
+    if (maxBefore) return { cutoffDate: maxBefore, periodoSemMovimento: true };
+    return { cutoffDate: to, periodoSemMovimento: true };
+  }, [allMovs, from, to]);
 
   const saldoPorConta = useMemo(() => {
     const map: Record<string, number> = {};
@@ -330,7 +334,11 @@ function BalancetePage() {
           <div className="inline-flex size-10 rounded-xl bg-success/10 text-success items-center justify-center mb-3"><TrendingUp className="size-5" /></div>
           <div className="text-xs text-muted-foreground">Entradas (realizado)</div>
           <div className="text-2xl font-display text-success">{brl(receitasRealizadas)}</div>
-          <div className="text-xs text-muted-foreground mt-1">Saldo consolidado até {dateBR(cutoffDate)}</div>
+          {periodoSemMovimento ? (
+            <div className="text-xs text-muted-foreground italic mt-1">Último saldo conhecido: {dateBR(cutoffDate)}</div>
+          ) : (
+            <div className="text-xs text-muted-foreground mt-1">Saldo consolidado até {dateBR(cutoffDate)}</div>
+          )}
         </CardContent></Card>
         <Card className="shadow-soft"><CardContent className="p-5">
           <div className="inline-flex size-10 rounded-xl bg-destructive/10 text-destructive items-center justify-center mb-3"><TrendingDown className="size-5" /></div>
