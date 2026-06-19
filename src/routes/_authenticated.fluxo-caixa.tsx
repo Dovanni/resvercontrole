@@ -443,7 +443,7 @@ function CashFlowPage() {
 
     const mostRecentBalance = asc.length ? asc[asc.length - 1].saldoAcumulado : opening;
     const visibleDays = onlyMovementDays ? asc.filter((d) => d.income > 0 || d.expense > 0) : asc;
-    const rows = visibleDays.slice(-15).reverse();
+    const rows = visibleDays.slice(-15);
 
     return { rows, finalBalance: mostRecentBalance };
   }, [filteredMovements, accountFilter, onlyMovementDays]);
