@@ -465,58 +465,104 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label>Cliente cadastrado</Label>
-          <Select value={customerId} onValueChange={pickCustomer}>
-            <SelectTrigger><SelectValue placeholder="Selecionar…" /></SelectTrigger>
-            <SelectContent>
-              {customers?.map(c => (
-                <SelectItem key={c.id} value={c.id}>{c.name} <span className="text-muted-foreground">· {c.customer_type}</span></SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label>Ou nome (balcão)</Label>
-          <Input value={walkInName} onChange={(e) => setWalkInName(e.target.value)} disabled={!!customerId} placeholder="Ex: Maria" />
-        </div>
-        <div className="space-y-1.5">
+        <div className="col-span-2 space-y-1.5">
           <Label>Canal</Label>
           <Select value={channel} onValueChange={(v: any) => changeChannel(v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="varejo">Varejo</SelectItem>
               <SelectItem value="atacado">Atacado</SelectItem>
+              <SelectItem value="recursos_financeiros">Recursos Financeiros</SelectItem>
             </SelectContent>
           </Select>
+          {isAporte && (
+            <div className="text-xs text-muted-foreground">
+              Aporte/investimento — não conta como venda, não afeta estoque nem Curva ABC.
+            </div>
+          )}
         </div>
-        <div className="space-y-1.5">
-          <Label>Status</Label>
-          <Select value={status} onValueChange={(v: any) => setStatus(v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+
+        <div className={isAporte ? "col-span-2 space-y-1.5" : "space-y-1.5"}>
+          <Label>{isAporte ? "Investidor / origem do aporte" : "Cliente cadastrado"}</Label>
+          <Select value={customerId} onValueChange={pickCustomer}>
+            <SelectTrigger><SelectValue placeholder={isAporte ? "Selecionar investidor…" : "Selecionar…"} /></SelectTrigger>
             <SelectContent>
-              {STATUSES.map(s => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
+              {filteredCustomers.length === 0 && (
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                  {isAporte ? "Nenhum cliente com canal Recursos Financeiros." : "Sem clientes cadastrados."}
+                </div>
+              )}
+              {filteredCustomers.map(c => (
+                <SelectItem key={c.id} value={c.id}>{c.name} <span className="text-muted-foreground">· {CHANNEL_LABEL[c.customer_type] ?? c.customer_type}</span></SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
+
+        {!isAporte && (
+          <div className="space-y-1.5">
+            <Label>Ou nome (balcão)</Label>
+            <Input value={walkInName} onChange={(e) => setWalkInName(e.target.value)} disabled={!!customerId} placeholder="Ex: Maria" />
+          </div>
+        )}
+
+        {isAporte ? (
+          <>
+            <div className="space-y-1.5">
+              <Label>Valor do aporte (R$)</Label>
+              <Input type="number" step="0.01" min={0} value={aporteAmount}
+                onChange={(e) => setAporteAmount(Number(e.target.value))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Tipo de recurso</Label>
+              <Select value={aporteType} onValueChange={setAporteType}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {APORTE_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Data</Label>
+              <Input type="date" value={aporteDate} onChange={(e) => setAporteDate(e.target.value)} />
+            </div>
+            <div className="col-span-2 space-y-1.5">
+              <Label>Observações</Label>
+              <Input value={aporteNotes} onChange={(e) => setAporteNotes(e.target.value)} placeholder="Condições, prazo, etc." />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="space-y-1.5">
+              <Label>Status</Label>
+              <Select value={status} onValueChange={(v: any) => setStatus(v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {STATUSES.map(s => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-2 space-y-1.5">
+              <Label>Forma de pagamento</Label>
+              <Select value={method} onValueChange={setMethod}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_METHODS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        )}
+
         <div className="col-span-2 space-y-1.5">
-          <Label>Forma de pagamento</Label>
-          <Select value={method} onValueChange={setMethod}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {PAYMENT_METHODS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="col-span-2 space-y-1.5">
-          <Label>Conta de destino {locked && <span className="text-xs text-muted-foreground">(automático)</span>}</Label>
-          {locked ? (
+          <Label>Conta de destino {locked && !isAporte && <span className="text-xs text-muted-foreground">(automático)</span>}</Label>
+          {locked && !isAporte ? (
             <Input value={accountName(bankAccountId)} disabled className="bg-muted" />
           ) : (
             <Select value={bankAccountId || "__none__"} onValueChange={(v) => setBankAccountId(v === "__none__" ? "" : v)}>
               <SelectTrigger><SelectValue placeholder="Selecione a conta" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none__">Não vincular a uma conta</SelectItem>
+                {!isAporte && <SelectItem value="__none__">Não vincular a uma conta</SelectItem>}
                 {(bankAccounts ?? []).map(b => (
                   <SelectItem key={b.id} value={b.id}>
                     <span className="inline-flex items-center gap-2">
@@ -529,10 +575,14 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
             </Select>
           )}
           <div className="text-xs text-muted-foreground">
-            {locked ? "Esta forma de pagamento cai automaticamente nesta conta." : "A entrada será lançada nesta conta ao confirmar o recebimento."}
+            {isAporte
+              ? "Conta onde o aporte foi creditado."
+              : (locked ? "Esta forma de pagamento cai automaticamente nesta conta." : "A entrada será lançada nesta conta ao confirmar o recebimento.")}
           </div>
         </div>
       </div>
+
+      {!isAporte && (<></>)}
 
       <div className="space-y-1.5">
         <Label>Adicionar produto</Label>
