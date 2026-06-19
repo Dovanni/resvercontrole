@@ -217,21 +217,75 @@ function ReceivablesPage() {
               {pageItems.map((r) => {
                 const eff = effectiveStatus(r);
                 const remaining = Number(r.amount) - Number(r.received_amount);
+
+                const inlineSave = async (patch: Partial<Receivable>) => {
+                  const { error } = await supabase.from("receivables" as any).update(patch as any).eq("id", r.id);
+                  if (error) { toast.error(error.message); return; }
+                  toast.success("Atualizado!");
+                  qc.invalidateQueries({ queryKey: ["receivables"] });
+                };
+
+                const handleDelete = async () => {
+                  const hasRecv = Number(r.received_amount) > 0;
+                  const ok = await confirm({
+                    title: hasRecv ? "Conta já recebida" : "Excluir conta a receber?",
+                    description: hasRecv
+                      ? `Esta conta já foi recebida. Excluir irá estornar a entrada na conta bancária. Confirmar?`
+                      : `Excluir a conta a receber de ${r.customers?.name ?? "—"} no valor de ${brl(Number(r.amount))}? Esta ação não pode ser desfeita.`,
+                    confirmText: hasRecv ? "Excluir e estornar" : "Excluir",
+                    destructive: true,
+                  });
+                  if (!ok) return;
+                  // Estornar movimentos bancários gerados por esta receivable
+                  await supabase.from("bank_movements" as any).delete().eq("origin", "receivable").eq("reference_id", r.id);
+                  const { error } = await supabase.from("receivables" as any).delete().eq("id", r.id);
+                  if (error) { toast.error(error.message); return; }
+                  toast.success("Excluído!");
+                  qc.invalidateQueries({ queryKey: ["receivables"] });
+                  qc.invalidateQueries({ queryKey: ["finance"] });
+                  qc.invalidateQueries({ queryKey: ["cashflow"] });
+                };
+
                 return (
-                  <TableRow key={r.id}>
-                    <TableCell>{dateBR(r.due_date)}</TableCell>
+                  <TableRow key={r.id} className="animate-in fade-in">
+                    <TableCell>
+                      <InlineEdit
+                        value={r.due_date}
+                        type="date"
+                        display={dateBR(r.due_date)}
+                        onSave={(v) => inlineSave({ due_date: v as any })}
+                      />
+                    </TableCell>
                     <TableCell>{r.customers?.name ?? "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">{r.description}</TableCell>
-                    <TableCell className="text-right">{brl(Number(r.amount))}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <InlineEdit
+                        value={r.description}
+                        type="text"
+                        display={r.description}
+                        onSave={(v) => inlineSave({ description: v })}
+                      />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <InlineEdit
+                        value={String(r.amount)}
+                        type="number"
+                        display={brl(Number(r.amount))}
+                        onSave={(v) => inlineSave({ amount: Number(v) as any })}
+                      />
+                    </TableCell>
                     <TableCell className="text-right text-success">{brl(Number(r.received_amount))}</TableCell>
                     <TableCell className="text-right font-medium">{brl(remaining)}</TableCell>
                     <TableCell>
                       <span className={`text-xs px-2 py-1 rounded-full capitalize ${STATUS_STYLE[eff]}`}>{eff}</span>
                     </TableCell>
                     <TableCell className="text-right">
-                      {eff !== "recebido" && eff !== "cancelado" && (
-                        <Button size="sm" variant="outline" onClick={() => setPayTarget(r)}>Baixar</Button>
-                      )}
+                      <div className="inline-flex gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => setEditTarget(r)} title="Editar"><Pencil className="size-4" /></Button>
+                        <Button size="sm" variant="ghost" onClick={handleDelete} title="Excluir"><Trash2 className="size-4 text-destructive" /></Button>
+                        {eff !== "recebido" && eff !== "cancelado" && (
+                          <Button size="sm" variant="outline" onClick={() => setPayTarget(r)}>Baixar</Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
