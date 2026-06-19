@@ -133,7 +133,7 @@ function CashFlowPage() {
     const missing: CashMovement[] = [];
 
     for (const p of paidPayables ?? []) {
-      const amount = Number(p.paid_amount ?? p.amount ?? 0);
+      const amount = Number(p.paid_amount || p.amount || 0);
       const movementDate = (p.paid_at ?? p.due_date).slice(0, 10);
       if (amount <= 0 || postedByReference.has(`payable:${p.id}`) || hasSamePostedMovement("saida", p.bank_account_id, movementDate, amount)) continue;
       missing.push({
@@ -150,7 +150,7 @@ function CashFlowPage() {
     }
 
     for (const r of receivableSources ?? []) {
-      const amount = Number(r.received_amount ?? 0);
+      const amount = Number(r.received_amount || (r.status === "recebido" ? r.amount : 0) || 0);
       const movementDate = (r.received_at ?? r.due_date).slice(0, 10);
       if (amount <= 0 || postedByReference.has(`receivable:${r.id}`) || hasSamePostedMovement("entrada", r.bank_account_id, movementDate, amount)) continue;
       missing.push({
