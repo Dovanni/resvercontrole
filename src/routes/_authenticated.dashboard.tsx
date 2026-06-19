@@ -27,7 +27,12 @@ function Dashboard() {
         supabase.from("sale_items").select("quantity,unit_price,unit_cost,product_id,products(name)").gte("created_at", monthStart),
       ]);
 
-      const salesRows = sales.data ?? [];
+      const allSales = sales.data ?? [];
+      // Recursos Financeiros (aportes) — kept separate from faturamento
+      const aporteRows = allSales.filter(r => r.channel === "recursos_financeiros");
+      const totalAportes = aporteRows.reduce((s, r) => s + Number(r.total), 0);
+      // Real sales (atacado + varejo) compose faturamento
+      const salesRows = allSales.filter(r => r.channel !== "recursos_financeiros");
       const totalRevenue = salesRows.reduce((s, r) => s + Number(r.total), 0);
       const totalIncome = (finance.data ?? []).filter(f => f.type === "income").reduce((s, r) => s + Number(r.amount), 0);
       const totalExpense = (finance.data ?? []).filter(f => f.type === "expense").reduce((s, r) => s + Number(r.amount), 0);
