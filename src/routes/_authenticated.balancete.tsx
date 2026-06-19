@@ -353,7 +353,7 @@ function BalancetePage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead><tr className="border-b text-muted-foreground text-left">
-                <th className="py-2">Conta Bancária</th><th className="text-right">Entradas período</th><th className="text-right">Saldo atual</th>
+                <th className="py-2">Conta Bancária</th><th className="text-right">Entradas período</th><th className="text-right">Saldo até {dateBR(cutoffDate)}</th>
               </tr></thead>
               <tbody>
                 {receitasPorConta.length === 0 && (
