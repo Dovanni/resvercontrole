@@ -91,17 +91,21 @@ function BalancetePage() {
     },
   });
 
-  // Data de corte para o cálculo do saldo no período
-  const cutoffDate = useMemo(() => {
-    const todayStr = new Date().toISOString().slice(0, 10);
-    if (period === "mes_anterior") return to;
-    if (period === "custom") {
-      const datasNoPeriodo = (bankMovs ?? []).map((m) => m.movement_date).filter((d) => d >= from && d <= to);
-      if (datasNoPeriodo.length === 0) return to;
-      return datasNoPeriodo.reduce((max, d) => (d > max ? d : max), datasNoPeriodo[0]);
+  // Data de corte: última data com movimento dentro do período;
+  // se não houver movimento no período, usa a última data com movimento ANTES do período.
+  const { cutoffDate, periodoSemMovimento } = useMemo(() => {
+    const movs = allMovs ?? [];
+    let maxIn = "";
+    let maxBefore = "";
+    for (const m of movs) {
+      const d = m.movement_date;
+      if (d >= from && d <= to) { if (d > maxIn) maxIn = d; }
+      else if (d < from) { if (d > maxBefore) maxBefore = d; }
     }
-    return todayStr;
-  }, [period, from, to, bankMovs]);
+    if (maxIn) return { cutoffDate: maxIn, periodoSemMovimento: false };
+    if (maxBefore) return { cutoffDate: maxBefore, periodoSemMovimento: true };
+    return { cutoffDate: to, periodoSemMovimento: true };
+  }, [allMovs, from, to]);
 
   const saldoPorConta = useMemo(() => {
     const map: Record<string, number> = {};
