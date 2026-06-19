@@ -1209,3 +1209,173 @@ function HistoricoMensal({ cartoes, lancamentos }: { cartoes: Cartao[]; lancamen
     </CardContent></Card>
   );
 }
+
+type Scope = "apenas" | "este_e_proximos" | "todos";
+
+function LancActions({ lanc }: { lanc: Lancamento }) {
+  const qc = useQueryClient();
+  const confirm = useConfirm();
+  const [editOpen, setEditOpen] = useState(false);
+
+  const isSerie = lanc.parcelado && !!lanc.grupo_parcela;
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["cartoes_lancamentos"] });
+    qc.invalidateQueries({ queryKey: ["cartoes_faturas"] });
+  };
+
+  const idsForScope = async (scope: Scope): Promise<string[]> => {
+    if (!isSerie || scope === "apenas") return [lanc.id];
+    const { data, error } = await (supabase
+      .from("cartoes_lancamentos" as any)
+      .select("id,parcela_atual")
+      .eq("grupo_parcela", lanc.grupo_parcela as string));
+    if (error) throw error;
+    const all = (data ?? []) as { id: string; parcela_atual: number }[];
+    if (scope === "todos") return all.map(r => r.id);
+    return all.filter(r => r.parcela_atual >= lanc.parcela_atual).map(r => r.id);
+  };
+
+  const handleDelete = async () => {
+    let scope: Scope = "apenas";
+    if (isSerie) {
+      const choice = window.prompt(
+        "Este lançamento faz parte de uma série. Excluir:\n1 - Somente este lançamento\n2 - Este e os próximos da série\n3 - Todos da série\n\nDigite 1, 2 ou 3:",
+        "1"
+      );
+      if (!choice) return;
+      scope = choice === "2" ? "este_e_proximos" : choice === "3" ? "todos" : "apenas";
+    } else {
+      const ok = await confirm({
+        title: "Excluir lançamento?",
+        description: `${lanc.descricao} — ${brl(Number(lanc.valor))}`,
+        confirmText: "Excluir",
+        destructive: true,
+      });
+      if (!ok) return;
+    }
+    try {
+      const ids = await idsForScope(scope);
+      const { error } = await (supabase.from("cartoes_lancamentos" as any).delete().in("id", ids));
+      if (error) throw error;
+      toast.success(ids.length > 1 ? `${ids.length} lançamentos excluídos!` : "Lançamento excluído!");
+      invalidate();
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  };
+
+  return (
+    <>
+      <div className="inline-flex gap-1">
+        <Button size="sm" variant="ghost" onClick={() => setEditOpen(true)} title="Editar"><Pencil className="size-4" /></Button>
+        <Button size="sm" variant="ghost" onClick={handleDelete} title="Excluir"><Trash2 className="size-4 text-destructive" /></Button>
+      </div>
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-md">
+          <LancEditForm lanc={lanc} isSerie={isSerie} onDone={() => { setEditOpen(false); invalidate(); }} />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function LancEditForm({ lanc, isSerie, onDone }: { lanc: Lancamento; isSerie: boolean; onDone: () => void }) {
+  const [data, setData] = useState(lanc.data);
+  const [descricao, setDescricao] = useState(
+    lanc.parcelado ? lanc.descricao.replace(/\s*\(\d+\/\d+\)\s*$/, "") : lanc.descricao
+  );
+  const [categoria, setCategoria] = useState<CatKey>(lanc.categoria);
+  const [valor, setValor] = useState<string>(String(lanc.valor));
+  const [scope, setScope] = useState<Scope>("apenas");
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const valorNum = Number(valor);
+      if (!descricao) throw new Error("Informe a descrição");
+      if (valorNum <= 0) throw new Error("Valor inválido");
+
+      let ids: { id: string; parcela_atual: number; total_parcelas: number }[] = [
+        { id: lanc.id, parcela_atual: lanc.parcela_atual, total_parcelas: lanc.total_parcelas },
+      ];
+      if (isSerie && scope !== "apenas") {
+        const { data: rows, error } = await (supabase
+          .from("cartoes_lancamentos" as any)
+          .select("id,parcela_atual,total_parcelas")
+          .eq("grupo_parcela", lanc.grupo_parcela as string));
+        if (error) throw error;
+        const all = (rows ?? []) as any[];
+        ids = scope === "todos" ? all : all.filter(r => r.parcela_atual >= lanc.parcela_atual);
+      }
+
+      for (const row of ids) {
+        const payload: any = {
+          descricao: lanc.parcelado ? `${descricao} (${row.parcela_atual}/${row.total_parcelas})` : descricao,
+          categoria,
+          valor: valorNum,
+        };
+        // Date changes only allowed for single edits to avoid recomputing series faturas
+        if (!isSerie || scope === "apenas") {
+          payload.data = data;
+        }
+        const { error } = await (supabase.from("cartoes_lancamentos" as any).update(payload).eq("id", row.id));
+        if (error) throw error;
+      }
+      toast.success("Lançamento atualizado com sucesso!");
+      onDone();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
+      <DialogHeader><DialogTitle>Editar lançamento</DialogTitle></DialogHeader>
+      <div className="space-y-3">
+        {isSerie && (
+          <div className="rounded-md border bg-muted/40 p-3 text-xs space-y-2">
+            <div className="font-medium">Este lançamento faz parte de uma série. Editar:</div>
+            <Select value={scope} onValueChange={(v) => setScope(v as Scope)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="apenas">Somente este lançamento</SelectItem>
+                <SelectItem value="este_e_proximos">Este e os próximos da série</SelectItem>
+                <SelectItem value="todos">Todos da série</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>Data</Label>
+            <Input type="date" value={data} onChange={(e) => setData(e.target.value)} disabled={isSerie && scope !== "apenas"} />
+          </div>
+          <div>
+            <Label>Valor</Label>
+            <Input type="number" step="0.01" value={valor} onChange={(e) => setValor(e.target.value)} />
+          </div>
+        </div>
+        <div><Label>Descrição</Label><Input value={descricao} onChange={(e) => setDescricao(e.target.value)} /></div>
+        <div>
+          <Label>Categoria</Label>
+          <Select value={categoria} onValueChange={(v) => setCategoria(v as CatKey)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="combustivel">🚗 Combustível</SelectItem>
+              <SelectItem value="casa">🏠 Casa</SelectItem>
+              <SelectItem value="pessoal">👤 Pessoal</SelectItem>
+              <SelectItem value="fornecedores">🏭 Fornecedores</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <DialogFooter>
+        <Button onClick={save} disabled={saving}>{saving ? "Salvando..." : "Salvar alterações"}</Button>
+      </DialogFooter>
+    </>
+  );
+}
