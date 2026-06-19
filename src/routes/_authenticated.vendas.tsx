@@ -135,12 +135,18 @@ function SalesPage() {
                   <TableCell className="text-muted-foreground">{dateBR(s.sold_at)}</TableCell>
                   <TableCell className="font-medium">{s.customers?.name ?? s.customer_name ?? "Balcão"}</TableCell>
                   <TableCell>
-                    <span className={`text-xs px-2 py-1 rounded-full capitalize ${s.channel === "atacado" ? "bg-gold/15 text-gold-foreground" : "bg-accent text-accent-foreground"}`}>
-                      {s.channel}
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      s.channel === "atacado" ? "bg-gold/15 text-gold-foreground"
+                      : s.channel === "recursos_financeiros" ? "bg-primary/15 text-primary"
+                      : "bg-accent text-accent-foreground"
+                    }`}>
+                      {CHANNEL_LABEL[s.channel] ?? s.channel}
                     </span>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
-                    {(s.sale_items ?? []).map((i: any) => `${i.quantity}× ${i.products?.name}`).join(", ") || "—"}
+                    {s.channel === "recursos_financeiros"
+                      ? <span className="italic">Aporte financeiro</span>
+                      : ((s.sale_items ?? []).map((i: any) => `${i.quantity}× ${i.products?.name}`).join(", ") || "—")}
                   </TableCell>
                   <TableCell className="text-sm">{STATUS_LABEL[s.status] ?? s.status}</TableCell>
                   <TableCell className="text-right font-medium">{brl(Number(s.total))}</TableCell>
