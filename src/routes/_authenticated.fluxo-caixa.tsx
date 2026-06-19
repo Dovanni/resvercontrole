@@ -35,6 +35,11 @@ type CashMovement = {
   reference_id: string | null;
 };
 
+type PayableCashSource = { id: string; description: string | null; category: string | null; amount: number; paid_amount: number | null; due_date: string; paid_at: string | null; status: string; bank_account_id: string | null };
+type ReceivableCashSource = { id: string; sale_id: string | null; description: string | null; amount: number; received_amount: number | null; due_date: string; received_at: string | null; status: string; bank_account_id: string | null };
+type SaleCashSource = { id: string; customer_name: string | null; payment_method: string | null; total: number; sold_at: string; status: string; bank_account_id: string | null };
+type PurchaseCashSource = { id: string; total: number; data_compra: string; status: string | null; condicao_pagamento: string | null; forma_pagamento: string | null; bank_account_id: string | null };
+
 function CashFlowPage() {
   const today = new Date();
   const startPast = new Date(today); startPast.setDate(today.getDate() - 30);
