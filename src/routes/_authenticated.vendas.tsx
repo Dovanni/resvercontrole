@@ -232,7 +232,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     queryFn: async () => {
       const { data, error } = await supabase.from("customers").select("id,name,customer_type").eq("status", "ativo").order("name");
       if (error) throw error;
-      return data as { id: string; name: string; customer_type: "varejo" | "atacado" }[];
+      return data as { id: string; name: string; customer_type: "varejo" | "atacado" | "recursos_financeiros" }[];
     },
   });
 
@@ -251,7 +251,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
 
   const [customerId, setCustomerId] = useState<string>("");
   const [walkInName, setWalkInName] = useState("");
-  const [channel, setChannel] = useState<"varejo" | "atacado">("varejo");
+  const [channel, setChannel] = useState<"varejo" | "atacado" | "recursos_financeiros">("varejo");
   const [status, setStatus] = useState<typeof STATUSES[number]>("confirmado");
   const [method, setMethod] = useState("dinheiro");
   const [discount, setDiscount] = useState(0);
@@ -261,6 +261,19 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
   const [items, setItems] = useState<LineItem[]>([]);
   const [bankAccountId, setBankAccountId] = useState<string>("");
   const [loaded, setLoaded] = useState(false);
+  // Recursos Financeiros (aporte) state
+  const [aporteType, setAporteType] = useState<string>("investidor");
+  const [aporteAmount, setAporteAmount] = useState<number>(0);
+  const [aporteNotes, setAporteNotes] = useState<string>("");
+  const [aporteDate, setAporteDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const isAporte = channel === "recursos_financeiros";
+
+  const filteredCustomers = useMemo(
+    () => (customers ?? []).filter(c =>
+      isAporte ? c.customer_type === "recursos_financeiros" : c.customer_type !== "recursos_financeiros"
+    ),
+    [customers, isAporte]
+  );
 
   const { data: bankAccounts } = useQuery({
     queryKey: ["bank-accounts-active"],
