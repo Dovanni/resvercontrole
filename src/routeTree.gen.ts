@@ -29,10 +29,10 @@ import { Route as AuthenticatedContasBancariasRouteImport } from './routes/_auth
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated.configuracoes'
 import { Route as AuthenticatedComprasRouteImport } from './routes/_authenticated.compras'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated.clientes'
+import { Route as AuthenticatedCategoriasRouteImport } from './routes/_authenticated.categorias'
 import { Route as AuthenticatedCartoesCreditoRouteImport } from './routes/_authenticated.cartoes-credito'
 import { Route as AuthenticatedBiRouteImport } from './routes/_authenticated.bi'
 import { Route as AuthenticatedBalanceteRouteImport } from './routes/_authenticated.balancete'
-import { Route as AuthenticatedConfiguracoesCategoriasRouteImport } from './routes/_authenticated.configuracoes.categorias'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -140,6 +140,11 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedCategoriasRoute = AuthenticatedCategoriasRouteImport.update({
+  id: '/categorias',
+  path: '/categorias',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedCartoesCreditoRoute =
   AuthenticatedCartoesCreditoRouteImport.update({
     id: '/cartoes-credito',
@@ -156,12 +161,6 @@ const AuthenticatedBalanceteRoute = AuthenticatedBalanceteRouteImport.update({
   path: '/balancete',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedConfiguracoesCategoriasRoute =
-  AuthenticatedConfiguracoesCategoriasRouteImport.update({
-    id: '/categorias',
-    path: '/categorias',
-    getParentRoute: () => AuthenticatedConfiguracoesRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -169,9 +168,10 @@ export interface FileRoutesByFullPath {
   '/balancete': typeof AuthenticatedBalanceteRoute
   '/bi': typeof AuthenticatedBiRoute
   '/cartoes-credito': typeof AuthenticatedCartoesCreditoRoute
+  '/categorias': typeof AuthenticatedCategoriasRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/compras': typeof AuthenticatedComprasRoute
-  '/configuracoes': typeof AuthenticatedConfiguracoesRouteWithChildren
+  '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/contas-bancarias': typeof AuthenticatedContasBancariasRoute
   '/contas-pagar': typeof AuthenticatedContasPagarRoute
   '/contas-receber': typeof AuthenticatedContasReceberRoute
@@ -186,7 +186,6 @@ export interface FileRoutesByFullPath {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/vendas': typeof AuthenticatedVendasRoute
-  '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -194,9 +193,10 @@ export interface FileRoutesByTo {
   '/balancete': typeof AuthenticatedBalanceteRoute
   '/bi': typeof AuthenticatedBiRoute
   '/cartoes-credito': typeof AuthenticatedCartoesCreditoRoute
+  '/categorias': typeof AuthenticatedCategoriasRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/compras': typeof AuthenticatedComprasRoute
-  '/configuracoes': typeof AuthenticatedConfiguracoesRouteWithChildren
+  '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/contas-bancarias': typeof AuthenticatedContasBancariasRoute
   '/contas-pagar': typeof AuthenticatedContasPagarRoute
   '/contas-receber': typeof AuthenticatedContasReceberRoute
@@ -211,7 +211,6 @@ export interface FileRoutesByTo {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/vendas': typeof AuthenticatedVendasRoute
-  '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -221,9 +220,10 @@ export interface FileRoutesById {
   '/_authenticated/balancete': typeof AuthenticatedBalanceteRoute
   '/_authenticated/bi': typeof AuthenticatedBiRoute
   '/_authenticated/cartoes-credito': typeof AuthenticatedCartoesCreditoRoute
+  '/_authenticated/categorias': typeof AuthenticatedCategoriasRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/compras': typeof AuthenticatedComprasRoute
-  '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRouteWithChildren
+  '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/contas-bancarias': typeof AuthenticatedContasBancariasRoute
   '/_authenticated/contas-pagar': typeof AuthenticatedContasPagarRoute
   '/_authenticated/contas-receber': typeof AuthenticatedContasReceberRoute
@@ -238,7 +238,6 @@ export interface FileRoutesById {
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/vendas': typeof AuthenticatedVendasRoute
-  '/_authenticated/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -248,6 +247,7 @@ export interface FileRouteTypes {
     | '/balancete'
     | '/bi'
     | '/cartoes-credito'
+    | '/categorias'
     | '/clientes'
     | '/compras'
     | '/configuracoes'
@@ -265,7 +265,6 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/relatorios'
     | '/vendas'
-    | '/configuracoes/categorias'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -273,6 +272,7 @@ export interface FileRouteTypes {
     | '/balancete'
     | '/bi'
     | '/cartoes-credito'
+    | '/categorias'
     | '/clientes'
     | '/compras'
     | '/configuracoes'
@@ -290,7 +290,6 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/relatorios'
     | '/vendas'
-    | '/configuracoes/categorias'
   id:
     | '__root__'
     | '/'
@@ -299,6 +298,7 @@ export interface FileRouteTypes {
     | '/_authenticated/balancete'
     | '/_authenticated/bi'
     | '/_authenticated/cartoes-credito'
+    | '/_authenticated/categorias'
     | '/_authenticated/clientes'
     | '/_authenticated/compras'
     | '/_authenticated/configuracoes'
@@ -316,7 +316,6 @@ export interface FileRouteTypes {
     | '/_authenticated/produtos'
     | '/_authenticated/relatorios'
     | '/_authenticated/vendas'
-    | '/_authenticated/configuracoes/categorias'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -467,6 +466,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/categorias': {
+      id: '/_authenticated/categorias'
+      path: '/categorias'
+      fullPath: '/categorias'
+      preLoaderRoute: typeof AuthenticatedCategoriasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/cartoes-credito': {
       id: '/_authenticated/cartoes-credito'
       path: '/cartoes-credito'
@@ -488,38 +494,17 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBalanceteRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/configuracoes/categorias': {
-      id: '/_authenticated/configuracoes/categorias'
-      path: '/categorias'
-      fullPath: '/configuracoes/categorias'
-      preLoaderRoute: typeof AuthenticatedConfiguracoesCategoriasRouteImport
-      parentRoute: typeof AuthenticatedConfiguracoesRoute
-    }
   }
 }
-
-interface AuthenticatedConfiguracoesRouteChildren {
-  AuthenticatedConfiguracoesCategoriasRoute: typeof AuthenticatedConfiguracoesCategoriasRoute
-}
-
-const AuthenticatedConfiguracoesRouteChildren: AuthenticatedConfiguracoesRouteChildren =
-  {
-    AuthenticatedConfiguracoesCategoriasRoute:
-      AuthenticatedConfiguracoesCategoriasRoute,
-  }
-
-const AuthenticatedConfiguracoesRouteWithChildren =
-  AuthenticatedConfiguracoesRoute._addFileChildren(
-    AuthenticatedConfiguracoesRouteChildren,
-  )
 
 interface AuthenticatedRouteChildren {
   AuthenticatedBalanceteRoute: typeof AuthenticatedBalanceteRoute
   AuthenticatedBiRoute: typeof AuthenticatedBiRoute
   AuthenticatedCartoesCreditoRoute: typeof AuthenticatedCartoesCreditoRoute
+  AuthenticatedCategoriasRoute: typeof AuthenticatedCategoriasRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedComprasRoute: typeof AuthenticatedComprasRoute
-  AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRouteWithChildren
+  AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedContasBancariasRoute: typeof AuthenticatedContasBancariasRoute
   AuthenticatedContasPagarRoute: typeof AuthenticatedContasPagarRoute
   AuthenticatedContasReceberRoute: typeof AuthenticatedContasReceberRoute
@@ -540,9 +525,10 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBalanceteRoute: AuthenticatedBalanceteRoute,
   AuthenticatedBiRoute: AuthenticatedBiRoute,
   AuthenticatedCartoesCreditoRoute: AuthenticatedCartoesCreditoRoute,
+  AuthenticatedCategoriasRoute: AuthenticatedCategoriasRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedComprasRoute: AuthenticatedComprasRoute,
-  AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRouteWithChildren,
+  AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedContasBancariasRoute: AuthenticatedContasBancariasRoute,
   AuthenticatedContasPagarRoute: AuthenticatedContasPagarRoute,
   AuthenticatedContasReceberRoute: AuthenticatedContasReceberRoute,
