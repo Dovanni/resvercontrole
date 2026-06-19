@@ -207,11 +207,11 @@ function CashFlowPage() {
   // Saldo consolidado (todas as movimentações)
   const bankBalances = useMemo(() => {
     const accountsWithInitialMovement = new Set(
-      (bankMovements ?? []).filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id)
+      cashMovements.filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id)
     );
     const map: Record<string, number> = {};
     for (const a of bankAccounts ?? []) map[a.id] = accountsWithInitialMovement.has(a.id) ? 0 : Number(a.initial_balance ?? 0);
-    for (const m of bankMovements ?? []) {
+    for (const m of cashMovements) {
       if (!m.account_id) continue;
       const amt = Number(m.amount);
       if (m.type === "entrada") map[m.account_id] = (map[m.account_id] ?? 0) + amt;
@@ -222,7 +222,7 @@ function CashFlowPage() {
       }
     }
     return map;
-  }, [bankAccounts, bankMovements]);
+  }, [bankAccounts, cashMovements]);
 
   const totalBankBalance = useMemo(
     () => (bankAccounts ?? []).reduce((s, a) => s + (bankBalances[a.id] ?? 0), 0),
@@ -232,7 +232,7 @@ function CashFlowPage() {
   // Movimentações filtradas pela conta selecionada
   const filteredMovements = useMemo(() => {
     const accountsWithInitialMovement = new Set(
-      (bankMovements ?? []).filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id)
+      cashMovements.filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id)
     );
     const syntheticInitialMovements = (bankAccounts ?? [])
       .filter((account) => Number(account.initial_balance ?? 0) > 0 && !accountsWithInitialMovement.has(account.id))
@@ -247,10 +247,10 @@ function CashFlowPage() {
         origin: "saldo_inicial_sintetico",
         reference_id: account.id,
       }));
-    const all = [...(bankMovements ?? []), ...syntheticInitialMovements];
+    const all = [...cashMovements, ...syntheticInitialMovements];
     if (accountFilter === "todas") return all;
     return all.filter((m) => m.account_id === accountFilter || m.destination_account_id === accountFilter);
-  }, [bankMovements, bankAccounts, accountFilter]);
+  }, [cashMovements, bankAccounts, accountFilter]);
 
   // Recebíveis/pagáveis futuros — projeção apenas se filtro = todas (ou filtrados por bank_account_id)
   const { data: futurePayables } = useQuery({
