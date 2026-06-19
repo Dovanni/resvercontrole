@@ -94,31 +94,35 @@ function vencimentoDate(ano: number, mes: number, diaVenc: number) {
   return new Date(ano, mes - 1, Math.min(diaVenc, last));
 }
 
-// Calcula o próximo fechamento e vencimento da fatura a partir de hoje.
-// Regra: se dia_vencimento < dia_fechamento, o vencimento cai no mês seguinte ao fechamento.
+// Retorna o fechamento e o vencimento da FATURA CORRENTE
+// (a próxima fatura a vencer a partir de hoje). O fechamento pode estar no passado
+// (fatura já fechada, aguardando pagamento) ou no futuro (fatura ainda aberta).
 function proximoCiclo(diaFechamento: number, diaVencimento: number, ref: Date = new Date()) {
   const hoje = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate());
-  let fAno = hoje.getFullYear();
-  let fMes = hoje.getMonth(); // 0-11
-  const lastDayMonth = (a: number, m: number) => new Date(a, m + 1, 0).getDate();
-  const clampedFech = Math.min(diaFechamento, lastDayMonth(fAno, fMes));
-  if (hoje.getDate() > clampedFech) {
-    fMes += 1;
-    if (fMes > 11) { fMes = 0; fAno += 1; }
-  }
-  const diaF = Math.min(diaFechamento, lastDayMonth(fAno, fMes));
-  const fechamento = new Date(fAno, fMes, diaF);
+  const lastDay = (a: number, m: number) => new Date(a, m + 1, 0).getDate();
+  const mkDate = (a: number, m: number, d: number) => new Date(a, m, Math.min(d, lastDay(a, m)));
 
-  let vAno = fAno;
-  let vMes = fMes;
-  if (diaVencimento < diaFechamento) {
+  // Próximo vencimento >= hoje
+  let vAno = hoje.getFullYear();
+  let vMes = hoje.getMonth();
+  let venc = mkDate(vAno, vMes, diaVencimento);
+  if (venc.getTime() < hoje.getTime()) {
     vMes += 1;
     if (vMes > 11) { vMes = 0; vAno += 1; }
+    venc = mkDate(vAno, vMes, diaVencimento);
   }
-  const diaV = Math.min(diaVencimento, lastDayMonth(vAno, vMes));
-  const vencimento = new Date(vAno, vMes, diaV);
-  return { fechamento, vencimento };
+
+  // Fechamento desse ciclo: mês anterior se dV < dF, mesmo mês caso contrário
+  let fAno = vAno;
+  let fMes = vMes;
+  if (diaVencimento < diaFechamento) {
+    fMes -= 1;
+    if (fMes < 0) { fMes = 11; fAno -= 1; }
+  }
+  const fechamento = mkDate(fAno, fMes, diaFechamento);
+  return { fechamento, vencimento: venc };
 }
+
 
 function dateBRShort(d: Date) {
   return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
