@@ -274,8 +274,17 @@ function CashFlowPage() {
       });
 
     const mostRecentBalance = asc.length ? asc[asc.length - 1].saldoAcumulado : opening;
-    // Mostra últimos 15 (mais recente no topo)
-    return { rows: asc.slice(-15).reverse(), finalBalance: mostRecentBalance };
+
+    // Mostra últimos 15 em DESC e ancora a coluna no mesmo saldo final do rodapé.
+    // Para cada linha anterior: saldo_anterior = saldo_linha_atual - líquido_linha_atual.
+    let balanceCursor = mostRecentBalance;
+    const rows = asc.slice(-15).reverse().map((d) => {
+      const saldoAcumulado = balanceCursor;
+      balanceCursor -= d.income - d.expense;
+      return { ...d, saldoAcumulado };
+    });
+
+    return { rows, finalBalance: mostRecentBalance };
   }, [filteredMovements, accountFilter, bankAccounts]);
 
   const divergence = Math.abs(daily.finalBalance - displayedBalance) > 0.01;
