@@ -279,22 +279,38 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [editOpen, setEditOpen] = useState(false);
+  const [payOpen, setPayOpen] = useState(false);
   // Limite usado = todas parcelas pendentes (fatura não paga)
   const usado = calcUsado(cartao.id, lancamentos, faturas);
   const { disp, pct, level } = limiteStatus(Number(cartao.limite_total), usado);
   const pctVisual = Math.min(100, pct);
-  const catTotals = CAT_KEYS.map((k) => ({
-    k, total: lancamentos.filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno && l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
-  }));
 
   const { fechamento: proxFech, vencimento: proxVenc } = proximoCiclo(cartao.dia_fechamento, cartao.dia_vencimento);
+  const mesV = proxVenc.getMonth() + 1;
+  const anoV = proxVenc.getFullYear();
   const hojeD = new Date();
   const hojeMid = new Date(hojeD.getFullYear(), hojeD.getMonth(), hojeD.getDate());
   const diasVenc = Math.ceil((proxVenc.getTime() - hojeMid.getTime()) / (1000 * 60 * 60 * 24));
-  const fat = faturas.find((f) => f.mes === curMes && f.ano === curAno);
-  const totalMesAtual = lancamentos
-    .filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno)
-    .reduce((s, l) => s + Number(l.valor), 0);
+
+  // Fatura corrente baseada no vencimento próximo (não no mês calendário)
+  const fat = faturas.find((f) => f.mes === mesV && f.ano === anoV);
+
+  // Lançamentos pendentes = não estão em nenhuma fatura paga
+  const faturasPagasKeys = new Set(
+    faturas.filter((f) => f.status === "paga").map((f) => `${f.ano}-${f.mes}`),
+  );
+  const ativos = lancamentos.filter((l) => (l as any).status !== "cancelado");
+  const pendentes = ativos.filter(
+    (l) => !faturasPagasKeys.has(`${l.ano_fatura}-${l.mes_fatura}`),
+  );
+  const totalFatura = pendentes.reduce((s, l) => s + Number(l.valor), 0);
+
+  // Categorias: TODOS os lançamentos ativos do cartão (sem filtro de mês)
+  const catTotals = CAT_KEYS.map((k) => ({
+    k,
+    total: ativos.filter((l) => l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
+  }));
+
   // Status: ABERTA até o fechamento; FECHADA entre fechamento e vencimento; VENCIDA após vencimento.
   const hojeMs = hojeMid.getTime();
   const status: "aberta" | "fechada" | "paga" | "atrasada" =
@@ -303,44 +319,6 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
     : hojeMs > proxFech.getTime() ? "fechada"
     : "aberta";
 
-
-
-  const marcarPaga = useMutation({
-    mutationFn: async () => {
-      const uid = (await supabase.auth.getUser()).data.user?.id;
-      if (!uid) throw new Error("Sessão inválida");
-      const hoje = new Date().toISOString().slice(0, 10);
-      const desc = `Fatura ${cartao.nome} — ${String(curMes).padStart(2, "0")}/${curAno}`;
-      const { data: upserted, error } = await (supabase.from("cartoes_faturas" as any).upsert({
-        cartao_id: cartao.id, user_id: uid,
-        mes: curMes, ano: curAno, valor_total: totalMesAtual, status: "paga",
-        data_pagamento: hoje,
-      }, { onConflict: "cartao_id,ano,mes" }).select().single());
-      if (error) throw error;
-      const faturaId = (upserted as any)?.id;
-      if (cartao.conta_bancaria_id && totalMesAtual > 0) {
-        const { error: bmErr } = await supabase.from("bank_movements").insert({
-          user_id: uid, account_id: cartao.conta_bancaria_id, movement_date: hoje,
-          type: "saida", category: "Cartão de Crédito",
-          description: `Pagamento ${desc}`, amount: totalMesAtual,
-          origin: "cartao_fatura", reference_id: faturaId,
-        });
-        if (bmErr) throw bmErr;
-      }
-      if (totalMesAtual > 0) {
-        const venc = vencimentoDate(curAno, curMes, cartao.dia_vencimento).toISOString().slice(0, 10);
-        const { error: pErr } = await supabase.from("payables").insert({
-          user_id: uid, description: desc, category: "Cartão de Crédito",
-          amount: totalMesAtual, due_date: venc, status: "pago",
-          paid_amount: totalMesAtual, paid_at: new Date().toISOString(),
-          bank_account_id: cartao.conta_bancaria_id, payment_method: "cartao",
-        });
-        if (pErr) throw pErr;
-      }
-    },
-    onSuccess: () => { toast.success("Fatura paga"); qc.invalidateQueries({ queryKey: ["cartoes_faturas"] }); qc.invalidateQueries({ queryKey: ["bank_movements"] }); qc.invalidateQueries({ queryKey: ["payables"] }); onPaga(); },
-    onError: (e: any) => toast.error(e.message),
-  });
 
   const estornarPaga = useMutation({
     mutationFn: async () => {
@@ -426,12 +404,12 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
               : <Badge variant="outline">Aberta</Badge>}
             <div className="text-muted-foreground mt-1">
               {status === "paga" ? `Paga em ${fat?.data_pagamento ? dateBR(fat.data_pagamento) : "-"}`
-                : diasVenc >= 0 ? `Vence em ${diasVenc} dias — ${brl(totalMesAtual)}` : `Venceu há ${Math.abs(diasVenc)} dias`}
+                : diasVenc >= 0 ? `Vence em ${diasVenc} dias — ${brl(totalFatura)}` : `Venceu há ${Math.abs(diasVenc)} dias — ${brl(totalFatura)}`}
             </div>
           </div>
-          {status !== "paga" && totalMesAtual > 0 && (
-            <Button size="sm" variant="outline" onClick={() => marcarPaga.mutate()} disabled={marcarPaga.isPending}>
-              <CheckCircle2 className="size-3 mr-1" /> Pagar
+          {status !== "paga" && totalFatura > 0 && (
+            <Button size="sm" onClick={() => setPayOpen(true)}>
+              <CheckCircle2 className="size-3 mr-1" /> Pagar fatura
             </Button>
           )}
           {status === "paga" && (
@@ -440,6 +418,7 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
             </Button>
           )}
         </div>
+
         {(alertaVenc || alertaAtraso) && (
           <div className="space-y-1 pt-2 border-t">
             {alertaVenc && <div className="flex items-center gap-1 text-xs text-amber-600"><Clock className="size-3" /> Vence em {diasVenc} dia(s)</div>}
@@ -475,9 +454,103 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <CartaoDialog contas={contas} userId={cartao.id /* unused on edit */} cartao={cartao} onDone={() => { setEditOpen(false); onChanged(); }} />
       </Dialog>
+      <Dialog open={payOpen} onOpenChange={setPayOpen}>
+        <PagarFaturaDialog
+          cartao={cartao}
+          contas={contas}
+          mes={mesV}
+          ano={anoV}
+          vencimento={proxVenc}
+          total={totalFatura}
+          onDone={() => { setPayOpen(false); onPaga(); }}
+        />
+      </Dialog>
     </Card>
   );
 }
+
+function PagarFaturaDialog({ cartao, contas, mes, ano, vencimento, total, onDone }: {
+  cartao: Cartao;
+  contas: { id: string; name: string }[];
+  mes: number; ano: number;
+  vencimento: Date;
+  total: number;
+  onDone: () => void;
+}) {
+  const qc = useQueryClient();
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const [dataPag, setDataPag] = useState(hojeISO);
+  const [contaId, setContaId] = useState(cartao.conta_bancaria_id ?? "");
+  const [valor, setValor] = useState(String(total.toFixed(2)));
+
+  const pagar = useMutation({
+    mutationFn: async () => {
+      const uid = (await supabase.auth.getUser()).data.user?.id;
+      if (!uid) throw new Error("Sessão inválida");
+      const vNum = Number(valor);
+      if (!vNum || vNum <= 0) throw new Error("Valor inválido");
+      if (!contaId) throw new Error("Selecione a conta debitada");
+      const desc = `Fatura ${cartao.nome} ${String(mes).padStart(2, "0")}/${ano}`;
+      const { data: upserted, error } = await (supabase.from("cartoes_faturas" as any).upsert({
+        cartao_id: cartao.id, user_id: uid,
+        mes, ano, valor_total: total, status: "paga",
+        data_pagamento: dataPag,
+      }, { onConflict: "cartao_id,ano,mes" }).select().single());
+      if (error) throw error;
+      const faturaId = (upserted as any)?.id;
+      const { error: bmErr } = await supabase.from("bank_movements").insert({
+        user_id: uid, account_id: contaId, movement_date: dataPag,
+        type: "saida", category: "Cartão de Crédito",
+        description: `Pagamento ${desc}`, amount: vNum,
+        origin: "cartao_fatura", reference_id: faturaId,
+      });
+      if (bmErr) throw bmErr;
+      const vencISO = vencimento.toISOString().slice(0, 10);
+      const { error: pErr } = await supabase.from("payables").insert({
+        user_id: uid, description: desc, category: "Cartão de Crédito",
+        amount: vNum, due_date: vencISO, status: "pago",
+        paid_amount: vNum, paid_at: new Date(dataPag + "T12:00:00").toISOString(),
+        bank_account_id: contaId, payment_method: "cartao",
+      });
+      if (pErr) throw pErr;
+    },
+    onSuccess: () => {
+      toast.success("Fatura paga com sucesso!");
+      qc.invalidateQueries({ queryKey: ["cartoes_faturas"] });
+      qc.invalidateQueries({ queryKey: ["bank_movements"] });
+      qc.invalidateQueries({ queryKey: ["payables"] });
+      onDone();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <DialogContent className="max-w-md">
+      <DialogHeader><DialogTitle>Pagar fatura — {cartao.nome}</DialogTitle></DialogHeader>
+      <div className="space-y-3">
+        <div className="rounded-md border p-3 text-sm bg-muted/30">
+          <div className="flex justify-between"><span className="text-muted-foreground">Total da fatura:</span><span className="font-medium">{brl(total)}</span></div>
+          <div className="flex justify-between mt-1"><span className="text-muted-foreground">Vencimento:</span><span className="font-medium">{dateBRShort(vencimento)}</span></div>
+        </div>
+        <div><Label>Data do pagamento</Label><Input type="date" value={dataPag} onChange={(e) => setDataPag(e.target.value)} /></div>
+        <div><Label>Conta debitada</Label>
+          <Select value={contaId} onValueChange={setContaId}>
+            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <SelectContent>
+              {contas.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div><Label>Valor pago</Label><Input type="number" step="0.01" value={valor} onChange={(e) => setValor(e.target.value)} /></div>
+      </div>
+      <DialogFooter>
+        <Button variant="outline" onClick={() => onDone()}>Cancelar</Button>
+        <Button onClick={() => pagar.mutate()} disabled={pagar.isPending}>Confirmar pagamento</Button>
+      </DialogFooter>
+    </DialogContent>
+  );
+}
+
 
 function CartaoDialog({ contas, userId, cartao, onDone }: { contas: { id: string; name: string }[]; userId: string; cartao?: Cartao; onDone: () => void }) {
   const isEdit = !!cartao;
