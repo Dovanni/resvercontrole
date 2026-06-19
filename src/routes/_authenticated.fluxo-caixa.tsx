@@ -46,17 +46,18 @@ function CashFlowPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bank_movements" as any)
-        .select("account_id,destination_account_id,type,amount,movement_date,description,category");
+        .select("account_id,destination_account_id,type,amount,movement_date,description,category,origin");
       if (error) throw error;
-      return (data ?? []) as unknown as { account_id: string; destination_account_id: string | null; type: string; amount: number; movement_date: string; description: string; category: string }[];
+      return (data ?? []) as unknown as { account_id: string; destination_account_id: string | null; type: string; amount: number; movement_date: string; description: string; category: string; origin: string | null }[];
     },
   });
 
   // Saldo consolidado (todas as movimentações)
   const bankBalances = useMemo(() => {
     const map: Record<string, number> = {};
-    for (const a of bankAccounts ?? []) map[a.id] = 0; // initial_balance já vira movimento "saldo_inicial"
+    for (const a of bankAccounts ?? []) map[a.id] = Number(a.initial_balance ?? 0);
     for (const m of bankMovements ?? []) {
+      if (m.origin === "saldo_inicial") continue;
       const amt = Number(m.amount);
       if (m.type === "entrada") map[m.account_id] = (map[m.account_id] ?? 0) + amt;
       else if (m.type === "saida") map[m.account_id] = (map[m.account_id] ?? 0) - amt;
