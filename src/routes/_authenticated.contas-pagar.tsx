@@ -249,11 +249,13 @@ function PayablesPage() {
     </TableHead>
   );
 
+  const { data: allCats } = useCategoriasContasPagar();
   const categoryOptions = useMemo(() => {
     const set = new Set<string>();
-    (data ?? []).forEach(p => set.add(p.category));
-    return Array.from(set).sort();
-  }, [data]);
+    (allCats ?? []).forEach(c => set.add(c.nome));
+    (data ?? []).forEach(p => { if (p.category) set.add(p.category); });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  }, [allCats, data]);
 
   const periodLabel = () => {
     if (preset === "today") return "hoje";
