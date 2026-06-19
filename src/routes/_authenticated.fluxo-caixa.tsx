@@ -186,8 +186,8 @@ function CashFlowPage() {
 
     for (const c of purchases ?? []) {
       const amount = Number(c.total ?? 0);
-      const paidStatus = ["pago", "paga", "concluida", "concluída", "finalizada"].includes(String(c.status ?? "").toLowerCase());
-      if (amount <= 0 || c.condicao_pagamento !== "a_vista" || !paidStatus || postedByReference.has(`compra:${c.id}`) || hasSamePostedMovement("saida", c.bank_account_id, c.data_compra, amount)) continue;
+      const canceled = ["cancelada", "cancelado"].includes(String(c.status ?? "").toLowerCase());
+      if (amount <= 0 || c.condicao_pagamento !== "a_vista" || canceled || postedByReference.has(`compra:${c.id}`) || hasSamePostedMovement("saida", c.bank_account_id, c.data_compra, amount)) continue;
       missing.push({
         account_id: c.bank_account_id,
         destination_account_id: null,
