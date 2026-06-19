@@ -211,9 +211,63 @@ function CashFlowPage() {
     return { income, expense, balance: income - expense };
   }, [filteredMovements, accountFilter]);
 
-  const daily = useMemo(() => chart.filter((d) => !d.isFuture).slice(-15).reverse(), [chart]);
-
   const displayedBalance = accountFilter === "todas" ? totalBankBalance : (bankBalances[accountFilter] ?? 0);
+
+  // Tabela diária com saldo acumulado real (do mais antigo p/ mais recente, depois invertido p/ exibir)
+  const daily = useMemo(() => {
+    const todayKey = isoDay(today);
+    const startKey = isoDay(startPast);
+
+    // 1) Saldo de abertura = tudo que aconteceu ANTES do startKey
+    let opening = 0;
+    for (const m of filteredMovements) {
+      if (m.movement_date >= startKey) continue;
+      const amt = Number(m.amount);
+      if (m.type === "entrada") opening += amt;
+      else if (m.type === "saida") opening -= amt;
+      else if (m.type === "transferencia" && accountFilter !== "todas") {
+        if (m.account_id === accountFilter) opening -= amt;
+        if (m.destination_account_id === accountFilter) opening += amt;
+      }
+    }
+
+    // 2) Gera todos os dias do intervalo (inclui dias sem movimento)
+    const days: Record<string, { date: string; income: number; expense: number }> = {};
+    const cursor = new Date(startPast);
+    while (isoDay(cursor) <= todayKey) {
+      const k = isoDay(cursor);
+      days[k] = { date: k, income: 0, expense: 0 };
+      cursor.setDate(cursor.getDate() + 1);
+    }
+
+    // 3) Soma movimentações de cada dia
+    for (const m of filteredMovements) {
+      const k = m.movement_date;
+      if (!days[k]) continue;
+      const amt = Number(m.amount);
+      if (m.type === "entrada") days[k].income += amt;
+      else if (m.type === "saida") days[k].expense += amt;
+      else if (m.type === "transferencia" && accountFilter !== "todas") {
+        if (m.account_id === accountFilter) days[k].expense += amt;
+        if (m.destination_account_id === accountFilter) days[k].income += amt;
+      }
+    }
+
+    // 4) Acumula dia a dia (ASC)
+    let saldo = opening;
+    const asc = Object.values(days)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .map((d) => {
+        saldo += d.income - d.expense;
+        return { ...d, saldoAcumulado: saldo };
+      });
+
+    const finalBalance = asc.length ? asc[asc.length - 1].saldoAcumulado : opening;
+    // Mostra últimos 15 (mais recente no topo)
+    return { rows: asc.slice(-15).reverse(), finalBalance };
+  }, [filteredMovements, accountFilter]);
+
+  const divergence = Math.abs(daily.finalBalance - displayedBalance) > 0.01;
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
@@ -315,23 +369,36 @@ function CashFlowPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {daily.length === 0 && (
+              {daily.rows.length === 0 && (
                 <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">Sem movimentações no período.</TableCell></TableRow>
               )}
-              {daily.map((d) => {
+              {daily.rows.map((d) => {
                 const net = d.income - d.expense;
                 return (
                   <TableRow key={d.date}>
                     <TableCell>{dateBR(d.date)}</TableCell>
                     <TableCell className="text-right text-success">{brl(d.income)}</TableCell>
                     <TableCell className="text-right text-destructive">{brl(d.expense)}</TableCell>
-                    <TableCell className={`text-right font-medium ${net >= 0 ? "text-success" : "text-destructive"}`}>{brl(net)}</TableCell>
-                    <TableCell className="text-right font-medium">{brl(d.saldoReal ?? 0)}</TableCell>
+                    <TableCell className={`text-right font-medium ${net >= 0 ? "text-success" : net < 0 ? "text-destructive" : ""}`}>{brl(net)}</TableCell>
+                    <TableCell className={`text-right font-medium ${d.saldoAcumulado < 0 ? "text-destructive" : ""}`}>{brl(d.saldoAcumulado)}</TableCell>
                   </TableRow>
                 );
               })}
             </TableBody>
           </Table>
+          <div className="px-5 py-4 border-t flex flex-wrap items-center justify-between gap-3">
+            <div className="text-sm">
+              <span className="text-muted-foreground">Saldo final acumulado: </span>
+              <span className={`font-display text-lg ${daily.finalBalance < 0 ? "text-destructive" : ""}`}>{brl(daily.finalBalance)}</span>
+            </div>
+            {divergence ? (
+              <div className="text-sm text-destructive font-medium">
+                ⚠️ Divergência: saldo acumulado ({brl(daily.finalBalance)}) não confere com saldo bancário ({brl(displayedBalance)})
+              </div>
+            ) : (
+              <div className="text-sm text-success">✓ Confere com saldo bancário {accountFilter === "todas" ? "consolidado" : "da conta"}</div>
+            )}
+          </div>
         </CardContent>
       </Card>
         </TabsContent>
