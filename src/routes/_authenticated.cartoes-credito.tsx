@@ -404,12 +404,12 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
               : <Badge variant="outline">Aberta</Badge>}
             <div className="text-muted-foreground mt-1">
               {status === "paga" ? `Paga em ${fat?.data_pagamento ? dateBR(fat.data_pagamento) : "-"}`
-                : diasVenc >= 0 ? `Vence em ${diasVenc} dias — ${brl(totalMesAtual)}` : `Venceu há ${Math.abs(diasVenc)} dias`}
+                : diasVenc >= 0 ? `Vence em ${diasVenc} dias — ${brl(totalFatura)}` : `Venceu há ${Math.abs(diasVenc)} dias — ${brl(totalFatura)}`}
             </div>
           </div>
-          {status !== "paga" && totalMesAtual > 0 && (
-            <Button size="sm" variant="outline" onClick={() => marcarPaga.mutate()} disabled={marcarPaga.isPending}>
-              <CheckCircle2 className="size-3 mr-1" /> Pagar
+          {status !== "paga" && totalFatura > 0 && (
+            <Button size="sm" onClick={() => setPayOpen(true)}>
+              <CheckCircle2 className="size-3 mr-1" /> Pagar fatura
             </Button>
           )}
           {status === "paga" && (
@@ -418,6 +418,7 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
             </Button>
           )}
         </div>
+
         {(alertaVenc || alertaAtraso) && (
           <div className="space-y-1 pt-2 border-t">
             {alertaVenc && <div className="flex items-center gap-1 text-xs text-amber-600"><Clock className="size-3" /> Vence em {diasVenc} dia(s)</div>}
