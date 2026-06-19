@@ -283,16 +283,28 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
     k, total: lancamentos.filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno && l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
   }));
 
-  const vencDate = vencimentoDate(curAno, curMes, cartao.dia_vencimento);
-  const diasVenc = Math.ceil((vencDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  const { fechamento: proxFech, vencimento: proxVenc } = proximoCiclo(cartao.dia_fechamento, cartao.dia_vencimento);
+  const vencDate = proxVenc;
+  const diasVenc = Math.ceil((vencDate.getTime() - new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime()) / (1000 * 60 * 60 * 24));
   const fat = faturas.find((f) => f.mes === curMes && f.ano === curAno);
   const totalMesAtual = lancamentos
     .filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno)
     .reduce((s, l) => s + Number(l.valor), 0);
+  const hojeD = new Date();
+  const jaFechou = hojeD.getTime() > proxFech.getTime() ? false : (() => {
+    // proxFech é sempre >= hoje; para saber se a fatura do mês corrente já fechou,
+    // verificar se o fechamento atual já passou (caso em que proxFech avançou de mês).
+    return false;
+  })();
+  // Status: ABERTA enquanto não chegou no fechamento; FECHADA entre fechamento e vencimento; VENCIDA depois do vencimento.
+  const hojeMs = hojeD.getTime();
   const status: "aberta" | "fechada" | "paga" | "atrasada" =
     fat?.status === "paga" ? "paga"
-    : diasVenc < 0 && totalMesAtual > 0 ? "atrasada"
-    : new Date().getDate() > cartao.dia_fechamento ? "fechada" : "aberta";
+    : hojeMs > proxVenc.getTime() ? "atrasada"
+    : hojeMs > proxFech.getTime() && hojeMs <= proxVenc.getTime() ? "fechada"
+    : "aberta";
+  void jaFechou;
+
 
   const marcarPaga = useMutation({
     mutationFn: async () => {
