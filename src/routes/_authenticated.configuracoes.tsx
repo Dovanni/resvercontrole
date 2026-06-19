@@ -193,7 +193,7 @@ function SettingsPage() {
             </p>
           </div>
           <Button asChild>
-            <Link to="/configuracoes/categorias">Gerenciar categorias</Link>
+            <Link to="/categorias">Gerenciar categorias</Link>
           </Button>
         </CardContent>
       </Card>
