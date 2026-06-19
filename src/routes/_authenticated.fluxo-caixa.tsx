@@ -400,12 +400,12 @@ function CashFlowPage() {
           </Table>
           <div className="px-5 py-4 border-t flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm">
-              <span className="text-muted-foreground">Saldo final acumulado: </span>
+              <span className="text-muted-foreground">Saldo acumulado: </span>
               <span className={`font-display text-lg ${daily.finalBalance < 0 ? "text-destructive" : ""}`}>{brl(daily.finalBalance)}</span>
             </div>
             {divergence ? (
               <div className="text-sm text-destructive font-medium">
-                ⚠️ Divergência: saldo acumulado ({brl(daily.finalBalance)}) não confere com saldo bancário ({brl(displayedBalance)})
+                ⚠️ Divergência de {brl(Math.abs(daily.finalBalance - displayedBalance))} — verificar movimentações não registradas
               </div>
             ) : (
               <div className="text-sm text-success">✓ Confere com saldo bancário {accountFilter === "todas" ? "consolidado" : "da conta"}</div>
