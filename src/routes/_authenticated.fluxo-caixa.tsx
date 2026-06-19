@@ -74,6 +74,7 @@ function CashFlowPage() {
     const map: Record<string, number> = {};
     for (const a of bankAccounts ?? []) map[a.id] = accountsWithInitialMovement.has(a.id) ? 0 : Number(a.initial_balance ?? 0);
     for (const m of bankMovements ?? []) {
+      if (!m.account_id) continue;
       const amt = Number(m.amount);
       if (m.type === "entrada") map[m.account_id] = (map[m.account_id] ?? 0) + amt;
       else if (m.type === "saida") map[m.account_id] = (map[m.account_id] ?? 0) - amt;
@@ -106,6 +107,7 @@ function CashFlowPage() {
         description: `Saldo inicial — ${account.name}`,
         category: "Saldo inicial",
         origin: "saldo_inicial_sintetico",
+        reference_id: account.id,
       }));
     const all = [...(bankMovements ?? []), ...syntheticInitialMovements];
     if (accountFilter === "todas") return all;
