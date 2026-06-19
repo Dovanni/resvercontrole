@@ -342,7 +342,6 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
     onError: (e: any) => toast.error(e.message),
   });
 
-  const confirm = useConfirm();
   const estornarPaga = useMutation({
     mutationFn: async () => {
       if (!fat) throw new Error("Fatura não encontrada");
