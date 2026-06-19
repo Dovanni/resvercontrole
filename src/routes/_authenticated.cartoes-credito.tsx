@@ -806,9 +806,9 @@ function CartaoDetalhe({ cartao, lancamentos, faturas }: { cartao: Cartao; lanca
 
       <Card className="shadow-soft"><CardContent className="p-0">
         <Table>
-          <TableHeader><TableRow><TableHead>Data</TableHead><TableHead>Descrição</TableHead><TableHead>Categoria</TableHead><TableHead>Parcela</TableHead><TableHead className="text-right">Valor</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>Data</TableHead><TableHead>Descrição</TableHead><TableHead>Categoria</TableHead><TableHead>Parcela</TableHead><TableHead className="text-right">Valor</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
           <TableBody>
-            {filtered.length === 0 && <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Sem lançamentos no período.</TableCell></TableRow>}
+            {filtered.length === 0 && <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Sem lançamentos no período.</TableCell></TableRow>}
             {filtered.map((l) => (
               <TableRow key={l.id}>
                 <TableCell>{dateBR(l.data)}</TableCell>
@@ -816,6 +816,7 @@ function CartaoDetalhe({ cartao, lancamentos, faturas }: { cartao: Cartao; lanca
                 <TableCell>{CAT_META[l.categoria].emoji} {CAT_META[l.categoria].label}</TableCell>
                 <TableCell>{l.parcelado ? `${l.parcela_atual}/${l.total_parcelas}` : "—"}</TableCell>
                 <TableCell className="text-right font-medium">{brl(Number(l.valor))}</TableCell>
+                <TableCell className="text-right"><LancActions lanc={l} /></TableCell>
               </TableRow>
             ))}
           </TableBody>
