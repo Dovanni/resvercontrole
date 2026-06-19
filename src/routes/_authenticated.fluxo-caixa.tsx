@@ -46,16 +46,19 @@ function CashFlowPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bank_movements" as any)
-        .select("account_id,destination_account_id,type,amount,movement_date,description,category");
+        .select("account_id,destination_account_id,type,amount,movement_date,description,category,origin");
       if (error) throw error;
-      return (data ?? []) as unknown as { account_id: string; destination_account_id: string | null; type: string; amount: number; movement_date: string; description: string; category: string }[];
+      return (data ?? []) as unknown as { account_id: string; destination_account_id: string | null; type: string; amount: number; movement_date: string; description: string; category: string; origin: string | null }[];
     },
   });
 
   // Saldo consolidado (todas as movimentações)
   const bankBalances = useMemo(() => {
+    const accountsWithInitialMovement = new Set(
+      (bankMovements ?? []).filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id)
+    );
     const map: Record<string, number> = {};
-    for (const a of bankAccounts ?? []) map[a.id] = 0; // initial_balance já vira movimento "saldo_inicial"
+    for (const a of bankAccounts ?? []) map[a.id] = accountsWithInitialMovement.has(a.id) ? 0 : Number(a.initial_balance ?? 0);
     for (const m of bankMovements ?? []) {
       const amt = Number(m.amount);
       if (m.type === "entrada") map[m.account_id] = (map[m.account_id] ?? 0) + amt;
@@ -120,8 +123,12 @@ function CashFlowPage() {
     const startKey = isoDay(startPast);
     const endKey = isoDay(endFuture);
 
-    // Saldo de abertura: tudo que aconteceu ANTES do startPast (incluindo saldos iniciais)
-    let opening = 0;
+    const accountsWithInitialMovement = new Set(filteredMovements.filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id));
+    // Saldo de abertura: saldo inicial das contas que ainda não têm movimento de saldo inicial
+    // + todas as movimentações ANTES do período.
+    let opening = accountFilter === "todas"
+      ? (bankAccounts ?? []).reduce((sum, account) => sum + (accountsWithInitialMovement.has(account.id) ? 0 : Number(account.initial_balance ?? 0)), 0)
+      : (accountsWithInitialMovement.has(accountFilter) ? 0 : Number((bankAccounts ?? []).find((account) => account.id === accountFilter)?.initial_balance ?? 0));
     for (const m of filteredMovements) {
       if (m.movement_date >= startKey) continue;
       const amt = Number(m.amount);
@@ -192,7 +199,7 @@ function CashFlowPage() {
     if (todayIdx >= 0) (series[todayIdx] as any).saldoProjetado = series[todayIdx].saldoReal;
 
     return series;
-  }, [filteredMovements, futurePayables, futureReceivables, accountFilter]);
+  }, [filteredMovements, futurePayables, futureReceivables, accountFilter, bankAccounts]);
 
   const totals = useMemo(() => {
     let income = 0, expense = 0;
@@ -218,8 +225,12 @@ function CashFlowPage() {
     const todayKey = isoDay(today);
     const startKey = isoDay(startPast);
 
-    // 1) Saldo de abertura = tudo que aconteceu ANTES do startKey
-    let opening = 0;
+    const accountsWithInitialMovement = new Set(filteredMovements.filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id));
+    // 1) Saldo anterior = saldo inicial das contas que ainda não têm movimento de saldo inicial
+    // + todas as movimentações ANTES do startKey.
+    let opening = accountFilter === "todas"
+      ? (bankAccounts ?? []).reduce((sum, account) => sum + (accountsWithInitialMovement.has(account.id) ? 0 : Number(account.initial_balance ?? 0)), 0)
+      : (accountsWithInitialMovement.has(accountFilter) ? 0 : Number((bankAccounts ?? []).find((account) => account.id === accountFilter)?.initial_balance ?? 0));
     for (const m of filteredMovements) {
       if (m.movement_date >= startKey) continue;
       const amt = Number(m.amount);
@@ -262,10 +273,10 @@ function CashFlowPage() {
         return { ...d, saldoAcumulado: saldo };
       });
 
-    const finalBalance = asc.length ? asc[asc.length - 1].saldoAcumulado : opening;
+    const mostRecentBalance = asc.length ? asc[asc.length - 1].saldoAcumulado : opening;
     // Mostra últimos 15 (mais recente no topo)
-    return { rows: asc.slice(-15).reverse(), finalBalance };
-  }, [filteredMovements, accountFilter]);
+    return { rows: asc.slice(-15).reverse(), finalBalance: mostRecentBalance };
+  }, [filteredMovements, accountFilter, bankAccounts]);
 
   const divergence = Math.abs(daily.finalBalance - displayedBalance) > 0.01;
 
@@ -388,12 +399,12 @@ function CashFlowPage() {
           </Table>
           <div className="px-5 py-4 border-t flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm">
-              <span className="text-muted-foreground">Saldo final acumulado: </span>
+              <span className="text-muted-foreground">Saldo acumulado: </span>
               <span className={`font-display text-lg ${daily.finalBalance < 0 ? "text-destructive" : ""}`}>{brl(daily.finalBalance)}</span>
             </div>
             {divergence ? (
               <div className="text-sm text-destructive font-medium">
-                ⚠️ Divergência: saldo acumulado ({brl(daily.finalBalance)}) não confere com saldo bancário ({brl(displayedBalance)})
+                ⚠️ Divergência de {brl(Math.abs(daily.finalBalance - displayedBalance))} — verificar movimentações não registradas
               </div>
             ) : (
               <div className="text-sm text-success">✓ Confere com saldo bancário {accountFilter === "todas" ? "consolidado" : "da conta"}</div>
