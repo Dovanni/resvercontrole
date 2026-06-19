@@ -941,7 +941,7 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
     const pct = c.limite_total > 0 ? (usado / Number(c.limite_total)) * 100 : 0;
     if (pct >= 80) acima80++;
     const fat = faturas.find((f) => f.cartao_id === c.id && f.mes === curMes && f.ano === curAno);
-    const venc = vencimentoDate(curAno, curMes, c.dia_vencimento);
+    const { vencimento: venc } = proximoCiclo(c.dia_fechamento, c.dia_vencimento, today);
     const dias = Math.ceil((venc.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     const paga = fat?.status === "paga";
     if (!paga && usado > 0) {
