@@ -400,7 +400,6 @@ function BalancetePage() {
           <table className="w-full text-sm">
             <tbody>
               <tr className="border-b"><td className="py-2">(+) Saldo atual contas bancárias</td><td className="text-right text-success">{brl(totalSaldoAtual)}</td></tr>
-              <tr className="border-b"><td className="py-2">(+) Entradas do período</td><td className="text-right text-success">{brl(totalEntradas)}</td></tr>
               <tr className="border-b bg-success/5 font-medium"><td className="py-2">(=) TOTAL RECEITAS</td><td className="text-right text-success">{brl(receitasRealizadas)}</td></tr>
               <tr className="border-b"><td className="py-2">(−) Total Despesas (pagas no período)</td><td className="text-right text-destructive">{brl(totDesp.realizado)}</td></tr>
               <tr className="border-b font-display text-lg"><td className="py-3">(=) RESULTADO FINAL</td>
