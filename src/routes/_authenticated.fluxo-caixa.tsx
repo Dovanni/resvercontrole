@@ -140,12 +140,9 @@ function CashFlowPage() {
     const startKey = isoDay(startPast);
     const endKey = isoDay(endFuture);
 
-    const accountsWithInitialMovement = new Set(filteredMovements.filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id));
-    // Saldo de abertura: saldo inicial das contas que ainda não têm movimento de saldo inicial
-    // + todas as movimentações ANTES do período.
-    let opening = accountFilter === "todas"
-      ? (bankAccounts ?? []).reduce((sum, account) => sum + (accountsWithInitialMovement.has(account.id) ? 0 : Number(account.initial_balance ?? 0)), 0)
-      : (accountsWithInitialMovement.has(accountFilter) ? 0 : Number((bankAccounts ?? []).find((account) => account.id === accountFilter)?.initial_balance ?? 0));
+    // Saldo de abertura = todas as movimentações ANTES do período.
+    // Saldos iniciais sem movimento gravado entram como movimentações sintéticas em filteredMovements.
+    let opening = 0;
     for (const m of filteredMovements) {
       if (m.movement_date >= startKey) continue;
       const amt = Number(m.amount);
@@ -216,7 +213,7 @@ function CashFlowPage() {
     if (todayIdx >= 0) (series[todayIdx] as any).saldoProjetado = series[todayIdx].saldoReal;
 
     return series;
-  }, [filteredMovements, futurePayables, futureReceivables, accountFilter, bankAccounts]);
+  }, [filteredMovements, futurePayables, futureReceivables, accountFilter]);
 
   const totals = useMemo(() => {
     let income = 0, expense = 0;
@@ -242,12 +239,9 @@ function CashFlowPage() {
     const todayKey = isoDay(today);
     const startKey = isoDay(startPast);
 
-    const accountsWithInitialMovement = new Set(filteredMovements.filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id));
-    // 1) Saldo anterior = saldo inicial das contas que ainda não têm movimento de saldo inicial
-    // + todas as movimentações ANTES do startKey.
-    let opening = accountFilter === "todas"
-      ? (bankAccounts ?? []).reduce((sum, account) => sum + (accountsWithInitialMovement.has(account.id) ? 0 : Number(account.initial_balance ?? 0)), 0)
-      : (accountsWithInitialMovement.has(accountFilter) ? 0 : Number((bankAccounts ?? []).find((account) => account.id === accountFilter)?.initial_balance ?? 0));
+    // 1) Saldo anterior = todas as movimentações ANTES do startKey.
+    // Saldos iniciais sem movimento gravado entram como movimentações sintéticas em filteredMovements.
+    let opening = 0;
     for (const m of filteredMovements) {
       if (m.movement_date >= startKey) continue;
       const amt = Number(m.amount);
@@ -295,7 +289,7 @@ function CashFlowPage() {
     const rows = visibleDays.slice(-15).reverse();
 
     return { rows, finalBalance: mostRecentBalance };
-  }, [filteredMovements, accountFilter, bankAccounts, onlyMovementDays]);
+  }, [filteredMovements, accountFilter, onlyMovementDays]);
 
   const divergence = Math.abs(daily.finalBalance - displayedBalance) > 0.01;
 
