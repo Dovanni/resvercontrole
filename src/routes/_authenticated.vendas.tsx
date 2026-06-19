@@ -190,7 +190,7 @@ function SaleView({ saleId }: { saleId: string }) {
       <div className="grid grid-cols-2 gap-3">
         <div><div className="text-muted-foreground text-xs">Cliente</div><div className="font-medium">{data.customers?.name ?? data.customer_name ?? "Balcão"}</div></div>
         <div><div className="text-muted-foreground text-xs">Data</div><div>{dateBR(data.sold_at)}</div></div>
-        <div><div className="text-muted-foreground text-xs">Canal</div><div className="capitalize">{data.channel}</div></div>
+        <div><div className="text-muted-foreground text-xs">Canal</div><div>{CHANNEL_LABEL[data.channel] ?? data.channel}</div></div>
         <div><div className="text-muted-foreground text-xs">Status</div><div>{STATUS_LABEL[data.status] ?? data.status}</div></div>
         <div><div className="text-muted-foreground text-xs">Pagamento</div><div>{PM_LABEL[data.payment_method] ?? data.payment_method}</div></div>
         <div><div className="text-muted-foreground text-xs">Conta destino</div><div>{data.bank_accounts?.name ?? "—"}</div></div>
