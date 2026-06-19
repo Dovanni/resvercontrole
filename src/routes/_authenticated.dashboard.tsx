@@ -116,10 +116,6 @@ function Dashboard() {
     },
   });
 
-  if (isLoading || !data) {
-    return <div className="p-8 text-muted-foreground">Carregando…</div>;
-  }
-
   if (isError) {
     return (
       <div className="p-6 md:p-8 max-w-3xl mx-auto">
@@ -132,6 +128,10 @@ function Dashboard() {
         </Card>
       </div>
     );
+  }
+
+  if (isLoading || !data) {
+    return <div className="p-8 text-muted-foreground">Carregando…</div>;
   }
 
   const kpis = [
