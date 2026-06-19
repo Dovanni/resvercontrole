@@ -15,7 +15,7 @@ import { useAuth } from "@/lib/auth";
 import { isValidCNPJ, maskCNPJ } from "@/lib/validators";
 import { useConfirm } from "@/components/confirm-dialog";
 import { resetDemoData } from "@/lib/api/reset-demo.functions";
-import { CategoriasManagerInline } from "@/components/categorias-contas-pagar-manager";
+
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   head: () => ({ meta: [{ title: "Configurações — Rosé" }] }),
