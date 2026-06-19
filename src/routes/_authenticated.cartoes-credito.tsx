@@ -307,30 +307,63 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
 
   const marcarPaga = useMutation({
     mutationFn: async () => {
-      const { error } = await (supabase.from("cartoes_faturas" as any).upsert({
-        cartao_id: cartao.id,
-        user_id: (await supabase.auth.getUser()).data.user?.id,
+      const uid = (await supabase.auth.getUser()).data.user?.id;
+      if (!uid) throw new Error("Sessão inválida");
+      const hoje = new Date().toISOString().slice(0, 10);
+      const desc = `Fatura ${cartao.nome} — ${String(curMes).padStart(2, "0")}/${curAno}`;
+      const { data: upserted, error } = await (supabase.from("cartoes_faturas" as any).upsert({
+        cartao_id: cartao.id, user_id: uid,
         mes: curMes, ano: curAno, valor_total: totalMesAtual, status: "paga",
-        data_pagamento: new Date().toISOString().slice(0, 10),
-      }, { onConflict: "cartao_id,ano,mes" }));
+        data_pagamento: hoje,
+      }, { onConflict: "cartao_id,ano,mes" }).select().single());
       if (error) throw error;
+      const faturaId = (upserted as any)?.id;
       if (cartao.conta_bancaria_id && totalMesAtual > 0) {
-        await supabase.from("bank_movements").insert({
-          user_id: (await supabase.auth.getUser()).data.user!.id,
-          account_id: cartao.conta_bancaria_id,
-          movement_date: new Date().toISOString().slice(0, 10),
-          type: "saida",
-          category: "Cartão de crédito",
-          description: `Fatura ${cartao.nome} — ${String(curMes).padStart(2, "0")}/${curAno}`,
-          amount: totalMesAtual,
-          origin: "cartao_fatura",
-          reference_id: cartao.id,
+        const { error: bmErr } = await supabase.from("bank_movements").insert({
+          user_id: uid, account_id: cartao.conta_bancaria_id, movement_date: hoje,
+          type: "saida", category: "Cartão de Crédito",
+          description: `Pagamento ${desc}`, amount: totalMesAtual,
+          origin: "cartao_fatura", reference_id: faturaId,
         });
+        if (bmErr) throw bmErr;
+      }
+      if (totalMesAtual > 0) {
+        const venc = vencimentoDate(curAno, curMes, cartao.dia_vencimento).toISOString().slice(0, 10);
+        const { error: pErr } = await supabase.from("payables").insert({
+          user_id: uid, description: desc, category: "Cartão de Crédito",
+          amount: totalMesAtual, due_date: venc, status: "pago",
+          paid_amount: totalMesAtual, paid_at: new Date().toISOString(),
+          bank_account_id: cartao.conta_bancaria_id, payment_method: "cartao",
+        });
+        if (pErr) throw pErr;
       }
     },
-    onSuccess: () => { toast.success("Fatura paga"); qc.invalidateQueries({ queryKey: ["cartoes_faturas"] }); onPaga(); },
+    onSuccess: () => { toast.success("Fatura paga"); qc.invalidateQueries({ queryKey: ["cartoes_faturas"] }); qc.invalidateQueries({ queryKey: ["bank_movements"] }); qc.invalidateQueries({ queryKey: ["payables"] }); onPaga(); },
     onError: (e: any) => toast.error(e.message),
   });
+
+  const confirm = useConfirm();
+  const estornarPaga = useMutation({
+    mutationFn: async () => {
+      if (!fat) throw new Error("Fatura não encontrada");
+      const desc = `Fatura ${cartao.nome} — ${String(fat.mes).padStart(2, "0")}/${fat.ano}`;
+      await supabase.from("bank_movements").delete().eq("origin", "cartao_fatura").eq("reference_id", fat.id);
+      await supabase.from("payables").delete().eq("description", desc).eq("category", "Cartão de Crédito").eq("status", "pago");
+      const { error } = await (supabase.from("cartoes_faturas" as any).update({ status: "fechada", data_pagamento: null }).eq("id", fat.id));
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Pagamento estornado com sucesso!"); qc.invalidateQueries({ queryKey: ["cartoes_faturas"] }); qc.invalidateQueries({ queryKey: ["bank_movements"] }); qc.invalidateQueries({ queryKey: ["payables"] }); onPaga(); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const onEstornar = async () => {
+    const ok = await confirm({
+      title: "Estornar pagamento",
+      description: `Deseja estornar o pagamento da fatura do ${cartao.nome} de ${fat?.data_pagamento ? dateBR(fat.data_pagamento) : ""}?\n\nIsso irá:\n• Voltar status da fatura para 'Fechada'\n• Estornar a saída na conta bancária vinculada\n• O valor voltará ao saldo da conta`,
+      confirmText: "Confirmar estorno",
+    });
+    if (ok) estornarPaga.mutate();
+  };
 
   const alertaVenc = diasVenc >= 0 && diasVenc <= 5 && status !== "paga";
   const alertaAtraso = status === "atrasada";
