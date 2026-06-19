@@ -118,95 +118,102 @@ function CashFlowPage() {
   });
 
   const cashMovements = useMemo(() => {
-    const posted = bankMovements ?? [];
-    const postedByReference = new Set(
-      posted.filter((m) => m.origin && m.reference_id).map((m) => `${m.origin}:${m.reference_id}`),
-    );
-    const hasSamePostedMovement = (type: string, accountId: string | null, date: string, amount: number) =>
-      posted.some((m) =>
-        m.type === type
-        && (m.account_id ?? null) === (accountId ?? null)
-        && m.movement_date === date
-        && Math.abs(Number(m.amount) - amount) < 0.01,
+    try {
+      const posted = bankMovements ?? [];
+      const postedByReference = new Set(
+        posted.filter((m) => m.origin && m.reference_id).map((m) => `${m.origin}:${m.reference_id}`),
       );
+      const hasSamePostedMovement = (type: string, accountId: string | null, date: string, amount: number) =>
+        posted.some((m) =>
+          m.type === type
+          && (m.account_id ?? null) === (accountId ?? null)
+          && m.movement_date === date
+          && Math.abs(Number(m.amount) - amount) < 0.01,
+        );
 
-    const missing: CashMovement[] = [];
+      const safeDate = (v: string | null | undefined) => (v ? String(v).slice(0, 10) : null);
+      const missing: CashMovement[] = [];
 
-    for (const p of paidPayables ?? []) {
-      const amount = Number(p.paid_amount || p.amount || 0);
-      const movementDate = (p.paid_at ?? p.due_date).slice(0, 10);
-      if (amount <= 0 || postedByReference.has(`payable:${p.id}`) || hasSamePostedMovement("saida", p.bank_account_id, movementDate, amount)) continue;
-      missing.push({
-        account_id: p.bank_account_id,
-        destination_account_id: null,
-        type: "saida",
-        amount,
-        movement_date: movementDate,
-        description: p.description,
-        category: p.category,
-        origin: "payable_fallback",
-        reference_id: p.id,
-      });
+      for (const p of paidPayables ?? []) {
+        const amount = Number(p.paid_amount || p.amount || 0);
+        const movementDate = safeDate(p.paid_at) ?? safeDate(p.due_date);
+        if (!movementDate || amount <= 0 || postedByReference.has(`payable:${p.id}`) || hasSamePostedMovement("saida", p.bank_account_id, movementDate, amount)) continue;
+        missing.push({
+          account_id: p.bank_account_id,
+          destination_account_id: null,
+          type: "saida",
+          amount,
+          movement_date: movementDate,
+          description: p.description,
+          category: p.category,
+          origin: "payable_fallback",
+          reference_id: p.id,
+        });
+      }
+
+      for (const r of receivableSources ?? []) {
+        const amount = Number(r.received_amount || (r.status === "recebido" ? r.amount : 0) || 0);
+        const movementDate = safeDate(r.received_at) ?? safeDate(r.due_date);
+        if (!movementDate || amount <= 0 || postedByReference.has(`receivable:${r.id}`) || hasSamePostedMovement("entrada", r.bank_account_id, movementDate, amount)) continue;
+        missing.push({
+          account_id: r.bank_account_id,
+          destination_account_id: null,
+          type: "entrada",
+          amount,
+          movement_date: movementDate,
+          description: r.description,
+          category: "Recebimento de venda",
+          origin: "receivable_fallback",
+          reference_id: r.id,
+        });
+      }
+
+      const salesWithReceivable = new Set((receivableSources ?? []).filter((r) => r.sale_id).map((r) => r.sale_id));
+      for (const s of deliveredSales ?? []) {
+        const amount = Number(s.total ?? 0);
+        const movementDate = safeDate(s.sold_at);
+        if (!movementDate || amount <= 0 || salesWithReceivable.has(s.id) || postedByReference.has(`sale:${s.id}`) || hasSamePostedMovement("entrada", s.bank_account_id, movementDate, amount)) continue;
+        missing.push({
+          account_id: s.bank_account_id,
+          destination_account_id: null,
+          type: "entrada",
+          amount,
+          movement_date: movementDate,
+          description: `Venda — ${s.customer_name ?? "balcão"}`,
+          category: "Recebimento de venda",
+          origin: "sale_fallback",
+          reference_id: s.id,
+        });
+      }
+
+      const purchasesWithPaidPayable = new Set(
+        (paidPayables ?? [])
+          .map((p) => p.description?.match(/Compra #([a-f0-9]{8})/i)?.[1])
+          .filter(Boolean),
+      );
+      for (const c of purchases ?? []) {
+        const amount = Number(c.total ?? 0);
+        const movementDate = safeDate(c.data_compra);
+        const canceled = ["cancelada", "cancelado"].includes(String(c.status ?? "").toLowerCase());
+        if (!movementDate || amount <= 0 || c.condicao_pagamento !== "a_vista" || canceled || purchasesWithPaidPayable.has(c.id.slice(0, 8)) || postedByReference.has(`compra:${c.id}`) || hasSamePostedMovement("saida", c.bank_account_id, movementDate, amount)) continue;
+        missing.push({
+          account_id: c.bank_account_id,
+          destination_account_id: null,
+          type: "saida",
+          amount,
+          movement_date: movementDate,
+          description: `Compra #${c.id.slice(0, 8)}`,
+          category: "Fornecedor",
+          origin: "purchase_fallback",
+          reference_id: c.id,
+        });
+      }
+
+      return [...posted, ...missing];
+    } catch (err) {
+      console.error("[fluxo-caixa] cashMovements failed", err);
+      return (bankMovements ?? []) as CashMovement[];
     }
-
-    for (const r of receivableSources ?? []) {
-      const amount = Number(r.received_amount || (r.status === "recebido" ? r.amount : 0) || 0);
-      const movementDate = (r.received_at ?? r.due_date).slice(0, 10);
-      if (amount <= 0 || postedByReference.has(`receivable:${r.id}`) || hasSamePostedMovement("entrada", r.bank_account_id, movementDate, amount)) continue;
-      missing.push({
-        account_id: r.bank_account_id,
-        destination_account_id: null,
-        type: "entrada",
-        amount,
-        movement_date: movementDate,
-        description: r.description,
-        category: "Recebimento de venda",
-        origin: "receivable_fallback",
-        reference_id: r.id,
-      });
-    }
-
-    const salesWithReceivable = new Set((receivableSources ?? []).filter((r) => r.sale_id).map((r) => r.sale_id));
-    for (const s of deliveredSales ?? []) {
-      const amount = Number(s.total ?? 0);
-      const movementDate = s.sold_at.slice(0, 10);
-      if (amount <= 0 || salesWithReceivable.has(s.id) || postedByReference.has(`sale:${s.id}`) || hasSamePostedMovement("entrada", s.bank_account_id, movementDate, amount)) continue;
-      missing.push({
-        account_id: s.bank_account_id,
-        destination_account_id: null,
-        type: "entrada",
-        amount,
-        movement_date: movementDate,
-        description: `Venda — ${s.customer_name ?? "balcão"}`,
-        category: "Recebimento de venda",
-        origin: "sale_fallback",
-        reference_id: s.id,
-      });
-    }
-
-    const purchasesWithPaidPayable = new Set(
-      (paidPayables ?? [])
-        .map((p) => p.description?.match(/Compra #([a-f0-9]{8})/i)?.[1])
-        .filter(Boolean),
-    );
-    for (const c of purchases ?? []) {
-      const amount = Number(c.total ?? 0);
-      const canceled = ["cancelada", "cancelado"].includes(String(c.status ?? "").toLowerCase());
-      if (amount <= 0 || c.condicao_pagamento !== "a_vista" || canceled || purchasesWithPaidPayable.has(c.id.slice(0, 8)) || postedByReference.has(`compra:${c.id}`) || hasSamePostedMovement("saida", c.bank_account_id, c.data_compra, amount)) continue;
-      missing.push({
-        account_id: c.bank_account_id,
-        destination_account_id: null,
-        type: "saida",
-        amount,
-        movement_date: c.data_compra,
-        description: `Compra #${c.id.slice(0, 8)}`,
-        category: "Fornecedor",
-        origin: "purchase_fallback",
-        reference_id: c.id,
-      });
-    }
-
-    return [...posted, ...missing];
   }, [bankMovements, paidPayables, receivableSources, deliveredSales, purchases]);
 
   // Saldo consolidado (todas as movimentações)
