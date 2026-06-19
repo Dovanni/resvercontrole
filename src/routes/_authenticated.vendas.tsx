@@ -352,7 +352,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
   function pickCustomer(id: string) {
     setCustomerId(id);
     const c = customers?.find(x => x.id === id);
-    if (c) setChannel(c.customer_type);
+    if (c && c.customer_type !== "recursos_financeiros") setChannel(c.customer_type);
   }
 
   function addProduct(id: string) {
@@ -366,8 +366,19 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     }]);
   }
 
-  function changeChannel(c: "varejo" | "atacado") {
+  function changeChannel(c: "varejo" | "atacado" | "recursos_financeiros") {
     setChannel(c);
+    if (c === "recursos_financeiros") {
+      // clear product/sale state — aporte uses its own fields
+      setItems([]);
+      setDiscount(0);
+      setShipping(0);
+      setMercadoPagoFees(0);
+      setCustomerId("");
+      setWalkInName("");
+      setMethod("deposito");
+      return;
+    }
     setItems(items.map(i => {
       const p = products?.find(x => x.id === i.product_id);
       return p ? { ...i, unit_price: c === "atacado" && Number(p.wholesale_price) > 0 ? Number(p.wholesale_price) : Number(p.sale_price) } : i;
@@ -376,10 +387,41 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
 
   const submit = useMutation({
     mutationFn: async () => {
-      if (items.length === 0) throw new Error("Adicione ao menos um produto");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
       const selected = customers?.find(c => c.id === customerId);
+
+      if (isAporte) {
+        if (!customerId) throw new Error("Selecione o investidor / origem do aporte");
+        if (!aporteAmount || aporteAmount <= 0) throw new Error("Informe o valor do aporte");
+        if (!bankAccountId) throw new Error("Selecione a conta de destino");
+        const payload = {
+          customer_id: customerId,
+          customer_name: selected?.name ?? null,
+          channel: "recursos_financeiros",
+          status: "entregue",
+          payment_method: "deposito",
+          total: aporteAmount,
+          discount: 0,
+          mercado_pago_fees: 0,
+          bank_account_id: bankAccountId,
+          aporte_type: aporteType,
+          notes: aporteNotes || null,
+          sold_at: new Date(aporteDate + "T12:00:00").toISOString(),
+        };
+        if (editing) {
+          const { error: delErr } = await supabase.from("sale_items").delete().eq("sale_id", saleId!);
+          if (delErr) throw delErr;
+          const { error: updErr } = await supabase.from("sales").update(payload as any).eq("id", saleId!);
+          if (updErr) throw updErr;
+        } else {
+          const { error } = await supabase.from("sales").insert({ user_id: user.id, ...payload } as any);
+          if (error) throw error;
+        }
+        return;
+      }
+
+      if (items.length === 0) throw new Error("Adicione ao menos um produto");
       const payload = {
         customer_id: customerId || null,
         customer_name: selected?.name ?? (walkInName || null),
