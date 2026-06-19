@@ -121,9 +121,13 @@ function CashFlowPage() {
     const startKey = isoDay(startPast);
     const endKey = isoDay(endFuture);
 
-    // Saldo de abertura: tudo que aconteceu ANTES do startPast (incluindo saldos iniciais)
-    let opening = 0;
+    // Saldo de abertura: saldo inicial das contas + movimentações ANTES do período.
+    // Movimentos originados de saldo_inicial são ignorados para não duplicar o initial_balance.
+    let opening = accountFilter === "todas"
+      ? (bankAccounts ?? []).reduce((sum, account) => sum + Number(account.initial_balance ?? 0), 0)
+      : Number((bankAccounts ?? []).find((account) => account.id === accountFilter)?.initial_balance ?? 0);
     for (const m of filteredMovements) {
+      if (m.origin === "saldo_inicial") continue;
       if (m.movement_date >= startKey) continue;
       const amt = Number(m.amount);
       if (m.type === "entrada") opening += amt;
@@ -147,6 +151,7 @@ function CashFlowPage() {
     }
 
     for (const m of filteredMovements) {
+      if (m.origin === "saldo_inicial") continue;
       const k = m.movement_date;
       if (!days[k]) continue;
       const amt = Number(m.amount);
@@ -193,13 +198,14 @@ function CashFlowPage() {
     if (todayIdx >= 0) (series[todayIdx] as any).saldoProjetado = series[todayIdx].saldoReal;
 
     return series;
-  }, [filteredMovements, futurePayables, futureReceivables, accountFilter]);
+  }, [filteredMovements, futurePayables, futureReceivables, accountFilter, bankAccounts]);
 
   const totals = useMemo(() => {
     let income = 0, expense = 0;
     const startKey = isoDay(startPast);
     const todayKey = isoDay(today);
     for (const m of filteredMovements) {
+      if (m.origin === "saldo_inicial") continue;
       if (m.movement_date < startKey || m.movement_date > todayKey) continue;
       const amt = Number(m.amount);
       if (m.type === "entrada") income += amt;
