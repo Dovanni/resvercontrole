@@ -77,6 +77,7 @@ function Dashboard() {
       return {
         totalRevenue, profit, salesCount,
         ticketAtacado, ticketVarejo,
+        totalAportes, aporteCount: aporteRows.length,
         totalIncome, totalExpense, balance: totalIncome - totalExpense,
         topProducts, chart, lowStock, recentSales: salesRows.slice(0, 5),
       };
