@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import { brl } from "@/lib/format";
 import { useConfirm } from "@/components/confirm-dialog";
 import { DataPagination, usePagination } from "@/components/data-pagination";
-import { CategoriasManagerDialog, useCategoriasContasPagar } from "@/components/categorias-contas-pagar-manager";
+import { useCategoriasContasPagar } from "@/components/categorias-contas-pagar-manager";
 import * as XLSX from "xlsx";
 
 type PeriodPreset = "all" | "today" | "week" | "month" | "next30" | "next90" | "custom";
@@ -621,7 +621,7 @@ function InlineDate({ value, onSave }: { value: string; onSave: (v: string) => P
 function EditPayableForm({ payable, all, suppliers, onDone }: { payable: Payable; all: Payable[]; suppliers: { id: string; name: string }[]; onDone: () => void }) {
   const series = useMemo(() => findSeriesItems(all, payable), [all, payable]);
   const [scope, setScope] = useState<"one" | "forward" | "all">("one");
-  const [manageCatsOpen, setManageCatsOpen] = useState(false);
+  const navCats = useNavigate();
   const { data: cats } = useCategoriasContasPagar();
   const categoryOptions = (cats && cats.length > 0) ? cats.map(c => c.nome) : FALLBACK_CATEGORIES;
 
@@ -736,7 +736,7 @@ function EditPayableForm({ payable, all, suppliers, onDone }: { payable: Payable
         </div>
         <div className="space-y-1.5">
           <Label>Categoria</Label>
-          <Select value={f.category} onValueChange={(v) => { if (v === "__manage__") { setManageCatsOpen(true); return; } setF({ ...f, category: v }); }}>
+          <Select value={f.category} onValueChange={(v) => { if (v === "__manage__") { navCats({ to: "/configuracoes/categorias" }); return; } setF({ ...f, category: v }); }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {categoryOptions.map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
@@ -744,7 +744,6 @@ function EditPayableForm({ payable, all, suppliers, onDone }: { payable: Payable
               <SelectItem value="__manage__">⚙️ Gerenciar categorias…</SelectItem>
             </SelectContent>
           </Select>
-          <CategoriasManagerDialog open={manageCatsOpen} onOpenChange={setManageCatsOpen} />
         </div>
         <div className="space-y-1.5">
           <Label>Valor (R$)</Label>
@@ -871,7 +870,7 @@ function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: str
     payment_method: "pix", recurrence: "nenhuma" as "nenhuma" | "semanal" | "mensal",
   });
   const [repeatCount, setRepeatCount] = useState(1);
-  const [manageCatsOpen, setManageCatsOpen] = useState(false);
+  const navCats2 = useNavigate();
   const { data: cats } = useCategoriasContasPagar();
   const categoryOptions = (cats && cats.length > 0) ? cats.map((c) => c.nome) : FALLBACK_CATEGORIES;
 
@@ -954,14 +953,13 @@ function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: str
         </div>
         <div className="space-y-1.5">
           <Label>Categoria</Label>
-          <Select value={f.category} onValueChange={(v) => { if (v === "__manage__") { setManageCatsOpen(true); return; } setF({ ...f, category: v }); }}>
+          <Select value={f.category} onValueChange={(v) => { if (v === "__manage__") { navCats2({ to: "/configuracoes/categorias" }); return; } setF({ ...f, category: v }); }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {categoryOptions.map((c) => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
               <SelectItem value="__manage__">⚙️ Gerenciar categorias…</SelectItem>
             </SelectContent>
           </Select>
-          <CategoriasManagerDialog open={manageCatsOpen} onOpenChange={setManageCatsOpen} />
         </div>
         <div className="space-y-1.5">
           <Label>Valor (R$)</Label>
