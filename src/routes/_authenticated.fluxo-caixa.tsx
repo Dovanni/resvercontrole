@@ -325,6 +325,12 @@ function CashFlowPage() {
             </SelectContent>
           </Select>
         </div>
+        <div className="flex items-center gap-2 pb-2">
+          <Switch id="only-movement-days" checked={onlyMovementDays} onCheckedChange={setOnlyMovementDays} />
+          <Label htmlFor="only-movement-days" className="text-sm cursor-pointer">
+            Mostrar só dias com movimento
+          </Label>
+        </div>
         <div className="ml-auto text-right">
           <div className="text-xs text-muted-foreground">Saldo bancário {accountFilter === "todas" ? "consolidado" : "da conta"}</div>
           <div className={`font-display text-2xl ${displayedBalance < 0 ? "text-destructive" : ""}`}>
@@ -381,7 +387,9 @@ function CashFlowPage() {
 
       <Card className="shadow-soft">
         <CardContent className="p-0">
-          <div className="px-5 py-4 border-b font-display">Movimentação diária (últimos 15 dias)</div>
+          <div className="px-5 py-4 border-b font-display">
+            Movimentação diária ({onlyMovementDays ? "dias com movimento" : "últimos 15 dias"})
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
