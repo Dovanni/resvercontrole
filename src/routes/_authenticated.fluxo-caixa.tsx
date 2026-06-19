@@ -207,11 +207,11 @@ function CashFlowPage() {
   // Saldo consolidado (todas as movimentações)
   const bankBalances = useMemo(() => {
     const accountsWithInitialMovement = new Set(
-      cashMovements.filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id)
+      (bankMovements ?? []).filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id)
     );
     const map: Record<string, number> = {};
     for (const a of bankAccounts ?? []) map[a.id] = accountsWithInitialMovement.has(a.id) ? 0 : Number(a.initial_balance ?? 0);
-    for (const m of cashMovements) {
+    for (const m of bankMovements ?? []) {
       if (!m.account_id) continue;
       const amt = Number(m.amount);
       if (m.type === "entrada") map[m.account_id] = (map[m.account_id] ?? 0) + amt;
@@ -222,7 +222,7 @@ function CashFlowPage() {
       }
     }
     return map;
-  }, [bankAccounts, cashMovements]);
+  }, [bankAccounts, bankMovements]);
 
   const totalBankBalance = useMemo(
     () => (bankAccounts ?? []).reduce((s, a) => s + (bankBalances[a.id] ?? 0), 0),
