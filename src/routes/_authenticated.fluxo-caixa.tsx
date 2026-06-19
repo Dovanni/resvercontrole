@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { ArrowDownRight, ArrowUpRight, Wallet, Landmark } from "lucide-react";
 import { brl, dateBR } from "@/lib/format";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend } from "recharts";
@@ -27,17 +28,18 @@ function CashFlowPage() {
   const startPast = new Date(today); startPast.setDate(today.getDate() - 30);
   const endFuture = new Date(today); endFuture.setDate(today.getDate() + 15);
   const [accountFilter, setAccountFilter] = useState<string>("todas");
+  const [onlyMovementDays, setOnlyMovementDays] = useState(true);
 
   const { data: bankAccounts } = useQuery({
     queryKey: ["bank-accounts-active"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bank_accounts" as any)
-        .select("id,name,bank,color,initial_balance,status")
+        .select("id,name,bank,color,initial_balance,status,created_at")
         .eq("status", "ativa")
         .order("name");
       if (error) throw error;
-      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string; initial_balance: number; status: string }[];
+      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string; initial_balance: number; status: string; created_at: string }[];
     },
   });
 
@@ -78,10 +80,25 @@ function CashFlowPage() {
 
   // Movimentações filtradas pela conta selecionada
   const filteredMovements = useMemo(() => {
-    const all = bankMovements ?? [];
+    const accountsWithInitialMovement = new Set(
+      (bankMovements ?? []).filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id)
+    );
+    const syntheticInitialMovements = (bankAccounts ?? [])
+      .filter((account) => Number(account.initial_balance ?? 0) > 0 && !accountsWithInitialMovement.has(account.id))
+      .map((account) => ({
+        account_id: account.id,
+        destination_account_id: null,
+        type: "entrada",
+        amount: Number(account.initial_balance ?? 0),
+        movement_date: String(account.created_at).slice(0, 10),
+        description: `Saldo inicial — ${account.name}`,
+        category: "Saldo inicial",
+        origin: "saldo_inicial_sintetico",
+      }));
+    const all = [...(bankMovements ?? []), ...syntheticInitialMovements];
     if (accountFilter === "todas") return all;
     return all.filter((m) => m.account_id === accountFilter || m.destination_account_id === accountFilter);
-  }, [bankMovements, accountFilter]);
+  }, [bankMovements, bankAccounts, accountFilter]);
 
   // Recebíveis/pagáveis futuros — projeção apenas se filtro = todas (ou filtrados por bank_account_id)
   const { data: futurePayables } = useQuery({
