@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { CategoriasManagerInline } from "@/components/categorias-contas-pagar-manager";
 
-export const Route = createFileRoute("/_authenticated/configuracoes/categorias")({
+export const Route = createFileRoute("/_authenticated/categorias")({
   head: () => ({ meta: [{ title: "Categorias de Despesas — Rosé" }] }),
   component: CategoriasPage,
 });
