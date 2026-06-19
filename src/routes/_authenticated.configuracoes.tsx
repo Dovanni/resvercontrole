@@ -192,8 +192,8 @@ function SettingsPage() {
               Gerencie as categorias usadas em Contas a pagar.
             </p>
           </div>
-          <Button asChild>
-            <Link to="/categorias">Gerenciar categorias</Link>
+          <Button asChild variant="link" className="text-primary">
+            <Link to="/categorias">Gerenciar categorias →</Link>
           </Button>
         </CardContent>
       </Card>
