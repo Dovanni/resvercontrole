@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
@@ -11,7 +11,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CheckCircle2, AlertCircle, Download, Plus, Clock } from "lucide-react";
+import { CheckCircle2, AlertCircle, Download, Plus, Clock, Pencil, Trash2, Check, X } from "lucide-react";
+import { useConfirm } from "@/components/confirm-dialog";
 import { toast } from "sonner";
 import { brl, dateBR } from "@/lib/format";
 import { DataPagination, usePagination } from "@/components/data-pagination";
@@ -54,12 +55,14 @@ const STATUS_STYLE: Record<string, string> = {
 
 function ReceivablesPage() {
   const qc = useQueryClient();
+  const confirm = useConfirm();
   const [statusFilter, setStatusFilter] = useState<string>("todos");
   const [customerFilter, setCustomerFilter] = useState<string>("todos");
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
   const [openNew, setOpenNew] = useState(false);
   const [payTarget, setPayTarget] = useState<Receivable | null>(null);
+  const [editTarget, setEditTarget] = useState<Receivable | null>(null);
 
   const { data: customers } = useQuery({
     queryKey: ["customers-min"],
@@ -214,21 +217,75 @@ function ReceivablesPage() {
               {pageItems.map((r) => {
                 const eff = effectiveStatus(r);
                 const remaining = Number(r.amount) - Number(r.received_amount);
+
+                const inlineSave = async (patch: Partial<Receivable>) => {
+                  const { error } = await supabase.from("receivables" as any).update(patch as any).eq("id", r.id);
+                  if (error) { toast.error(error.message); return; }
+                  toast.success("Atualizado!");
+                  qc.invalidateQueries({ queryKey: ["receivables"] });
+                };
+
+                const handleDelete = async () => {
+                  const hasRecv = Number(r.received_amount) > 0;
+                  const ok = await confirm({
+                    title: hasRecv ? "Conta já recebida" : "Excluir conta a receber?",
+                    description: hasRecv
+                      ? `Esta conta já foi recebida. Excluir irá estornar a entrada na conta bancária. Confirmar?`
+                      : `Excluir a conta a receber de ${r.customers?.name ?? "—"} no valor de ${brl(Number(r.amount))}? Esta ação não pode ser desfeita.`,
+                    confirmText: hasRecv ? "Excluir e estornar" : "Excluir",
+                    destructive: true,
+                  });
+                  if (!ok) return;
+                  // Estornar movimentos bancários gerados por esta receivable
+                  await supabase.from("bank_movements" as any).delete().eq("origin", "receivable").eq("reference_id", r.id);
+                  const { error } = await supabase.from("receivables" as any).delete().eq("id", r.id);
+                  if (error) { toast.error(error.message); return; }
+                  toast.success("Excluído!");
+                  qc.invalidateQueries({ queryKey: ["receivables"] });
+                  qc.invalidateQueries({ queryKey: ["finance"] });
+                  qc.invalidateQueries({ queryKey: ["cashflow"] });
+                };
+
                 return (
-                  <TableRow key={r.id}>
-                    <TableCell>{dateBR(r.due_date)}</TableCell>
+                  <TableRow key={r.id} className="animate-in fade-in">
+                    <TableCell>
+                      <InlineEdit
+                        value={r.due_date}
+                        type="date"
+                        display={dateBR(r.due_date)}
+                        onSave={(v) => inlineSave({ due_date: v as any })}
+                      />
+                    </TableCell>
                     <TableCell>{r.customers?.name ?? "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">{r.description}</TableCell>
-                    <TableCell className="text-right">{brl(Number(r.amount))}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <InlineEdit
+                        value={r.description}
+                        type="text"
+                        display={r.description}
+                        onSave={(v) => inlineSave({ description: v })}
+                      />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <InlineEdit
+                        value={String(r.amount)}
+                        type="number"
+                        display={brl(Number(r.amount))}
+                        onSave={(v) => inlineSave({ amount: Number(v) as any })}
+                      />
+                    </TableCell>
                     <TableCell className="text-right text-success">{brl(Number(r.received_amount))}</TableCell>
                     <TableCell className="text-right font-medium">{brl(remaining)}</TableCell>
                     <TableCell>
                       <span className={`text-xs px-2 py-1 rounded-full capitalize ${STATUS_STYLE[eff]}`}>{eff}</span>
                     </TableCell>
                     <TableCell className="text-right">
-                      {eff !== "recebido" && eff !== "cancelado" && (
-                        <Button size="sm" variant="outline" onClick={() => setPayTarget(r)}>Baixar</Button>
-                      )}
+                      <div className="inline-flex gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => setEditTarget(r)} title="Editar"><Pencil className="size-4" /></Button>
+                        <Button size="sm" variant="ghost" onClick={handleDelete} title="Excluir"><Trash2 className="size-4 text-destructive" /></Button>
+                        {eff !== "recebido" && eff !== "cancelado" && (
+                          <Button size="sm" variant="outline" onClick={() => setPayTarget(r)}>Baixar</Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -266,7 +323,166 @@ function ReceivablesPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!editTarget} onOpenChange={(o) => !o && setEditTarget(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle className="font-display">Editar conta a receber</DialogTitle></DialogHeader>
+          {editTarget && (
+            <EditReceivableForm
+              receivable={editTarget}
+              customers={customers ?? []}
+              onDone={() => {
+                setEditTarget(null);
+                qc.invalidateQueries({ queryKey: ["receivables"] });
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+function InlineEdit({ value, type, display, onSave }: {
+  value: string; type: "text" | "number" | "date"; display: React.ReactNode; onSave: (v: string) => void | Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [v, setV] = useState(value);
+  useEffect(() => { setV(value); }, [value]);
+  if (!editing) {
+    return (
+      <button type="button" onClick={() => setEditing(true)} className="hover:underline cursor-pointer text-left w-full">
+        {display}
+      </button>
+    );
+  }
+  const commit = async () => { setEditing(false); if (v !== value) await onSave(v); };
+  const cancel = () => { setV(value); setEditing(false); };
+  return (
+    <div className="inline-flex items-center gap-1">
+      <Input
+        autoFocus
+        type={type}
+        value={v}
+        onChange={(e) => setV(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") commit(); else if (e.key === "Escape") cancel(); }}
+        className="h-7 text-xs w-32"
+      />
+      <button type="button" onClick={commit} className="text-success"><Check className="size-4" /></button>
+      <button type="button" onClick={cancel} className="text-destructive"><X className="size-4" /></button>
+    </div>
+  );
+}
+
+function EditReceivableForm({ receivable, customers, onDone }: { receivable: Receivable; customers: any[]; onDone: () => void }) {
+  const [customer_id, setCustomerId] = useState<string>(receivable.customer_id ?? "");
+  const [description, setDescription] = useState(receivable.description);
+  const [amount, setAmount] = useState(Number(receivable.amount));
+  const [due_date, setDueDate] = useState(receivable.due_date);
+  const [payment_method, setPaymentMethod] = useState(receivable.payment_method ?? "boleto");
+  const [bank_account_id, setBankAccountId] = useState<string>((receivable as any).bank_account_id ?? "");
+  const [status, setStatus] = useState<string>(receivable.status);
+
+  const { data: bankAccounts } = useQuery({
+    queryKey: ["bank-accounts-active"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("bank_accounts" as any).select("id,name,bank,color").eq("status", "ativa").order("name");
+      if (error) throw error;
+      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string }[];
+    },
+  });
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("receivables" as any).update({
+        customer_id: customer_id || null,
+        description, amount, due_date, payment_method,
+        bank_account_id: bank_account_id || null,
+        status,
+      } as any).eq("id", receivable.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("Conta atualizada com sucesso!"); onDone(); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="space-y-3">
+      <div className="space-y-1.5">
+        <Label>Cliente</Label>
+        <Select value={customer_id} onValueChange={setCustomerId}>
+          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>{customers.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1.5">
+        <Label>Descrição</Label>
+        <Input required value={description} onChange={(e) => setDescription(e.target.value)} />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label>Valor (R$)</Label>
+          <Input type="number" step="0.01" min={0.01} required value={amount} onChange={(e) => setAmount(Number(e.target.value))} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Vencimento</Label>
+          <Input type="date" required value={due_date} onChange={(e) => setDueDate(e.target.value)} />
+        </div>
+        <div className="col-span-2 space-y-1.5">
+          <Label>Forma de pagamento</Label>
+          <Select value={payment_method} onValueChange={setPaymentMethod}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pix">PIX</SelectItem>
+              <SelectItem value="dinheiro">Dinheiro</SelectItem>
+              <SelectItem value="deposito">Depósito bancário</SelectItem>
+              <SelectItem value="transferencia">Transferência</SelectItem>
+              <SelectItem value="cartao_credito">Cartão de crédito</SelectItem>
+              <SelectItem value="cartao_debito">Cartão de débito</SelectItem>
+              <SelectItem value="cartao">Cartão (parcelado)</SelectItem>
+              <SelectItem value="mercado_livre">Venda Mercado Livre</SelectItem>
+              <SelectItem value="boleto">Boleto</SelectItem>
+              <SelectItem value="pix_prazo">PIX a prazo</SelectItem>
+              <SelectItem value="crediario">Crediário</SelectItem>
+              <SelectItem value="prazo">A prazo</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="col-span-2 space-y-1.5">
+          <Label>Conta de destino</Label>
+          <Select value={bank_account_id || "__none__"} onValueChange={(v) => setBankAccountId(v === "__none__" ? "" : v)}>
+            <SelectTrigger><SelectValue placeholder="Selecione a conta" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Não vincular a uma conta</SelectItem>
+              {(bankAccounts ?? []).map((b) => (
+                <SelectItem key={b.id} value={b.id}>
+                  <span className="inline-flex items-center gap-2">
+                    <span className="size-2 rounded-full" style={{ background: b.color }} />
+                    {b.name} <span className="text-muted-foreground">— {b.bank}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="col-span-2 space-y-1.5">
+          <Label>Status</Label>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pendente">Pendente</SelectItem>
+              <SelectItem value="parcial">Parcial</SelectItem>
+              <SelectItem value="recebido">Recebido</SelectItem>
+              <SelectItem value="atrasado">Atrasado</SelectItem>
+              <SelectItem value="cancelado">Cancelado</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <Button type="submit" disabled={save.isPending} className="w-full bg-gradient-primary text-primary-foreground">
+        {save.isPending ? "Salvando…" : "Salvar alterações"}
+      </Button>
+    </form>
   );
 }
 
