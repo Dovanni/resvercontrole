@@ -168,6 +168,8 @@ function CustomerForm({ initial, onSubmit, busy }: { initial: Customer | null; o
     zip: initial?.zip ?? "", address: initial?.address ?? "",
     credit_limit: initial?.credit_limit ?? 0, notes: initial?.notes ?? "",
     status: initial?.status ?? "ativo",
+    aporte_type: initial?.aporte_type ?? "",
+    aporte_notes: initial?.aporte_notes ?? "",
   });
 
   async function lookupCep() {
