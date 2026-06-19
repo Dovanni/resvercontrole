@@ -40,6 +40,16 @@ const STATUS_LABEL: Record<string, string> = {
   orcamento: "Orçamento", confirmado: "Confirmado", separacao: "Em separação",
   enviado: "Enviado", entregue: "Entregue", cancelado: "Cancelado",
 };
+const APORTE_TYPES = [
+  { value: "investidor", label: "Investidor" },
+  { value: "emprestimo_familiar", label: "Empréstimo familiar" },
+  { value: "socio", label: "Sócio" },
+  { value: "recurso_proprio", label: "Recurso próprio" },
+  { value: "outro", label: "Outro" },
+];
+const CHANNEL_LABEL: Record<string, string> = {
+  varejo: "Varejo", atacado: "Atacado", recursos_financeiros: "Recursos Financeiros",
+};
 
 
 function SalesPage() {
@@ -125,12 +135,18 @@ function SalesPage() {
                   <TableCell className="text-muted-foreground">{dateBR(s.sold_at)}</TableCell>
                   <TableCell className="font-medium">{s.customers?.name ?? s.customer_name ?? "Balcão"}</TableCell>
                   <TableCell>
-                    <span className={`text-xs px-2 py-1 rounded-full capitalize ${s.channel === "atacado" ? "bg-gold/15 text-gold-foreground" : "bg-accent text-accent-foreground"}`}>
-                      {s.channel}
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      s.channel === "atacado" ? "bg-gold/15 text-gold-foreground"
+                      : s.channel === "recursos_financeiros" ? "bg-primary/15 text-primary"
+                      : "bg-accent text-accent-foreground"
+                    }`}>
+                      {CHANNEL_LABEL[s.channel] ?? s.channel}
                     </span>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
-                    {(s.sale_items ?? []).map((i: any) => `${i.quantity}× ${i.products?.name}`).join(", ") || "—"}
+                    {s.channel === "recursos_financeiros"
+                      ? <span className="italic">Aporte financeiro</span>
+                      : ((s.sale_items ?? []).map((i: any) => `${i.quantity}× ${i.products?.name}`).join(", ") || "—")}
                   </TableCell>
                   <TableCell className="text-sm">{STATUS_LABEL[s.status] ?? s.status}</TableCell>
                   <TableCell className="text-right font-medium">{brl(Number(s.total))}</TableCell>
@@ -174,7 +190,7 @@ function SaleView({ saleId }: { saleId: string }) {
       <div className="grid grid-cols-2 gap-3">
         <div><div className="text-muted-foreground text-xs">Cliente</div><div className="font-medium">{data.customers?.name ?? data.customer_name ?? "Balcão"}</div></div>
         <div><div className="text-muted-foreground text-xs">Data</div><div>{dateBR(data.sold_at)}</div></div>
-        <div><div className="text-muted-foreground text-xs">Canal</div><div className="capitalize">{data.channel}</div></div>
+        <div><div className="text-muted-foreground text-xs">Canal</div><div>{CHANNEL_LABEL[data.channel] ?? data.channel}</div></div>
         <div><div className="text-muted-foreground text-xs">Status</div><div>{STATUS_LABEL[data.status] ?? data.status}</div></div>
         <div><div className="text-muted-foreground text-xs">Pagamento</div><div>{PM_LABEL[data.payment_method] ?? data.payment_method}</div></div>
         <div><div className="text-muted-foreground text-xs">Conta destino</div><div>{data.bank_accounts?.name ?? "—"}</div></div>
@@ -216,7 +232,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     queryFn: async () => {
       const { data, error } = await supabase.from("customers").select("id,name,customer_type").eq("status", "ativo").order("name");
       if (error) throw error;
-      return data as { id: string; name: string; customer_type: "varejo" | "atacado" }[];
+      return data as { id: string; name: string; customer_type: "varejo" | "atacado" | "recursos_financeiros" }[];
     },
   });
 
@@ -235,7 +251,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
 
   const [customerId, setCustomerId] = useState<string>("");
   const [walkInName, setWalkInName] = useState("");
-  const [channel, setChannel] = useState<"varejo" | "atacado">("varejo");
+  const [channel, setChannel] = useState<"varejo" | "atacado" | "recursos_financeiros">("varejo");
   const [status, setStatus] = useState<typeof STATUSES[number]>("confirmado");
   const [method, setMethod] = useState("dinheiro");
   const [discount, setDiscount] = useState(0);
@@ -245,6 +261,19 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
   const [items, setItems] = useState<LineItem[]>([]);
   const [bankAccountId, setBankAccountId] = useState<string>("");
   const [loaded, setLoaded] = useState(false);
+  // Recursos Financeiros (aporte) state
+  const [aporteType, setAporteType] = useState<string>("investidor");
+  const [aporteAmount, setAporteAmount] = useState<number>(0);
+  const [aporteNotes, setAporteNotes] = useState<string>("");
+  const [aporteDate, setAporteDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const isAporte = channel === "recursos_financeiros";
+
+  const filteredCustomers = useMemo(
+    () => (customers ?? []).filter(c =>
+      isAporte ? c.customer_type === "recursos_financeiros" : c.customer_type !== "recursos_financeiros"
+    ),
+    [customers, isAporte]
+  );
 
   const { data: bankAccounts } = useQuery({
     queryKey: ["bank-accounts-active"],
@@ -283,6 +312,12 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     setDiscount(Number(existing.discount ?? 0));
     setDiscountMode("reais");
     setBankAccountId(existing.bank_account_id ?? "");
+    if (existing.channel === "recursos_financeiros") {
+      setAporteType(existing.aporte_type ?? "investidor");
+      setAporteAmount(Number(existing.total ?? 0));
+      setAporteNotes(existing.notes ?? "");
+      setAporteDate((existing.sold_at ?? new Date().toISOString()).slice(0, 10));
+    }
     const hydratedItems = (existing.sale_items ?? []).map((it: any) => ({
       product_id: it.product_id,
       quantity: Number(it.quantity),
@@ -317,7 +352,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
   function pickCustomer(id: string) {
     setCustomerId(id);
     const c = customers?.find(x => x.id === id);
-    if (c) setChannel(c.customer_type);
+    if (c && c.customer_type !== "recursos_financeiros") setChannel(c.customer_type);
   }
 
   function addProduct(id: string) {
@@ -331,8 +366,19 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     }]);
   }
 
-  function changeChannel(c: "varejo" | "atacado") {
+  function changeChannel(c: "varejo" | "atacado" | "recursos_financeiros") {
     setChannel(c);
+    if (c === "recursos_financeiros") {
+      // clear product/sale state — aporte uses its own fields
+      setItems([]);
+      setDiscount(0);
+      setShipping(0);
+      setMercadoPagoFees(0);
+      setCustomerId("");
+      setWalkInName("");
+      setMethod("deposito");
+      return;
+    }
     setItems(items.map(i => {
       const p = products?.find(x => x.id === i.product_id);
       return p ? { ...i, unit_price: c === "atacado" && Number(p.wholesale_price) > 0 ? Number(p.wholesale_price) : Number(p.sale_price) } : i;
@@ -341,10 +387,41 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
 
   const submit = useMutation({
     mutationFn: async () => {
-      if (items.length === 0) throw new Error("Adicione ao menos um produto");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
       const selected = customers?.find(c => c.id === customerId);
+
+      if (isAporte) {
+        if (!customerId) throw new Error("Selecione o investidor / origem do aporte");
+        if (!aporteAmount || aporteAmount <= 0) throw new Error("Informe o valor do aporte");
+        if (!bankAccountId) throw new Error("Selecione a conta de destino");
+        const payload = {
+          customer_id: customerId,
+          customer_name: selected?.name ?? null,
+          channel: "recursos_financeiros",
+          status: "entregue",
+          payment_method: "deposito",
+          total: aporteAmount,
+          discount: 0,
+          mercado_pago_fees: 0,
+          bank_account_id: bankAccountId,
+          aporte_type: aporteType,
+          notes: aporteNotes || null,
+          sold_at: new Date(aporteDate + "T12:00:00").toISOString(),
+        };
+        if (editing) {
+          const { error: delErr } = await supabase.from("sale_items").delete().eq("sale_id", saleId!);
+          if (delErr) throw delErr;
+          const { error: updErr } = await supabase.from("sales").update(payload as any).eq("id", saleId!);
+          if (updErr) throw updErr;
+        } else {
+          const { error } = await supabase.from("sales").insert({ user_id: user.id, ...payload } as any);
+          if (error) throw error;
+        }
+        return;
+      }
+
+      if (items.length === 0) throw new Error("Adicione ao menos um produto");
       const payload = {
         customer_id: customerId || null,
         customer_name: selected?.name ?? (walkInName || null),
@@ -388,58 +465,104 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label>Cliente cadastrado</Label>
-          <Select value={customerId} onValueChange={pickCustomer}>
-            <SelectTrigger><SelectValue placeholder="Selecionar…" /></SelectTrigger>
-            <SelectContent>
-              {customers?.map(c => (
-                <SelectItem key={c.id} value={c.id}>{c.name} <span className="text-muted-foreground">· {c.customer_type}</span></SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label>Ou nome (balcão)</Label>
-          <Input value={walkInName} onChange={(e) => setWalkInName(e.target.value)} disabled={!!customerId} placeholder="Ex: Maria" />
-        </div>
-        <div className="space-y-1.5">
+        <div className="col-span-2 space-y-1.5">
           <Label>Canal</Label>
           <Select value={channel} onValueChange={(v: any) => changeChannel(v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="varejo">Varejo</SelectItem>
               <SelectItem value="atacado">Atacado</SelectItem>
+              <SelectItem value="recursos_financeiros">Recursos Financeiros</SelectItem>
             </SelectContent>
           </Select>
+          {isAporte && (
+            <div className="text-xs text-muted-foreground">
+              Aporte/investimento — não conta como venda, não afeta estoque nem Curva ABC.
+            </div>
+          )}
         </div>
-        <div className="space-y-1.5">
-          <Label>Status</Label>
-          <Select value={status} onValueChange={(v: any) => setStatus(v)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+
+        <div className={isAporte ? "col-span-2 space-y-1.5" : "space-y-1.5"}>
+          <Label>{isAporte ? "Investidor / origem do aporte" : "Cliente cadastrado"}</Label>
+          <Select value={customerId} onValueChange={pickCustomer}>
+            <SelectTrigger><SelectValue placeholder={isAporte ? "Selecionar investidor…" : "Selecionar…"} /></SelectTrigger>
             <SelectContent>
-              {STATUSES.map(s => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
+              {filteredCustomers.length === 0 && (
+                <div className="px-2 py-1.5 text-xs text-muted-foreground">
+                  {isAporte ? "Nenhum cliente com canal Recursos Financeiros." : "Sem clientes cadastrados."}
+                </div>
+              )}
+              {filteredCustomers.map(c => (
+                <SelectItem key={c.id} value={c.id}>{c.name} <span className="text-muted-foreground">· {CHANNEL_LABEL[c.customer_type] ?? c.customer_type}</span></SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
+
+        {!isAporte && (
+          <div className="space-y-1.5">
+            <Label>Ou nome (balcão)</Label>
+            <Input value={walkInName} onChange={(e) => setWalkInName(e.target.value)} disabled={!!customerId} placeholder="Ex: Maria" />
+          </div>
+        )}
+
+        {isAporte ? (
+          <>
+            <div className="space-y-1.5">
+              <Label>Valor do aporte (R$)</Label>
+              <Input type="number" step="0.01" min={0} value={aporteAmount}
+                onChange={(e) => setAporteAmount(Number(e.target.value))} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Tipo de recurso</Label>
+              <Select value={aporteType} onValueChange={setAporteType}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {APORTE_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Data</Label>
+              <Input type="date" value={aporteDate} onChange={(e) => setAporteDate(e.target.value)} />
+            </div>
+            <div className="col-span-2 space-y-1.5">
+              <Label>Observações</Label>
+              <Input value={aporteNotes} onChange={(e) => setAporteNotes(e.target.value)} placeholder="Condições, prazo, etc." />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="space-y-1.5">
+              <Label>Status</Label>
+              <Select value={status} onValueChange={(v: any) => setStatus(v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {STATUSES.map(s => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-2 space-y-1.5">
+              <Label>Forma de pagamento</Label>
+              <Select value={method} onValueChange={setMethod}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_METHODS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        )}
+
         <div className="col-span-2 space-y-1.5">
-          <Label>Forma de pagamento</Label>
-          <Select value={method} onValueChange={setMethod}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {PAYMENT_METHODS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="col-span-2 space-y-1.5">
-          <Label>Conta de destino {locked && <span className="text-xs text-muted-foreground">(automático)</span>}</Label>
-          {locked ? (
+          <Label>Conta de destino {locked && !isAporte && <span className="text-xs text-muted-foreground">(automático)</span>}</Label>
+          {locked && !isAporte ? (
             <Input value={accountName(bankAccountId)} disabled className="bg-muted" />
           ) : (
             <Select value={bankAccountId || "__none__"} onValueChange={(v) => setBankAccountId(v === "__none__" ? "" : v)}>
               <SelectTrigger><SelectValue placeholder="Selecione a conta" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="__none__">Não vincular a uma conta</SelectItem>
+                {!isAporte && <SelectItem value="__none__">Não vincular a uma conta</SelectItem>}
                 {(bankAccounts ?? []).map(b => (
                   <SelectItem key={b.id} value={b.id}>
                     <span className="inline-flex items-center gap-2">
@@ -452,93 +575,106 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
             </Select>
           )}
           <div className="text-xs text-muted-foreground">
-            {locked ? "Esta forma de pagamento cai automaticamente nesta conta." : "A entrada será lançada nesta conta ao confirmar o recebimento."}
+            {isAporte
+              ? "Conta onde o aporte foi creditado."
+              : (locked ? "Esta forma de pagamento cai automaticamente nesta conta." : "A entrada será lançada nesta conta ao confirmar o recebimento.")}
           </div>
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label>Adicionar produto</Label>
-        <Select value="" onValueChange={addProduct}>
-          <SelectTrigger><SelectValue placeholder="Selecionar produto…" /></SelectTrigger>
-          <SelectContent>
-            {products?.map(p => (
-              <SelectItem key={p.id} value={p.id} disabled={p.stock <= 0}>
-                {p.name} — {brl(priceFor(p))} ({p.stock} em estoque)
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {!isAporte && (
+        <>
+          <div className="space-y-1.5">
+            <Label>Adicionar produto</Label>
+            <Select value="" onValueChange={addProduct}>
+              <SelectTrigger><SelectValue placeholder="Selecionar produto…" /></SelectTrigger>
+              <SelectContent>
+                {products?.map(p => (
+                  <SelectItem key={p.id} value={p.id} disabled={p.stock <= 0}>
+                    {p.name} — {brl(priceFor(p))} ({p.stock} em estoque)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-      {items.length > 0 && (
-        <div className="rounded-lg border divide-y">
-          {items.map((it, idx) => (
-            <div key={it.product_id} className="p-3 flex items-center gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="font-medium truncate">{it.name}</div>
-                <div className="text-xs text-muted-foreground">{brl(it.unit_price)} × {it.quantity} = {brl(it.unit_price * it.quantity)}</div>
-              </div>
-              <Input type="number" min={1} max={it.max} value={it.quantity}
-                onChange={(e) => {
-                  const q = Math.min(it.max, Math.max(1, Number(e.target.value)));
-                  setItems(items.map((x, i) => i === idx ? { ...x, quantity: q } : x));
-                }}
-                className="w-20"
-              />
-              <Button variant="ghost" size="icon" onClick={() => setItems(items.filter((_, i) => i !== idx))}>
-                <Trash2 className="size-4 text-destructive" />
-              </Button>
+          {items.length > 0 && (
+            <div className="rounded-lg border divide-y">
+              {items.map((it, idx) => (
+                <div key={it.product_id} className="p-3 flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{it.name}</div>
+                    <div className="text-xs text-muted-foreground">{brl(it.unit_price)} × {it.quantity} = {brl(it.unit_price * it.quantity)}</div>
+                  </div>
+                  <Input type="number" min={1} max={it.max} value={it.quantity}
+                    onChange={(e) => {
+                      const q = Math.min(it.max, Math.max(1, Number(e.target.value)));
+                      setItems(items.map((x, i) => i === idx ? { ...x, quantity: q } : x));
+                    }}
+                    className="w-20"
+                  />
+                  <Button variant="ghost" size="icon" onClick={() => setItems(items.filter((_, i) => i !== idx))}>
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
+
+          <div className="grid grid-cols-2 gap-3 items-end">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label>Desconto</Label>
+                <div className="inline-flex rounded-md border overflow-hidden text-xs">
+                  <button type="button" onClick={() => setDiscountMode("reais")}
+                    className={`px-2 py-1 ${discountMode === "reais" ? "bg-primary text-primary-foreground" : "bg-background"}`}>R$</button>
+                  <button type="button" onClick={() => setDiscountMode("percent")}
+                    className={`px-2 py-1 ${discountMode === "percent" ? "bg-primary text-primary-foreground" : "bg-background"}`}>%</button>
+                </div>
+              </div>
+              <Input type="number" step="0.01" min={0} max={discountMode === "percent" ? 100 : undefined}
+                value={discount} onChange={(e) => setDiscount(Number(e.target.value))} />
+              <div className="text-xs text-muted-foreground">Desconto: {brl(discountValue)}</div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Frete cobrado do cliente (R$)</Label>
+              <Input type="number" step="0.01" min={0}
+                value={shipping} onChange={(e) => setShipping(Number(e.target.value))} />
+              <div className="text-xs text-muted-foreground">Valor do frete pago pelo cliente</div>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Juros Mercado Pago (R$)</Label>
+            <Input type="number" step="0.01" min={0}
+              value={mercadoPagoFees} onChange={(e) => setMercadoPagoFees(Number(e.target.value))} />
+            <div className="text-xs text-muted-foreground">Valor dos juros cobrados pelo Mercado Pago a abater do total</div>
+          </div>
+
+          <div className="rounded-md border p-3 space-y-1 text-right">
+            <div className="text-xs text-muted-foreground flex justify-between"><span>Subtotal produtos</span><span>{brl(subtotal)}</span></div>
+            <div className="text-xs text-muted-foreground flex justify-between"><span>Desconto</span><span>-{brl(discountValue)}</span></div>
+            <div className="text-xs text-muted-foreground flex justify-between"><span>Frete cliente</span><span>+{brl(Number(shipping) || 0)}</span></div>
+            <div className="text-xs text-muted-foreground flex justify-between"><span>Juros Mercado Pago</span><span>-{brl(Number(mercadoPagoFees) || 0)}</span></div>
+            <div className="border-t pt-1 flex items-end justify-between">
+              <span className="text-xs text-muted-foreground">TOTAL</span>
+              <span className="font-display text-3xl">{brl(total)}</span>
+            </div>
+          </div>
+        </>
+      )}
+
+      {isAporte && (
+        <div className="rounded-md border p-3 text-right">
+          <div className="text-xs text-muted-foreground">VALOR DO APORTE</div>
+          <div className="font-display text-3xl">{brl(Number(aporteAmount) || 0)}</div>
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 items-end">
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label>Desconto</Label>
-            <div className="inline-flex rounded-md border overflow-hidden text-xs">
-              <button type="button" onClick={() => setDiscountMode("reais")}
-                className={`px-2 py-1 ${discountMode === "reais" ? "bg-primary text-primary-foreground" : "bg-background"}`}>R$</button>
-              <button type="button" onClick={() => setDiscountMode("percent")}
-                className={`px-2 py-1 ${discountMode === "percent" ? "bg-primary text-primary-foreground" : "bg-background"}`}>%</button>
-            </div>
-          </div>
-          <Input type="number" step="0.01" min={0} max={discountMode === "percent" ? 100 : undefined}
-            value={discount} onChange={(e) => setDiscount(Number(e.target.value))} />
-          <div className="text-xs text-muted-foreground">Desconto: {brl(discountValue)}</div>
-        </div>
-        <div className="space-y-1.5">
-          <Label>Frete cobrado do cliente (R$)</Label>
-          <Input type="number" step="0.01" min={0}
-            value={shipping} onChange={(e) => setShipping(Number(e.target.value))} />
-          <div className="text-xs text-muted-foreground">Valor do frete pago pelo cliente</div>
-        </div>
-      </div>
-
-      <div className="space-y-1.5">
-        <Label>Juros Mercado Pago (R$)</Label>
-        <Input type="number" step="0.01" min={0}
-          value={mercadoPagoFees} onChange={(e) => setMercadoPagoFees(Number(e.target.value))} />
-        <div className="text-xs text-muted-foreground">Valor dos juros cobrados pelo Mercado Pago a abater do total</div>
-      </div>
-
-      <div className="rounded-md border p-3 space-y-1 text-right">
-        <div className="text-xs text-muted-foreground flex justify-between"><span>Subtotal produtos</span><span>{brl(subtotal)}</span></div>
-        <div className="text-xs text-muted-foreground flex justify-between"><span>Desconto</span><span>-{brl(discountValue)}</span></div>
-        <div className="text-xs text-muted-foreground flex justify-between"><span>Frete cliente</span><span>+{brl(Number(shipping) || 0)}</span></div>
-        <div className="text-xs text-muted-foreground flex justify-between"><span>Juros Mercado Pago</span><span>-{brl(Number(mercadoPagoFees) || 0)}</span></div>
-        <div className="border-t pt-1 flex items-end justify-between">
-          <span className="text-xs text-muted-foreground">TOTAL</span>
-          <span className="font-display text-3xl">{brl(total)}</span>
-        </div>
-      </div>
-
-
-      <Button onClick={() => submit.mutate()} disabled={submit.isPending || items.length === 0}
+      <Button onClick={() => submit.mutate()}
+        disabled={submit.isPending || (isAporte ? (!customerId || !aporteAmount || !bankAccountId) : items.length === 0)}
         className="w-full bg-gradient-primary text-primary-foreground">
-        {submit.isPending ? "Salvando…" : (editing ? "Salvar alterações" : "Registrar venda")}
+        {submit.isPending ? "Salvando…" : (editing ? "Salvar alterações" : (isAporte ? "Registrar aporte" : "Registrar venda"))}
       </Button>
     </div>
   );

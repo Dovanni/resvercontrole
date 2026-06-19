@@ -25,10 +25,24 @@ export const Route = createFileRoute("/_authenticated/clientes")({
 
 type Customer = {
   id: string; name: string; person_type: "pf" | "pj"; document: string | null;
-  customer_type: "varejo" | "atacado"; email: string | null; phone: string | null;
+  customer_type: "varejo" | "atacado" | "recursos_financeiros"; email: string | null; phone: string | null;
   zip: string | null; address: string | null; credit_limit: number;
   notes: string | null; status: "ativo" | "inativo";
+  aporte_type?: string | null; aporte_notes?: string | null;
 };
+
+const CUSTOMER_TYPE_LABEL: Record<string, string> = {
+  varejo: "Varejo",
+  atacado: "Atacado",
+  recursos_financeiros: "Recursos Financeiros",
+};
+const APORTE_TYPES = [
+  { value: "investidor", label: "Investidor" },
+  { value: "emprestimo_familiar", label: "Empréstimo familiar" },
+  { value: "socio", label: "Sócio" },
+  { value: "recurso_proprio", label: "Recurso próprio" },
+  { value: "outro", label: "Outro" },
+];
 
 function CustomersPage() {
   const qc = useQueryClient();
@@ -118,8 +132,12 @@ function CustomersPage() {
                     {c.status === "inativo" && <span className="ml-2 text-xs text-muted-foreground">(inativo)</span>}
                   </TableCell>
                   <TableCell>
-                    <span className={`text-xs px-2 py-1 rounded-full capitalize ${c.customer_type === "atacado" ? "bg-gold/15 text-gold-foreground" : "bg-accent text-accent-foreground"}`}>
-                      {c.customer_type}
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      c.customer_type === "atacado" ? "bg-gold/15 text-gold-foreground"
+                      : c.customer_type === "recursos_financeiros" ? "bg-primary/15 text-primary"
+                      : "bg-accent text-accent-foreground"
+                    }`}>
+                      {CUSTOMER_TYPE_LABEL[c.customer_type] ?? c.customer_type}
                     </span>
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">{c.document ?? "—"}</TableCell>
@@ -150,6 +168,8 @@ function CustomerForm({ initial, onSubmit, busy }: { initial: Customer | null; o
     zip: initial?.zip ?? "", address: initial?.address ?? "",
     credit_limit: initial?.credit_limit ?? 0, notes: initial?.notes ?? "",
     status: initial?.status ?? "ativo",
+    aporte_type: initial?.aporte_type ?? "",
+    aporte_notes: initial?.aporte_notes ?? "",
   });
 
   async function lookupCep() {
@@ -207,9 +227,27 @@ function CustomerForm({ initial, onSubmit, busy }: { initial: Customer | null; o
             <SelectContent>
               <SelectItem value="varejo">Varejo</SelectItem>
               <SelectItem value="atacado">Atacado</SelectItem>
+              <SelectItem value="recursos_financeiros">Recursos Financeiros</SelectItem>
             </SelectContent>
           </Select>
         </div>
+        {f.customer_type === "recursos_financeiros" && (
+          <>
+            <div className="col-span-2 space-y-1.5">
+              <Label>Tipo de aporte</Label>
+              <Select value={f.aporte_type || "investidor"} onValueChange={(v) => setF({ ...f, aporte_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {APORTE_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-2 space-y-1.5">
+              <Label>Observações sobre o recurso</Label>
+              <Textarea rows={2} value={f.aporte_notes} onChange={(e) => setF({ ...f, aporte_notes: e.target.value })} placeholder="Detalhes do investidor, condições do empréstimo, etc." />
+            </div>
+          </>
+        )}
         <div className="space-y-1.5">
           <Label>Status</Label>
           <Select value={f.status} onValueChange={(v: any) => setF({ ...f, status: v })}>

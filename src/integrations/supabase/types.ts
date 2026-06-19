@@ -590,6 +590,8 @@ export type Database = {
       customers: {
         Row: {
           address: string | null
+          aporte_notes: string | null
+          aporte_type: string | null
           created_at: string
           credit_limit: number
           customer_type: string
@@ -607,6 +609,8 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          aporte_notes?: string | null
+          aporte_type?: string | null
           created_at?: string
           credit_limit?: number
           customer_type?: string
@@ -624,6 +628,8 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          aporte_notes?: string | null
+          aporte_type?: string | null
           created_at?: string
           credit_limit?: number
           customer_type?: string
@@ -996,6 +1002,7 @@ export type Database = {
       }
       sales: {
         Row: {
+          aporte_type: string | null
           bank_account_id: string | null
           channel: string
           created_at: string
@@ -1012,6 +1019,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          aporte_type?: string | null
           bank_account_id?: string | null
           channel?: string
           created_at?: string
@@ -1028,6 +1036,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          aporte_type?: string | null
           bank_account_id?: string | null
           channel?: string
           created_at?: string

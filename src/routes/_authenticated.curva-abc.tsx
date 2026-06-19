@@ -106,7 +106,8 @@ function CurvaABCPage() {
         .select("id, total, channel, sold_at, customer_id, customer_name, customers(name)")
         .gte("sold_at", new Date(applied.from).toISOString())
         .lte("sold_at", new Date(applied.to + "T23:59:59").toISOString())
-        .neq("status", "cancelado");
+        .neq("status", "cancelado")
+        .neq("channel", "recursos_financeiros");
       if (applied.channel !== "todos") q = q.eq("channel", applied.channel);
       const { data, error } = await q;
       if (error) throw error;
@@ -122,7 +123,8 @@ function CurvaABCPage() {
         .select("product_id, quantity, unit_price, products(name, category), sales!inner(sold_at, status, channel)")
         .gte("sales.sold_at", new Date(applied.from).toISOString())
         .lte("sales.sold_at", new Date(applied.to + "T23:59:59").toISOString())
-        .neq("sales.status", "cancelado");
+        .neq("sales.status", "cancelado")
+        .neq("sales.channel", "recursos_financeiros");
       if (applied.channel !== "todos") q = q.eq("sales.channel", applied.channel);
       const { data, error } = await q;
       if (error) throw error;
