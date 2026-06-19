@@ -184,10 +184,15 @@ function CashFlowPage() {
       });
     }
 
+    const purchasesWithPaidPayable = new Set(
+      (paidPayables ?? [])
+        .map((p) => p.description?.match(/Compra #([a-f0-9]{8})/i)?.[1])
+        .filter(Boolean),
+    );
     for (const c of purchases ?? []) {
       const amount = Number(c.total ?? 0);
       const canceled = ["cancelada", "cancelado"].includes(String(c.status ?? "").toLowerCase());
-      if (amount <= 0 || c.condicao_pagamento !== "a_vista" || canceled || postedByReference.has(`compra:${c.id}`) || hasSamePostedMovement("saida", c.bank_account_id, c.data_compra, amount)) continue;
+      if (amount <= 0 || c.condicao_pagamento !== "a_vista" || canceled || purchasesWithPaidPayable.has(c.id.slice(0, 8)) || postedByReference.has(`compra:${c.id}`) || hasSamePostedMovement("saida", c.bank_account_id, c.data_compra, amount)) continue;
       missing.push({
         account_id: c.bank_account_id,
         destination_account_id: null,
