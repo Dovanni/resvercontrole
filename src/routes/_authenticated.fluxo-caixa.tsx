@@ -23,6 +23,18 @@ function isoDay(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
+type CashMovement = {
+  account_id: string | null;
+  destination_account_id: string | null;
+  type: string;
+  amount: number;
+  movement_date: string;
+  description: string | null;
+  category: string | null;
+  origin: string | null;
+  reference_id: string | null;
+};
+
 function CashFlowPage() {
   const today = new Date();
   const startPast = new Date(today); startPast.setDate(today.getDate() - 30);
@@ -48,9 +60,9 @@ function CashFlowPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bank_movements" as any)
-        .select("account_id,destination_account_id,type,amount,movement_date,description,category,origin");
+        .select("account_id,destination_account_id,type,amount,movement_date,description,category,origin,reference_id");
       if (error) throw error;
-      return (data ?? []) as unknown as { account_id: string; destination_account_id: string | null; type: string; amount: number; movement_date: string; description: string; category: string; origin: string | null }[];
+      return (data ?? []) as unknown as CashMovement[];
     },
   });
 
