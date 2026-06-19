@@ -434,6 +434,11 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
               <CheckCircle2 className="size-3 mr-1" /> Pagar
             </Button>
           )}
+          {status === "paga" && (
+            <Button size="sm" variant="outline" onClick={onEstornar} disabled={estornarPaga.isPending}>
+              Estornar pagamento
+            </Button>
+          )}
         </div>
         {(alertaVenc || alertaAtraso) && (
           <div className="space-y-1 pt-2 border-t">
