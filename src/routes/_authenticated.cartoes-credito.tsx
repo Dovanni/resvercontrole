@@ -454,9 +454,103 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <CartaoDialog contas={contas} userId={cartao.id /* unused on edit */} cartao={cartao} onDone={() => { setEditOpen(false); onChanged(); }} />
       </Dialog>
+      <Dialog open={payOpen} onOpenChange={setPayOpen}>
+        <PagarFaturaDialog
+          cartao={cartao}
+          contas={contas}
+          mes={mesV}
+          ano={anoV}
+          vencimento={proxVenc}
+          total={totalFatura}
+          onDone={() => { setPayOpen(false); onPaga(); }}
+        />
+      </Dialog>
     </Card>
   );
 }
+
+function PagarFaturaDialog({ cartao, contas, mes, ano, vencimento, total, onDone }: {
+  cartao: Cartao;
+  contas: { id: string; name: string }[];
+  mes: number; ano: number;
+  vencimento: Date;
+  total: number;
+  onDone: () => void;
+}) {
+  const qc = useQueryClient();
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const [dataPag, setDataPag] = useState(hojeISO);
+  const [contaId, setContaId] = useState(cartao.conta_bancaria_id ?? "");
+  const [valor, setValor] = useState(String(total.toFixed(2)));
+
+  const pagar = useMutation({
+    mutationFn: async () => {
+      const uid = (await supabase.auth.getUser()).data.user?.id;
+      if (!uid) throw new Error("Sessão inválida");
+      const vNum = Number(valor);
+      if (!vNum || vNum <= 0) throw new Error("Valor inválido");
+      if (!contaId) throw new Error("Selecione a conta debitada");
+      const desc = `Fatura ${cartao.nome} ${String(mes).padStart(2, "0")}/${ano}`;
+      const { data: upserted, error } = await (supabase.from("cartoes_faturas" as any).upsert({
+        cartao_id: cartao.id, user_id: uid,
+        mes, ano, valor_total: total, status: "paga",
+        data_pagamento: dataPag,
+      }, { onConflict: "cartao_id,ano,mes" }).select().single());
+      if (error) throw error;
+      const faturaId = (upserted as any)?.id;
+      const { error: bmErr } = await supabase.from("bank_movements").insert({
+        user_id: uid, account_id: contaId, movement_date: dataPag,
+        type: "saida", category: "Cartão de Crédito",
+        description: `Pagamento ${desc}`, amount: vNum,
+        origin: "cartao_fatura", reference_id: faturaId,
+      });
+      if (bmErr) throw bmErr;
+      const vencISO = vencimento.toISOString().slice(0, 10);
+      const { error: pErr } = await supabase.from("payables").insert({
+        user_id: uid, description: desc, category: "Cartão de Crédito",
+        amount: vNum, due_date: vencISO, status: "pago",
+        paid_amount: vNum, paid_at: new Date(dataPag + "T12:00:00").toISOString(),
+        bank_account_id: contaId, payment_method: "cartao",
+      });
+      if (pErr) throw pErr;
+    },
+    onSuccess: () => {
+      toast.success("Fatura paga com sucesso!");
+      qc.invalidateQueries({ queryKey: ["cartoes_faturas"] });
+      qc.invalidateQueries({ queryKey: ["bank_movements"] });
+      qc.invalidateQueries({ queryKey: ["payables"] });
+      onDone();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <DialogContent className="max-w-md">
+      <DialogHeader><DialogTitle>Pagar fatura — {cartao.nome}</DialogTitle></DialogHeader>
+      <div className="space-y-3">
+        <div className="rounded-md border p-3 text-sm bg-muted/30">
+          <div className="flex justify-between"><span className="text-muted-foreground">Total da fatura:</span><span className="font-medium">{brl(total)}</span></div>
+          <div className="flex justify-between mt-1"><span className="text-muted-foreground">Vencimento:</span><span className="font-medium">{dateBRShort(vencimento)}</span></div>
+        </div>
+        <div><Label>Data do pagamento</Label><Input type="date" value={dataPag} onChange={(e) => setDataPag(e.target.value)} /></div>
+        <div><Label>Conta debitada</Label>
+          <Select value={contaId} onValueChange={setContaId}>
+            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <SelectContent>
+              {contas.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div><Label>Valor pago</Label><Input type="number" step="0.01" value={valor} onChange={(e) => setValor(e.target.value)} /></div>
+      </div>
+      <DialogFooter>
+        <Button variant="outline" onClick={() => onDone()}>Cancelar</Button>
+        <Button onClick={() => pagar.mutate()} disabled={pagar.isPending}>Confirmar pagamento</Button>
+      </DialogFooter>
+    </DialogContent>
+  );
+}
+
 
 function CartaoDialog({ contas, userId, cartao, onDone }: { contas: { id: string; name: string }[]; userId: string; cartao?: Cartao; onDone: () => void }) {
   const isEdit = !!cartao;
