@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { brl } from "@/lib/format";
 import { TrendingUp, TrendingDown, ShoppingBag, Wallet, AlertTriangle, ChevronDown, LineChart as LineChartIcon, ArrowRight } from "lucide-react";
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
       const now = new Date();
@@ -26,6 +27,12 @@ function Dashboard() {
         supabase.from("products").select("id,name,stock,min_stock"),
         supabase.from("sale_items").select("quantity,unit_price,unit_cost,product_id,products(name)").gte("created_at", monthStart),
       ]);
+
+      const queryError = sales.error ?? finance.error ?? products.error ?? items.error;
+      if (queryError) {
+        console.error("[dashboard] Falha ao carregar dados", queryError);
+        throw new Error(queryError.message || "Falha ao carregar Dashboard");
+      }
 
       const allSales = sales.data ?? [];
       // Recursos Financeiros (aportes) — kept separate from faturamento
@@ -91,6 +98,11 @@ function Dashboard() {
         supabase.from("bank_accounts" as any).select("id,name,bank,color,initial_balance").eq("status", "ativa").order("name"),
         supabase.from("bank_movements" as any).select("account_id,type,amount"),
       ]);
+      const queryError = accountsRes.error ?? movsRes.error;
+      if (queryError) {
+        console.error("[dashboard-bank-balances] Falha ao carregar saldos", queryError);
+        throw new Error(queryError.message || "Falha ao carregar saldos bancários");
+      }
       const accounts = (accountsRes.data ?? []) as any[];
       const movs = (movsRes.data ?? []) as any[];
       const perAccount = accounts.map(a => {
@@ -103,6 +115,20 @@ function Dashboard() {
       return { perAccount, total };
     },
   });
+
+  if (isError) {
+    return (
+      <div className="p-6 md:p-8 max-w-3xl mx-auto">
+        <Card className="shadow-soft border-destructive/40">
+          <CardContent className="p-6 space-y-3">
+            <div className="font-display text-lg text-destructive">Erro ao carregar Dashboard</div>
+            <div className="text-sm text-muted-foreground">{error instanceof Error ? error.message : "Falha desconhecida ao buscar dados."}</div>
+            <Button onClick={() => refetch()} variant="outline">Tentar novamente</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (isLoading || !data) {
     return <div className="p-8 text-muted-foreground">Carregando…</div>;
