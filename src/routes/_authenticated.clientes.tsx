@@ -132,8 +132,12 @@ function CustomersPage() {
                     {c.status === "inativo" && <span className="ml-2 text-xs text-muted-foreground">(inativo)</span>}
                   </TableCell>
                   <TableCell>
-                    <span className={`text-xs px-2 py-1 rounded-full capitalize ${c.customer_type === "atacado" ? "bg-gold/15 text-gold-foreground" : "bg-accent text-accent-foreground"}`}>
-                      {c.customer_type}
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      c.customer_type === "atacado" ? "bg-gold/15 text-gold-foreground"
+                      : c.customer_type === "recursos_financeiros" ? "bg-primary/15 text-primary"
+                      : "bg-accent text-accent-foreground"
+                    }`}>
+                      {CUSTOMER_TYPE_LABEL[c.customer_type] ?? c.customer_type}
                     </span>
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">{c.document ?? "—"}</TableCell>
