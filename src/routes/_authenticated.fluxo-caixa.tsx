@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { ArrowDownRight, ArrowUpRight, Wallet, Landmark } from "lucide-react";
 import { brl, dateBR } from "@/lib/format";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend } from "recharts";
@@ -27,17 +28,18 @@ function CashFlowPage() {
   const startPast = new Date(today); startPast.setDate(today.getDate() - 30);
   const endFuture = new Date(today); endFuture.setDate(today.getDate() + 15);
   const [accountFilter, setAccountFilter] = useState<string>("todas");
+  const [onlyMovementDays, setOnlyMovementDays] = useState(true);
 
   const { data: bankAccounts } = useQuery({
     queryKey: ["bank-accounts-active"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bank_accounts" as any)
-        .select("id,name,bank,color,initial_balance,status")
+        .select("id,name,bank,color,initial_balance,status,created_at")
         .eq("status", "ativa")
         .order("name");
       if (error) throw error;
-      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string; initial_balance: number; status: string }[];
+      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string; initial_balance: number; status: string; created_at: string }[];
     },
   });
 
@@ -78,10 +80,25 @@ function CashFlowPage() {
 
   // Movimentações filtradas pela conta selecionada
   const filteredMovements = useMemo(() => {
-    const all = bankMovements ?? [];
+    const accountsWithInitialMovement = new Set(
+      (bankMovements ?? []).filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id)
+    );
+    const syntheticInitialMovements = (bankAccounts ?? [])
+      .filter((account) => Number(account.initial_balance ?? 0) > 0 && !accountsWithInitialMovement.has(account.id))
+      .map((account) => ({
+        account_id: account.id,
+        destination_account_id: null,
+        type: "entrada",
+        amount: Number(account.initial_balance ?? 0),
+        movement_date: String(account.created_at).slice(0, 10),
+        description: `Saldo inicial — ${account.name}`,
+        category: "Saldo inicial",
+        origin: "saldo_inicial_sintetico",
+      }));
+    const all = [...(bankMovements ?? []), ...syntheticInitialMovements];
     if (accountFilter === "todas") return all;
     return all.filter((m) => m.account_id === accountFilter || m.destination_account_id === accountFilter);
-  }, [bankMovements, accountFilter]);
+  }, [bankMovements, bankAccounts, accountFilter]);
 
   // Recebíveis/pagáveis futuros — projeção apenas se filtro = todas (ou filtrados por bank_account_id)
   const { data: futurePayables } = useQuery({
@@ -123,12 +140,9 @@ function CashFlowPage() {
     const startKey = isoDay(startPast);
     const endKey = isoDay(endFuture);
 
-    const accountsWithInitialMovement = new Set(filteredMovements.filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id));
-    // Saldo de abertura: saldo inicial das contas que ainda não têm movimento de saldo inicial
-    // + todas as movimentações ANTES do período.
-    let opening = accountFilter === "todas"
-      ? (bankAccounts ?? []).reduce((sum, account) => sum + (accountsWithInitialMovement.has(account.id) ? 0 : Number(account.initial_balance ?? 0)), 0)
-      : (accountsWithInitialMovement.has(accountFilter) ? 0 : Number((bankAccounts ?? []).find((account) => account.id === accountFilter)?.initial_balance ?? 0));
+    // Saldo de abertura = todas as movimentações ANTES do período.
+    // Saldos iniciais sem movimento gravado entram como movimentações sintéticas em filteredMovements.
+    let opening = 0;
     for (const m of filteredMovements) {
       if (m.movement_date >= startKey) continue;
       const amt = Number(m.amount);
@@ -199,7 +213,7 @@ function CashFlowPage() {
     if (todayIdx >= 0) (series[todayIdx] as any).saldoProjetado = series[todayIdx].saldoReal;
 
     return series;
-  }, [filteredMovements, futurePayables, futureReceivables, accountFilter, bankAccounts]);
+  }, [filteredMovements, futurePayables, futureReceivables, accountFilter]);
 
   const totals = useMemo(() => {
     let income = 0, expense = 0;
@@ -225,12 +239,9 @@ function CashFlowPage() {
     const todayKey = isoDay(today);
     const startKey = isoDay(startPast);
 
-    const accountsWithInitialMovement = new Set(filteredMovements.filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id));
-    // 1) Saldo anterior = saldo inicial das contas que ainda não têm movimento de saldo inicial
-    // + todas as movimentações ANTES do startKey.
-    let opening = accountFilter === "todas"
-      ? (bankAccounts ?? []).reduce((sum, account) => sum + (accountsWithInitialMovement.has(account.id) ? 0 : Number(account.initial_balance ?? 0)), 0)
-      : (accountsWithInitialMovement.has(accountFilter) ? 0 : Number((bankAccounts ?? []).find((account) => account.id === accountFilter)?.initial_balance ?? 0));
+    // 1) Saldo anterior = todas as movimentações ANTES do startKey.
+    // Saldos iniciais sem movimento gravado entram como movimentações sintéticas em filteredMovements.
+    let opening = 0;
     for (const m of filteredMovements) {
       if (m.movement_date >= startKey) continue;
       const amt = Number(m.amount);
@@ -274,18 +285,11 @@ function CashFlowPage() {
       });
 
     const mostRecentBalance = asc.length ? asc[asc.length - 1].saldoAcumulado : opening;
-
-    // Mostra últimos 15 em DESC e ancora a coluna no mesmo saldo final do rodapé.
-    // Para cada linha anterior: saldo_anterior = saldo_linha_atual - líquido_linha_atual.
-    let balanceCursor = mostRecentBalance;
-    const rows = asc.slice(-15).reverse().map((d) => {
-      const saldoAcumulado = balanceCursor;
-      balanceCursor -= d.income - d.expense;
-      return { ...d, saldoAcumulado };
-    });
+    const visibleDays = onlyMovementDays ? asc.filter((d) => d.income > 0 || d.expense > 0) : asc;
+    const rows = visibleDays.slice(-15).reverse();
 
     return { rows, finalBalance: mostRecentBalance };
-  }, [filteredMovements, accountFilter, bankAccounts]);
+  }, [filteredMovements, accountFilter, onlyMovementDays]);
 
   const divergence = Math.abs(daily.finalBalance - displayedBalance) > 0.01;
 
@@ -320,6 +324,12 @@ function CashFlowPage() {
               ))}
             </SelectContent>
           </Select>
+        </div>
+        <div className="flex items-center gap-2 pb-2">
+          <Switch id="only-movement-days" checked={onlyMovementDays} onCheckedChange={setOnlyMovementDays} />
+          <Label htmlFor="only-movement-days" className="text-sm cursor-pointer">
+            Mostrar só dias com movimento
+          </Label>
         </div>
         <div className="ml-auto text-right">
           <div className="text-xs text-muted-foreground">Saldo bancário {accountFilter === "todas" ? "consolidado" : "da conta"}</div>
@@ -377,7 +387,9 @@ function CashFlowPage() {
 
       <Card className="shadow-soft">
         <CardContent className="p-0">
-          <div className="px-5 py-4 border-b font-display">Movimentação diária (últimos 15 dias)</div>
+          <div className="px-5 py-4 border-b font-display">
+            Movimentação diária ({onlyMovementDays ? "dias com movimento" : "últimos 15 dias"})
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
