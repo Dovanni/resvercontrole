@@ -369,23 +369,36 @@ function CashFlowPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {daily.length === 0 && (
+              {daily.rows.length === 0 && (
                 <TableRow><TableCell colSpan={5} className="text-center py-10 text-muted-foreground">Sem movimentações no período.</TableCell></TableRow>
               )}
-              {daily.map((d) => {
+              {daily.rows.map((d) => {
                 const net = d.income - d.expense;
                 return (
                   <TableRow key={d.date}>
                     <TableCell>{dateBR(d.date)}</TableCell>
                     <TableCell className="text-right text-success">{brl(d.income)}</TableCell>
                     <TableCell className="text-right text-destructive">{brl(d.expense)}</TableCell>
-                    <TableCell className={`text-right font-medium ${net >= 0 ? "text-success" : "text-destructive"}`}>{brl(net)}</TableCell>
-                    <TableCell className="text-right font-medium">{brl(d.saldoReal ?? 0)}</TableCell>
+                    <TableCell className={`text-right font-medium ${net >= 0 ? "text-success" : net < 0 ? "text-destructive" : ""}`}>{brl(net)}</TableCell>
+                    <TableCell className={`text-right font-medium ${d.saldoAcumulado < 0 ? "text-destructive" : ""}`}>{brl(d.saldoAcumulado)}</TableCell>
                   </TableRow>
                 );
               })}
             </TableBody>
           </Table>
+          <div className="px-5 py-4 border-t flex flex-wrap items-center justify-between gap-3">
+            <div className="text-sm">
+              <span className="text-muted-foreground">Saldo final acumulado: </span>
+              <span className={`font-display text-lg ${daily.finalBalance < 0 ? "text-destructive" : ""}`}>{brl(daily.finalBalance)}</span>
+            </div>
+            {divergence ? (
+              <div className="text-sm text-destructive font-medium">
+                ⚠️ Divergência: saldo acumulado ({brl(daily.finalBalance)}) não confere com saldo bancário ({brl(displayedBalance)})
+              </div>
+            ) : (
+              <div className="text-sm text-success">✓ Confere com saldo bancário {accountFilter === "todas" ? "consolidado" : "da conta"}</div>
+            )}
+          </div>
         </CardContent>
       </Card>
         </TabsContent>
