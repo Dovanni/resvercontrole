@@ -14,6 +14,76 @@ export type Database = {
   }
   public: {
     Tables: {
+      aportes_financeiros: {
+        Row: {
+          amount: number
+          aporte_type: string
+          bank_account_id: string | null
+          bank_movement_id: string | null
+          created_at: string
+          customer_id: string | null
+          description: string | null
+          id: string
+          movement_date: string
+          notes: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          aporte_type?: string
+          bank_account_id?: string | null
+          bank_movement_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          id?: string
+          movement_date?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          aporte_type?: string
+          bank_account_id?: string | null
+          bank_movement_id?: string | null
+          created_at?: string
+          customer_id?: string | null
+          description?: string | null
+          id?: string
+          movement_date?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aportes_financeiros_bank_account_id_fkey"
+            columns: ["bank_account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aportes_financeiros_bank_movement_id_fkey"
+            columns: ["bank_movement_id"]
+            isOneToOne: false
+            referencedRelation: "bank_movements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aportes_financeiros_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_accounts: {
         Row: {
           account_number: string | null
