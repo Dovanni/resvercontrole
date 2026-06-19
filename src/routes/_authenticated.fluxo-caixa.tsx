@@ -17,6 +17,17 @@ import { CashProjection } from "@/components/cash-projection";
 export const Route = createFileRoute("/_authenticated/fluxo-caixa")({
   head: () => ({ meta: [{ title: "Fluxo de caixa — Rosé" }] }),
   component: CashFlowPage,
+  errorComponent: ({ error, reset }) => (
+    <div className="p-6 md:p-8 max-w-3xl mx-auto">
+      <Card className="shadow-soft border-destructive/40">
+        <CardContent className="p-6 space-y-3">
+          <div className="font-display text-lg text-destructive">Erro ao carregar Fluxo de caixa</div>
+          <div className="text-sm text-muted-foreground">{error?.message ?? "Falha desconhecida"}</div>
+          <button onClick={() => reset()} className="text-sm underline">Tentar novamente</button>
+        </CardContent>
+      </Card>
+    </div>
+  ),
 });
 
 function isoDay(d: Date) {
