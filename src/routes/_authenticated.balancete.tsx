@@ -79,26 +79,39 @@ function BalancetePage() {
     },
   });
 
-  // Saldo atual: todas as movimentações (sem filtro de período) por conta
+  // Todas as movimentações (com data) para calcular saldo até uma data de corte
   const { data: allMovs } = useQuery({
     queryKey: ["balancete-allmovs"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bank_movements" as any)
-        .select("account_id, type, amount");
+        .select("account_id, movement_date, type, amount");
       if (error) throw error;
-      return (data ?? []) as unknown as { account_id: string; type: string; amount: number }[];
+      return (data ?? []) as unknown as { account_id: string; movement_date: string; type: string; amount: number }[];
     },
   });
+
+  // Data de corte para o cálculo do saldo no período
+  const cutoffDate = useMemo(() => {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    if (period === "mes_anterior") return to;
+    if (period === "custom") {
+      const datasNoPeriodo = (bankMovs ?? []).map((m) => m.movement_date).filter((d) => d >= from && d <= to);
+      if (datasNoPeriodo.length === 0) return to;
+      return datasNoPeriodo.reduce((max, d) => (d > max ? d : max), datasNoPeriodo[0]);
+    }
+    return todayStr;
+  }, [period, from, to, bankMovs]);
 
   const saldoPorConta = useMemo(() => {
     const map: Record<string, number> = {};
     for (const m of allMovs ?? []) {
+      if (m.movement_date > cutoffDate) continue;
       const v = Number(m.amount || 0);
       map[m.account_id] = (map[m.account_id] ?? 0) + (m.type === "entrada" ? v : -v);
     }
     return map;
-  }, [allMovs]);
+  }, [allMovs, cutoffDate]);
 
   // Receitas agrupadas por conta bancária → categoria (todas as contas ativas, mesmo sem movimentação)
   const receitasPorConta = useMemo(() => {
