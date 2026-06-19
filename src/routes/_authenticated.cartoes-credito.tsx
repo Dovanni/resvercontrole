@@ -1231,7 +1231,7 @@ function LancActions({ lanc }: { lanc: Lancamento }) {
       .select("id,parcela_atual")
       .eq("grupo_parcela", lanc.grupo_parcela as string));
     if (error) throw error;
-    const all = (data ?? []) as { id: string; parcela_atual: number }[];
+    const all = (data ?? []) as unknown as { id: string; parcela_atual: number }[];
     if (scope === "todos") return all.map(r => r.id);
     return all.filter(r => r.parcela_atual >= lanc.parcela_atual).map(r => r.id);
   };
@@ -1306,7 +1306,7 @@ function LancEditForm({ lanc, isSerie, onDone }: { lanc: Lancamento; isSerie: bo
           .select("id,parcela_atual,total_parcelas")
           .eq("grupo_parcela", lanc.grupo_parcela as string));
         if (error) throw error;
-        const all = (rows ?? []) as any[];
+        const all = (rows ?? []) as unknown as any[];
         ids = scope === "todos" ? all : all.filter(r => r.parcela_atual >= lanc.parcela_atual);
       }
 
