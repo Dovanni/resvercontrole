@@ -352,7 +352,7 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
           <span className="text-xs font-medium uppercase">{cartao.bandeira}</span>
         </div>
         <div className="font-display text-xl mt-6">{cartao.nome}</div>
-        <div className="text-xs opacity-80 mt-1">Venc. dia {cartao.dia_vencimento} · Fecha dia {cartao.dia_fechamento}</div>
+        <div className="text-xs opacity-80 mt-1">Fecha: {dateBRShort(proxFech)} · Vence: {dateBRShort(proxVenc)}</div>
       </div>
       <CardContent className="p-5 space-y-3">
         {level === "estourado" && (
