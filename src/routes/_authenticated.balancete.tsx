@@ -166,7 +166,7 @@ function BalancetePage() {
     () => Object.values(saldoPorConta).reduce((s, v) => s + v, 0),
     [saldoPorConta]
   );
-  const receitasRealizadas = totalSaldoAtual + totalEntradas;
+  const receitasRealizadas = totalSaldoAtual;
 
   const totRec = useMemo(() => ({ previsto: totalEntradas, realizado: receitasRealizadas }), [totalEntradas, receitasRealizadas]);
   const totDesp = useMemo(() => Object.values(despesas).reduce((a, v) => ({ previsto: a.previsto + v.previsto, realizado: a.realizado + v.realizado }), { previsto: 0, realizado: 0 }), [despesas]);
