@@ -227,9 +227,27 @@ function CustomerForm({ initial, onSubmit, busy }: { initial: Customer | null; o
             <SelectContent>
               <SelectItem value="varejo">Varejo</SelectItem>
               <SelectItem value="atacado">Atacado</SelectItem>
+              <SelectItem value="recursos_financeiros">Recursos Financeiros</SelectItem>
             </SelectContent>
           </Select>
         </div>
+        {f.customer_type === "recursos_financeiros" && (
+          <>
+            <div className="col-span-2 space-y-1.5">
+              <Label>Tipo de aporte</Label>
+              <Select value={f.aporte_type || "investidor"} onValueChange={(v) => setF({ ...f, aporte_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {APORTE_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="col-span-2 space-y-1.5">
+              <Label>Observações sobre o recurso</Label>
+              <Textarea rows={2} value={f.aporte_notes} onChange={(e) => setF({ ...f, aporte_notes: e.target.value })} placeholder="Detalhes do investidor, condições do empréstimo, etc." />
+            </div>
+          </>
+        )}
         <div className="space-y-1.5">
           <Label>Status</Label>
           <Select value={f.status} onValueChange={(v: any) => setF({ ...f, status: v })}>
