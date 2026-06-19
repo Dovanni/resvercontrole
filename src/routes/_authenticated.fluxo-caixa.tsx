@@ -23,6 +23,23 @@ function isoDay(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
+type CashMovement = {
+  account_id: string | null;
+  destination_account_id: string | null;
+  type: string;
+  amount: number;
+  movement_date: string;
+  description: string | null;
+  category: string | null;
+  origin: string | null;
+  reference_id: string | null;
+};
+
+type PayableCashSource = { id: string; description: string | null; category: string | null; amount: number; paid_amount: number | null; due_date: string; paid_at: string | null; status: string; bank_account_id: string | null };
+type ReceivableCashSource = { id: string; sale_id: string | null; description: string | null; amount: number; received_amount: number | null; due_date: string; received_at: string | null; status: string; bank_account_id: string | null };
+type SaleCashSource = { id: string; customer_name: string | null; payment_method: string | null; total: number; sold_at: string; status: string; bank_account_id: string | null };
+type PurchaseCashSource = { id: string; total: number; data_compra: string; status: string | null; condicao_pagamento: string | null; forma_pagamento: string | null; bank_account_id: string | null };
+
 function CashFlowPage() {
   const today = new Date();
   const startPast = new Date(today); startPast.setDate(today.getDate() - 30);
@@ -48,11 +65,149 @@ function CashFlowPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bank_movements" as any)
-        .select("account_id,destination_account_id,type,amount,movement_date,description,category,origin");
+        .select("account_id,destination_account_id,type,amount,movement_date,description,category,origin,reference_id");
       if (error) throw error;
-      return (data ?? []) as unknown as { account_id: string; destination_account_id: string | null; type: string; amount: number; movement_date: string; description: string; category: string; origin: string | null }[];
+      return (data ?? []) as unknown as CashMovement[];
     },
   });
+
+  const { data: paidPayables } = useQuery({
+    queryKey: ["cashflow", "paid-payables"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payables")
+        .select("id,description,category,amount,paid_amount,due_date,paid_at,status,bank_account_id")
+        .eq("status", "pago");
+      if (error) throw error;
+      return (data ?? []) as unknown as PayableCashSource[];
+    },
+  });
+
+  const { data: receivableSources } = useQuery({
+    queryKey: ["cashflow", "receivable-sources"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("receivables" as any)
+        .select("id,sale_id,description,amount,received_amount,due_date,received_at,status,bank_account_id");
+      if (error) throw error;
+      return (data ?? []) as unknown as ReceivableCashSource[];
+    },
+  });
+
+  const { data: deliveredSales } = useQuery({
+    queryKey: ["cashflow", "delivered-sales"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sales")
+        .select("id,customer_name,payment_method,total,sold_at,status,bank_account_id")
+        .eq("status", "entregue");
+      if (error) throw error;
+      return (data ?? []) as unknown as SaleCashSource[];
+    },
+  });
+
+  const { data: purchases } = useQuery({
+    queryKey: ["cashflow", "purchase-sources"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("compras" as any)
+        .select("id,total,data_compra,status,condicao_pagamento,forma_pagamento,bank_account_id");
+      if (error) throw error;
+      return (data ?? []) as unknown as PurchaseCashSource[];
+    },
+  });
+
+  const cashMovements = useMemo(() => {
+    const posted = bankMovements ?? [];
+    const postedByReference = new Set(
+      posted.filter((m) => m.origin && m.reference_id).map((m) => `${m.origin}:${m.reference_id}`),
+    );
+    const hasSamePostedMovement = (type: string, accountId: string | null, date: string, amount: number) =>
+      posted.some((m) =>
+        m.type === type
+        && (m.account_id ?? null) === (accountId ?? null)
+        && m.movement_date === date
+        && Math.abs(Number(m.amount) - amount) < 0.01,
+      );
+
+    const missing: CashMovement[] = [];
+
+    for (const p of paidPayables ?? []) {
+      const amount = Number(p.paid_amount || p.amount || 0);
+      const movementDate = (p.paid_at ?? p.due_date).slice(0, 10);
+      if (amount <= 0 || postedByReference.has(`payable:${p.id}`) || hasSamePostedMovement("saida", p.bank_account_id, movementDate, amount)) continue;
+      missing.push({
+        account_id: p.bank_account_id,
+        destination_account_id: null,
+        type: "saida",
+        amount,
+        movement_date: movementDate,
+        description: p.description,
+        category: p.category,
+        origin: "payable_fallback",
+        reference_id: p.id,
+      });
+    }
+
+    for (const r of receivableSources ?? []) {
+      const amount = Number(r.received_amount || (r.status === "recebido" ? r.amount : 0) || 0);
+      const movementDate = (r.received_at ?? r.due_date).slice(0, 10);
+      if (amount <= 0 || postedByReference.has(`receivable:${r.id}`) || hasSamePostedMovement("entrada", r.bank_account_id, movementDate, amount)) continue;
+      missing.push({
+        account_id: r.bank_account_id,
+        destination_account_id: null,
+        type: "entrada",
+        amount,
+        movement_date: movementDate,
+        description: r.description,
+        category: "Recebimento de venda",
+        origin: "receivable_fallback",
+        reference_id: r.id,
+      });
+    }
+
+    const salesWithReceivable = new Set((receivableSources ?? []).filter((r) => r.sale_id).map((r) => r.sale_id));
+    for (const s of deliveredSales ?? []) {
+      const amount = Number(s.total ?? 0);
+      const movementDate = s.sold_at.slice(0, 10);
+      if (amount <= 0 || salesWithReceivable.has(s.id) || postedByReference.has(`sale:${s.id}`) || hasSamePostedMovement("entrada", s.bank_account_id, movementDate, amount)) continue;
+      missing.push({
+        account_id: s.bank_account_id,
+        destination_account_id: null,
+        type: "entrada",
+        amount,
+        movement_date: movementDate,
+        description: `Venda — ${s.customer_name ?? "balcão"}`,
+        category: "Recebimento de venda",
+        origin: "sale_fallback",
+        reference_id: s.id,
+      });
+    }
+
+    const purchasesWithPaidPayable = new Set(
+      (paidPayables ?? [])
+        .map((p) => p.description?.match(/Compra #([a-f0-9]{8})/i)?.[1])
+        .filter(Boolean),
+    );
+    for (const c of purchases ?? []) {
+      const amount = Number(c.total ?? 0);
+      const canceled = ["cancelada", "cancelado"].includes(String(c.status ?? "").toLowerCase());
+      if (amount <= 0 || c.condicao_pagamento !== "a_vista" || canceled || purchasesWithPaidPayable.has(c.id.slice(0, 8)) || postedByReference.has(`compra:${c.id}`) || hasSamePostedMovement("saida", c.bank_account_id, c.data_compra, amount)) continue;
+      missing.push({
+        account_id: c.bank_account_id,
+        destination_account_id: null,
+        type: "saida",
+        amount,
+        movement_date: c.data_compra,
+        description: `Compra #${c.id.slice(0, 8)}`,
+        category: "Fornecedor",
+        origin: "purchase_fallback",
+        reference_id: c.id,
+      });
+    }
+
+    return [...posted, ...missing];
+  }, [bankMovements, paidPayables, receivableSources, deliveredSales, purchases]);
 
   // Saldo consolidado (todas as movimentações)
   const bankBalances = useMemo(() => {
@@ -62,6 +217,7 @@ function CashFlowPage() {
     const map: Record<string, number> = {};
     for (const a of bankAccounts ?? []) map[a.id] = accountsWithInitialMovement.has(a.id) ? 0 : Number(a.initial_balance ?? 0);
     for (const m of bankMovements ?? []) {
+      if (!m.account_id) continue;
       const amt = Number(m.amount);
       if (m.type === "entrada") map[m.account_id] = (map[m.account_id] ?? 0) + amt;
       else if (m.type === "saida") map[m.account_id] = (map[m.account_id] ?? 0) - amt;
@@ -81,7 +237,7 @@ function CashFlowPage() {
   // Movimentações filtradas pela conta selecionada
   const filteredMovements = useMemo(() => {
     const accountsWithInitialMovement = new Set(
-      (bankMovements ?? []).filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id)
+      cashMovements.filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id)
     );
     const syntheticInitialMovements = (bankAccounts ?? [])
       .filter((account) => Number(account.initial_balance ?? 0) > 0 && !accountsWithInitialMovement.has(account.id))
@@ -94,11 +250,12 @@ function CashFlowPage() {
         description: `Saldo inicial — ${account.name}`,
         category: "Saldo inicial",
         origin: "saldo_inicial_sintetico",
+        reference_id: account.id,
       }));
-    const all = [...(bankMovements ?? []), ...syntheticInitialMovements];
+    const all = [...cashMovements, ...syntheticInitialMovements];
     if (accountFilter === "todas") return all;
     return all.filter((m) => m.account_id === accountFilter || m.destination_account_id === accountFilter);
-  }, [bankMovements, bankAccounts, accountFilter]);
+  }, [cashMovements, bankAccounts, accountFilter]);
 
   // Recebíveis/pagáveis futuros — projeção apenas se filtro = todas (ou filtrados por bank_account_id)
   const { data: futurePayables } = useQuery({
