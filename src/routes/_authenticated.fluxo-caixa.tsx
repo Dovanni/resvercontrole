@@ -225,9 +225,13 @@ function CashFlowPage() {
     const todayKey = isoDay(today);
     const startKey = isoDay(startPast);
 
-    // 1) Saldo de abertura = tudo que aconteceu ANTES do startKey
-    let opening = 0;
+    // 1) Saldo anterior = saldo inicial das contas + movimentações ANTES do startKey.
+    // Ignora movimentos originados de saldo_inicial para não somar o mesmo saldo duas vezes.
+    let opening = accountFilter === "todas"
+      ? (bankAccounts ?? []).reduce((sum, account) => sum + Number(account.initial_balance ?? 0), 0)
+      : Number((bankAccounts ?? []).find((account) => account.id === accountFilter)?.initial_balance ?? 0);
     for (const m of filteredMovements) {
+      if (m.origin === "saldo_inicial") continue;
       if (m.movement_date >= startKey) continue;
       const amt = Number(m.amount);
       if (m.type === "entrada") opening += amt;
@@ -249,6 +253,7 @@ function CashFlowPage() {
 
     // 3) Soma movimentações de cada dia
     for (const m of filteredMovements) {
+      if (m.origin === "saldo_inicial") continue;
       const k = m.movement_date;
       if (!days[k]) continue;
       const amt = Number(m.amount);
@@ -269,10 +274,10 @@ function CashFlowPage() {
         return { ...d, saldoAcumulado: saldo };
       });
 
-    const finalBalance = asc.length ? asc[asc.length - 1].saldoAcumulado : opening;
+    const mostRecentBalance = asc.length ? asc[asc.length - 1].saldoAcumulado : opening;
     // Mostra últimos 15 (mais recente no topo)
-    return { rows: asc.slice(-15).reverse(), finalBalance };
-  }, [filteredMovements, accountFilter]);
+    return { rows: asc.slice(-15).reverse(), finalBalance: mostRecentBalance };
+  }, [filteredMovements, accountFilter, bankAccounts]);
 
   const divergence = Math.abs(daily.finalBalance - displayedBalance) > 0.01;
 
