@@ -94,6 +94,40 @@ function vencimentoDate(ano: number, mes: number, diaVenc: number) {
   return new Date(ano, mes - 1, Math.min(diaVenc, last));
 }
 
+// Retorna o fechamento e o vencimento da FATURA CORRENTE
+// (a próxima fatura a vencer a partir de hoje). O fechamento pode estar no passado
+// (fatura já fechada, aguardando pagamento) ou no futuro (fatura ainda aberta).
+function proximoCiclo(diaFechamento: number, diaVencimento: number, ref: Date = new Date()) {
+  const hoje = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate());
+  const lastDay = (a: number, m: number) => new Date(a, m + 1, 0).getDate();
+  const mkDate = (a: number, m: number, d: number) => new Date(a, m, Math.min(d, lastDay(a, m)));
+
+  // Próximo vencimento >= hoje
+  let vAno = hoje.getFullYear();
+  let vMes = hoje.getMonth();
+  let venc = mkDate(vAno, vMes, diaVencimento);
+  if (venc.getTime() < hoje.getTime()) {
+    vMes += 1;
+    if (vMes > 11) { vMes = 0; vAno += 1; }
+    venc = mkDate(vAno, vMes, diaVencimento);
+  }
+
+  // Fechamento desse ciclo: mês anterior se dV < dF, mesmo mês caso contrário
+  let fAno = vAno;
+  let fMes = vMes;
+  if (diaVencimento < diaFechamento) {
+    fMes -= 1;
+    if (fMes < 0) { fMes = 11; fAno -= 1; }
+  }
+  const fechamento = mkDate(fAno, fMes, diaFechamento);
+  return { fechamento, vencimento: venc };
+}
+
+
+function dateBRShort(d: Date) {
+  return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+}
+
 // Limite usado = soma de TODAS as parcelas cujas faturas ainda não foram pagas.
 // Ao quitar uma fatura, as parcelas daquele mês são liberadas do limite.
 function calcUsado(cartaoId: string, lancs: Lancamento[], faturas: Fatura[]) {
@@ -253,16 +287,23 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
     k, total: lancamentos.filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno && l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
   }));
 
-  const vencDate = vencimentoDate(curAno, curMes, cartao.dia_vencimento);
-  const diasVenc = Math.ceil((vencDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  const { fechamento: proxFech, vencimento: proxVenc } = proximoCiclo(cartao.dia_fechamento, cartao.dia_vencimento);
+  const hojeD = new Date();
+  const hojeMid = new Date(hojeD.getFullYear(), hojeD.getMonth(), hojeD.getDate());
+  const diasVenc = Math.ceil((proxVenc.getTime() - hojeMid.getTime()) / (1000 * 60 * 60 * 24));
   const fat = faturas.find((f) => f.mes === curMes && f.ano === curAno);
   const totalMesAtual = lancamentos
     .filter((l) => l.mes_fatura === curMes && l.ano_fatura === curAno)
     .reduce((s, l) => s + Number(l.valor), 0);
+  // Status: ABERTA até o fechamento; FECHADA entre fechamento e vencimento; VENCIDA após vencimento.
+  const hojeMs = hojeMid.getTime();
   const status: "aberta" | "fechada" | "paga" | "atrasada" =
     fat?.status === "paga" ? "paga"
-    : diasVenc < 0 && totalMesAtual > 0 ? "atrasada"
-    : new Date().getDate() > cartao.dia_fechamento ? "fechada" : "aberta";
+    : hojeMs > proxVenc.getTime() ? "atrasada"
+    : hojeMs > proxFech.getTime() ? "fechada"
+    : "aberta";
+
+
 
   const marcarPaga = useMutation({
     mutationFn: async () => {
@@ -311,7 +352,7 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
           <span className="text-xs font-medium uppercase">{cartao.bandeira}</span>
         </div>
         <div className="font-display text-xl mt-6">{cartao.nome}</div>
-        <div className="text-xs opacity-80 mt-1">Venc. dia {cartao.dia_vencimento} · Fecha dia {cartao.dia_fechamento}</div>
+        <div className="text-xs opacity-80 mt-1">Fecha: {dateBRShort(proxFech)} · Vence: {dateBRShort(proxVenc)}</div>
       </div>
       <CardContent className="p-5 space-y-3">
         {level === "estourado" && (
@@ -900,7 +941,7 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
     const pct = c.limite_total > 0 ? (usado / Number(c.limite_total)) * 100 : 0;
     if (pct >= 80) acima80++;
     const fat = faturas.find((f) => f.cartao_id === c.id && f.mes === curMes && f.ano === curAno);
-    const venc = vencimentoDate(curAno, curMes, c.dia_vencimento);
+    const { vencimento: venc } = proximoCiclo(c.dia_fechamento, c.dia_vencimento, today);
     const dias = Math.ceil((venc.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     const paga = fat?.status === "paga";
     if (!paga && usado > 0) {
