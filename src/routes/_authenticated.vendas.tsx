@@ -40,6 +40,16 @@ const STATUS_LABEL: Record<string, string> = {
   orcamento: "Orçamento", confirmado: "Confirmado", separacao: "Em separação",
   enviado: "Enviado", entregue: "Entregue", cancelado: "Cancelado",
 };
+const APORTE_TYPES = [
+  { value: "investidor", label: "Investidor" },
+  { value: "emprestimo_familiar", label: "Empréstimo familiar" },
+  { value: "socio", label: "Sócio" },
+  { value: "recurso_proprio", label: "Recurso próprio" },
+  { value: "outro", label: "Outro" },
+];
+const CHANNEL_LABEL: Record<string, string> = {
+  varejo: "Varejo", atacado: "Atacado", recursos_financeiros: "Recursos Financeiros",
+};
 
 
 function SalesPage() {
