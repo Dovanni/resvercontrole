@@ -25,10 +25,24 @@ export const Route = createFileRoute("/_authenticated/clientes")({
 
 type Customer = {
   id: string; name: string; person_type: "pf" | "pj"; document: string | null;
-  customer_type: "varejo" | "atacado"; email: string | null; phone: string | null;
+  customer_type: "varejo" | "atacado" | "recursos_financeiros"; email: string | null; phone: string | null;
   zip: string | null; address: string | null; credit_limit: number;
   notes: string | null; status: "ativo" | "inativo";
+  aporte_type?: string | null; aporte_notes?: string | null;
 };
+
+const CUSTOMER_TYPE_LABEL: Record<string, string> = {
+  varejo: "Varejo",
+  atacado: "Atacado",
+  recursos_financeiros: "Recursos Financeiros",
+};
+const APORTE_TYPES = [
+  { value: "investidor", label: "Investidor" },
+  { value: "emprestimo_familiar", label: "Empréstimo familiar" },
+  { value: "socio", label: "Sócio" },
+  { value: "recurso_proprio", label: "Recurso próprio" },
+  { value: "outro", label: "Outro" },
+];
 
 function CustomersPage() {
   const qc = useQueryClient();
