@@ -29,7 +29,7 @@ export function CategoriasManagerInline() {
   const qc = useQueryClient();
   const confirm = useConfirm();
   const { data: cats } = useCategoriasContasPagar();
-  const [novo, setNovo] = useState("");
+  const [novaCategoria, setNovaCategoria] = useState("");
   const [busca, setBusca] = useState("");
   const [editId, setEditId] = useState<string | null>(null);
   const [editNome, setEditNome] = useState("");
@@ -54,7 +54,7 @@ export function CategoriasManagerInline() {
         throw new Error(error.message);
       }
     },
-    onSuccess: () => { setNovo(""); toast.success("Categoria criada"); qc.invalidateQueries({ queryKey: ["categorias-contas-pagar"] }); },
+    onSuccess: () => { setNovaCategoria(""); toast.success("Categoria criada"); qc.invalidateQueries({ queryKey: ["categorias-contas-pagar"] }); },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -89,24 +89,27 @@ export function CategoriasManagerInline() {
   const all = cats ?? [];
   const padrao = all.filter((c) => c.padrao && (!filtro || c.nome.toLowerCase().includes(filtro)));
   const custom = all.filter((c) => !c.padrao && (!filtro || c.nome.toLowerCase().includes(filtro)));
+  const podeAdicionar = novaCategoria.trim().length >= 2;
+
+  const handleAdicionar = () => {
+    if (!podeAdicionar) return;
+    create.mutate(novaCategoria);
+  };
 
   return (
     <div className="w-full space-y-4">
-      <form
-        onSubmit={(e) => { e.preventDefault(); if (novo.trim().length >= 2) create.mutate(novo); }}
-        className="flex flex-col sm:flex-row gap-2"
-      >
+      <div className="flex flex-col sm:flex-row gap-2">
         <Input
           placeholder="Nova categoria (mín. 2 caracteres)"
-          value={novo}
-          onChange={(e) => setNovo(e.target.value)}
+          value={novaCategoria}
+          onChange={(e) => setNovaCategoria(e.target.value)}
           className="flex-1"
           autoFocus
         />
-        <Button type="submit" disabled={novo.trim().length < 2 || create.isPending}>
+        <Button type="button" disabled={!podeAdicionar} onClick={handleAdicionar}>
           <Plus className="size-4 mr-1" /> Adicionar
         </Button>
-      </form>
+      </div>
 
       <div className="relative">
         <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
