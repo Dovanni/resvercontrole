@@ -253,7 +253,7 @@ function CartoesPage() {
               </CardContent></Card>
             )}
             {cartoes.map((c) => (
-              <CartaoCard key={c.id} cartao={c} contas={contas} lancamentos={lancByCartao[c.id] ?? []} faturas={faturas.filter((f) => f.cartao_id === c.id)} curMes={curMes} curAno={curAno} onClick={() => setTab(c.id)} onPaga={invalidate} onChanged={invalidate} />
+              <CartaoCard key={c.id} cartao={c} contas={contas} lancamentos={lancByCartao[c.id] ?? []} faturas={faturas.filter((f) => f.cartao_id === c.id)} curMes={curMes} curAno={curAno} onClick={() => setTab(c.id)} onVerHistorico={() => setTab("historico")} onPaga={invalidate} onChanged={invalidate} />
             ))}
           </div>
         </TabsContent>
