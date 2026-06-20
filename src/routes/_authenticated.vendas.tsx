@@ -659,7 +659,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
             <Label>Juros Mercado Pago (R$)</Label>
             <Input type="number" step="0.01" min={0}
               value={mercadoPagoFees} onChange={(e) => setMercadoPagoFees(Number(e.target.value))} />
-            <div className="text-xs text-muted-foreground">Valor registrado para controle, sem alterar o total da venda</div>
+            <div className="text-xs text-muted-foreground">Soma ao total da venda</div>
           </div>
 
           <div className="rounded-md border p-3 space-y-1 text-right">
