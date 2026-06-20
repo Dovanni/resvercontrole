@@ -1269,7 +1269,7 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
             <TableBody>
               {(() => {
                 const rows = cartoes.map((c) => {
-                  const u = calcUsado(c.id, lancamentos, faturas);
+                  const u = usadoPorCartao[c.id] ?? 0;
                   const st = limiteStatus(Number(c.limite_total), u);
                   return { c, usado: u, ...st };
                 });
