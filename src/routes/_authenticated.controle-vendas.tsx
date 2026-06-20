@@ -427,7 +427,7 @@ function ControleVendasPage() {
         headStyles: { fillColor: [60, 60, 60], textColor: 255, halign: "center" },
         alternateRowStyles: { fillColor: [248, 248, 248] },
         columnStyles: { 0: { halign: "left", fontStyle: "bold" } },
-        didParseCell: (data) => {
+        didParseCell: (data: any) => {
           const isTotal = data.row.index === 12 && data.section === "body";
           const m = data.section === "body" && data.row.index < 12 ? monthly[data.row.index] : null;
           const noData = m && !m.hasData;
