@@ -43,6 +43,9 @@ type Row = {
   receber: number;
   rateio: number;
   lucro: number;
+  origem?: string | null;
+  sale_id?: string | null;
+  sales?: { customer_name: string | null; customers?: { name: string | null } | null } | null;
 };
 
 const emptyForm = () => ({
