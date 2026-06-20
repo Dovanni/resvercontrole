@@ -9,10 +9,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileSpreadsheet, FileText, Pencil, Trash2, Save, Eraser, Lock, LockOpen, History, ChevronDown, ChevronUp } from "lucide-react";
+import { FileSpreadsheet, FileText, Pencil, Trash2, Save, Eraser, Lock, LockOpen, History, ChevronDown, ChevronUp, Eye, Search } from "lucide-react";
 // jspdf and jspdf-autotable are lazy-loaded inside exportPdfAnual to avoid bundling them on initial page load
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { brl } from "@/lib/format";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/confirm-dialog";
