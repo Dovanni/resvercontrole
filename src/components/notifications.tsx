@@ -23,7 +23,7 @@ export function NotificationsBell() {
       const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
       const [lowStock, dueToday, oldOrders] = await Promise.all([
         supabase.from("products").select("id,name,stock,min_stock").order("name"),
-        supabase.from("payables").select("id,description,amount,due_date").eq("due_date", today).neq("status", "pago").neq("status", "cancelado"),
+        supabase.from("payables").select("id,description,amount,due_date").eq("due_date", today).not("status", "in", "(pago,cancelado)"),
         supabase.from("sales").select("id,customer_name,total,sold_at,customers(name)").in("status", ["orcamento", "confirmado", "separacao"]).lt("sold_at", threeDaysAgo).order("sold_at", { ascending: true }),
       ]);
 

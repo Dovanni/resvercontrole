@@ -282,8 +282,7 @@ function CashFlowPage() {
       let q = supabase
         .from("payables")
         .select("amount,due_date,description,status,bank_account_id")
-        .neq("status", "pago")
-        .neq("status", "cancelado")
+        .not("status", "in", "(pago,cancelado)")
         .gte("due_date", isoDay(today))
         .lte("due_date", isoDay(endFuture));
       if (accountFilter !== "todas") q = q.eq("bank_account_id", accountFilter);
@@ -299,8 +298,7 @@ function CashFlowPage() {
       let q = supabase
         .from("receivables" as any)
         .select("amount,received_amount,due_date,description,status,bank_account_id")
-        .neq("status", "recebido")
-        .neq("status", "cancelado")
+        .not("status", "in", "(recebido,cancelado)")
         .gte("due_date", isoDay(today))
         .lte("due_date", isoDay(endFuture));
       if (accountFilter !== "todas") q = (q as any).eq("bank_account_id", accountFilter);
