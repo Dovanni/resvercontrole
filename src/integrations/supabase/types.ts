@@ -589,8 +589,10 @@ export type Database = {
           loja: number
           lucro: number
           mes: number
+          origem: string
           rateio: number
           receber: number
+          sale_id: string | null
           updated_at: string
           user_id: string
         }
@@ -606,8 +608,10 @@ export type Database = {
           loja?: number
           lucro?: number
           mes: number
+          origem?: string
           rateio?: number
           receber?: number
+          sale_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -623,12 +627,22 @@ export type Database = {
           loja?: number
           lucro?: number
           mes?: number
+          origem?: string
           rateio?: number
           receber?: number
+          sale_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "controle_vendas_diario_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       controle_vendas_fornecedor: {
         Row: {
@@ -1258,6 +1272,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: undefined
       }
+      sync_cvd_from_sale: { Args: { _sale_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "vendedor" | "financeiro"
