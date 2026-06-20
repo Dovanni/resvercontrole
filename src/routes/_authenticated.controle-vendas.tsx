@@ -293,6 +293,10 @@ function ControleVendasPage() {
   });
 
   const onEdit = (r: Row) => {
+    if (r.origem === "venda_automatica") {
+      toast.info("Lançamento gerado automaticamente de uma venda. Edite a venda original na tela Vendas.");
+      return;
+    }
     setForm({
       id: r.id,
       data: r.data,
@@ -305,9 +309,12 @@ function ControleVendasPage() {
   };
 
   const onDelete = async (r: Row) => {
+    const auto = r.origem === "venda_automatica";
     const ok = await confirm({
       title: "Excluir lançamento?",
-      description: `Lançamento de ${new Date(r.data + "T00:00:00").toLocaleDateString("pt-BR")} será removido.`,
+      description: auto
+        ? `Esta linha foi gerada automaticamente da venda de ${r.sales?.customers?.name ?? r.sales?.customer_name ?? "cliente"}. Se a venda for editada novamente, o lançamento será recriado. Excluir mesmo assim?`
+        : `Lançamento de ${new Date(r.data + "T00:00:00").toLocaleDateString("pt-BR")} será removido.`,
       confirmText: "Excluir",
     });
     if (ok) del.mutate(r.id);
