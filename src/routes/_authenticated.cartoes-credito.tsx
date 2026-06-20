@@ -168,7 +168,7 @@ function CartoesPage() {
   const { data: lancamentos = [] } = useQuery({
     queryKey: ["cartoes_lancamentos"],
     queryFn: async () => {
-      const { data, error } = await (supabase.from("cartoes_lancamentos" as any).select("*").order("data", { ascending: false }));
+      const { data, error } = await (supabase.from("cartoes_lancamentos" as any).select("*").is("deleted_at", null).order("data", { ascending: false }));
       if (error) throw error;
       return (data ?? []) as unknown as Lancamento[];
     },
