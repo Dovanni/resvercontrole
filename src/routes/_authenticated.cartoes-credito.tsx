@@ -1403,6 +1403,7 @@ function LancActions({ lanc }: { lanc: Lancamento }) {
     const { data, error } = await (supabase
       .from("cartoes_lancamentos" as any)
       .select("id,parcela_atual")
+      .is("deleted_at", null)
       .eq("grupo_parcela", lanc.grupo_parcela as string));
     if (error) throw error;
     const all = (data ?? []) as unknown as { id: string; parcela_atual: number }[];
