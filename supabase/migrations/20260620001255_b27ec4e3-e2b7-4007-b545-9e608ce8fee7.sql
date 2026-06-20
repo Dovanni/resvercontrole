@@ -1,0 +1,2 @@
+ALTER TABLE public.cartoes_lancamentos ADD COLUMN IF NOT EXISTS deleted_at timestamptz DEFAULT NULL;
+CREATE INDEX IF NOT EXISTS cartoes_lancamentos_deleted_at_idx ON public.cartoes_lancamentos(deleted_at);

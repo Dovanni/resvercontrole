@@ -302,6 +302,7 @@ export type Database = {
           categoria: string
           created_at: string
           data: string
+          deleted_at: string | null
           descricao: string
           grupo_parcela: string | null
           id: string
@@ -320,6 +321,7 @@ export type Database = {
           categoria: string
           created_at?: string
           data: string
+          deleted_at?: string | null
           descricao: string
           grupo_parcela?: string | null
           id?: string
@@ -338,6 +340,7 @@ export type Database = {
           categoria?: string
           created_at?: string
           data?: string
+          deleted_at?: string | null
           descricao?: string
           grupo_parcela?: string | null
           id?: string

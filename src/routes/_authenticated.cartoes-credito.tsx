@@ -168,7 +168,7 @@ function CartoesPage() {
   const { data: lancamentos = [] } = useQuery({
     queryKey: ["cartoes_lancamentos"],
     queryFn: async () => {
-      const { data, error } = await (supabase.from("cartoes_lancamentos" as any).select("*").order("data", { ascending: false }));
+      const { data, error } = await (supabase.from("cartoes_lancamentos" as any).select("*").is("deleted_at", null).order("data", { ascending: false }));
       if (error) throw error;
       return (data ?? []) as unknown as Lancamento[];
     },
@@ -1403,6 +1403,7 @@ function LancActions({ lanc }: { lanc: Lancamento }) {
     const { data, error } = await (supabase
       .from("cartoes_lancamentos" as any)
       .select("id,parcela_atual")
+      .is("deleted_at", null)
       .eq("grupo_parcela", lanc.grupo_parcela as string));
     if (error) throw error;
     const all = (data ?? []) as unknown as { id: string; parcela_atual: number }[];
@@ -1430,7 +1431,7 @@ function LancActions({ lanc }: { lanc: Lancamento }) {
     }
     try {
       const ids = await idsForScope(scope);
-      const { error } = await (supabase.from("cartoes_lancamentos" as any).delete().in("id", ids));
+      const { error } = await (supabase.from("cartoes_lancamentos" as any).update({ deleted_at: new Date().toISOString() }).in("id", ids));
       if (error) throw error;
       toast.success(ids.length > 1 ? `${ids.length} lançamentos excluídos!` : "Lançamento excluído!");
       invalidate();
@@ -1478,6 +1479,7 @@ function LancEditForm({ lanc, isSerie, onDone }: { lanc: Lancamento; isSerie: bo
         const { data: rows, error } = await (supabase
           .from("cartoes_lancamentos" as any)
           .select("id,parcela_atual,total_parcelas")
+          .is("deleted_at", null)
           .eq("grupo_parcela", lanc.grupo_parcela as string));
         if (error) throw error;
         const all = (rows ?? []) as unknown as any[];
