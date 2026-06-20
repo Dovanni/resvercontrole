@@ -295,7 +295,11 @@ function ControleVendasPage() {
 
   const onEdit = (r: Row) => {
     if (r.origem === "venda_automatica") {
-      toast.info("Lançamento gerado automaticamente de uma venda. Edite a venda original na tela Vendas.");
+      if (r.sale_id) {
+        navigate({ to: "/vendas", search: { edit: r.sale_id } as any });
+      } else {
+        toast.info("Lançamento gerado de uma venda. Edite na tela Vendas.");
+      }
       return;
     }
     setForm({
