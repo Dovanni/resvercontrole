@@ -366,6 +366,10 @@ function ControleVendasPage() {
       );
       const margemTotal = totals.receber > 0 ? (totals.lucro * 100) / totals.receber : 0;
 
+      const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+        import("jspdf"),
+        import("jspdf-autotable"),
+      ]);
       const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const pageW = doc.internal.pageSize.getWidth();
       const dash = "—";
