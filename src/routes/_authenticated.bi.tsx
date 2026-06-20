@@ -66,8 +66,7 @@ function BIPage() {
         .from("receivables" as any)
         .select("amount, received_amount, due_date, description, customers(name)")
         .lt("due_date", todayStr)
-        .neq("status", "recebido")
-        .neq("status", "cancelado");
+        .not("status", "in", "(recebido,cancelado)");
       if (error) throw error;
       return data as any[];
     },
