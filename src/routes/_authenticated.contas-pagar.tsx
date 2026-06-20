@@ -918,6 +918,18 @@ function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: str
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (f.amount <= 0) { toast.error("Informe um valor maior que zero"); return; }
+    // Trava anti-duplicidade: bloquear lançamento manual de despesas de cartão
+    if (/cart[aã]o/i.test(f.category)) {
+      const ok = await confirm({
+        title: "⚠️ Possível duplicidade de cartão de crédito",
+        description:
+          "Despesas de cartão de crédito devem ser lançadas no módulo Cartões de Crédito, não aqui — caso contrário, o pagamento da fatura no módulo Cartões + a baixa manual em Contas a Pagar debitam o valor em dobro do banco. Deseja continuar mesmo assim?",
+        confirmText: "Continuar mesmo assim",
+        cancelText: "Cancelar",
+        destructive: true,
+      });
+      if (!ok) return;
+    }
     const isRecurring = f.recurrence !== "nenhuma" && repeatCount > 1;
     if (isRecurring) {
       const ok = await confirm({
