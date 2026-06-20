@@ -1,4 +1,4 @@
-import { createFileRoute, Navigate, Link } from "@tanstack/react-router";
+import { createFileRoute, Navigate, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useRef, useState } from "react";
@@ -23,6 +23,7 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
 });
 
 function SettingsPage() {
+  const location = useLocation();
   const { user, can, role } = useAuth();
   const qc = useQueryClient();
   const confirm = useConfirm();
@@ -100,6 +101,8 @@ function SettingsPage() {
     });
     if (ok) reset.mutate();
   };
+
+  if (location.pathname !== "/configuracoes") return <Outlet />;
 
   const uploadLogo = async (file: File) => {
     const ext = file.name.split(".").pop() ?? "png";
@@ -193,7 +196,7 @@ function SettingsPage() {
             </p>
           </div>
           <Button asChild variant="link" className="text-primary">
-            <Link to="/categorias">Gerenciar categorias →</Link>
+            <Link to="/configuracoes/categorias">Gerenciar categorias →</Link>
           </Button>
         </CardContent>
       </Card>

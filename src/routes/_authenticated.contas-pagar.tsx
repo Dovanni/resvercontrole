@@ -416,7 +416,7 @@ function PayablesPage() {
               <div className="flex items-center justify-between">
                 <Label className="text-xs">Categoria</Label>
                 <Button asChild variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground">
-                  <Link to="/categorias"><Settings className="size-3 mr-1" />Categorias</Link>
+                  <Link to="/configuracoes/categorias"><Settings className="size-3 mr-1" />Categorias</Link>
                 </Button>
               </div>
               <Select value={fCategory} onValueChange={setFCategory}>
@@ -743,7 +743,7 @@ function EditPayableForm({ payable, all, suppliers, onDone }: { payable: Payable
         </div>
         <div className="space-y-1.5">
           <Label>Categoria</Label>
-          <Select value={f.category} onValueChange={(v) => { if (v === "__manage__") { navCats({ to: "/categorias" }); return; } setF({ ...f, category: v }); }}>
+          <Select value={f.category} onValueChange={(v) => { if (v === "__manage__") { navCats({ to: "/configuracoes/categorias" }); return; } setF({ ...f, category: v }); }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {categoryOptions.map(c => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
@@ -960,7 +960,7 @@ function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: str
         </div>
         <div className="space-y-1.5">
           <Label>Categoria</Label>
-          <Select value={f.category} onValueChange={(v) => { if (v === "__manage__") { navCats2({ to: "/categorias" }); return; } setF({ ...f, category: v }); }}>
+          <Select value={f.category} onValueChange={(v) => { if (v === "__manage__") { navCats2({ to: "/configuracoes/categorias" }); return; } setF({ ...f, category: v }); }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {categoryOptions.map((c) => <SelectItem key={c} value={c} className="capitalize">{c}</SelectItem>)}
