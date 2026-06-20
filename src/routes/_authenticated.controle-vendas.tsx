@@ -75,6 +75,7 @@ const calcMargem = (lucro: number, receber: number) => (receber > 0 ? (lucro * 1
 
 function ControleVendasPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const confirm = useConfirm();
   const [mes, setMes] = useState<number>(new Date().getMonth() + 1);
   const [form, setForm] = useState(emptyForm());
