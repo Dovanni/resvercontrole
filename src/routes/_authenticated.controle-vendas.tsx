@@ -87,16 +87,24 @@ function ControleVendasPage() {
   const { data: vendasMes = [] } = useQuery({
     queryKey: ["controle-vendas-pedidos", YEAR, mes],
     queryFn: async () => {
-      const ini = new Date(YEAR, mes - 1, 1).toISOString();
-      const fim = new Date(YEAR, mes, 1).toISOString();
+      const mm = String(mes).padStart(2, "0");
+      const nextMes = mes === 12 ? 1 : mes + 1;
+      const nextAno = mes === 12 ? YEAR + 1 : YEAR;
+      const nmm = String(nextMes).padStart(2, "0");
+      const ini = `${YEAR}-${mm}-01T00:00:00`;
+      const fim = `${nextAno}-${nmm}-01T00:00:00`;
       const { data, error } = await supabase
         .from("sales")
         .select("id, sold_at, customer_name, customer_id, channel, payment_method, total, discount, status, bank_account_id, notes, customers(name), bank_accounts(name, bank), sale_items(quantity, unit_price, unit_cost, products(name))")
         .gte("sold_at", ini)
         .lt("sold_at", fim)
         .neq("channel", "recursos_financeiros")
+        .neq("status", "cancelado")
         .order("sold_at", { ascending: false });
-      if (error) throw error;
+      if (error) {
+        console.error("[controle-vendas-pedidos] erro:", error);
+        throw error;
+      }
       return (data ?? []) as any[];
     },
   });
