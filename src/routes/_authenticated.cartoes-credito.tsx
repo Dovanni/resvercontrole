@@ -253,7 +253,7 @@ function CartoesPage() {
               </CardContent></Card>
             )}
             {cartoes.map((c) => (
-              <CartaoCard key={c.id} cartao={c} contas={contas} lancamentos={lancByCartao[c.id] ?? []} faturas={faturas.filter((f) => f.cartao_id === c.id)} curMes={curMes} curAno={curAno} onClick={() => setTab(c.id)} onPaga={invalidate} onChanged={invalidate} />
+              <CartaoCard key={c.id} cartao={c} contas={contas} lancamentos={lancByCartao[c.id] ?? []} faturas={faturas.filter((f) => f.cartao_id === c.id)} curMes={curMes} curAno={curAno} onClick={() => setTab(c.id)} onVerHistorico={() => setTab("historico")} onPaga={invalidate} onChanged={invalidate} />
             ))}
           </div>
         </TabsContent>
@@ -272,9 +272,9 @@ function CartoesPage() {
   );
 }
 
-function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onClick, onPaga, onChanged }: {
+function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onClick, onVerHistorico, onPaga, onChanged }: {
   cartao: Cartao; contas: { id: string; name: string }[]; lancamentos: Lancamento[]; faturas: Fatura[]; curMes: number; curAno: number;
-  onClick: () => void; onPaga: () => void; onChanged: () => void;
+  onClick: () => void; onVerHistorico?: () => void; onPaga: () => void; onChanged: () => void;
 }) {
   const qc = useQueryClient();
   const confirm = useConfirm();
@@ -425,7 +425,27 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
             {alertaAtraso && <div className="flex items-center gap-1 text-xs text-destructive"><AlertTriangle className="size-3" /> Fatura vencida</div>}
           </div>
         )}
+        {(() => {
+          const futuras = ativos.filter((l) => l.ano_fatura > anoV || (l.ano_fatura === anoV && l.mes_fatura > mesV));
+          const totalFut = futuras.reduce((s, l) => s + Number(l.valor), 0);
+          if (futuras.length === 0) return null;
+          return (
+            <div className="rounded-md border border-primary/30 bg-primary/5 p-2 text-xs flex items-center justify-between gap-2">
+              <div>
+                <div className="font-medium text-primary">📅 {futuras.length} lançamento{futuras.length > 1 ? "s" : ""} em meses futuros</div>
+                <div className="text-muted-foreground">Total: {brl(totalFut)}</div>
+              </div>
+              {onVerHistorico && (
+                <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onVerHistorico(); }}>
+                  Ver todos os meses
+                </Button>
+              )}
+            </div>
+          );
+        })()}
         <div className="flex gap-2 pt-2 border-t">
+
+
           <Button size="sm" variant="outline" className="flex-1" onClick={() => setEditOpen(true)}>
             <Pencil className="size-3 mr-1" /> Editar
           </Button>
@@ -1018,7 +1038,7 @@ function HistoricoFaturas({ cartao, faturas }: { cartao: Cartao; faturas: Fatura
 }
 
 type SortKey = "nome" | "comb" | "casa" | "pess" | "forn" | "tot" | "limite" | "pct" | "venc";
-type PeriodPreset = "este_mes" | "mes_anterior" | "ultimos_3" | "ultimos_6" | "ano_atual" | "personalizado";
+type PeriodPreset = "este_mes" | "mes_anterior" | "ultimos_3" | "ultimos_6" | "ano_atual" | "todos" | "personalizado";
 
 function getPeriodRange(preset: PeriodPreset, customStart: string, customEnd: string): { start: string; end: string; label: string } {
   const today = new Date();
@@ -1030,6 +1050,7 @@ function getPeriodRange(preset: PeriodPreset, customStart: string, customEnd: st
     case "ultimos_3": start = new Date(y, m - 2, 1); end = new Date(y, m + 1, 0); label = "Últimos 3 meses"; break;
     case "ultimos_6": start = new Date(y, m - 5, 1); end = new Date(y, m + 1, 0); label = "Últimos 6 meses"; break;
     case "ano_atual": start = new Date(y, 0, 1); end = new Date(y, 11, 31); label = "Ano atual"; break;
+    case "todos": start = new Date(2000, 0, 1); end = new Date(2099, 11, 31); label = "Todos os lançamentos"; break;
     case "personalizado":
       start = customStart ? new Date(customStart + "T00:00:00") : new Date(y, m, 1);
       end = customEnd ? new Date(customEnd + "T00:00:00") : new Date(y, m + 1, 0);
@@ -1050,6 +1071,7 @@ function PeriodoFiltro({ preset, setPreset, customStart, setCustomStart, customE
     { v: "ultimos_3", label: "Últimos 3 meses" },
     { v: "ultimos_6", label: "Últimos 6 meses" },
     { v: "ano_atual", label: "Ano atual" },
+    { v: "todos", label: "📋 Todos os lançamentos" },
     { v: "personalizado", label: "Personalizado" },
   ];
   return (

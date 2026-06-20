@@ -84,6 +84,39 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          at: string
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          op: string
+          row_id: string | null
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          at?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          op: string
+          row_id?: string | null
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          at?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          op?: string
+          row_id?: string | null
+          table_name?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       bank_accounts: {
         Row: {
           account_number: string | null
