@@ -1431,7 +1431,7 @@ function LancActions({ lanc }: { lanc: Lancamento }) {
     }
     try {
       const ids = await idsForScope(scope);
-      const { error } = await (supabase.from("cartoes_lancamentos" as any).delete().in("id", ids));
+      const { error } = await (supabase.from("cartoes_lancamentos" as any).update({ deleted_at: new Date().toISOString() }).in("id", ids));
       if (error) throw error;
       toast.success(ids.length > 1 ? `${ids.length} lançamentos excluídos!` : "Lançamento excluído!");
       invalidate();
