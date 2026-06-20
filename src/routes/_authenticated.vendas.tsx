@@ -338,9 +338,10 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     }));
     setItems(hydratedItems);
     const sub = hydratedItems.reduce((s: number, i: any) => s + i.quantity * i.unit_price, 0);
-    const inferredShipping = Math.max(0, Number(existing.total ?? 0) - sub + Number(existing.discount ?? 0));
+    const fees = Number(existing.mercado_pago_fees ?? 0);
+    const inferredShipping = Math.max(0, Number(existing.total ?? 0) - sub + Number(existing.discount ?? 0) - fees);
     setShipping(inferredShipping);
-    setMercadoPagoFees(Number(existing.mercado_pago_fees ?? 0));
+    setMercadoPagoFees(fees);
     setLoaded(true);
   }, [editing, existing, loaded]);
 
@@ -357,7 +358,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     () => discountMode === "percent" ? (subtotal * Math.min(100, Math.max(0, discount))) / 100 : discount,
     [discountMode, discount, subtotal]
   );
-  const total = useMemo(() => Math.max(0, subtotal - discountValue + (Number(shipping) || 0)), [subtotal, discountValue, shipping]);
+  const total = useMemo(() => Math.max(0, subtotal - discountValue + (Number(shipping) || 0) + (Number(mercadoPagoFees) || 0)), [subtotal, discountValue, shipping, mercadoPagoFees]);
 
   function pickCustomer(id: string) {
     setCustomerId(id);
@@ -658,14 +659,14 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
             <Label>Juros Mercado Pago (R$)</Label>
             <Input type="number" step="0.01" min={0}
               value={mercadoPagoFees} onChange={(e) => setMercadoPagoFees(Number(e.target.value))} />
-            <div className="text-xs text-muted-foreground">Valor registrado para controle, sem alterar o total da venda</div>
+            <div className="text-xs text-muted-foreground">Soma ao total da venda</div>
           </div>
 
           <div className="rounded-md border p-3 space-y-1 text-right">
             <div className="text-xs text-muted-foreground flex justify-between"><span>Subtotal produtos</span><span>{brl(subtotal)}</span></div>
             <div className="text-xs text-muted-foreground flex justify-between"><span>Desconto</span><span>-{brl(discountValue)}</span></div>
             <div className="text-xs text-muted-foreground flex justify-between"><span>Frete cliente</span><span>+{brl(Number(shipping) || 0)}</span></div>
-            <div className="text-xs text-muted-foreground flex justify-between"><span>Juros Mercado Pago</span><span>{brl(Number(mercadoPagoFees) || 0)}</span></div>
+            <div className="text-xs text-muted-foreground flex justify-between"><span>Juros Mercado Pago</span><span>+{brl(Number(mercadoPagoFees) || 0)}</span></div>
             <div className="border-t pt-1 flex items-end justify-between">
               <span className="text-xs text-muted-foreground">TOTAL</span>
               <span className="font-display text-3xl">{brl(total)}</span>
