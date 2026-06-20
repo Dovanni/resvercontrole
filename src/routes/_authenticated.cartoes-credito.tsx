@@ -1479,6 +1479,7 @@ function LancEditForm({ lanc, isSerie, onDone }: { lanc: Lancamento; isSerie: bo
         const { data: rows, error } = await (supabase
           .from("cartoes_lancamentos" as any)
           .select("id,parcela_atual,total_parcelas")
+          .is("deleted_at", null)
           .eq("grupo_parcela", lanc.grupo_parcela as string));
         if (error) throw error;
         const all = (rows ?? []) as unknown as any[];
