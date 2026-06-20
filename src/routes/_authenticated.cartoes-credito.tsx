@@ -1241,9 +1241,9 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
         </div>
       </CardContent></Card>
 
-      {/* Resumo de limites — usado = soma das 4 categorias no período */}
+      {/* Resumo de limites — SEMPRE total real (todas parcelas pendentes, ignora filtro de período) */}
       <Card className="shadow-soft"><CardContent className="p-5">
-        <div className="font-display text-lg mb-3">Resumo de limites <span className="text-xs font-normal text-muted-foreground">({periodoLabel})</span></div>
+        <div className="font-display text-lg mb-3">Resumo de limites <span className="text-xs font-normal text-muted-foreground">(todas parcelas pendentes)</span></div>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader><TableRow>
@@ -1257,7 +1257,7 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
             <TableBody>
               {(() => {
                 const rows = cartoes.map((c) => {
-                  const u = mesL.filter((l) => l.cartao_id === c.id).reduce((s, l) => s + Number(l.valor), 0);
+                  const u = calcUsado(c.id, lancamentos, faturas);
                   const st = limiteStatus(Number(c.limite_total), u);
                   return { c, usado: u, ...st };
                 });
