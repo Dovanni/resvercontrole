@@ -285,15 +285,9 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
   const { disp, pct, level } = limiteStatus(Number(cartao.limite_total), usado);
   const pctVisual = Math.min(100, pct);
 
-  const { fechamento: proxFech, vencimento: proxVenc } = proximoCiclo(cartao.dia_fechamento, cartao.dia_vencimento);
-  const mesV = proxVenc.getMonth() + 1;
-  const anoV = proxVenc.getFullYear();
+  const { fechamento: proxFechCalc, vencimento: proxVencCalc } = proximoCiclo(cartao.dia_fechamento, cartao.dia_vencimento);
   const hojeD = new Date();
   const hojeMid = new Date(hojeD.getFullYear(), hojeD.getMonth(), hojeD.getDate());
-  const diasVenc = Math.ceil((proxVenc.getTime() - hojeMid.getTime()) / (1000 * 60 * 60 * 24));
-
-  // Fatura corrente baseada no vencimento próximo (não no mês calendário)
-  const fat = faturas.find((f) => f.mes === mesV && f.ano === anoV);
 
   // Lançamentos pendentes = não estão em nenhuma fatura paga
   const faturasPagasKeys = new Set(
@@ -303,8 +297,39 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
   const pendentes = ativos.filter(
     (l) => !faturasPagasKeys.has(`${l.ano_fatura}-${l.mes_fatura}`),
   );
-  // Total da fatura ATUAL = apenas lançamentos cujo mes/ano de fatura
-  // corresponde ao ciclo que vence agora (não inclui parcelas futuras).
+
+  // Ciclo atual = o PRIMEIRO mes_fatura/ano_fatura pendente com lançamentos.
+  // Se não houver lançamentos pendentes, cai no próximo vencimento calculado.
+  const cicloKeys = Array.from(
+    new Set(pendentes.map((l) => `${l.ano_fatura}-${String(l.mes_fatura).padStart(2, "0")}`)),
+  ).sort();
+  let mesV: number;
+  let anoV: number;
+  if (cicloKeys[0]) {
+    const [a, m] = cicloKeys[0].split("-").map(Number);
+    anoV = a;
+    mesV = m;
+  } else {
+    mesV = proxVencCalc.getMonth() + 1;
+    anoV = proxVencCalc.getFullYear();
+  }
+  const proxVenc = vencimentoDate(anoV, mesV, cartao.dia_vencimento);
+  const proxFech = cicloKeys[0] ? (() => {
+    // Fechamento desse ciclo: mês anterior se dV < dF, mesmo mês caso contrário
+    let fAno = anoV, fMes0 = mesV - 1; // 0-based
+    if (cartao.dia_vencimento < cartao.dia_fechamento) {
+      fMes0 -= 1;
+      if (fMes0 < 0) { fMes0 = 11; fAno -= 1; }
+    }
+    const last = new Date(fAno, fMes0 + 1, 0).getDate();
+    return new Date(fAno, fMes0, Math.min(cartao.dia_fechamento, last));
+  })() : proxFechCalc;
+  const diasVenc = Math.ceil((proxVenc.getTime() - hojeMid.getTime()) / (1000 * 60 * 60 * 24));
+
+  // Fatura corrente baseada no ciclo escolhido
+  const fat = faturas.find((f) => f.mes === mesV && f.ano === anoV);
+
+  // Total da fatura ATUAL = apenas lançamentos do ciclo atual (não inclui parcelas futuras).
   const lancsCicloAtual = pendentes.filter(
     (l) => l.mes_fatura === mesV && l.ano_fatura === anoV,
   );
