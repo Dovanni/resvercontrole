@@ -303,7 +303,12 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
   const pendentes = ativos.filter(
     (l) => !faturasPagasKeys.has(`${l.ano_fatura}-${l.mes_fatura}`),
   );
-  const totalFatura = pendentes.reduce((s, l) => s + Number(l.valor), 0);
+  // Total da fatura ATUAL = apenas lançamentos cujo mes/ano de fatura
+  // corresponde ao ciclo que vence agora (não inclui parcelas futuras).
+  const lancsCicloAtual = pendentes.filter(
+    (l) => l.mes_fatura === mesV && l.ano_fatura === anoV,
+  );
+  const totalFatura = lancsCicloAtual.reduce((s, l) => s + Number(l.valor), 0);
 
   // Categorias: TODOS os lançamentos ativos do cartão (sem filtro de mês)
   const catTotals = CAT_KEYS.map((k) => ({
