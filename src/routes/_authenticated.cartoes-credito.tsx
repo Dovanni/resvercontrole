@@ -1018,7 +1018,7 @@ function HistoricoFaturas({ cartao, faturas }: { cartao: Cartao; faturas: Fatura
 }
 
 type SortKey = "nome" | "comb" | "casa" | "pess" | "forn" | "tot" | "limite" | "pct" | "venc";
-type PeriodPreset = "este_mes" | "mes_anterior" | "ultimos_3" | "ultimos_6" | "ano_atual" | "personalizado";
+type PeriodPreset = "este_mes" | "mes_anterior" | "ultimos_3" | "ultimos_6" | "ano_atual" | "todos" | "personalizado";
 
 function getPeriodRange(preset: PeriodPreset, customStart: string, customEnd: string): { start: string; end: string; label: string } {
   const today = new Date();
@@ -1030,6 +1030,7 @@ function getPeriodRange(preset: PeriodPreset, customStart: string, customEnd: st
     case "ultimos_3": start = new Date(y, m - 2, 1); end = new Date(y, m + 1, 0); label = "Últimos 3 meses"; break;
     case "ultimos_6": start = new Date(y, m - 5, 1); end = new Date(y, m + 1, 0); label = "Últimos 6 meses"; break;
     case "ano_atual": start = new Date(y, 0, 1); end = new Date(y, 11, 31); label = "Ano atual"; break;
+    case "todos": start = new Date(2000, 0, 1); end = new Date(2099, 11, 31); label = "Todos os lançamentos"; break;
     case "personalizado":
       start = customStart ? new Date(customStart + "T00:00:00") : new Date(y, m, 1);
       end = customEnd ? new Date(customEnd + "T00:00:00") : new Date(y, m + 1, 0);
@@ -1050,6 +1051,7 @@ function PeriodoFiltro({ preset, setPreset, customStart, setCustomStart, customE
     { v: "ultimos_3", label: "Últimos 3 meses" },
     { v: "ultimos_6", label: "Últimos 6 meses" },
     { v: "ano_atual", label: "Ano atual" },
+    { v: "todos", label: "📋 Todos os lançamentos" },
     { v: "personalizado", label: "Personalizado" },
   ];
   return (
