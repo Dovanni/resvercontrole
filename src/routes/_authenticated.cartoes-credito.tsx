@@ -443,6 +443,8 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
             </div>
           );
         })()}
+        <div className="flex gap-2 pt-2 border-t">
+
 
           <Button size="sm" variant="outline" className="flex-1" onClick={() => setEditOpen(true)}>
             <Pencil className="size-3 mr-1" /> Editar
