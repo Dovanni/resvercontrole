@@ -1551,6 +1551,20 @@ function LancEditForm({ lanc, isSerie, onDone }: { lanc: Lancamento; isSerie: bo
         ids = scope === "todos" ? all : all.filter(r => r.parcela_atual >= lanc.parcela_atual);
       }
 
+      // Se a data mudou, recalcular mes_fatura/ano_fatura com base no dia
+      // de fechamento do cartão (somente para edição "apenas este").
+      let novaFatura: { mes: number; ano: number } | null = null;
+      if (data !== lanc.data && (!isSerie || scope === "apenas")) {
+        const { data: cartaoRow, error: cErr } = await (supabase
+          .from("cartoes_credito" as any)
+          .select("dia_fechamento")
+          .eq("id", lanc.cartao_id)
+          .maybeSingle());
+        if (cErr) throw cErr;
+        const diaFech = Number((cartaoRow as any)?.dia_fechamento ?? 1);
+        novaFatura = computeFatura(data, diaFech);
+      }
+
       for (const row of ids) {
         const payload: any = {
           descricao: lanc.parcelado ? `${descricao} (${row.parcela_atual}/${row.total_parcelas})` : descricao,
@@ -1560,6 +1574,10 @@ function LancEditForm({ lanc, isSerie, onDone }: { lanc: Lancamento; isSerie: bo
         // Date changes only allowed for single edits to avoid recomputing series faturas
         if (!isSerie || scope === "apenas") {
           payload.data = data;
+          if (novaFatura) {
+            payload.mes_fatura = novaFatura.mes;
+            payload.ano_fatura = novaFatura.ano;
+          }
         }
         const { error } = await (supabase.from("cartoes_lancamentos" as any).update(payload).eq("id", row.id));
         if (error) throw error;
