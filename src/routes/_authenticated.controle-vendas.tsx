@@ -9,7 +9,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileSpreadsheet, Pencil, Trash2, Save, Eraser, Lock, LockOpen, History, ChevronDown, ChevronUp } from "lucide-react";
+import { FileSpreadsheet, FileText, Pencil, Trash2, Save, Eraser, Lock, LockOpen, History, ChevronDown, ChevronUp } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
 import { brl } from "@/lib/format";
@@ -310,6 +312,158 @@ function ControleVendasPage() {
     XLSX.writeFile(wb, `controle_vendas_${MONTH_SHORT[mes - 1]}_${YEAR}.xlsx`);
   };
 
+  const exportPdfAnual = async () => {
+    const ano = YEAR;
+    try {
+      const [diarioRes, fornRes] = await Promise.all([
+        supabase.from("controle_vendas_diario").select("mes,receber,lucro,custo").eq("ano", ano),
+        supabase.from("controle_vendas_fornecedor").select("mes,valor_fornecedor").eq("ano", ano),
+      ]);
+      if (diarioRes.error) throw diarioRes.error;
+      if (fornRes.error) throw fornRes.error;
+
+      const fornByMes = new Map<number, number>();
+      (fornRes.data ?? []).forEach((f: any) => fornByMes.set(f.mes, Number(f.valor_fornecedor ?? 0)));
+
+      const monthly = Array.from({ length: 12 }, (_, i) => ({
+        mes: i + 1,
+        receber: 0,
+        lucro: 0,
+        custo: 0,
+        fornecedor: 0,
+        rateio: 0,
+        saldo: 0,
+        margem: 0,
+        hasData: false,
+      }));
+      (diarioRes.data ?? []).forEach((r: any) => {
+        const m = monthly[r.mes - 1];
+        m.receber += Number(r.receber ?? 0);
+        m.lucro += Number(r.lucro ?? 0);
+        m.custo += Number(r.custo ?? 0);
+        m.hasData = true;
+      });
+      monthly.forEach((m) => {
+        const forn = fornByMes.get(m.mes);
+        if (forn !== undefined) {
+          m.fornecedor = -Math.abs(forn);
+          m.hasData = true;
+        }
+        m.rateio = m.fornecedor + m.custo;
+        m.saldo = m.rateio;
+        m.margem = m.receber > 0 ? (m.lucro * 100) / m.receber : 0;
+      });
+
+      const totals = monthly.reduce(
+        (a, m) => ({
+          receber: a.receber + m.receber,
+          lucro: a.lucro + m.lucro,
+          custo: a.custo + m.custo,
+          fornecedor: a.fornecedor + m.fornecedor,
+          rateio: a.rateio + m.rateio,
+          saldo: a.saldo + m.saldo,
+        }),
+        { receber: 0, lucro: 0, custo: 0, fornecedor: 0, rateio: 0, saldo: 0 },
+      );
+      const margemTotal = totals.receber > 0 ? (totals.lucro * 100) / totals.receber : 0;
+
+      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+      const pageW = doc.internal.pageSize.getWidth();
+      const dash = "—";
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text("ANGELA MARIA MOMO RODRIGUES MEI", pageW / 2, 14, { align: "center" });
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text("CNPJ: 33.613.716/0001-13", pageW / 2, 20, { align: "center" });
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Controle de Vendas — Anual ${ano}`, pageW / 2, 27, { align: "center" });
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      const geradoEm = new Date().toLocaleString("pt-BR");
+      doc.text(`Gerado em ${geradoEm}`, pageW / 2, 32, { align: "center" });
+
+      const fmt = (n: number, m: { hasData: boolean }, _col: string) => {
+        if (!m.hasData) return dash;
+        return brl(n);
+      };
+
+      const body = monthly.map((m) => [
+        MONTHS[m.mes - 1],
+        m.hasData ? brl(m.receber) : dash,
+        m.hasData ? brl(m.lucro) : dash,
+        m.hasData ? `${m.margem.toFixed(1)}%` : dash,
+        m.hasData ? brl(m.custo) : dash,
+        m.hasData ? brl(m.fornecedor) : dash,
+        m.hasData ? brl(m.rateio) : dash,
+        m.hasData ? brl(m.saldo) : dash,
+      ]);
+
+      body.push([
+        "TOTAL ANO",
+        brl(totals.receber),
+        brl(totals.lucro),
+        `${margemTotal.toFixed(1)}%`,
+        brl(totals.custo),
+        brl(totals.fornecedor),
+        brl(totals.rateio),
+        brl(totals.saldo),
+      ]);
+
+      const negativeCols = new Set([5, 6, 7]); // Fornecedor, Rateio, Saldo
+      const positiveCols = new Set([1, 2, 4]); // Receber, Lucro, Custo
+      const margemCol = 3;
+
+      autoTable(doc, {
+        startY: 38,
+        head: [["Mês", "Receber", "Lucro", "Margem", "Custo", "Fornecedor", "Rateio", "Saldo"]],
+        body,
+        styles: { fontSize: 9, halign: "right" },
+        headStyles: { fillColor: [60, 60, 60], textColor: 255, halign: "center" },
+        alternateRowStyles: { fillColor: [248, 248, 248] },
+        columnStyles: { 0: { halign: "left", fontStyle: "bold" } },
+        didParseCell: (data) => {
+          const isTotal = data.row.index === 12 && data.section === "body";
+          const m = data.section === "body" && data.row.index < 12 ? monthly[data.row.index] : null;
+          const noData = m && !m.hasData;
+
+          if (isTotal) {
+            data.cell.styles.fillColor = [220, 220, 220];
+            data.cell.styles.fontStyle = "bold";
+          }
+          if (data.section === "body" && data.column.index > 0) {
+            if (noData) {
+              data.cell.styles.textColor = [170, 170, 170];
+            } else if (negativeCols.has(data.column.index)) {
+              data.cell.styles.textColor = [200, 30, 30];
+            } else if (positiveCols.has(data.column.index)) {
+              data.cell.styles.textColor = [20, 120, 50];
+            } else if (data.column.index === margemCol) {
+              data.cell.styles.textColor = [30, 80, 190];
+            }
+          }
+        },
+      });
+
+      const finalY = (doc as any).lastAutoTable.finalY ?? 38;
+      doc.setFontSize(8);
+      doc.setTextColor(120);
+      doc.text(
+        `Gerado em ${geradoEm} pelo Rosé Sistema`,
+        pageW / 2,
+        Math.min(finalY + 10, doc.internal.pageSize.getHeight() - 8),
+        { align: "center" },
+      );
+
+      doc.save(`controle_vendas_anual_${ano}.pdf`);
+      toast.success("PDF anual gerado");
+    } catch (e: any) {
+      toast.error(e.message ?? "Erro ao gerar PDF");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -327,6 +481,9 @@ function ControleVendasPage() {
             </Select>
             <Button variant="outline" onClick={exportXlsx}>
               <FileSpreadsheet className="size-4 mr-2" /> Exportar Excel
+            </Button>
+            <Button variant="outline" onClick={exportPdfAnual}>
+              <FileText className="size-4 mr-2" /> Exportar PDF Anual
             </Button>
           </div>
         }
