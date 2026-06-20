@@ -425,7 +425,25 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
             {alertaAtraso && <div className="flex items-center gap-1 text-xs text-destructive"><AlertTriangle className="size-3" /> Fatura vencida</div>}
           </div>
         )}
-        <div className="flex gap-2 pt-2 border-t">
+        {(() => {
+          const futuras = ativos.filter((l) => l.ano_fatura > anoV || (l.ano_fatura === anoV && l.mes_fatura > mesV));
+          const totalFut = futuras.reduce((s, l) => s + Number(l.valor), 0);
+          if (futuras.length === 0) return null;
+          return (
+            <div className="rounded-md border border-primary/30 bg-primary/5 p-2 text-xs flex items-center justify-between gap-2">
+              <div>
+                <div className="font-medium text-primary">📅 {futuras.length} lançamento{futuras.length > 1 ? "s" : ""} em meses futuros</div>
+                <div className="text-muted-foreground">Total: {brl(totalFut)}</div>
+              </div>
+              {onVerHistorico && (
+                <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); onVerHistorico(); }}>
+                  Ver todos os meses
+                </Button>
+              )}
+            </div>
+          );
+        })()}
+
           <Button size="sm" variant="outline" className="flex-1" onClick={() => setEditOpen(true)}>
             <Pencil className="size-3 mr-1" /> Editar
           </Button>
