@@ -328,7 +328,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     }));
     setItems(hydratedItems);
     const sub = hydratedItems.reduce((s: number, i: any) => s + i.quantity * i.unit_price, 0);
-    const inferredShipping = Math.max(0, Number(existing.total ?? 0) - sub + Number(existing.discount ?? 0) + Number(existing.mercado_pago_fees ?? 0));
+    const inferredShipping = Math.max(0, Number(existing.total ?? 0) - sub + Number(existing.discount ?? 0));
     setShipping(inferredShipping);
     setMercadoPagoFees(Number(existing.mercado_pago_fees ?? 0));
     setLoaded(true);
@@ -347,7 +347,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     () => discountMode === "percent" ? (subtotal * Math.min(100, Math.max(0, discount))) / 100 : discount,
     [discountMode, discount, subtotal]
   );
-  const total = useMemo(() => Math.max(0, subtotal - discountValue + (Number(shipping) || 0) - (Number(mercadoPagoFees) || 0)), [subtotal, discountValue, shipping, mercadoPagoFees]);
+  const total = useMemo(() => Math.max(0, subtotal - discountValue + (Number(shipping) || 0)), [subtotal, discountValue, shipping]);
 
   function pickCustomer(id: string) {
     setCustomerId(id);
