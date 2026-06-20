@@ -10,8 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileSpreadsheet, FileText, Pencil, Trash2, Save, Eraser, Lock, LockOpen, History, ChevronDown, ChevronUp } from "lucide-react";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+// jspdf and jspdf-autotable are lazy-loaded inside exportPdfAnual to avoid bundling them on initial page load
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
 import { brl } from "@/lib/format";
@@ -367,6 +366,10 @@ function ControleVendasPage() {
       );
       const margemTotal = totals.receber > 0 ? (totals.lucro * 100) / totals.receber : 0;
 
+      const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+        import("jspdf"),
+        import("jspdf-autotable"),
+      ]);
       const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const pageW = doc.internal.pageSize.getWidth();
       const dash = "—";
@@ -424,7 +427,7 @@ function ControleVendasPage() {
         headStyles: { fillColor: [60, 60, 60], textColor: 255, halign: "center" },
         alternateRowStyles: { fillColor: [248, 248, 248] },
         columnStyles: { 0: { halign: "left", fontStyle: "bold" } },
-        didParseCell: (data) => {
+        didParseCell: (data: any) => {
           const isTotal = data.row.index === 12 && data.section === "body";
           const m = data.section === "body" && data.row.index < 12 ? monthly[data.row.index] : null;
           const noData = m && !m.hasData;
