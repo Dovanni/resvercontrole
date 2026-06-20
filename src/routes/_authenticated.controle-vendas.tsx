@@ -482,6 +482,9 @@ function ControleVendasPage() {
             <Button variant="outline" onClick={exportXlsx}>
               <FileSpreadsheet className="size-4 mr-2" /> Exportar Excel
             </Button>
+            <Button variant="outline" onClick={exportPdfAnual}>
+              <FileText className="size-4 mr-2" /> Exportar PDF Anual
+            </Button>
           </div>
         }
       />
