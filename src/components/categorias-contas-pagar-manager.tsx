@@ -93,7 +93,7 @@ export function CategoriasManagerInline() {
   return (
     <div className="w-full space-y-4">
       <form
-        onSubmit={(e) => { e.preventDefault(); if (novo.trim()) create.mutate(novo); }}
+        onSubmit={(e) => { e.preventDefault(); if (novo.trim().length >= 2) create.mutate(novo); }}
         className="flex flex-col sm:flex-row gap-2"
       >
         <Input
@@ -101,20 +101,22 @@ export function CategoriasManagerInline() {
           value={novo}
           onChange={(e) => setNovo(e.target.value)}
           className="flex-1"
+          autoFocus
         />
-        <div className="relative sm:w-64">
-          <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar categoria…"
-            value={busca}
-            onChange={(e) => setBusca(e.target.value)}
-            className="pl-9"
-          />
-        </div>
         <Button type="submit" disabled={novo.trim().length < 2 || create.isPending}>
           <Plus className="size-4 mr-1" /> Adicionar
         </Button>
       </form>
+
+      <div className="relative">
+        <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Buscar categoria…"
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          className="pl-9"
+        />
+      </div>
 
       <section className="space-y-2">
         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
