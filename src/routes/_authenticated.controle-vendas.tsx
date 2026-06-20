@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
@@ -75,6 +75,7 @@ const calcMargem = (lucro: number, receber: number) => (receber > 0 ? (lucro * 1
 
 function ControleVendasPage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const confirm = useConfirm();
   const [mes, setMes] = useState<number>(new Date().getMonth() + 1);
   const [form, setForm] = useState(emptyForm());
@@ -294,7 +295,11 @@ function ControleVendasPage() {
 
   const onEdit = (r: Row) => {
     if (r.origem === "venda_automatica") {
-      toast.info("Lançamento gerado automaticamente de uma venda. Edite a venda original na tela Vendas.");
+      if (r.sale_id) {
+        navigate({ to: "/vendas", search: { edit: r.sale_id } as any });
+      } else {
+        toast.info("Lançamento gerado de uma venda. Edite na tela Vendas.");
+      }
       return;
     }
     setForm({
@@ -775,7 +780,7 @@ function ControleVendasPage() {
                     )}>{brl(r.saldo_acumulado)}</td>
                     <td className="p-2">
                       <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => onEdit(r)} disabled={auto} title={auto ? "Editar na tela de Vendas" : "Editar"}><Pencil className="size-4" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => onEdit(r)} title={auto ? "Editar venda original" : "Editar"}><Pencil className="size-4" /></Button>
                         <Button size="icon" variant="ghost" onClick={() => onDelete(r)}><Trash2 className="size-4" /></Button>
                       </div>
                     </td>

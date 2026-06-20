@@ -17,6 +17,7 @@ import { DataPagination, usePagination } from "@/components/data-pagination";
 
 export const Route = createFileRoute("/_authenticated/vendas")({
   head: () => ({ meta: [{ title: "Vendas — Rosé" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({ edit: typeof s.edit === "string" ? s.edit : undefined }),
   component: SalesPage,
 });
 
@@ -54,9 +55,18 @@ const CHANNEL_LABEL: Record<string, string> = {
 
 function SalesPage() {
   const qc = useQueryClient();
+  const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingId, setViewingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (search.edit) {
+      setEditingId(search.edit);
+      navigate({ search: { edit: undefined } as any, replace: true });
+    }
+  }, [search.edit]);
 
   const { data: sales } = useQuery({
     queryKey: ["sales"],
