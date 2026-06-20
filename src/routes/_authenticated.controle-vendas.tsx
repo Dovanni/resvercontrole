@@ -740,9 +740,25 @@ function ControleVendasPage() {
                 const d = new Date(r.data + "T00:00:00");
                 const dow = d.getDay();
                 const weekend = dow === 0 || dow === 6;
+                const auto = r.origem === "venda_automatica";
+                const clienteNome = r.sales?.customers?.name ?? r.sales?.customer_name ?? "";
                 return (
                   <tr key={r.id} className={cn("border-b", weekend && "bg-primary/10")}>
-                    <td className="p-2">{d.toLocaleDateString("pt-BR")}</td>
+                    <td className="p-2">
+                      <div className="flex items-center gap-1.5">
+                        {d.toLocaleDateString("pt-BR")}
+                        {auto && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Link2 className="size-3.5 text-primary shrink-0" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              Gerado da venda{clienteNome ? ` de ${clienteNome}` : ""}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </td>
                     <td className="p-2">{WEEKDAYS[dow]}</td>
                     <td className="p-2 text-right">{brl(r.loja)}</td>
                     <td className="p-2 text-right">{brl(r.custo)}</td>
@@ -759,7 +775,7 @@ function ControleVendasPage() {
                     )}>{brl(r.saldo_acumulado)}</td>
                     <td className="p-2">
                       <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => onEdit(r)}><Pencil className="size-4" /></Button>
+                        <Button size="icon" variant="ghost" onClick={() => onEdit(r)} disabled={auto} title={auto ? "Editar na tela de Vendas" : "Editar"}><Pencil className="size-4" /></Button>
                         <Button size="icon" variant="ghost" onClick={() => onDelete(r)}><Trash2 className="size-4" /></Button>
                       </div>
                     </td>
