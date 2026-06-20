@@ -17,7 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { brl, dateBR } from "@/lib/format";
 import { toast } from "sonner";
-import { Plus, CreditCard as CCIcon, Fuel, Home, User, AlertTriangle, Clock, CheckCircle2, Pencil, Trash2, Factory } from "lucide-react";
+import { Plus, CreditCard as CCIcon, Fuel, Home, User, AlertTriangle, Clock, CheckCircle2, Pencil, Trash2, Factory, Info } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line } from "recharts";
 import { useConfirm } from "@/components/confirm-dialog";
 
@@ -212,6 +212,15 @@ function CartoesPage() {
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <PageHeader title="Cartões de Crédito" subtitle="Gestão de cartões com categorias Combustível, Casa e Pessoal" />
 
+      <div className="mb-4 rounded-md border border-primary/30 bg-primary/5 p-3 text-sm flex gap-2 items-start">
+        <Info className="size-4 mt-0.5 text-primary shrink-0" />
+        <div>
+          Este módulo é apenas para <strong>acompanhamento de limite e gastos por categoria</strong>.
+          O pagamento real das faturas deve ser registrado em <strong>Contas a Pagar</strong> — é lá que afeta Financeiro, Fluxo de Caixa, Balancete e Despesas Anuais.
+        </div>
+      </div>
+
+
       <div className="flex flex-wrap gap-2 mb-6">
         <Dialog open={openCartao} onOpenChange={setOpenCartao}>
           <DialogTrigger asChild>
@@ -353,21 +362,18 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
   const estornarPaga = useMutation({
     mutationFn: async () => {
       if (!fat) throw new Error("Fatura não encontrada");
-      const desc = `Fatura ${cartao.nome} — ${String(fat.mes).padStart(2, "0")}/${fat.ano}`;
-      await supabase.from("bank_movements").delete().eq("origin", "cartao_fatura").eq("reference_id", fat.id);
-      await supabase.from("payables").delete().eq("description", desc).eq("category", "Cartão de Crédito").eq("status", "pago");
       const { error } = await (supabase.from("cartoes_faturas" as any).update({ status: "fechada", data_pagamento: null }).eq("id", fat.id));
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Pagamento estornado com sucesso!"); qc.invalidateQueries({ queryKey: ["cartoes_faturas"] }); qc.invalidateQueries({ queryKey: ["bank_movements"] }); qc.invalidateQueries({ queryKey: ["payables"] }); onPaga(); },
+    onSuccess: () => { toast.success("Conferência desfeita"); qc.invalidateQueries({ queryKey: ["cartoes_faturas"] }); onPaga(); },
     onError: (e: any) => toast.error(e.message),
   });
 
   const onEstornar = async () => {
     const ok = await confirm({
-      title: "Estornar pagamento",
-      description: `Deseja estornar o pagamento da fatura do ${cartao.nome} de ${fat?.data_pagamento ? dateBR(fat.data_pagamento) : ""}?\n\nIsso irá:\n• Voltar status da fatura para 'Fechada'\n• Estornar a saída na conta bancária vinculada\n• O valor voltará ao saldo da conta`,
-      confirmText: "Confirmar estorno",
+      title: "Desfazer conferência",
+      description: `Deseja desfazer a conferência da fatura do ${cartao.nome}?\n\nIsso apenas reabre o status no painel — não mexe em Contas a Pagar, banco ou financeiro.`,
+      confirmText: "Desfazer",
     });
     if (ok) estornarPaga.mutate();
   };
@@ -438,13 +444,13 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
             </div>
           </div>
           {status !== "paga" && totalFatura > 0 && (
-            <Button size="sm" onClick={() => setPayOpen(true)}>
-              <CheckCircle2 className="size-3 mr-1" /> Pagar fatura
+            <Button size="sm" variant="outline" onClick={() => setPayOpen(true)}>
+              <CheckCircle2 className="size-3 mr-1" /> Marcar como conferida
             </Button>
           )}
           {status === "paga" && (
             <Button size="sm" variant="outline" onClick={onEstornar} disabled={estornarPaga.isPending}>
-              Estornar pagamento
+              Desfazer conferência
             </Button>
           )}
         </div>
@@ -519,7 +525,7 @@ function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onCl
   );
 }
 
-function PagarFaturaDialog({ cartao, contas, mes, ano, vencimento, total, onDone }: {
+function PagarFaturaDialog({ cartao, contas: _contas, mes, ano, vencimento, total, onDone }: {
   cartao: Cartao;
   contas: { id: string; name: string }[];
   mes: number; ano: number;
@@ -529,46 +535,22 @@ function PagarFaturaDialog({ cartao, contas, mes, ano, vencimento, total, onDone
 }) {
   const qc = useQueryClient();
   const hojeISO = new Date().toISOString().slice(0, 10);
-  const [dataPag, setDataPag] = useState(hojeISO);
-  const [contaId, setContaId] = useState(cartao.conta_bancaria_id ?? "");
-  const [valor, setValor] = useState(String(total.toFixed(2)));
+  const [dataConf, setDataConf] = useState(hojeISO);
 
-  const pagar = useMutation({
+  const conferir = useMutation({
     mutationFn: async () => {
       const uid = (await supabase.auth.getUser()).data.user?.id;
       if (!uid) throw new Error("Sessão inválida");
-      const vNum = Number(valor);
-      if (!vNum || vNum <= 0) throw new Error("Valor inválido");
-      if (!contaId) throw new Error("Selecione a conta debitada");
-      const desc = `Fatura ${cartao.nome} ${String(mes).padStart(2, "0")}/${ano}`;
-      const { data: upserted, error } = await (supabase.from("cartoes_faturas" as any).upsert({
+      const { error } = await (supabase.from("cartoes_faturas" as any).upsert({
         cartao_id: cartao.id, user_id: uid,
         mes, ano, valor_total: total, status: "paga",
-        data_pagamento: dataPag,
-      }, { onConflict: "cartao_id,ano,mes" }).select().single());
+        data_pagamento: dataConf,
+      }, { onConflict: "cartao_id,ano,mes" }));
       if (error) throw error;
-      const faturaId = (upserted as any)?.id;
-      const { error: bmErr } = await supabase.from("bank_movements").insert({
-        user_id: uid, account_id: contaId, movement_date: dataPag,
-        type: "saida", category: "Cartão de Crédito",
-        description: `Pagamento ${desc}`, amount: vNum,
-        origin: "cartao_fatura", reference_id: faturaId,
-      });
-      if (bmErr) throw bmErr;
-      const vencISO = vencimento.toISOString().slice(0, 10);
-      const { error: pErr } = await supabase.from("payables").insert({
-        user_id: uid, description: desc, category: "Cartão de Crédito",
-        amount: vNum, due_date: vencISO, status: "pago",
-        paid_amount: vNum, paid_at: new Date(dataPag + "T12:00:00").toISOString(),
-        bank_account_id: contaId, payment_method: "cartao",
-      });
-      if (pErr) throw pErr;
     },
     onSuccess: () => {
-      toast.success("Fatura paga com sucesso!");
+      toast.success("Fatura marcada como conferida");
       qc.invalidateQueries({ queryKey: ["cartoes_faturas"] });
-      qc.invalidateQueries({ queryKey: ["bank_movements"] });
-      qc.invalidateQueries({ queryKey: ["payables"] });
       onDone();
     },
     onError: (e: any) => toast.error(e.message),
@@ -576,26 +558,20 @@ function PagarFaturaDialog({ cartao, contas, mes, ano, vencimento, total, onDone
 
   return (
     <DialogContent className="max-w-md">
-      <DialogHeader><DialogTitle>Pagar fatura — {cartao.nome}</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>Marcar fatura como conferida — {cartao.nome}</DialogTitle></DialogHeader>
       <div className="space-y-3">
+        <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+          ⚠️ Esta ação <strong>não registra pagamento</strong> em Contas a Pagar nem debita conta bancária — serve apenas para marcar visualmente que a fatura já foi conferida/quitada por fora. O pagamento real deve estar lançado em <strong>Contas a Pagar</strong>.
+        </div>
         <div className="rounded-md border p-3 text-sm bg-muted/30">
           <div className="flex justify-between"><span className="text-muted-foreground">Total da fatura:</span><span className="font-medium">{brl(total)}</span></div>
           <div className="flex justify-between mt-1"><span className="text-muted-foreground">Vencimento:</span><span className="font-medium">{dateBRShort(vencimento)}</span></div>
         </div>
-        <div><Label>Data do pagamento</Label><Input type="date" value={dataPag} onChange={(e) => setDataPag(e.target.value)} /></div>
-        <div><Label>Conta debitada</Label>
-          <Select value={contaId} onValueChange={setContaId}>
-            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-            <SelectContent>
-              {contas.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div><Label>Valor pago</Label><Input type="number" step="0.01" value={valor} onChange={(e) => setValor(e.target.value)} /></div>
+        <div><Label>Data da conferência</Label><Input type="date" value={dataConf} onChange={(e) => setDataConf(e.target.value)} /></div>
       </div>
       <DialogFooter>
         <Button variant="outline" onClick={() => onDone()}>Cancelar</Button>
-        <Button onClick={() => pagar.mutate()} disabled={pagar.isPending}>Confirmar pagamento</Button>
+        <Button onClick={() => conferir.mutate()} disabled={conferir.isPending}>Marcar como conferida</Button>
       </DialogFooter>
     </DialogContent>
   );
