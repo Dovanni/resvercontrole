@@ -9,10 +9,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileSpreadsheet, FileText, Pencil, Trash2, Save, Eraser, Lock, LockOpen, History, ChevronDown, ChevronUp } from "lucide-react";
+import { FileSpreadsheet, FileText, Pencil, Trash2, Save, Eraser, Lock, LockOpen, History, ChevronDown, ChevronUp, Eye, Search } from "lucide-react";
 // jspdf and jspdf-autotable are lazy-loaded inside exportPdfAnual to avoid bundling them on initial page load
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { brl } from "@/lib/format";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/confirm-dialog";
@@ -77,6 +79,27 @@ function ControleVendasPage() {
   const [editingFornecedor, setEditingFornecedor] = useState(false);
   const [motivoAlteracao, setMotivoAlteracao] = useState("");
   const [showHistorico, setShowHistorico] = useState(false);
+  const [vendaSearch, setVendaSearch] = useState("");
+  const [vendaCanal, setVendaCanal] = useState<string>("todos");
+  const [vendaStatus, setVendaStatus] = useState<string>("todos");
+  const [vendaDetalheId, setVendaDetalheId] = useState<string | null>(null);
+
+  const { data: vendasMes = [] } = useQuery({
+    queryKey: ["controle-vendas-pedidos", YEAR, mes],
+    queryFn: async () => {
+      const ini = new Date(YEAR, mes - 1, 1).toISOString();
+      const fim = new Date(YEAR, mes, 1).toISOString();
+      const { data, error } = await supabase
+        .from("sales")
+        .select("id, sold_at, customer_name, customer_id, channel, payment_method, total, discount, status, bank_account_id, notes, customers(name), bank_accounts(name, bank), sale_items(quantity, unit_price, unit_cost, products(name))")
+        .gte("sold_at", ini)
+        .lt("sold_at", fim)
+        .neq("channel", "recursos_financeiros")
+        .order("sold_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
 
   const { data: rows = [] } = useQuery({
     queryKey: ["controle-vendas", YEAR, mes],
@@ -747,6 +770,271 @@ function ControleVendasPage() {
           </table>
         </CardContent>
       </Card>
+
+      {/* Vendas do dia por cliente */}
+      <VendasClienteCard
+        mes={mes}
+        vendas={vendasMes}
+        search={vendaSearch}
+        setSearch={setVendaSearch}
+        canal={vendaCanal}
+        setCanal={setVendaCanal}
+        status={vendaStatus}
+        setStatus={setVendaStatus}
+        onVerDetalhe={(id) => setVendaDetalheId(id)}
+      />
+
+      <VendaDetalheDialog
+        venda={vendasMes.find((v) => v.id === vendaDetalheId) ?? null}
+        onClose={() => setVendaDetalheId(null)}
+      />
+    </div>
+  );
+}
+
+const STATUS_TONE: Record<string, string> = {
+  orcamento: "bg-muted text-muted-foreground",
+  confirmado: "bg-blue-100 text-blue-800",
+  separacao: "bg-amber-100 text-amber-800",
+  enviado: "bg-indigo-100 text-indigo-800",
+  entregue: "bg-emerald-100 text-emerald-800",
+  cancelado: "bg-red-100 text-red-800",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  orcamento: "Orçamento",
+  confirmado: "Confirmado",
+  separacao: "Separação",
+  enviado: "Enviado",
+  entregue: "Entregue",
+  cancelado: "Cancelado",
+};
+
+const PAGTO_LABEL: Record<string, string> = {
+  dinheiro: "Dinheiro",
+  pix: "PIX",
+  pix_prazo: "PIX a prazo",
+  debito: "Débito",
+  cartao_debito: "Cartão Débito",
+  cartao_credito: "Cartão Crédito",
+  cartao: "Cartão",
+  mercado_livre: "Mercado Livre",
+  boleto: "Boleto",
+  crediario: "Crediário",
+  prazo: "A prazo",
+  deposito: "Depósito",
+  transferencia: "Transferência",
+};
+
+function VendasClienteCard({
+  mes, vendas, search, setSearch, canal, setCanal, status, setStatus, onVerDetalhe,
+}: {
+  mes: number;
+  vendas: any[];
+  search: string; setSearch: (s: string) => void;
+  canal: string; setCanal: (s: string) => void;
+  status: string; setStatus: (s: string) => void;
+  onVerDetalhe: (id: string) => void;
+}) {
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return vendas.filter((v) => {
+      if (canal !== "todos" && v.channel !== canal) return false;
+      if (status !== "todos" && v.status !== status) return false;
+      if (term) {
+        const nome = (v.customers?.name ?? v.customer_name ?? "").toLowerCase();
+        if (!nome.includes(term)) return false;
+      }
+      return true;
+    });
+  }, [vendas, search, canal, status]);
+
+  const totalValor = filtered.reduce((a, v) => a + Number(v.total ?? 0), 0);
+  const ticketMedio = filtered.length > 0 ? totalValor / filtered.length : 0;
+
+  return (
+    <Card>
+      <CardContent className="pt-6 space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div>
+            <h3 className="font-display text-lg">Vendas do dia por cliente</h3>
+            <p className="text-xs text-muted-foreground">Pedidos registrados em {MONTHS[mes - 1]}/{YEAR}</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="relative">
+              <Search className="size-3.5 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Buscar cliente..."
+                className="pl-7 w-[200px]"
+              />
+            </div>
+            <Select value={canal} onValueChange={setCanal}>
+              <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos canais</SelectItem>
+                <SelectItem value="atacado">Atacado</SelectItem>
+                <SelectItem value="varejo">Varejo</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos status</SelectItem>
+                {Object.entries(STATUS_LABEL).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>{v}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-left text-muted-foreground">
+                <th className="p-2">Data</th>
+                <th className="p-2">Cliente</th>
+                <th className="p-2">Canal</th>
+                <th className="p-2">Pagto</th>
+                <th className="p-2">Produtos</th>
+                <th className="p-2 text-right">Qtd</th>
+                <th className="p-2 text-right">Valor</th>
+                <th className="p-2">Conta destino</th>
+                <th className="p-2">Status</th>
+                <th className="p-2 w-16">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 && (
+                <tr><td colSpan={10} className="p-6 text-center text-muted-foreground">Nenhuma venda neste mês.</td></tr>
+              )}
+              {filtered.map((v) => {
+                const d = new Date(v.sold_at);
+                const items = v.sale_items ?? [];
+                const qtd = items.reduce((a: number, it: any) => a + Number(it.quantity ?? 0), 0);
+                const produtos = items.map((it: any) => it.products?.name).filter(Boolean);
+                const produtosLabel = produtos.length === 0
+                  ? "—"
+                  : produtos.length <= 2
+                    ? produtos.join(", ")
+                    : `${produtos.slice(0, 2).join(", ")} +${produtos.length - 2}`;
+                const cliente = v.customers?.name ?? v.customer_name ?? "Balcão";
+                const conta = v.bank_accounts?.name ?? "—";
+                return (
+                  <tr key={v.id} className="border-b hover:bg-muted/30">
+                    <td className="p-2 whitespace-nowrap">{d.toLocaleDateString("pt-BR")}</td>
+                    <td className="p-2">{cliente}</td>
+                    <td className="p-2 capitalize">{v.channel}</td>
+                    <td className="p-2">{PAGTO_LABEL[v.payment_method] ?? v.payment_method}</td>
+                    <td className="p-2 max-w-[260px] truncate" title={produtos.join(", ")}>{produtosLabel}</td>
+                    <td className="p-2 text-right">{qtd}</td>
+                    <td className="p-2 text-right font-medium">{brl(Number(v.total ?? 0))}</td>
+                    <td className="p-2">{conta}</td>
+                    <td className="p-2">
+                      <Badge className={cn("font-normal", STATUS_TONE[v.status] ?? "bg-muted")} variant="secondary">
+                        {STATUS_LABEL[v.status] ?? v.status}
+                      </Badge>
+                    </td>
+                    <td className="p-2">
+                      <Button size="icon" variant="ghost" onClick={() => onVerDetalhe(v.id)} title="Ver detalhes">
+                        <Eye className="size-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="font-semibold bg-muted/50">
+                <td className="p-2" colSpan={6}>
+                  TOTAL DO MÊS — {filtered.length} {filtered.length === 1 ? "venda" : "vendas"}
+                </td>
+                <td className="p-2 text-right">{brl(totalValor)}</td>
+                <td className="p-2 text-muted-foreground" colSpan={3}>
+                  Ticket médio: {brl(ticketMedio)}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function VendaDetalheDialog({ venda, onClose }: { venda: any | null; onClose: () => void }) {
+  const open = !!venda;
+  const items = venda?.sale_items ?? [];
+  const subtotal = items.reduce((a: number, it: any) => a + Number(it.quantity ?? 0) * Number(it.unit_price ?? 0), 0);
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Detalhes do pedido</DialogTitle>
+        </DialogHeader>
+        {venda && (
+          <div className="space-y-4 text-sm">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <Info label="Data" value={new Date(venda.sold_at).toLocaleString("pt-BR")} />
+              <Info label="Cliente" value={venda.customers?.name ?? venda.customer_name ?? "Balcão"} />
+              <Info label="Canal" value={<span className="capitalize">{venda.channel}</span>} />
+              <Info label="Pagamento" value={PAGTO_LABEL[venda.payment_method] ?? venda.payment_method} />
+              <Info label="Status" value={STATUS_LABEL[venda.status] ?? venda.status} />
+              <Info label="Conta destino" value={venda.bank_accounts?.name ?? "—"} />
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground mb-1">Itens</div>
+              <table className="w-full text-sm border rounded">
+                <thead>
+                  <tr className="border-b bg-muted/40 text-left">
+                    <th className="p-2">Produto</th>
+                    <th className="p-2 text-right">Qtd</th>
+                    <th className="p-2 text-right">Unit.</th>
+                    <th className="p-2 text-right">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.length === 0 && (
+                    <tr><td colSpan={4} className="p-3 text-center text-muted-foreground">Sem itens</td></tr>
+                  )}
+                  {items.map((it: any, idx: number) => (
+                    <tr key={idx} className="border-b last:border-0">
+                      <td className="p-2">{it.products?.name ?? "—"}</td>
+                      <td className="p-2 text-right">{it.quantity}</td>
+                      <td className="p-2 text-right">{brl(Number(it.unit_price ?? 0))}</td>
+                      <td className="p-2 text-right">{brl(Number(it.quantity ?? 0) * Number(it.unit_price ?? 0))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex flex-col items-end gap-1 text-sm">
+              <div className="text-muted-foreground">Subtotal: {brl(subtotal)}</div>
+              {Number(venda.discount ?? 0) > 0 && (
+                <div className="text-muted-foreground">Desconto: −{brl(Number(venda.discount))}</div>
+              )}
+              <div className="font-display text-lg">Total: {brl(Number(venda.total ?? 0))}</div>
+            </div>
+            {venda.notes && (
+              <div className="rounded border bg-muted/30 px-3 py-2">
+                <div className="text-xs text-muted-foreground mb-0.5">Observações</div>
+                <div>{venda.notes}</div>
+              </div>
+            )}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function Info({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div>
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="font-medium">{value}</div>
     </div>
   );
 }
