@@ -79,6 +79,27 @@ function ControleVendasPage() {
   const [editingFornecedor, setEditingFornecedor] = useState(false);
   const [motivoAlteracao, setMotivoAlteracao] = useState("");
   const [showHistorico, setShowHistorico] = useState(false);
+  const [vendaSearch, setVendaSearch] = useState("");
+  const [vendaCanal, setVendaCanal] = useState<string>("todos");
+  const [vendaStatus, setVendaStatus] = useState<string>("todos");
+  const [vendaDetalheId, setVendaDetalheId] = useState<string | null>(null);
+
+  const { data: vendasMes = [] } = useQuery({
+    queryKey: ["controle-vendas-pedidos", YEAR, mes],
+    queryFn: async () => {
+      const ini = new Date(YEAR, mes - 1, 1).toISOString();
+      const fim = new Date(YEAR, mes, 1).toISOString();
+      const { data, error } = await supabase
+        .from("sales")
+        .select("id, sold_at, customer_name, customer_id, channel, payment_method, total, discount, status, bank_account_id, notes, customers(name), bank_accounts(name, bank), sale_items(quantity, unit_price, unit_cost, products(name))")
+        .gte("sold_at", ini)
+        .lt("sold_at", fim)
+        .neq("channel", "recursos_financeiros")
+        .order("sold_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
 
   const { data: rows = [] } = useQuery({
     queryKey: ["controle-vendas", YEAR, mes],
