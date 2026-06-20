@@ -1113,9 +1113,10 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
     k, valor: mesL.filter((l) => l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
   }));
 
-  // Consolidated totals
+  // Consolidated totals — limite usado SEMPRE = todas parcelas pendentes (ignora filtro de período)
   const limiteTotalGeral = cartoes.reduce((s, c) => s + Number(c.limite_total), 0);
-  const limiteDisponivel = limiteTotalGeral - total;
+  const usadoTotalReal = cartoes.reduce((s, c) => s + calcUsado(c.id, lancamentos, faturas), 0);
+  const limiteDisponivel = limiteTotalGeral - usadoTotalReal;
 
   // Filter cartoes
   const cartoesFiltrados = cartoes.filter((c) => {
