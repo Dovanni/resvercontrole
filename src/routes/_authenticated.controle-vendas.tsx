@@ -117,7 +117,7 @@ function ControleVendasPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("controle_vendas_diario")
-        .select("*")
+        .select("*, sales:sale_id(customer_name, customers:customer_id(name))")
         .eq("ano", YEAR)
         .eq("mes", mes)
         .order("data", { ascending: true });
