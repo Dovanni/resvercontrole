@@ -1107,15 +1107,27 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
   const { start, end, label: periodoLabel } = getPeriodRange(preset, customStart, customEnd);
 
   // Lançamentos do período (pela data da compra/parcela)
-  const mesL = lancamentos.filter((l) => l.data >= start && l.data <= end);
-  const total = mesL.reduce((s, l) => s + Number(l.valor), 0);
-  const catTotals = CAT_KEYS.map((k) => ({
+  const mesL = useMemo(() => lancamentos.filter((l) => l.data >= start && l.data <= end), [lancamentos, start, end]);
+  const total = useMemo(() => mesL.reduce((s, l) => s + Number(l.valor), 0), [mesL]);
+  const catTotals = useMemo(() => CAT_KEYS.map((k) => ({
     k, valor: mesL.filter((l) => l.categoria === k).reduce((s, l) => s + Number(l.valor), 0),
-  }));
+  })), [mesL]);
 
   // Consolidated totals — limite usado SEMPRE = todas parcelas pendentes (ignora filtro de período)
-  const limiteTotalGeral = cartoes.reduce((s, c) => s + Number(c.limite_total), 0);
-  const usadoTotalReal = cartoes.reduce((s, c) => s + calcUsado(c.id, lancamentos, faturas), 0);
+  // Pré-calcula uma vez o "usado real" por cartão para evitar O(C×L) em múltiplos pontos da tela
+  const usadoPorCartao = useMemo(() => {
+    const pagasKey = new Set(faturas.filter((f) => f.status === "paga").map((f) => `${f.cartao_id}-${f.ano}-${f.mes}`));
+    const map: Record<string, number> = {};
+    for (const c of cartoes) map[c.id] = 0;
+    for (const l of lancamentos) {
+      if (!pagasKey.has(`${l.cartao_id}-${l.ano_fatura}-${l.mes_fatura}`)) {
+        map[l.cartao_id] = (map[l.cartao_id] ?? 0) + Number(l.valor);
+      }
+    }
+    return map;
+  }, [cartoes, lancamentos, faturas]);
+  const limiteTotalGeral = useMemo(() => cartoes.reduce((s, c) => s + Number(c.limite_total), 0), [cartoes]);
+  const usadoTotalReal = useMemo(() => Object.values(usadoPorCartao).reduce((s, v) => s + v, 0), [usadoPorCartao]);
   const limiteDisponivel = limiteTotalGeral - usadoTotalReal;
 
   // Filter cartoes
