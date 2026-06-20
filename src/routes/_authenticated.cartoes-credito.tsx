@@ -272,9 +272,9 @@ function CartoesPage() {
   );
 }
 
-function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onClick, onPaga, onChanged }: {
+function CartaoCard({ cartao, contas, lancamentos, faturas, curMes, curAno, onClick, onVerHistorico, onPaga, onChanged }: {
   cartao: Cartao; contas: { id: string; name: string }[]; lancamentos: Lancamento[]; faturas: Fatura[]; curMes: number; curAno: number;
-  onClick: () => void; onPaga: () => void; onChanged: () => void;
+  onClick: () => void; onVerHistorico?: () => void; onPaga: () => void; onChanged: () => void;
 }) {
   const qc = useQueryClient();
   const confirm = useConfirm();
