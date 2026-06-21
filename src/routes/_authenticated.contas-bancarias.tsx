@@ -550,15 +550,15 @@ function ExtractView({ account, accounts, balance, onClose }: { account: BankAcc
   );
 }
 
-function MovementForm({ accountId, accounts, onDone }: { accountId: string; accounts: BankAccount[]; onDone: () => void }) {
+function MovementForm({ accountId, accounts, initial, onDone }: { accountId: string; accounts: BankAccount[]; initial?: Movement; onDone: () => void }) {
   const [f, setF] = useState({
-    movement_date: new Date().toISOString().slice(0, 10),
-    type: "saida" as "entrada" | "saida" | "transferencia",
-    category: SAIDA_CATS[0],
-    description: "",
-    amount: 0,
-    destination_account_id: "",
-    notes: "",
+    movement_date: initial?.movement_date ?? new Date().toISOString().slice(0, 10),
+    type: (initial?.type ?? "saida") as "entrada" | "saida" | "transferencia",
+    category: initial?.category ?? SAIDA_CATS[0],
+    description: initial?.description ?? "",
+    amount: initial ? Number(initial.amount) : 0,
+    destination_account_id: initial?.destination_account_id ?? "",
+    notes: initial?.notes ?? "",
   });
 
   const cats = f.type === "entrada" ? ENTRADA_CATS : f.type === "transferencia" ? ["Transferência entre contas"] : SAIDA_CATS;
@@ -568,6 +568,29 @@ function MovementForm({ accountId, accounts, onDone }: { accountId: string; acco
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
       if (f.type === "transferencia" && !f.destination_account_id) throw new Error("Selecione a conta destino");
+      const payload = {
+        movement_date: f.movement_date,
+        type: f.type,
+        category: f.type === "transferencia" ? "Transferência entre contas" : f.category,
+        description: f.description || (f.type === "transferencia" ? "Transferência entre contas" : f.category),
+        amount: f.amount,
+        destination_account_id: f.type === "transferencia" ? f.destination_account_id : null,
+        notes: f.notes || null,
+      };
+      if (initial) {
+        const { error } = await supabase.from("bank_movements" as any).update(payload as any).eq("id", initial.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("bank_movements" as any).insert({
+          ...payload,
+          user_id: user.id,
+          account_id: accountId,
+          origin: f.type === "transferencia" ? "transfer" : "manual",
+        } as any);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => { toast.success(initial ? "Movimentação atualizada" : "Movimentação registrada"); onDone(); },
       const { error } = await supabase.from("bank_movements" as any).insert({
         user_id: user.id,
         account_id: accountId,
