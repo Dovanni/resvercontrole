@@ -477,11 +477,35 @@ function ExtractView({ account, accounts, balance, onClose }: { account: BankAcc
                   </TableCell>
                   <TableCell className={`text-right ${m.runningBalance < 0 ? "text-destructive font-medium" : ""}`}>{brl(m.runningBalance)}</TableCell>
                   <TableCell>
-                    {m.origin === "manual" && (
-                      <Button variant="ghost" size="icon" onClick={() => { if (confirm("Remover?")) remove.mutate(m.id); }}>
-                        <Trash2 className="size-4 text-destructive" />
-                      </Button>
-                    )}
+                    <div className="flex justify-end gap-1">
+                      {m.origin === "saldo_inicial" ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground" title="Saldo inicial — edite no cadastro da conta">
+                          <Lock className="size-3.5" />
+                        </span>
+                      ) : m.origin === "manual" ? (
+                        <>
+                          <Button variant="ghost" size="icon" title="Editar" onClick={() => setEditingMov(m)}>
+                            <Pencil className="size-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" title="Excluir" onClick={async () => {
+                            if (await confirm({ title: "Remover movimentação?", description: m.description })) remove.mutate(m.id);
+                          }}>
+                            <Trash2 className="size-4 text-destructive" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="inline-flex items-center text-xs text-muted-foreground" title="Gerado automaticamente — edite na origem">
+                            <Lock className="size-3.5" />
+                          </span>
+                          <Button variant="ghost" size="icon" title="Excluir" onClick={async () => {
+                            if (await confirm({ title: "Remover movimentação automática?", description: "Isso pode dessincronizar com a origem (venda, pagamento, etc.)." })) remove.mutate(m.id);
+                          }}>
+                            <Trash2 className="size-4 text-destructive" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               );
