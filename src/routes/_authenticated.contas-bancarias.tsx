@@ -591,21 +591,6 @@ function MovementForm({ accountId, accounts, initial, onDone }: { accountId: str
       }
     },
     onSuccess: () => { toast.success(initial ? "Movimentação atualizada" : "Movimentação registrada"); onDone(); },
-      const { error } = await supabase.from("bank_movements" as any).insert({
-        user_id: user.id,
-        account_id: accountId,
-        movement_date: f.movement_date,
-        type: f.type,
-        category: f.type === "transferencia" ? "Transferência entre contas" : f.category,
-        description: f.description || (f.type === "transferencia" ? "Transferência entre contas" : f.category),
-        amount: f.amount,
-        destination_account_id: f.type === "transferencia" ? f.destination_account_id : null,
-        origin: f.type === "transferencia" ? "transfer" : "manual",
-        notes: f.notes || null,
-      } as any);
-      if (error) throw error;
-    },
-    onSuccess: () => { toast.success("Movimentação registrada"); onDone(); },
     onError: (e: any) => toast.error(e.message),
   });
 
