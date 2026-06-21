@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Landmark, Pencil, Trash2, Download, AlertTriangle, ArrowLeftRight, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
+import { Plus, Landmark, Pencil, Trash2, Download, AlertTriangle, ArrowLeftRight, ArrowDownCircle, ArrowUpCircle, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { brl, dateBR } from "@/lib/format";
 import { useConfirm } from "@/components/confirm-dialog";
@@ -282,6 +282,8 @@ function ExtractView({ account, accounts, balance, onClose }: { account: BankAcc
   const [catFilter, setCatFilter] = useState("todos");
   const [typeFilter, setTypeFilter] = useState("todos");
   const [openNew, setOpenNew] = useState(false);
+  const [editingMov, setEditingMov] = useState<Movement | null>(null);
+  const confirm = useConfirm();
 
   const { data: movements } = useQuery({
     queryKey: ["bank-movements", account.id],
@@ -475,11 +477,35 @@ function ExtractView({ account, accounts, balance, onClose }: { account: BankAcc
                   </TableCell>
                   <TableCell className={`text-right ${m.runningBalance < 0 ? "text-destructive font-medium" : ""}`}>{brl(m.runningBalance)}</TableCell>
                   <TableCell>
-                    {m.origin === "manual" && (
-                      <Button variant="ghost" size="icon" onClick={() => { if (confirm("Remover?")) remove.mutate(m.id); }}>
-                        <Trash2 className="size-4 text-destructive" />
-                      </Button>
-                    )}
+                    <div className="flex justify-end gap-1">
+                      {m.origin === "saldo_inicial" ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground" title="Saldo inicial — edite no cadastro da conta">
+                          <Lock className="size-3.5" />
+                        </span>
+                      ) : m.origin === "manual" ? (
+                        <>
+                          <Button variant="ghost" size="icon" title="Editar" onClick={() => setEditingMov(m)}>
+                            <Pencil className="size-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" title="Excluir" onClick={async () => {
+                            if (await confirm({ title: "Remover movimentação?", description: m.description })) remove.mutate(m.id);
+                          }}>
+                            <Trash2 className="size-4 text-destructive" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="inline-flex items-center text-xs text-muted-foreground" title="Gerado automaticamente — edite na origem">
+                            <Lock className="size-3.5" />
+                          </span>
+                          <Button variant="ghost" size="icon" title="Excluir" onClick={async () => {
+                            if (await confirm({ title: "Remover movimentação automática?", description: "Isso pode dessincronizar com a origem (venda, pagamento, etc.)." })) remove.mutate(m.id);
+                          }}>
+                            <Trash2 className="size-4 text-destructive" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -502,20 +528,37 @@ function ExtractView({ account, accounts, balance, onClose }: { account: BankAcc
         </DialogContent>
       </Dialog>
 
+      <Dialog open={!!editingMov} onOpenChange={(o) => !o && setEditingMov(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle className="font-display">Editar movimentação</DialogTitle></DialogHeader>
+          {editingMov && (
+            <MovementForm
+              accountId={account.id}
+              accounts={accounts}
+              initial={editingMov}
+              onDone={() => {
+                setEditingMov(null);
+                qc.invalidateQueries({ queryKey: ["bank-movements"] });
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       <div className="mt-4 flex justify-end"><Button variant="outline" onClick={onClose}>Fechar</Button></div>
     </div>
   );
 }
 
-function MovementForm({ accountId, accounts, onDone }: { accountId: string; accounts: BankAccount[]; onDone: () => void }) {
+function MovementForm({ accountId, accounts, initial, onDone }: { accountId: string; accounts: BankAccount[]; initial?: Movement; onDone: () => void }) {
   const [f, setF] = useState({
-    movement_date: new Date().toISOString().slice(0, 10),
-    type: "saida" as "entrada" | "saida" | "transferencia",
-    category: SAIDA_CATS[0],
-    description: "",
-    amount: 0,
-    destination_account_id: "",
-    notes: "",
+    movement_date: initial?.movement_date ?? new Date().toISOString().slice(0, 10),
+    type: (initial?.type ?? "saida") as "entrada" | "saida" | "transferencia",
+    category: initial?.category ?? SAIDA_CATS[0],
+    description: initial?.description ?? "",
+    amount: initial ? Number(initial.amount) : 0,
+    destination_account_id: initial?.destination_account_id ?? "",
+    notes: initial?.notes ?? "",
   });
 
   const cats = f.type === "entrada" ? ENTRADA_CATS : f.type === "transferencia" ? ["Transferência entre contas"] : SAIDA_CATS;
@@ -525,21 +568,29 @@ function MovementForm({ accountId, accounts, onDone }: { accountId: string; acco
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
       if (f.type === "transferencia" && !f.destination_account_id) throw new Error("Selecione a conta destino");
-      const { error } = await supabase.from("bank_movements" as any).insert({
-        user_id: user.id,
-        account_id: accountId,
+      const payload = {
         movement_date: f.movement_date,
         type: f.type,
         category: f.type === "transferencia" ? "Transferência entre contas" : f.category,
         description: f.description || (f.type === "transferencia" ? "Transferência entre contas" : f.category),
         amount: f.amount,
         destination_account_id: f.type === "transferencia" ? f.destination_account_id : null,
-        origin: f.type === "transferencia" ? "transfer" : "manual",
         notes: f.notes || null,
-      } as any);
-      if (error) throw error;
+      };
+      if (initial) {
+        const { error } = await supabase.from("bank_movements" as any).update(payload as any).eq("id", initial.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("bank_movements" as any).insert({
+          ...payload,
+          user_id: user.id,
+          account_id: accountId,
+          origin: f.type === "transferencia" ? "transfer" : "manual",
+        } as any);
+        if (error) throw error;
+      }
     },
-    onSuccess: () => { toast.success("Movimentação registrada"); onDone(); },
+    onSuccess: () => { toast.success(initial ? "Movimentação atualizada" : "Movimentação registrada"); onDone(); },
     onError: (e: any) => toast.error(e.message),
   });
 
