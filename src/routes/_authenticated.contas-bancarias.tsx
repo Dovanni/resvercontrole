@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Landmark, Pencil, Trash2, Download, AlertTriangle, ArrowLeftRight, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
+import { Plus, Landmark, Pencil, Trash2, Download, AlertTriangle, ArrowLeftRight, ArrowDownCircle, ArrowUpCircle, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { brl, dateBR } from "@/lib/format";
 import { useConfirm } from "@/components/confirm-dialog";
