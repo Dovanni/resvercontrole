@@ -528,6 +528,23 @@ function ExtractView({ account, accounts, balance, onClose }: { account: BankAcc
         </DialogContent>
       </Dialog>
 
+      <Dialog open={!!editingMov} onOpenChange={(o) => !o && setEditingMov(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle className="font-display">Editar movimentação</DialogTitle></DialogHeader>
+          {editingMov && (
+            <MovementForm
+              accountId={account.id}
+              accounts={accounts}
+              initial={editingMov}
+              onDone={() => {
+                setEditingMov(null);
+                qc.invalidateQueries({ queryKey: ["bank-movements"] });
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       <div className="mt-4 flex justify-end"><Button variant="outline" onClick={onClose}>Fechar</Button></div>
     </div>
   );
