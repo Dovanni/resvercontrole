@@ -282,6 +282,8 @@ function ExtractView({ account, accounts, balance, onClose }: { account: BankAcc
   const [catFilter, setCatFilter] = useState("todos");
   const [typeFilter, setTypeFilter] = useState("todos");
   const [openNew, setOpenNew] = useState(false);
+  const [editingMov, setEditingMov] = useState<Movement | null>(null);
+  const confirm = useConfirm();
 
   const { data: movements } = useQuery({
     queryKey: ["bank-movements", account.id],
