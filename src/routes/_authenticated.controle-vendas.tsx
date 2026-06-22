@@ -401,8 +401,7 @@ function ControleVendasPage() {
         }
         m.rateio = m.fornecedor + m.custo;
         m.saldo = m.rateio;
-        const base = m.receber - m.frete_empresa;
-        m.margem = base > 0 ? (m.lucro * 100) / base : 0;
+        m.margem = m.receber > 0 ? (m.lucro * 100) / m.receber : 0;
       });
 
       const totals = monthly.reduce(
