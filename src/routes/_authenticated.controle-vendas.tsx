@@ -64,17 +64,15 @@ const num = (s: string) => {
 };
 
 // Fórmulas oficiais (definitivas):
-// RECEBER = LOJA (total da venda, já inclui frete cliente e juros ML)
-// LUCRO   = RECEBER - CUSTO - JUROS_ML - FRETE_EMPRESA
-// MARGEM  = LUCRO / (RECEBER - CUSTO - JUROS_ML - FRETE_EMPRESA) * 100
-//          (numerador = denominador → sempre 100% quando lucro > 0)
+// RECEBER = LOJA (fixo)
+// LUCRO   = RECEBER + FRETE_CLIENTE - CUSTO - JUROS_ML - FRETE_EMPRESA
+// MARGEM  = LUCRO / RECEBER * 100
 // RATEIO (mensal) = TOTAL_FORNECEDOR - SUM(CUSTO)
 const calcReceber = (loja: number) => loja;
-const calcLucro = (loja: number, custo: number, freteEmp: number, juros: number) =>
-  loja - custo - juros - freteEmp;
-const calcMargem = (lucro: number, receber: number, custo: number, juros: number, freteEmp: number) => {
-  const base = receber - custo - juros - freteEmp;
-  return base > 0 ? (lucro * 100) / base : 0;
+const calcLucro = (loja: number, custo: number, freteEmp: number, juros: number, freteCli: number) =>
+  loja + freteCli - custo - juros - freteEmp;
+const calcMargem = (lucro: number, receber: number) => {
+  return receber > 0 ? (lucro * 100) / receber : 0;
 };
 
 function ControleVendasPage() {
@@ -155,9 +153,10 @@ function ControleVendasPage() {
     const custo = num(form.custo);
     const juros = num(form.juros_ml);
     const frete_emp = num(form.frete_empresa);
+    const frete_cli = num(form.frete_cliente);
     const receber = calcReceber(loja);
-    const lucro = calcLucro(loja, custo, frete_emp, juros);
-    const margem = calcMargem(lucro, receber, custo, juros, frete_emp);
+    const lucro = calcLucro(loja, custo, frete_emp, juros, frete_cli);
+    const margem = calcMargem(lucro, receber);
     return { receber, lucro, margem };
   }, [form]);
 
@@ -192,7 +191,7 @@ function ControleVendasPage() {
       ? rowsWithSaldo[rowsWithSaldo.length - 1].saldo_acumulado
       : fornecedor;
     const quitado = saldoAtual >= 0 && fornecedor < 0;
-    const margem = calcMargem(totals.lucro, totals.receber, totals.custo, totals.juros_ml, totals.frete_empresa);
+    const margem = calcMargem(totals.lucro, totals.receber);
     return { receber: totals.receber, lucro: totals.lucro, margem, rateio, fornecedor, investimento, custo: totals.custo, saldo, saldoAtual, quitado };
   }, [totals, fornecedor, rowsWithSaldo]);
 
@@ -402,8 +401,7 @@ function ControleVendasPage() {
         }
         m.rateio = m.fornecedor + m.custo;
         m.saldo = m.rateio;
-        const base = m.receber - m.frete_empresa;
-        m.margem = base > 0 ? (m.lucro * 100) / base : 0;
+        m.margem = m.receber > 0 ? (m.lucro * 100) / m.receber : 0;
       });
 
       const totals = monthly.reduce(
@@ -418,8 +416,7 @@ function ControleVendasPage() {
         }),
         { receber: 0, lucro: 0, custo: 0, frete_empresa: 0, fornecedor: 0, rateio: 0, saldo: 0 },
       );
-      const baseTotal = totals.receber - totals.frete_empresa;
-      const margemTotal = baseTotal > 0 ? (totals.lucro * 100) / baseTotal : 0;
+      const margemTotal = totals.receber > 0 ? (totals.lucro * 100) / totals.receber : 0;
 
       const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
         import("jspdf"),
