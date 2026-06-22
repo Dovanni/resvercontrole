@@ -65,12 +65,12 @@ const num = (s: string) => {
 
 // Fórmulas oficiais:
 // RECEBER = LOJA (total da venda, já inclui frete cliente e juros ML)
-// LUCRO   = RECEBER - CUSTO - JUROS_ML - FRETE_EMPRESA
+// LUCRO   = RECEBER - CUSTO - JUROS_ML  (Frete Empresa NÃO abate do lucro)
 // MARGEM  = LUCRO / (RECEBER - FRETE_EMPRESA) * 100
 // RATEIO (mensal) = TOTAL_FORNECEDOR - SUM(CUSTO)
 const calcReceber = (loja: number) => loja;
-const calcLucro = (loja: number, custo: number, freteEmp: number, juros: number) =>
-  loja - custo - freteEmp - juros;
+const calcLucro = (loja: number, custo: number, _freteEmp: number, juros: number) =>
+  loja - custo - juros;
 const calcMargem = (lucro: number, receber: number, freteEmp: number) => {
   const base = receber - freteEmp;
   return base > 0 ? (lucro * 100) / base : 0;
