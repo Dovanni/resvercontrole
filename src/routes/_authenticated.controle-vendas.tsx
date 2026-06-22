@@ -192,7 +192,7 @@ function ControleVendasPage() {
       ? rowsWithSaldo[rowsWithSaldo.length - 1].saldo_acumulado
       : fornecedor;
     const quitado = saldoAtual >= 0 && fornecedor < 0;
-    const margem = calcMargem(totals.lucro, totals.receber, totals.frete_empresa);
+    const margem = calcMargem(totals.lucro, totals.receber, totals.custo, totals.juros_ml, totals.frete_empresa);
     return { receber: totals.receber, lucro: totals.lucro, margem, rateio, fornecedor, investimento, custo: totals.custo, saldo, saldoAtual, quitado };
   }, [totals, fornecedor, rowsWithSaldo]);
 
