@@ -267,6 +267,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
   const [discount, setDiscount] = useState(0);
   const [discountMode, setDiscountMode] = useState<"reais" | "percent">("reais");
   const [shipping, setShipping] = useState(0);
+  const [freteEmpresa, setFreteEmpresa] = useState(0);
   const [mercadoPagoFees, setMercadoPagoFees] = useState(0);
   const [items, setItems] = useState<LineItem[]>([]);
   const [bankAccountId, setBankAccountId] = useState<string>("");
@@ -341,6 +342,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     const fees = Number(existing.mercado_pago_fees ?? 0);
     const inferredShipping = Math.max(0, Number(existing.total ?? 0) - sub + Number(existing.discount ?? 0) - fees);
     setShipping(inferredShipping);
+    setFreteEmpresa(Number(existing.frete_empresa ?? 0));
     setMercadoPagoFees(fees);
     setLoaded(true);
   }, [editing, existing, loaded]);
@@ -438,6 +440,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
         customer_name: selected?.name ?? (walkInName || null),
         channel, status, payment_method: method, total, discount: discountValue,
         mercado_pago_fees: Number(mercadoPagoFees) || 0,
+        frete_empresa: Number(freteEmpresa) || 0,
         bank_account_id: bankAccountId || null,
       };
 
@@ -655,11 +658,19 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Juros Mercado Pago (R$)</Label>
-            <Input type="number" step="0.01" min={0}
-              value={mercadoPagoFees} onChange={(e) => setMercadoPagoFees(Number(e.target.value))} />
-            <div className="text-xs text-muted-foreground">Soma ao total da venda</div>
+          <div className="grid grid-cols-2 gap-3 items-end">
+            <div className="space-y-1.5">
+              <Label>Juros Mercado Pago (R$)</Label>
+              <Input type="number" step="0.01" min={0}
+                value={mercadoPagoFees} onChange={(e) => setMercadoPagoFees(Number(e.target.value))} />
+              <div className="text-xs text-muted-foreground">Soma ao total da venda</div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Frete Empresa (R$)</Label>
+              <Input type="number" step="0.01" min={0}
+                value={freteEmpresa} onChange={(e) => setFreteEmpresa(Number(e.target.value))} />
+              <div className="text-xs text-muted-foreground">Custo de envio pago aos Correios — não soma no total</div>
+            </div>
           </div>
 
           <div className="rounded-md border p-3 space-y-1 text-right">

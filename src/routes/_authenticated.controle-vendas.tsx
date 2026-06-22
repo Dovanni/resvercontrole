@@ -64,14 +64,17 @@ const num = (s: string) => {
 };
 
 // Fórmulas oficiais:
-// RECEBER = LOJA - JUROS_ML - FRETE_CLIENTE
-// LUCRO   = LOJA - CUSTO - FRETE_EMPRESA - JUROS_ML
-// MARGEM  = RECEBER * 100 / LOJA
+// RECEBER = LOJA (total da venda, já inclui frete cliente e juros ML)
+// LUCRO   = RECEBER - CUSTO - JUROS_ML - FRETE_EMPRESA
+// MARGEM  = LUCRO / (RECEBER - FRETE_EMPRESA) * 100
 // RATEIO (mensal) = TOTAL_FORNECEDOR - SUM(CUSTO)
 const calcReceber = (loja: number) => loja;
 const calcLucro = (loja: number, custo: number, freteEmp: number, juros: number) =>
   loja - custo - freteEmp - juros;
-const calcMargem = (lucro: number, receber: number) => (receber > 0 ? (lucro * 100) / receber : 0);
+const calcMargem = (lucro: number, receber: number, freteEmp: number) => {
+  const base = receber - freteEmp;
+  return base > 0 ? (lucro * 100) / base : 0;
+};
 
 function ControleVendasPage() {
   const qc = useQueryClient();
@@ -153,7 +156,7 @@ function ControleVendasPage() {
     const frete_emp = num(form.frete_empresa);
     const receber = calcReceber(loja);
     const lucro = calcLucro(loja, custo, frete_emp, juros);
-    const margem = calcMargem(lucro, receber);
+    const margem = calcMargem(lucro, receber, frete_emp);
     return { receber, lucro, margem };
   }, [form]);
 
@@ -188,7 +191,7 @@ function ControleVendasPage() {
       ? rowsWithSaldo[rowsWithSaldo.length - 1].saldo_acumulado
       : fornecedor;
     const quitado = saldoAtual >= 0 && fornecedor < 0;
-    const margem = calcMargem(totals.lucro, totals.receber);
+    const margem = calcMargem(totals.lucro, totals.receber, totals.frete_empresa);
     return { receber: totals.receber, lucro: totals.lucro, margem, rateio, fornecedor, investimento, custo: totals.custo, saldo, saldoAtual, quitado };
   }, [totals, fornecedor, rowsWithSaldo]);
 
@@ -361,7 +364,7 @@ function ControleVendasPage() {
     const ano = YEAR;
     try {
       const [diarioRes, fornRes] = await Promise.all([
-        supabase.from("controle_vendas_diario").select("mes,receber,lucro,custo").eq("ano", ano),
+        supabase.from("controle_vendas_diario").select("mes,receber,lucro,custo,frete_empresa").eq("ano", ano),
         supabase.from("controle_vendas_fornecedor").select("mes,valor_fornecedor").eq("ano", ano),
       ]);
       if (diarioRes.error) throw diarioRes.error;
@@ -375,6 +378,7 @@ function ControleVendasPage() {
         receber: 0,
         lucro: 0,
         custo: 0,
+        frete_empresa: 0,
         fornecedor: 0,
         rateio: 0,
         saldo: 0,
@@ -386,6 +390,7 @@ function ControleVendasPage() {
         m.receber += Number(r.receber ?? 0);
         m.lucro += Number(r.lucro ?? 0);
         m.custo += Number(r.custo ?? 0);
+        m.frete_empresa += Number(r.frete_empresa ?? 0);
         m.hasData = true;
       });
       monthly.forEach((m) => {
@@ -396,7 +401,8 @@ function ControleVendasPage() {
         }
         m.rateio = m.fornecedor + m.custo;
         m.saldo = m.rateio;
-        m.margem = m.receber > 0 ? (m.lucro * 100) / m.receber : 0;
+        const base = m.receber - m.frete_empresa;
+        m.margem = base > 0 ? (m.lucro * 100) / base : 0;
       });
 
       const totals = monthly.reduce(
@@ -404,13 +410,15 @@ function ControleVendasPage() {
           receber: a.receber + m.receber,
           lucro: a.lucro + m.lucro,
           custo: a.custo + m.custo,
+          frete_empresa: a.frete_empresa + m.frete_empresa,
           fornecedor: a.fornecedor + m.fornecedor,
           rateio: a.rateio + m.rateio,
           saldo: a.saldo + m.saldo,
         }),
-        { receber: 0, lucro: 0, custo: 0, fornecedor: 0, rateio: 0, saldo: 0 },
+        { receber: 0, lucro: 0, custo: 0, frete_empresa: 0, fornecedor: 0, rateio: 0, saldo: 0 },
       );
-      const margemTotal = totals.receber > 0 ? (totals.lucro * 100) / totals.receber : 0;
+      const baseTotal = totals.receber - totals.frete_empresa;
+      const margemTotal = baseTotal > 0 ? (totals.lucro * 100) / baseTotal : 0;
 
       const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
         import("jspdf"),
