@@ -416,8 +416,7 @@ function ControleVendasPage() {
         }),
         { receber: 0, lucro: 0, custo: 0, frete_empresa: 0, fornecedor: 0, rateio: 0, saldo: 0 },
       );
-      const baseTotal = totals.receber - totals.frete_empresa;
-      const margemTotal = baseTotal > 0 ? (totals.lucro * 100) / baseTotal : 0;
+      const margemTotal = totals.receber > 0 ? (totals.lucro * 100) / totals.receber : 0;
 
       const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
         import("jspdf"),
