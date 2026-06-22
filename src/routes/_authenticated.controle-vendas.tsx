@@ -64,17 +64,15 @@ const num = (s: string) => {
 };
 
 // Fórmulas oficiais (definitivas):
-// RECEBER = LOJA (total da venda, já inclui frete cliente e juros ML)
-// LUCRO   = RECEBER - CUSTO - JUROS_ML - FRETE_EMPRESA
-// MARGEM  = LUCRO / (RECEBER - CUSTO - JUROS_ML - FRETE_EMPRESA) * 100
-//          (numerador = denominador → sempre 100% quando lucro > 0)
+// RECEBER = LOJA (fixo)
+// LUCRO   = RECEBER + FRETE_CLIENTE - CUSTO - JUROS_ML - FRETE_EMPRESA
+// MARGEM  = LUCRO / RECEBER * 100
 // RATEIO (mensal) = TOTAL_FORNECEDOR - SUM(CUSTO)
 const calcReceber = (loja: number) => loja;
-const calcLucro = (loja: number, custo: number, freteEmp: number, juros: number) =>
-  loja - custo - juros - freteEmp;
-const calcMargem = (lucro: number, receber: number, custo: number, juros: number, freteEmp: number) => {
-  const base = receber - custo - juros - freteEmp;
-  return base > 0 ? (lucro * 100) / base : 0;
+const calcLucro = (loja: number, custo: number, freteEmp: number, juros: number, freteCli: number) =>
+  loja + freteCli - custo - juros - freteEmp;
+const calcMargem = (lucro: number, receber: number) => {
+  return receber > 0 ? (lucro * 100) / receber : 0;
 };
 
 function ControleVendasPage() {
