@@ -157,7 +157,7 @@ function ControleVendasPage() {
     const frete_emp = num(form.frete_empresa);
     const receber = calcReceber(loja);
     const lucro = calcLucro(loja, custo, frete_emp, juros);
-    const margem = calcMargem(lucro, receber, frete_emp);
+    const margem = calcMargem(lucro, receber, custo, juros, frete_emp);
     return { receber, lucro, margem };
   }, [form]);
 
