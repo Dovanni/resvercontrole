@@ -1129,6 +1129,7 @@ export type Database = {
           customer_id: string | null
           customer_name: string | null
           discount: number
+          frete_empresa: number
           id: string
           mercado_pago_fees: number | null
           notes: string | null
@@ -1146,6 +1147,7 @@ export type Database = {
           customer_id?: string | null
           customer_name?: string | null
           discount?: number
+          frete_empresa?: number
           id?: string
           mercado_pago_fees?: number | null
           notes?: string | null
@@ -1163,6 +1165,7 @@ export type Database = {
           customer_id?: string | null
           customer_name?: string | null
           discount?: number
+          frete_empresa?: number
           id?: string
           mercado_pago_fees?: number | null
           notes?: string | null
