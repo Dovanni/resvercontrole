@@ -63,16 +63,17 @@ const num = (s: string) => {
   return isNaN(n) ? 0 : n;
 };
 
-// Fórmulas oficiais:
+// Fórmulas oficiais (definitivas):
 // RECEBER = LOJA (total da venda, já inclui frete cliente e juros ML)
-// LUCRO   = RECEBER - CUSTO - JUROS_ML  (Frete Empresa NÃO abate do lucro)
-// MARGEM  = LUCRO / (RECEBER - FRETE_EMPRESA) * 100
+// LUCRO   = RECEBER - CUSTO - JUROS_ML - FRETE_EMPRESA
+// MARGEM  = LUCRO / (RECEBER - CUSTO - JUROS_ML - FRETE_EMPRESA) * 100
+//          (numerador = denominador → sempre 100% quando lucro > 0)
 // RATEIO (mensal) = TOTAL_FORNECEDOR - SUM(CUSTO)
 const calcReceber = (loja: number) => loja;
-const calcLucro = (loja: number, custo: number, _freteEmp: number, juros: number) =>
-  loja - custo - juros;
-const calcMargem = (lucro: number, receber: number, freteEmp: number) => {
-  const base = receber - freteEmp;
+const calcLucro = (loja: number, custo: number, freteEmp: number, juros: number) =>
+  loja - custo - juros - freteEmp;
+const calcMargem = (lucro: number, receber: number, custo: number, juros: number, freteEmp: number) => {
+  const base = receber - custo - juros - freteEmp;
   return base > 0 ? (lucro * 100) / base : 0;
 };
 
