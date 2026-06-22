@@ -63,16 +63,17 @@ const num = (s: string) => {
   return isNaN(n) ? 0 : n;
 };
 
-// Fórmulas oficiais:
+// Fórmulas oficiais (definitivas):
 // RECEBER = LOJA (total da venda, já inclui frete cliente e juros ML)
-// LUCRO   = RECEBER - CUSTO - JUROS_ML  (Frete Empresa NÃO abate do lucro)
-// MARGEM  = LUCRO / (RECEBER - FRETE_EMPRESA) * 100
+// LUCRO   = RECEBER - CUSTO - JUROS_ML - FRETE_EMPRESA
+// MARGEM  = LUCRO / (RECEBER - CUSTO - JUROS_ML - FRETE_EMPRESA) * 100
+//          (numerador = denominador → sempre 100% quando lucro > 0)
 // RATEIO (mensal) = TOTAL_FORNECEDOR - SUM(CUSTO)
 const calcReceber = (loja: number) => loja;
-const calcLucro = (loja: number, custo: number, _freteEmp: number, juros: number) =>
-  loja - custo - juros;
-const calcMargem = (lucro: number, receber: number, freteEmp: number) => {
-  const base = receber - freteEmp;
+const calcLucro = (loja: number, custo: number, freteEmp: number, juros: number) =>
+  loja - custo - juros - freteEmp;
+const calcMargem = (lucro: number, receber: number, custo: number, juros: number, freteEmp: number) => {
+  const base = receber - custo - juros - freteEmp;
   return base > 0 ? (lucro * 100) / base : 0;
 };
 
@@ -156,7 +157,7 @@ function ControleVendasPage() {
     const frete_emp = num(form.frete_empresa);
     const receber = calcReceber(loja);
     const lucro = calcLucro(loja, custo, frete_emp, juros);
-    const margem = calcMargem(lucro, receber, frete_emp);
+    const margem = calcMargem(lucro, receber, custo, juros, frete_emp);
     return { receber, lucro, margem };
   }, [form]);
 
@@ -191,7 +192,7 @@ function ControleVendasPage() {
       ? rowsWithSaldo[rowsWithSaldo.length - 1].saldo_acumulado
       : fornecedor;
     const quitado = saldoAtual >= 0 && fornecedor < 0;
-    const margem = calcMargem(totals.lucro, totals.receber, totals.frete_empresa);
+    const margem = calcMargem(totals.lucro, totals.receber, totals.custo, totals.juros_ml, totals.frete_empresa);
     return { receber: totals.receber, lucro: totals.lucro, margem, rateio, fornecedor, investimento, custo: totals.custo, saldo, saldoAtual, quitado };
   }, [totals, fornecedor, rowsWithSaldo]);
 
