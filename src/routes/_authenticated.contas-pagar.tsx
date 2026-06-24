@@ -908,7 +908,12 @@ function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: str
         };
       });
       const { error } = await supabase.from("payables").insert(rows as any);
-      if (error) throw error;
+      if (error) {
+        if ((error as any).code === "23505") {
+          throw new Error("Já existe uma conta a pagar pendente com a mesma descrição, vencimento e valor. Verifique antes de criar novamente.");
+        }
+        throw error;
+      }
       return total;
     },
     onSuccess: (n) => { toast.success(n > 1 ? `${n} contas criadas` : "Conta criada"); onDone(); },
