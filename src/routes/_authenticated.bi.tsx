@@ -466,7 +466,7 @@ function BIPage() {
     for (const it of items ?? []) {
       const name = it.products?.name ?? "—";
       m[name] ??= { receita: 0, custo: 0 };
-      m[name].receita += Number(it.total);
+      m[name].receita += Number(it.unit_price || 0) * Number(it.quantity || 0);
       m[name].custo += Number(it.unit_cost || 0) * Number(it.quantity);
     }
     return Object.entries(m)
