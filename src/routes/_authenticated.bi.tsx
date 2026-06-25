@@ -43,7 +43,7 @@ export const Route = createFileRoute("/_authenticated/bi")({
 const C = {
   atacado: "#3b82f6", // azul
   varejo: "#ec4899", // rosa
-  total: "hsl(var(--primary))",
+  total: "#8b5cf6",
   positive: "#10b981", // verde
   negative: "#ef4444", // vermelho
   neutral: "#94a3b8", // cinza
