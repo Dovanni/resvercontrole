@@ -600,41 +600,60 @@ function BIPage() {
       .sort((a, b) => b.value - a.value);
   }, [payables]);
 
-  // 7. Evolução saldo bancário
+  // 7. Evolução saldo bancário (dia a dia)
   const saldoEvol = useMemo(() => {
     if (!bankAccounts || !bankMoves) return [];
-    const initial = bankAccounts.reduce((s, a) => s + Number(a.initial_balance || 0), 0);
-    const sorted = [...bankMoves].sort((a, b) => a.movement_date.localeCompare(b.movement_date));
-    const fromD = from;
-    const toD = to;
-    // saldo até antes de `from`
+    const initial = bankAccounts.reduce(
+      (s, a) => s + Number(a.initial_balance || 0),
+      0,
+    );
+    const sorted = [...bankMoves].sort((a, b) =>
+      String(a.movement_date).localeCompare(String(b.movement_date)),
+    );
+
+    // saldo acumulado até antes de `from`
     let saldo = initial;
     let i = 0;
-    while (i < sorted.length && sorted[i].movement_date < fromD) {
+    while (i < sorted.length && String(sorted[i].movement_date) < from) {
       const v = Number(sorted[i].amount);
       saldo += sorted[i].type === "entrada" ? v : -v;
       i++;
     }
+
+    // itera dia a dia usando strings (sem Date/TZ)
     const out: { date: string; saldo: number }[] = [];
-    const cur = new Date(fromD + "T00:00:00");
-    const end = new Date(toD + "T00:00:00");
-    while (cur <= end) {
-      const ds = cur.toISOString().slice(0, 10);
-      while (i < sorted.length && sorted[i].movement_date === ds) {
+    const addDays = (s: string, n: number) => {
+      const d = new Date(s + "T12:00:00Z");
+      d.setUTCDate(d.getUTCDate() + n);
+      return d.toISOString().slice(0, 10);
+    };
+    let ds = from;
+    while (ds <= to) {
+      while (i < sorted.length && String(sorted[i].movement_date) === ds) {
         const v = Number(sorted[i].amount);
         saldo += sorted[i].type === "entrada" ? v : -v;
         i++;
       }
-      out.push({ date: ds.slice(5), saldo });
-      cur.setDate(cur.getDate() + 1);
+      out.push({ date: ds.slice(5), saldo: Number(saldo.toFixed(2)) });
+      ds = addDays(ds, 1);
     }
-    // se muitos dias, agrupar mostrando 1 a cada N
+
+    // Mantém todos os dias com movimentação + amostragem do restante.
+    const movementDates = new Set(
+      (bankMoves ?? []).map((m) => String(m.movement_date).slice(5)),
+    );
+    let result = out;
     if (out.length > 60) {
       const step = Math.ceil(out.length / 60);
-      return out.filter((_, idx) => idx % step === 0);
+      result = out.filter(
+        (p, idx) => idx === 0 || idx === out.length - 1 || idx % step === 0 || movementDates.has(p.date),
+      );
     }
-    return out;
+    console.log("[BI] saldoEvol points:", result.length, "initial:", initial, "final:", result.at(-1));
+    return result;
   }, [bankAccounts, bankMoves, from, to]);
+
+
 
   // 8. A pagar vs a receber pendente por mês de vencimento.
   // Usa SEMPRE o conjunto de pendentes/atrasados (sem filtro de período),
