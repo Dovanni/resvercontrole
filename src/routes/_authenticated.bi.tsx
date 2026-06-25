@@ -206,7 +206,7 @@ function BIPage() {
       const { data, error } = await supabase
         .from("sale_items")
         .select(
-          "quantity, total, unit_cost, unit_price, products(name), sales!inner(sold_at, status)",
+          "quantity, unit_cost, unit_price, products(name), sales!inner(sold_at, status)",
         )
         .gte("sales.sold_at", new Date(from).toISOString())
         .lte("sales.sold_at", new Date(to + "T23:59:59").toISOString())
@@ -452,7 +452,7 @@ function BIPage() {
     const m: Record<string, number> = {};
     for (const it of items ?? []) {
       const name = it.products?.name ?? "—";
-      m[name] = (m[name] ?? 0) + Number(it.total);
+      m[name] = (m[name] ?? 0) + Number(it.unit_price || 0) * Number(it.quantity || 0);
     }
     return Object.entries(m)
       .map(([name, total]) => ({ name, total }))
@@ -466,7 +466,7 @@ function BIPage() {
     for (const it of items ?? []) {
       const name = it.products?.name ?? "—";
       m[name] ??= { receita: 0, custo: 0 };
-      m[name].receita += Number(it.total);
+      m[name].receita += Number(it.unit_price || 0) * Number(it.quantity || 0);
       m[name].custo += Number(it.unit_cost || 0) * Number(it.quantity);
     }
     return Object.entries(m)
