@@ -956,12 +956,26 @@ function BIPage() {
         </ChartCard>
 
         <ChartCard title="Evolução do saldo bancário consolidado" filename="saldo-bancario">
-          <LineChart data={saldoEvol}>
+          <LineChart data={saldoEvol} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-            <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
+            <XAxis dataKey="date" tick={{ fontSize: 10 }} minTickGap={20} />
+            <YAxis
+              tick={{ fontSize: 11 }}
+              tickFormatter={(v) => `R$${(v / 1000).toFixed(1)}k`}
+              domain={["auto", "auto"]}
+            />
             <Tooltip formatter={(v: any) => brl(Number(v))} />
-            <Line type="monotone" dataKey="saldo" name="Saldo" stroke={C.total} strokeWidth={2} dot={false} />
+            <Line
+              type="monotone"
+              dataKey="saldo"
+              name="Saldo"
+              stroke={C.total}
+              strokeWidth={2.5}
+              dot={{ r: 2 }}
+              activeDot={{ r: 5 }}
+              isAnimationActive={false}
+              connectNulls
+            />
           </LineChart>
         </ChartCard>
 
