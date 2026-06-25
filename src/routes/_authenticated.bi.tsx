@@ -256,6 +256,40 @@ function BIPage() {
     },
   });
 
+  // Para "A pagar vs A receber": busca TODOS os pendentes/atrasados, sem filtro
+  // de período — o gráfico mostra o que está em aberto por mês de vencimento.
+  const { data: pendingPayables } = useQuery({
+    queryKey: ["bi-pending-payables"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payables")
+        .select("amount, paid_amount, due_date, status")
+        .in("status", ["pendente", "atrasado"]);
+      if (error) {
+        console.error("[BI] pendingPayables error:", error);
+        throw error;
+      }
+      console.log("[BI] pendingPayables:", data?.length, data);
+      return data as any[];
+    },
+  });
+
+  const { data: pendingReceivables } = useQuery({
+    queryKey: ["bi-pending-receivables"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("receivables")
+        .select("amount, received_amount, due_date, status")
+        .in("status", ["pendente", "atrasado", "parcial"]);
+      if (error) {
+        console.error("[BI] pendingReceivables error:", error);
+        throw error;
+      }
+      console.log("[BI] pendingReceivables:", data?.length, data);
+      return data as any[];
+    },
+  });
+
   const { data: finance } = useQuery({
     queryKey: ["bi-finance", from, to],
     queryFn: async () => {
@@ -566,60 +600,105 @@ function BIPage() {
       .sort((a, b) => b.value - a.value);
   }, [payables]);
 
-  // 7. Evolução saldo bancário
+  // 7. Evolução saldo bancário (dia a dia)
   const saldoEvol = useMemo(() => {
     if (!bankAccounts || !bankMoves) return [];
-    const initial = bankAccounts.reduce((s, a) => s + Number(a.initial_balance || 0), 0);
-    const sorted = [...bankMoves].sort((a, b) => a.movement_date.localeCompare(b.movement_date));
-    const fromD = from;
-    const toD = to;
-    // saldo até antes de `from`
+    const initial = bankAccounts.reduce(
+      (s, a) => s + Number(a.initial_balance || 0),
+      0,
+    );
+    const sorted = [...bankMoves].sort((a, b) =>
+      String(a.movement_date).localeCompare(String(b.movement_date)),
+    );
+
+    // saldo acumulado até antes de `from`
     let saldo = initial;
     let i = 0;
-    while (i < sorted.length && sorted[i].movement_date < fromD) {
+    while (i < sorted.length && String(sorted[i].movement_date) < from) {
       const v = Number(sorted[i].amount);
       saldo += sorted[i].type === "entrada" ? v : -v;
       i++;
     }
+
+    // itera dia a dia usando strings (sem Date/TZ)
     const out: { date: string; saldo: number }[] = [];
-    const cur = new Date(fromD + "T00:00:00");
-    const end = new Date(toD + "T00:00:00");
-    while (cur <= end) {
-      const ds = cur.toISOString().slice(0, 10);
-      while (i < sorted.length && sorted[i].movement_date === ds) {
+    const addDays = (s: string, n: number) => {
+      const d = new Date(s + "T12:00:00Z");
+      d.setUTCDate(d.getUTCDate() + n);
+      return d.toISOString().slice(0, 10);
+    };
+    let ds = from;
+    while (ds <= to) {
+      while (i < sorted.length && String(sorted[i].movement_date) === ds) {
         const v = Number(sorted[i].amount);
         saldo += sorted[i].type === "entrada" ? v : -v;
         i++;
       }
-      out.push({ date: ds.slice(5), saldo });
-      cur.setDate(cur.getDate() + 1);
+      out.push({ date: ds.slice(5), saldo: Number(saldo.toFixed(2)) });
+      ds = addDays(ds, 1);
     }
-    // se muitos dias, agrupar mostrando 1 a cada N
+
+    // Mantém todos os dias com movimentação + amostragem do restante.
+    const movementDates = new Set(
+      (bankMoves ?? []).map((m) => String(m.movement_date).slice(5)),
+    );
+    let result = out;
     if (out.length > 60) {
       const step = Math.ceil(out.length / 60);
-      return out.filter((_, idx) => idx % step === 0);
+      result = out.filter(
+        (p, idx) => idx === 0 || idx === out.length - 1 || idx % step === 0 || movementDates.has(p.date),
+      );
     }
-    return out;
+    console.log("[BI] saldoEvol points:", result.length, "initial:", initial, "final:", result.at(-1));
+    return result;
   }, [bankAccounts, bankMoves, from, to]);
 
-  // 8. A pagar vs a receber pendente por mês
+
+
+  // 8. A pagar vs a receber pendente por mês de vencimento.
+  // Usa SEMPRE o conjunto de pendentes/atrasados (sem filtro de período),
+  // mas restringe ao intervalo [hoje - 6 meses, máximo vencimento futuro].
   const pagarReceber = useMemo(() => {
+    const allP = pendingPayables ?? [];
+    const allR = pendingReceivables ?? [];
+    if (allP.length === 0 && allR.length === 0) return [];
+
+    // intervalo: do menor entre `from` e início do mês atual,
+    // até o maior vencimento encontrado (no mínimo `to`).
+    const todayMonth = new Date();
+    todayMonth.setDate(1);
+    const startCandidates = [from, todayMonth.toISOString().slice(0, 10)];
+    const startStr = startCandidates.sort()[0];
+
+    const maxDue = [
+      to,
+      ...allP.map((p) => p.due_date as string),
+      ...allR.map((r) => r.due_date as string),
+    ]
+      .filter(Boolean)
+      .sort()
+      .at(-1) as string;
+
+    const ms = monthRange(startStr, maxDue);
     const base: Record<string, { month: string; pagar: number; receber: number }> = {};
-    months.forEach((m) => (base[m] = { month: monthLabel(m), pagar: 0, receber: 0 }));
-    for (const p of payables ?? []) {
-      if (["pago"].includes(p.status)) continue;
+    ms.forEach((m) => (base[m] = { month: monthLabel(m), pagar: 0, receber: 0 }));
+
+    for (const p of allP) {
       const k = monthKey(p.due_date);
       if (!base[k]) continue;
       base[k].pagar += Number(p.amount) - Number(p.paid_amount || 0);
     }
-    for (const r of receivables ?? []) {
-      if (["recebido", "cancelado"].includes(r.status)) continue;
+    for (const r of allR) {
       const k = monthKey(r.due_date);
       if (!base[k]) continue;
       base[k].receber += Number(r.amount) - Number(r.received_amount || 0);
     }
-    return Object.values(base);
-  }, [payables, receivables, months]);
+    const out = Object.values(base);
+    console.log("[BI] pagarReceber:", out);
+    return out;
+  }, [pendingPayables, pendingReceivables, from, to]);
+
+
 
   // 9 e 10. CVD por mês
   const cvdMes = useMemo(() => {
@@ -877,12 +956,26 @@ function BIPage() {
         </ChartCard>
 
         <ChartCard title="Evolução do saldo bancário consolidado" filename="saldo-bancario">
-          <LineChart data={saldoEvol}>
+          <LineChart data={saldoEvol} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-            <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-            <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} />
+            <XAxis dataKey="date" tick={{ fontSize: 10 }} minTickGap={20} />
+            <YAxis
+              tick={{ fontSize: 11 }}
+              tickFormatter={(v) => `R$${(v / 1000).toFixed(1)}k`}
+              domain={["auto", "auto"]}
+            />
             <Tooltip formatter={(v: any) => brl(Number(v))} />
-            <Line type="monotone" dataKey="saldo" name="Saldo" stroke={C.total} strokeWidth={2} dot={false} />
+            <Line
+              type="monotone"
+              dataKey="saldo"
+              name="Saldo"
+              stroke={C.total}
+              strokeWidth={2.5}
+              dot={{ r: 2 }}
+              activeDot={{ r: 5 }}
+              isAnimationActive={false}
+              connectNulls
+            />
           </LineChart>
         </ChartCard>
 
