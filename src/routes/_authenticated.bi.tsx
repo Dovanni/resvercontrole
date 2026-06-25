@@ -206,7 +206,7 @@ function BIPage() {
       const { data, error } = await supabase
         .from("sale_items")
         .select(
-          "quantity, total, unit_cost, unit_price, products(name), sales!inner(sold_at, status)",
+          "quantity, unit_cost, unit_price, products(name), sales!inner(sold_at, status)",
         )
         .gte("sales.sold_at", new Date(from).toISOString())
         .lte("sales.sold_at", new Date(to + "T23:59:59").toISOString())
