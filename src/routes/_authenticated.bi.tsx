@@ -636,24 +636,50 @@ function BIPage() {
     return out;
   }, [bankAccounts, bankMoves, from, to]);
 
-  // 8. A pagar vs a receber pendente por mês
+  // 8. A pagar vs a receber pendente por mês de vencimento.
+  // Usa SEMPRE o conjunto de pendentes/atrasados (sem filtro de período),
+  // mas restringe ao intervalo [hoje - 6 meses, máximo vencimento futuro].
   const pagarReceber = useMemo(() => {
+    const allP = pendingPayables ?? [];
+    const allR = pendingReceivables ?? [];
+    if (allP.length === 0 && allR.length === 0) return [];
+
+    // intervalo: do menor entre `from` e início do mês atual,
+    // até o maior vencimento encontrado (no mínimo `to`).
+    const todayMonth = new Date();
+    todayMonth.setDate(1);
+    const startCandidates = [from, todayMonth.toISOString().slice(0, 10)];
+    const startStr = startCandidates.sort()[0];
+
+    const maxDue = [
+      to,
+      ...allP.map((p) => p.due_date as string),
+      ...allR.map((r) => r.due_date as string),
+    ]
+      .filter(Boolean)
+      .sort()
+      .at(-1) as string;
+
+    const ms = monthRange(startStr, maxDue);
     const base: Record<string, { month: string; pagar: number; receber: number }> = {};
-    months.forEach((m) => (base[m] = { month: monthLabel(m), pagar: 0, receber: 0 }));
-    for (const p of payables ?? []) {
-      if (["pago"].includes(p.status)) continue;
+    ms.forEach((m) => (base[m] = { month: monthLabel(m), pagar: 0, receber: 0 }));
+
+    for (const p of allP) {
       const k = monthKey(p.due_date);
       if (!base[k]) continue;
       base[k].pagar += Number(p.amount) - Number(p.paid_amount || 0);
     }
-    for (const r of receivables ?? []) {
-      if (["recebido", "cancelado"].includes(r.status)) continue;
+    for (const r of allR) {
       const k = monthKey(r.due_date);
       if (!base[k]) continue;
       base[k].receber += Number(r.amount) - Number(r.received_amount || 0);
     }
-    return Object.values(base);
-  }, [payables, receivables, months]);
+    const out = Object.values(base);
+    console.log("[BI] pagarReceber:", out);
+    return out;
+  }, [pendingPayables, pendingReceivables, from, to]);
+
+
 
   // 9 e 10. CVD por mês
   const cvdMes = useMemo(() => {
