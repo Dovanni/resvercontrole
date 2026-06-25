@@ -452,7 +452,7 @@ function BIPage() {
     const m: Record<string, number> = {};
     for (const it of items ?? []) {
       const name = it.products?.name ?? "—";
-      m[name] = (m[name] ?? 0) + Number(it.total);
+      m[name] = (m[name] ?? 0) + Number(it.unit_price || 0) * Number(it.quantity || 0);
     }
     return Object.entries(m)
       .map(([name, total]) => ({ name, total }))
