@@ -256,6 +256,40 @@ function BIPage() {
     },
   });
 
+  // Para "A pagar vs A receber": busca TODOS os pendentes/atrasados, sem filtro
+  // de período — o gráfico mostra o que está em aberto por mês de vencimento.
+  const { data: pendingPayables } = useQuery({
+    queryKey: ["bi-pending-payables"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payables")
+        .select("amount, paid_amount, due_date, status")
+        .in("status", ["pendente", "atrasado"]);
+      if (error) {
+        console.error("[BI] pendingPayables error:", error);
+        throw error;
+      }
+      console.log("[BI] pendingPayables:", data?.length, data);
+      return data as any[];
+    },
+  });
+
+  const { data: pendingReceivables } = useQuery({
+    queryKey: ["bi-pending-receivables"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("receivables")
+        .select("amount, received_amount, due_date, status")
+        .in("status", ["pendente", "atrasado", "parcial"]);
+      if (error) {
+        console.error("[BI] pendingReceivables error:", error);
+        throw error;
+      }
+      console.log("[BI] pendingReceivables:", data?.length, data);
+      return data as any[];
+    },
+  });
+
   const { data: finance } = useQuery({
     queryKey: ["bi-finance", from, to],
     queryFn: async () => {
