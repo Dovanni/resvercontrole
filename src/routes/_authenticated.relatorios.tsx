@@ -61,10 +61,14 @@ function ReportsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("name, sku, stock, min_stock, cost, price, wholesale_price")
+        .select("name, sku, stock, min_stock, cost_price, sale_price, wholesale_price, status")
         .order("name");
       if (error) throw error;
-      return data as any[];
+      return (data ?? []).map((p: any) => ({
+        ...p,
+        cost: Number(p.cost_price ?? 0),
+        price: Number(p.sale_price ?? 0),
+      })) as any[];
     },
   });
 
