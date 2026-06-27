@@ -1167,8 +1167,16 @@ function VisaoGeral({ cartoes, lancamentos, faturas, curMes, curAno }: { cartoes
     }
   });
 
+  // Tabela comparativa por categoria — TODAS as parcelas pendentes (ignora filtro de período),
+  // igual ao "Resumo de limites".
+  const pagasKeySet = useMemo(
+    () => new Set(faturas.filter((f) => f.status === "paga").map((f) => `${f.cartao_id}-${f.ano}-${f.mes}`)),
+    [faturas],
+  );
   const tableData = cartoesFiltrados.map((c) => {
-    const cl = mesL.filter((l) => l.cartao_id === c.id);
+    const cl = lancamentos.filter(
+      (l) => l.cartao_id === c.id && !pagasKeySet.has(`${l.cartao_id}-${l.ano_fatura}-${l.mes_fatura}`),
+    );
     const comb = cl.filter((l) => l.categoria === "combustivel").reduce((s, l) => s + Number(l.valor), 0);
     const casa = cl.filter((l) => l.categoria === "casa").reduce((s, l) => s + Number(l.valor), 0);
     const pess = cl.filter((l) => l.categoria === "pessoal").reduce((s, l) => s + Number(l.valor), 0);
