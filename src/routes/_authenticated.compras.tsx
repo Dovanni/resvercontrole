@@ -326,9 +326,10 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
     fornecedor_id: "", data_compra: new Date().toISOString().slice(0, 10), numero_nf: "",
     condicao: "a_vista" as "a_vista" | "parcelado" | "a_prazo",
     forma_pagamento: "pix", bank_account_id: "",
-    parcelas: 2, dia_vencimento: 10, data_vencimento: "",
+    parcelas: 2, data_primeira_parcela: "", data_vencimento: "",
     desconto: "0", frete: "0", observacoes: "",
   });
+
   const [itens, setItens] = useState<(Item & { _key: string })[]>([]);
   const [busca, setBusca] = useState("");
 
