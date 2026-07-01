@@ -512,6 +512,21 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
           )}
         </div>
 
+        {f.condicao === "parcelado" && parcelasPreview.length > 0 && (
+          <div className="rounded-md border bg-muted/30 p-3">
+            <div className="text-xs font-medium text-muted-foreground mb-2">Prévia das parcelas</div>
+            <div className="space-y-1 text-sm">
+              {parcelasPreview.map((p) => (
+                <div key={p.n} className="flex items-center justify-between">
+                  <span>Parcela {p.n}/{f.parcelas} → {dateBR(p.date)}</span>
+                  <span className="font-medium">{brl(p.amount)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+
         <div className="border-t pt-3">
           <Label>Itens da compra</Label>
           <div className="relative mt-1">
