@@ -46,7 +46,74 @@ function ProductsPage() {
     },
   });
 
-  const { page, setPage, totalPages, total, pageItems } = usePagination(products);
+  const [search, setSearch] = useState("");
+  const [brandFilter, setBrandFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [stockFilter, setStockFilter] = useState("all");
+  const [sortKey, setSortKey] = useState<SortKey>("name");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+
+  const brands = useMemo(
+    () => Array.from(new Set((products ?? []).map(p => p.brand).filter((b): b is string => !!b))).sort(),
+    [products]
+  );
+  const categories = useMemo(
+    () => Array.from(new Set((products ?? []).map(p => p.category).filter((c): c is string => !!c))).sort(),
+    [products]
+  );
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const list = (products ?? []).filter(p => {
+      if (q) {
+        const hay = `${p.name ?? ""} ${p.sku ?? ""} ${p.brand ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (brandFilter !== "all" && (p.brand ?? "") !== brandFilter) return false;
+      if (categoryFilter !== "all" && (p.category ?? "") !== categoryFilter) return false;
+      if (statusFilter !== "all") {
+        const s = (p.status ?? "ativo").toLowerCase();
+        if (statusFilter === "ativo" && s !== "ativo") return false;
+        if (statusFilter === "inativo" && s === "ativo") return false;
+      }
+      if (stockFilter !== "all") {
+        const stock = Number(p.stock ?? 0);
+        const min = Number(p.min_stock ?? 0);
+        if (stockFilter === "zerado" && stock !== 0) return false;
+        if (stockFilter === "baixo" && !(stock > 0 && stock <= min)) return false;
+        if (stockFilter === "normal" && !(stock > min)) return false;
+      }
+      return true;
+    });
+    const sorted = [...list].sort((a, b) => {
+      const av = (a[sortKey] ?? "").toString().toLowerCase();
+      const bv = (b[sortKey] ?? "").toString().toLowerCase();
+      const cmp = av.localeCompare(bv, "pt-BR");
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [products, search, brandFilter, categoryFilter, statusFilter, stockFilter, sortKey, sortDir]);
+
+  const { page, setPage, totalPages, total, pageItems } = usePagination(filtered);
+
+  const toggleSort = (k: SortKey) => {
+    if (sortKey === k) setSortDir(sortDir === "asc" ? "desc" : "asc");
+    else { setSortKey(k); setSortDir("asc"); }
+  };
+
+  const clearFilters = () => {
+    setSearch(""); setBrandFilter("all"); setCategoryFilter("all");
+    setStatusFilter("all"); setStockFilter("all");
+  };
+
+  const hasActiveFilters = search || brandFilter !== "all" || categoryFilter !== "all" || statusFilter !== "all" || stockFilter !== "all";
+
+  const SortIcon = ({ k }: { k: SortKey }) =>
+    sortKey !== k ? <ArrowUpDown className="size-3 inline ml-1 opacity-50" />
+    : sortDir === "asc" ? <ArrowUp className="size-3 inline ml-1" />
+    : <ArrowDown className="size-3 inline ml-1" />;
+
 
 
   const save = useMutation({
