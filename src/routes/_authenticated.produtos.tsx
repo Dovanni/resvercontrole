@@ -25,7 +25,11 @@ type Product = {
   id: string; name: string; brand: string | null; category: string | null;
   cost_price: number; sale_price: number; wholesale_price: number;
   stock: number; min_stock: number; sku: string | null; photo_url: string | null;
+  status?: string | null;
 };
+
+type SortKey = "name" | "brand";
+type SortDir = "asc" | "desc";
 
 function ProductsPage() {
   const qc = useQueryClient();
