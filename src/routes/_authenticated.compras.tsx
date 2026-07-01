@@ -504,8 +504,9 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
           </>}
           {f.condicao === "parcelado" && <>
             <div><Label>Nº parcelas</Label><Input type="number" min={2} max={36} value={f.parcelas} onChange={(e) => setF({ ...f, parcelas: Number(e.target.value) })} /></div>
-            <div><Label>Dia de vencimento</Label><Input type="number" min={1} max={31} value={f.dia_vencimento} onChange={(e) => setF({ ...f, dia_vencimento: Number(e.target.value) })} /></div>
+            <div><Label>Data de vencimento (1ª parcela)</Label><Input type="date" value={f.data_primeira_parcela} onChange={(e) => setF({ ...f, data_primeira_parcela: e.target.value })} /></div>
           </>}
+
           {f.condicao === "a_prazo" && (
             <div><Label>Data de vencimento</Label><Input type="date" value={f.data_vencimento} onChange={(e) => setF({ ...f, data_vencimento: e.target.value })} /></div>
           )}
