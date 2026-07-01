@@ -169,14 +169,75 @@ function ProductsPage() {
         }
       />
 
+      <Card className="shadow-soft mb-4">
+        <CardContent className="p-4 space-y-3">
+          <div className="flex flex-col md:flex-row gap-2 md:items-center">
+            <div className="relative flex-1 min-w-[220px]">
+              <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome, SKU ou marca..."
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                className="pl-9"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Select value={brandFilter} onValueChange={(v) => { setBrandFilter(v); setPage(1); }}>
+                <SelectTrigger className="w-[150px]"><SelectValue placeholder="Marca" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as marcas</SelectItem>
+                  {brands.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v); setPage(1); }}>
+                <SelectTrigger className="w-[150px]"><SelectValue placeholder="Categoria" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as categorias</SelectItem>
+                  {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+                <SelectTrigger className="w-[130px]"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos status</SelectItem>
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="inativo">Inativo</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={stockFilter} onValueChange={(v) => { setStockFilter(v); setPage(1); }}>
+                <SelectTrigger className="w-[170px]"><SelectValue placeholder="Estoque" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos estoques</SelectItem>
+                  <SelectItem value="baixo">Abaixo do mínimo ⚠️</SelectItem>
+                  <SelectItem value="zerado">Zerado 🔴</SelectItem>
+                  <SelectItem value="normal">Normal ✅</SelectItem>
+                </SelectContent>
+              </Select>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  <X className="size-4 mr-1" /> Limpar filtros
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Exibindo {filtered.length} de {products?.length ?? 0} produtos
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="shadow-soft">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-16"></TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Marca</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("name")}>
+                  Nome <SortIcon k="name" />
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("brand")}>
+                  Marca <SortIcon k="brand" />
+                </TableHead>
                 <TableHead className="text-right">Custo</TableHead>
                 <TableHead className="text-right">Preço</TableHead>
                 <TableHead className="text-right">Estoque</TableHead>
@@ -184,8 +245,10 @@ function ProductsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products?.length === 0 && (
-                <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Nenhum produto cadastrado ainda.</TableCell></TableRow>
+              {filtered.length === 0 && (
+                <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                  {products?.length === 0 ? "Nenhum produto cadastrado ainda." : "Nenhum produto encontrado com os filtros aplicados."}
+                </TableCell></TableRow>
               )}
               {pageItems.map(p => (
                 <TableRow key={p.id}>
