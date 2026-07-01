@@ -326,9 +326,10 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
     fornecedor_id: "", data_compra: new Date().toISOString().slice(0, 10), numero_nf: "",
     condicao: "a_vista" as "a_vista" | "parcelado" | "a_prazo",
     forma_pagamento: "pix", bank_account_id: "",
-    parcelas: 2, dia_vencimento: 10, data_vencimento: "",
+    parcelas: 2, data_primeira_parcela: "", data_vencimento: "",
     desconto: "0", frete: "0", observacoes: "",
   });
+
   const [itens, setItens] = useState<(Item & { _key: string })[]>([]);
   const [busca, setBusca] = useState("");
 
@@ -357,14 +358,30 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
     ? produtos.filter((p) => p.name.toLowerCase().includes(busca.toLowerCase()) || (p.sku ?? "").toLowerCase().includes(busca.toLowerCase())).slice(0, 8)
     : [];
 
+  const parcelasPreview = useMemo(() => {
+    if (f.condicao !== "parcelado" || !f.data_primeira_parcela || !f.parcelas) return [];
+    const [y, m, d] = f.data_primeira_parcela.split("-").map(Number);
+    const valorParcela = Number((total / f.parcelas).toFixed(2));
+    const arr: { n: number; date: string; amount: number }[] = [];
+    for (let i = 0; i < f.parcelas; i++) {
+      const dv = new Date(y, m - 1 + i, 1);
+      const lastDay = new Date(dv.getFullYear(), dv.getMonth() + 1, 0).getDate();
+      dv.setDate(Math.min(d, lastDay));
+      arr.push({ n: i + 1, date: dv.toISOString().slice(0, 10), amount: valorParcela });
+    }
+    return arr;
+  }, [f.condicao, f.data_primeira_parcela, f.parcelas, total]);
+
   const save = useMutation({
     mutationFn: async () => {
       if (!f.fornecedor_id) throw new Error("Selecione um fornecedor");
       if (itens.length === 0) throw new Error("Adicione ao menos um item");
       if (f.condicao === "a_vista" && !f.bank_account_id) throw new Error("Selecione a conta bancária");
       if (f.condicao === "a_prazo" && !f.data_vencimento) throw new Error("Informe a data de vencimento");
+      if (f.condicao === "parcelado" && !f.data_primeira_parcela) throw new Error("Informe a data da primeira parcela");
 
       const fornName = fornecedores.find((x) => x.id === f.fornecedor_id)?.name ?? "Fornecedor";
+      const diaVenc = f.condicao === "parcelado" ? Number(f.data_primeira_parcela.split("-")[2]) : null;
 
       // 1. Criar compra
       const { data: compraRow, error: e1 } = await (supabase.from("compras" as any).insert({
@@ -376,8 +393,8 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
         forma_pagamento: f.condicao === "a_vista" ? f.forma_pagamento : null,
         bank_account_id: f.condicao === "a_vista" ? f.bank_account_id : null,
         parcelas: f.condicao === "parcelado" ? f.parcelas : 1,
-        dia_vencimento: f.condicao === "parcelado" ? f.dia_vencimento : null,
-        data_vencimento: f.condicao === "a_prazo" ? f.data_vencimento : null,
+        dia_vencimento: diaVenc,
+        data_vencimento: f.condicao === "a_prazo" ? f.data_vencimento : (f.condicao === "parcelado" ? f.data_primeira_parcela : null),
         subtotal, desconto: Number(f.desconto) || 0, frete: Number(f.frete) || 0, total,
         observacoes: f.observacoes || null,
       }).select().single());
@@ -415,20 +432,12 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
         });
         payablesCount = 1;
       } else if (f.condicao === "parcelado") {
-        const valorParcela = Number((total / f.parcelas).toFixed(2));
-        const rows: any[] = [];
-        const dCompra = new Date(f.data_compra + "T00:00:00");
-        for (let i = 0; i < f.parcelas; i++) {
-          const dv = new Date(dCompra.getFullYear(), dCompra.getMonth() + i + 1, 0);
-          const lastDay = dv.getDate();
-          dv.setDate(Math.min(f.dia_vencimento, lastDay));
-          rows.push({
-            user_id: userId, supplier_id: f.fornecedor_id,
-            description: `${baseDesc} (${i + 1}/${f.parcelas})`,
-            category: "Fornecedor", amount: valorParcela,
-            due_date: dv.toISOString().slice(0, 10), status: "pendente",
-          });
-        }
+        const rows = parcelasPreview.map((p) => ({
+          user_id: userId, supplier_id: f.fornecedor_id,
+          description: `${baseDesc} (${p.n}/${f.parcelas})`,
+          category: "Fornecedor", amount: p.amount,
+          due_date: p.date, status: "pendente",
+        }));
         const { error } = await supabase.from("payables").insert(rows);
         if (error) throw error;
         payablesCount = f.parcelas;
@@ -444,6 +453,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
     onSuccess: (n) => { toast.success(`Compra registrada! ${n} conta(s) a pagar gerada(s) e estoque atualizado.`); onDone(); },
     onError: (e: any) => toast.error(e.message),
   });
+
 
   return (
     <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -494,12 +504,28 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
           </>}
           {f.condicao === "parcelado" && <>
             <div><Label>Nº parcelas</Label><Input type="number" min={2} max={36} value={f.parcelas} onChange={(e) => setF({ ...f, parcelas: Number(e.target.value) })} /></div>
-            <div><Label>Dia de vencimento</Label><Input type="number" min={1} max={31} value={f.dia_vencimento} onChange={(e) => setF({ ...f, dia_vencimento: Number(e.target.value) })} /></div>
+            <div><Label>Data de vencimento (1ª parcela)</Label><Input type="date" value={f.data_primeira_parcela} onChange={(e) => setF({ ...f, data_primeira_parcela: e.target.value })} /></div>
           </>}
+
           {f.condicao === "a_prazo" && (
             <div><Label>Data de vencimento</Label><Input type="date" value={f.data_vencimento} onChange={(e) => setF({ ...f, data_vencimento: e.target.value })} /></div>
           )}
         </div>
+
+        {f.condicao === "parcelado" && parcelasPreview.length > 0 && (
+          <div className="rounded-md border bg-muted/30 p-3">
+            <div className="text-xs font-medium text-muted-foreground mb-2">Prévia das parcelas</div>
+            <div className="space-y-1 text-sm">
+              {parcelasPreview.map((p) => (
+                <div key={p.n} className="flex items-center justify-between">
+                  <span>Parcela {p.n}/{f.parcelas} → {dateBR(p.date)}</span>
+                  <span className="font-medium">{brl(p.amount)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
 
         <div className="border-t pt-3">
           <Label>Itens da compra</Label>
