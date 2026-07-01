@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, Upload, Package } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, Package, Search, ArrowUp, ArrowDown, ArrowUpDown, X } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
 import { useConfirm } from "@/components/confirm-dialog";
@@ -24,7 +25,11 @@ type Product = {
   id: string; name: string; brand: string | null; category: string | null;
   cost_price: number; sale_price: number; wholesale_price: number;
   stock: number; min_stock: number; sku: string | null; photo_url: string | null;
+  status?: string;
 };
+
+type SortKey = "name" | "brand";
+type SortDir = "asc" | "desc";
 
 function ProductsPage() {
   const qc = useQueryClient();
@@ -41,7 +46,74 @@ function ProductsPage() {
     },
   });
 
-  const { page, setPage, totalPages, total, pageItems } = usePagination(products);
+  const [search, setSearch] = useState("");
+  const [brandFilter, setBrandFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [stockFilter, setStockFilter] = useState("all");
+  const [sortKey, setSortKey] = useState<SortKey>("name");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+
+  const brands = useMemo(
+    () => Array.from(new Set((products ?? []).map(p => p.brand).filter((b): b is string => !!b))).sort(),
+    [products]
+  );
+  const categories = useMemo(
+    () => Array.from(new Set((products ?? []).map(p => p.category).filter((c): c is string => !!c))).sort(),
+    [products]
+  );
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const list = (products ?? []).filter(p => {
+      if (q) {
+        const hay = `${p.name ?? ""} ${p.sku ?? ""} ${p.brand ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (brandFilter !== "all" && (p.brand ?? "") !== brandFilter) return false;
+      if (categoryFilter !== "all" && (p.category ?? "") !== categoryFilter) return false;
+      if (statusFilter !== "all") {
+        const s = (p.status ?? "ativo").toLowerCase();
+        if (statusFilter === "ativo" && s !== "ativo") return false;
+        if (statusFilter === "inativo" && s === "ativo") return false;
+      }
+      if (stockFilter !== "all") {
+        const stock = Number(p.stock ?? 0);
+        const min = Number(p.min_stock ?? 0);
+        if (stockFilter === "zerado" && stock !== 0) return false;
+        if (stockFilter === "baixo" && !(stock > 0 && stock <= min)) return false;
+        if (stockFilter === "normal" && !(stock > min)) return false;
+      }
+      return true;
+    });
+    const sorted = [...list].sort((a, b) => {
+      const av = (a[sortKey] ?? "").toString().toLowerCase();
+      const bv = (b[sortKey] ?? "").toString().toLowerCase();
+      const cmp = av.localeCompare(bv, "pt-BR");
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [products, search, brandFilter, categoryFilter, statusFilter, stockFilter, sortKey, sortDir]);
+
+  const { page, setPage, totalPages, total, pageItems } = usePagination(filtered);
+
+  const toggleSort = (k: SortKey) => {
+    if (sortKey === k) setSortDir(sortDir === "asc" ? "desc" : "asc");
+    else { setSortKey(k); setSortDir("asc"); }
+  };
+
+  const clearFilters = () => {
+    setSearch(""); setBrandFilter("all"); setCategoryFilter("all");
+    setStatusFilter("all"); setStockFilter("all");
+  };
+
+  const hasActiveFilters = search || brandFilter !== "all" || categoryFilter !== "all" || statusFilter !== "all" || stockFilter !== "all";
+
+  const SortIcon = ({ k }: { k: SortKey }) =>
+    sortKey !== k ? <ArrowUpDown className="size-3 inline ml-1 opacity-50" />
+    : sortDir === "asc" ? <ArrowUp className="size-3 inline ml-1" />
+    : <ArrowDown className="size-3 inline ml-1" />;
+
 
 
   const save = useMutation({
@@ -97,14 +169,75 @@ function ProductsPage() {
         }
       />
 
+      <Card className="shadow-soft mb-4">
+        <CardContent className="p-4 space-y-3">
+          <div className="flex flex-col md:flex-row gap-2 md:items-center">
+            <div className="relative flex-1 min-w-[220px]">
+              <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome, SKU ou marca..."
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                className="pl-9"
+              />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Select value={brandFilter} onValueChange={(v) => { setBrandFilter(v); setPage(1); }}>
+                <SelectTrigger className="w-[150px]"><SelectValue placeholder="Marca" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as marcas</SelectItem>
+                  {brands.map(b => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v); setPage(1); }}>
+                <SelectTrigger className="w-[150px]"><SelectValue placeholder="Categoria" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as categorias</SelectItem>
+                  {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+                <SelectTrigger className="w-[130px]"><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos status</SelectItem>
+                  <SelectItem value="ativo">Ativo</SelectItem>
+                  <SelectItem value="inativo">Inativo</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={stockFilter} onValueChange={(v) => { setStockFilter(v); setPage(1); }}>
+                <SelectTrigger className="w-[170px]"><SelectValue placeholder="Estoque" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos estoques</SelectItem>
+                  <SelectItem value="baixo">Abaixo do mínimo ⚠️</SelectItem>
+                  <SelectItem value="zerado">Zerado 🔴</SelectItem>
+                  <SelectItem value="normal">Normal ✅</SelectItem>
+                </SelectContent>
+              </Select>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                  <X className="size-4 mr-1" /> Limpar filtros
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            Exibindo {filtered.length} de {products?.length ?? 0} produtos
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="shadow-soft">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-16"></TableHead>
-                <TableHead>Nome</TableHead>
-                <TableHead>Marca</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("name")}>
+                  Nome <SortIcon k="name" />
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("brand")}>
+                  Marca <SortIcon k="brand" />
+                </TableHead>
                 <TableHead className="text-right">Custo</TableHead>
                 <TableHead className="text-right">Preço</TableHead>
                 <TableHead className="text-right">Estoque</TableHead>
@@ -112,8 +245,10 @@ function ProductsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products?.length === 0 && (
-                <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Nenhum produto cadastrado ainda.</TableCell></TableRow>
+              {filtered.length === 0 && (
+                <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                  {products?.length === 0 ? "Nenhum produto cadastrado ainda." : "Nenhum produto encontrado com os filtros aplicados."}
+                </TableCell></TableRow>
               )}
               {pageItems.map(p => (
                 <TableRow key={p.id}>
