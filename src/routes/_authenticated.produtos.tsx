@@ -25,7 +25,7 @@ type Product = {
   id: string; name: string; brand: string | null; category: string | null;
   cost_price: number; sale_price: number; wholesale_price: number;
   stock: number; min_stock: number; sku: string | null; photo_url: string | null;
-  status?: string | null;
+  status?: string;
 };
 
 type SortKey = "name" | "brand";
