@@ -749,3 +749,120 @@ function ReceivePaymentForm({ receivable, onDone }: { receivable: Receivable; on
     </form>
   );
 }
+
+function HelpDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[600px] max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-display text-2xl">Como funciona Contas a Receber</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6 text-sm leading-relaxed">
+          <section>
+            <h3 className="font-semibold text-base mb-2">📌 Objetivo desta tela</h3>
+            <p className="text-muted-foreground">
+              Contas a Receber é onde você acompanha todos os valores que seus clientes devem pagar — tanto os já recebidos quanto os pendentes.
+            </p>
+            <p className="text-muted-foreground mt-2">
+              É o controle de <strong>crédito</strong> do seu negócio: tudo que você vendeu mas ainda não recebeu em dinheiro.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-base mb-2">💰 Cards do topo</h3>
+            <div className="space-y-2 text-muted-foreground">
+              <div className="rounded-lg bg-muted/40 border p-3">
+                <strong className="text-foreground">🟡 A receber</strong><br />
+                Total de valores pendentes que os clientes ainda não pagaram.<br />
+                → Atenção: acompanhe de perto para não deixar vencer!
+              </div>
+              <div className="rounded-lg bg-destructive/5 border border-destructive/20 p-3">
+                <strong className="text-foreground">🔴 Em atraso</strong><br />
+                Valores com data de vencimento já ultrapassada e ainda não recebidos.<br />
+                → Priorize cobrar esses clientes!
+              </div>
+              <div className="rounded-lg bg-success/5 border border-success/20 p-3">
+                <strong className="text-foreground">🟢 Recebido</strong><br />
+                Total já recebido no período filtrado — dinheiro que entrou no seu caixa.
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-base mb-2">📋 Tabela de lançamentos</h3>
+            <p className="text-muted-foreground mb-2">Colunas:</p>
+            <ul className="text-muted-foreground text-xs pl-4 list-disc space-y-1 mb-3">
+              <li><strong>Vencimento:</strong> data em que o pagamento deve ser recebido</li>
+              <li><strong>Cliente:</strong> quem deve pagar</li>
+              <li><strong>Descrição:</strong> referência da venda ou serviço</li>
+              <li><strong>Valor:</strong> total a receber</li>
+              <li><strong>Recebido:</strong> quanto já foi pago (para recebimentos parciais)</li>
+              <li><strong>Saldo:</strong> quanto ainda falta (<code className="text-[11px]">Valor − Recebido</code>)</li>
+              <li><strong>Status:</strong> situação atual do lançamento</li>
+            </ul>
+            <p className="text-muted-foreground mb-2">Status possíveis:</p>
+            <ul className="text-muted-foreground text-xs pl-4 list-disc space-y-1">
+              <li>🟡 <strong>Pendente</strong> — ainda dentro do prazo</li>
+              <li>🔴 <strong>Em atraso</strong> — passou do vencimento</li>
+              <li>🟢 <strong>Recebido</strong> — pago integralmente</li>
+              <li>🔵 <strong>Parcial</strong> — pago parcialmente</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-base mb-2">⚙️ Como os lançamentos são criados</h3>
+            <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 text-xs mb-2">
+              <strong className="text-foreground">Automático</strong>
+              <ul className="pl-4 list-disc mt-1 space-y-0.5 text-muted-foreground">
+                <li>✅ Toda venda confirmada (status <em>Confirmado</em> ou superior) gera automaticamente uma conta a receber vinculada ao cliente</li>
+                <li>✅ O valor = total da venda</li>
+                <li>✅ A conta de destino é definida pela forma de pagamento da venda</li>
+              </ul>
+            </div>
+            <div className="rounded-lg bg-muted/40 border p-3 text-xs">
+              <strong className="text-foreground">Manual</strong>
+              <ul className="pl-4 list-disc mt-1 space-y-0.5 text-muted-foreground">
+                <li>✅ Clique em <strong>+ Nova conta a receber</strong> para lançar manualmente (ex: acordos, parcelamentos avulsos, aportes de recursos financeiros)</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-base mb-2">✅ Como dar baixa (receber)</h3>
+            <p className="text-muted-foreground mb-2">Ao receber o pagamento do cliente:</p>
+            <ol className="text-muted-foreground text-xs pl-4 list-decimal space-y-2">
+              <li>Clique no botão <strong>Baixar</strong> na linha do lançamento.</li>
+              <li>
+                Informe:
+                <ul className="pl-4 list-disc mt-1 space-y-0.5">
+                  <li>Data do recebimento</li>
+                  <li>Valor recebido (total ou parcial)</li>
+                  <li>Conta bancária de destino (onde o dinheiro entrou)</li>
+                </ul>
+              </li>
+              <li>
+                Ao confirmar:
+                <ul className="pl-4 list-disc mt-1 space-y-0.5">
+                  <li>Status muda para <strong>Recebido</strong></li>
+                  <li>Entra automaticamente no <strong>Financeiro</strong> como <em>entrada</em></li>
+                  <li>Saldo da conta bancária escolhida é atualizado</li>
+                  <li>Aparece no <strong>Fluxo de Caixa</strong></li>
+                </ul>
+              </li>
+            </ol>
+            <div className="mt-3 rounded-lg bg-blue-500/10 border border-blue-500/30 p-3 text-xs">
+              <strong>⚠️ Recebimento parcial:</strong> se o cliente pagou apenas parte, informe o valor recebido — o status vira <strong>Parcial</strong> e o saldo restante continua em aberto até a próxima baixa.
+            </div>
+          </section>
+        </div>
+
+        <div className="flex justify-end pt-2">
+          <Button onClick={() => onOpenChange(false)} className="bg-gradient-primary text-primary-foreground">
+            Entendi ✓
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
