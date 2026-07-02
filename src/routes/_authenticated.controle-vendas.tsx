@@ -1128,3 +1128,93 @@ function PreviewBox({ label, value, tone = "neutral" }: { label: string; value: 
     </div>
   );
 }
+
+function HelpDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[600px] max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-display text-xl">Como funciona o Controle de Vendas</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-5 text-sm">
+          <section>
+            <h3 className="font-semibold text-base mb-1 flex items-center gap-2">📌 Objetivo desta tela</h3>
+            <p className="text-muted-foreground">
+              O Controle de Vendas permite acompanhar diariamente o desempenho financeiro das suas vendas,
+              calculando automaticamente o <b>Lucro Real</b> e a <b>Margem</b> de cada dia e do mês inteiro.
+            </p>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-base mb-2 flex items-center gap-2">📊 Painel de resumo (cards do topo)</h3>
+            <p className="text-muted-foreground mb-2">Os cards mostram o consolidado do mês selecionado:</p>
+            <ul className="space-y-2">
+              <li><span className="text-emerald-600 font-medium">🟢 RECEBER</span> — Total das vendas do mês (soma da coluna Loja).</li>
+              <li><span className="text-emerald-600 font-medium">🟢 LUCRO</span> — O que sobrou depois de todos os custos.
+                <div className="mt-1 rounded-md bg-muted px-3 py-2 font-mono text-xs">Loja + Frete Cliente − Custo − Juros ML − Frete Empresa</div>
+              </li>
+              <li><span className="text-blue-600 font-medium">🔵 MARGEM %</span> — Percentual de lucro sobre o recebido.
+                <div className="mt-1 rounded-md bg-muted px-3 py-2 font-mono text-xs">Lucro ÷ Receber × 100</div>
+              </li>
+              <li><span className="font-medium">⚪ CUSTO</span> — Soma do custo de todos os produtos vendidos no mês.</li>
+              <li><span className="text-destructive font-medium">🔴 FORNECEDOR</span> — Total devido aos fornecedores no mês (valor negativo = dívida).</li>
+              <li><span className="text-destructive font-medium">🔴 RATEIO</span> — Quanto ainda deve ao fornecedor após abater o custo.
+                <div className="mt-1 rounded-md bg-muted px-3 py-2 font-mono text-xs">|Fornecedor| − Custo</div>
+              </li>
+              <li><span className="text-destructive font-medium">🔴 SALDO</span> — Mesmo valor do Rateio (saldo devedor com fornecedor).</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-base mb-2 flex items-center gap-2">➕ Como fazer um novo lançamento</h3>
+            <ol className="list-decimal ml-5 space-y-2">
+              <li>Selecione a <b>Data</b> (o dia da semana aparece automaticamente).</li>
+              <li><b>Loja (R$)</b> — total das vendas do dia. Vendas do módulo "Vendas" com status <b>Entregue</b> aparecem aqui automaticamente.</li>
+              <li><b>Custo (R$)</b> — calculado pelo custo real de cada produto vendido; ajustável manualmente.</li>
+              <li><b>Juros ML (R$)</b> — taxa do Mercado Livre. Deixe zero se não usou ML.</li>
+              <li><b>Frete Empresa (R$)</b> — valor pago aos Correios. Não entra no total da venda; apenas reduz o lucro.</li>
+              <li><b>Frete Cliente (R$)</b> — valor cobrado do cliente pelo frete; entra no lucro como receita adicional.</li>
+              <li>Veja a <b>prévia</b> em tempo real: A receber, Lucro e Margem do dia antes de salvar.</li>
+              <li>Clique em <b>Salvar</b>.</li>
+            </ol>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-base mb-2 flex items-center gap-2">🔒 Total devido a fornecedores</h3>
+            <p className="text-muted-foreground">
+              Representa o total que você deve pagar aos fornecedores no mês corrente.
+            </p>
+            <ul className="mt-2 space-y-1 list-disc ml-5">
+              <li>Fica <b>bloqueado durante o mês</b> (só pode ser editado no 1º dia do mês seguinte).</li>
+              <li>Clique em <b>Editar</b> para alterar em caso de renegociação (registra histórico).</li>
+              <li>Este valor alimenta os cálculos de Fornecedor, Rateio e Saldo.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-base mb-2 flex items-center gap-2">📋 Tabela de lançamentos</h3>
+            <ul className="space-y-1 list-disc ml-5">
+              <li><b>Lançamentos automáticos (🔗)</b> — gerados por vendas com status "Entregue". Não editáveis aqui — edite na tela Vendas.</li>
+              <li><b>Lançamentos manuais</b> — editáveis e excluíveis diretamente.</li>
+              <li>A coluna <b>Saldo</b> mostra o saldo acumulado devedor com o fornecedor após cada lançamento do dia.</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-base mb-2 flex items-center gap-2">📤 Exportações</h3>
+            <ul className="space-y-1 list-disc ml-5">
+              <li><b>Exportar Excel</b> — planilha do mês selecionado com todos os lançamentos e totais.</li>
+              <li><b>Exportar PDF Anual</b> — relatório com todos os meses do ano, linha por linha, com totais anuais.</li>
+            </ul>
+          </section>
+        </div>
+
+        <div className="flex justify-end pt-2">
+          <Button onClick={() => onOpenChange(false)}>Entendi ✓</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
