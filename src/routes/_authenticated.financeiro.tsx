@@ -106,6 +106,9 @@ function FinancePage() {
         subtitle="Entradas e saídas do seu negócio"
         action={
           <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setShowHelp(true)}>
+              <HelpCircle className="size-4 mr-1" /> Como funciona
+            </Button>
             <Link to="/balancete"><Button variant="outline"><Scale className="size-4 mr-1" /> Balancete</Button></Link>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
