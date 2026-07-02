@@ -526,7 +526,10 @@ function ControleVendasPage() {
         title="Controle de Vendas"
         subtitle="Lançamento diário e resumo mensal"
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button variant="ghost" size="sm" onClick={() => setShowHelp(true)} className="text-muted-foreground hover:text-primary">
+              <HelpCircle className="size-4 mr-1" /> Como funciona
+            </Button>
             <Select value={String(mes)} onValueChange={(v) => setMes(Number(v))}>
               <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -544,6 +547,9 @@ function ControleVendasPage() {
           </div>
         }
       />
+
+      <HelpDialog open={showHelp} onOpenChange={setShowHelp} />
+
 
       {/* Summary */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-8">
