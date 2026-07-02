@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Trash2, TrendingDown, TrendingUp, Landmark, ChevronDown, ChevronUp, Scale } from "lucide-react";
+import { Plus, Trash2, TrendingDown, TrendingUp, Landmark, ChevronDown, ChevronUp, Scale, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import { brl, dateBR } from "@/lib/format";
 
@@ -24,6 +24,7 @@ const EXPENSE_CATS = ["estoque", "embalagem", "marketing", "frete", "operacional
 function FinancePage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [expandedBalance, setExpandedBalance] = useState(false);
 
   const { data: bankAccounts } = useQuery({
@@ -105,6 +106,9 @@ function FinancePage() {
         subtitle="Entradas e saídas do seu negócio"
         action={
           <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setShowHelp(true)}>
+              <HelpCircle className="size-4 mr-1" /> Como funciona
+            </Button>
             <Link to="/balancete"><Button variant="outline"><Scale className="size-4 mr-1" /> Balancete</Button></Link>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
@@ -215,7 +219,129 @@ function FinancePage() {
           </Table>
         </CardContent>
       </Card>
+
+      <HelpDialog open={showHelp} onOpenChange={setShowHelp} />
     </div>
+  );
+}
+
+function HelpDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-[600px] max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-display text-2xl">Como funciona o Financeiro</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6 text-sm leading-relaxed">
+          <section>
+            <h3 className="font-semibold text-base mb-2">📌 Objetivo desta tela</h3>
+            <p className="text-muted-foreground">
+              O Financeiro exibe todas as movimentações reais de dinheiro do seu negócio — entradas e saídas — mostrando em tempo real quanto você tem disponível em caixa.
+            </p>
+            <div className="mt-2 rounded-lg bg-amber-500/10 border border-amber-500/30 p-3 text-xs">
+              <strong>⚠️ IMPORTANTE:</strong> Esta tela reflete apenas movimentações <strong>JÁ REALIZADAS</strong> (dinheiro que já entrou ou saiu das suas contas bancárias). Valores previstos ficam em <em>Contas a Pagar</em> e <em>Contas a Receber</em>.
+            </div>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-base mb-2">💰 Cards do topo</h3>
+            <div className="space-y-2 text-muted-foreground">
+              <div className="rounded-lg bg-primary/5 border border-primary/20 p-3">
+                <strong className="text-foreground">🏦 Saldo em conta (consolidado)</strong><br />
+                Soma dos saldos atuais de TODAS as suas contas bancárias ativas (Bradesco, Mercado Pago, Nubank, Caixa-Resvera, etc.).<br />
+                → É o dinheiro <strong>REAL disponível agora</strong>.
+              </div>
+              <div className="rounded-lg bg-success/5 border border-success/20 p-3">
+                <strong className="text-foreground">🟢 Entradas</strong><br />
+                Total de dinheiro que entrou nas suas contas no período filtrado (vendas recebidas, aportes, etc.).
+              </div>
+              <div className="rounded-lg bg-destructive/5 border border-destructive/20 p-3">
+                <strong className="text-foreground">🔴 Saídas</strong><br />
+                Total de dinheiro que saiu das suas contas no período filtrado (pagamentos, despesas, etc.).
+              </div>
+              <div className="rounded-lg bg-muted/40 border p-3">
+                <strong className="text-foreground">⚖️ Saldo do período</strong><br />
+                <code className="text-xs">Entradas − Saídas</code> do período.
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-base mb-2">📋 Tabela de movimentações</h3>
+            <p className="text-muted-foreground mb-2">
+              Lista todas as movimentações financeiras em ordem cronológica:
+            </p>
+            <ul className="text-muted-foreground text-xs space-y-1 mb-3 pl-4 list-disc">
+              <li><strong>Data:</strong> quando o dinheiro movimentou</li>
+              <li><strong>Tipo:</strong> Entrada (🟢) ou Saída (🔴)</li>
+              <li><strong>Categoria:</strong> origem (venda, fornecedor, cartão, etc.)</li>
+              <li><strong>Descrição:</strong> detalhe do lançamento</li>
+              <li><strong>Valor:</strong> montante da movimentação</li>
+            </ul>
+            <div className="rounded-lg bg-muted/40 border p-3 text-xs space-y-2">
+              <div>
+                <strong>Tipos automáticos [AUTO]</strong> — gerados pelo sistema:
+                <ul className="pl-4 list-disc mt-1 space-y-0.5">
+                  <li>✅ Venda com status <em>Entregue</em> → Entrada automática</li>
+                  <li>✅ Conta a Pagar marcada como <em>Pago</em> → Saída automática</li>
+                  <li>✅ Conta a Receber marcada como <em>Recebido</em> → Entrada automática</li>
+                </ul>
+              </div>
+              <div>
+                <strong>Lançamentos manuais:</strong> criados diretamente em <em>Contas Bancárias → Nova movimentação</em>.
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-base mb-2">🏦 Contas bancárias vinculadas</h3>
+            <p className="text-muted-foreground mb-2">
+              Cada movimentação está vinculada a uma conta bancária específica. O saldo consolidado soma todas as contas ativas:
+            </p>
+            <ul className="text-muted-foreground text-xs pl-4 list-disc space-y-1">
+              <li><strong>Mercado Pago:</strong> recebe vendas com cartão de crédito e débito</li>
+              <li><strong>Outras contas</strong> (Bradesco, Nubank, Caixa): recebem PIX, depósito, dinheiro, transferências</li>
+            </ul>
+            <div className="mt-3 rounded-lg bg-amber-500/10 border border-amber-500/30 p-3 text-xs">
+              <strong>⚠️ Atenção — Cartões de Crédito:</strong> Os lançamentos de cartão de crédito que aparecem aqui são <strong>saídas</strong> das contas bancárias vinculadas quando a fatura é paga em <em>Contas a Pagar</em>. O módulo <em>Cartões de Crédito</em> é apenas para acompanhamento de limite e gastos — não gera movimentação bancária direta.
+            </div>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-base mb-2">🔍 Como filtrar</h3>
+            <p className="text-muted-foreground mb-2">Use os filtros para analisar períodos específicos:</p>
+            <ul className="text-muted-foreground text-xs pl-4 list-disc space-y-1">
+              <li>Hoje, Esta semana, Este mês, Mês anterior ou Personalizado</li>
+              <li>Filtrar por conta bancária específica ou ver todas juntas</li>
+              <li>Filtrar por tipo (Entrada/Saída)</li>
+              <li>Filtrar por categoria</li>
+            </ul>
+          </section>
+
+          <section>
+            <h3 className="font-semibold text-base mb-2">⚙️ Fluxo completo do dinheiro</h3>
+            <div className="rounded-lg bg-gradient-rose/30 border p-3 text-xs font-mono leading-6">
+              VENDA realizada<br />
+              &nbsp;&nbsp;↓ status = "Entregue"<br />
+              &nbsp;&nbsp;↓ gera <strong>Entrada</strong> automática<br />
+              &nbsp;&nbsp;↓<br />
+              COMPRA / DESPESA lançada<br />
+              &nbsp;&nbsp;↓ marcada como "Pago"<br />
+              &nbsp;&nbsp;↓ gera <strong>Saída</strong> automática<br />
+              &nbsp;&nbsp;↓<br />
+              SALDO EM CONTA atualizado em tempo real
+            </div>
+          </section>
+        </div>
+
+        <div className="flex justify-end pt-2">
+          <Button onClick={() => onOpenChange(false)} className="bg-gradient-primary text-primary-foreground">
+            Entendi ✓
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
