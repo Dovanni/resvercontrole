@@ -1124,6 +1124,7 @@ export type Database = {
         Row: {
           aporte_type: string | null
           bank_account_id: string | null
+          bank_movement_generated: boolean
           channel: string
           created_at: string
           customer_id: string | null
@@ -1142,6 +1143,7 @@ export type Database = {
         Insert: {
           aporte_type?: string | null
           bank_account_id?: string | null
+          bank_movement_generated?: boolean
           channel?: string
           created_at?: string
           customer_id?: string | null
@@ -1160,6 +1162,7 @@ export type Database = {
         Update: {
           aporte_type?: string | null
           bank_account_id?: string | null
+          bank_movement_generated?: boolean
           channel?: string
           created_at?: string
           customer_id?: string | null
