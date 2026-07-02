@@ -61,6 +61,7 @@ function ReceivablesPage() {
   const [fromDate, setFromDate] = useState<string>("");
   const [toDate, setToDate] = useState<string>("");
   const [openNew, setOpenNew] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [payTarget, setPayTarget] = useState<Receivable | null>(null);
   const [editTarget, setEditTarget] = useState<Receivable | null>(null);
 
