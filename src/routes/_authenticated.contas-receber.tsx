@@ -135,6 +135,9 @@ function ReceivablesPage() {
         subtitle="Acompanhe pagamentos pendentes dos clientes"
         action={
           <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={() => setShowHelp(true)}>
+              <HelpCircle className="size-4 mr-1" /> Como funciona
+            </Button>
             <Button variant="outline" onClick={exportXlsx}><Download className="size-4 mr-1" /> Excel</Button>
             <Button className="bg-gradient-primary text-primary-foreground" onClick={() => setOpenNew(true)}>
               <Plus className="size-4 mr-1" /> Nova conta
@@ -142,6 +145,8 @@ function ReceivablesPage() {
           </div>
         }
       />
+
+      <HelpDialog open={showHelp} onOpenChange={setShowHelp} />
 
       <div className="grid grid-cols-3 gap-4 mb-6">
         <Card className="shadow-soft"><CardContent className="p-5">
