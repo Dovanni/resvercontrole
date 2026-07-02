@@ -1,0 +1,1 @@
+ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS bank_movement_generated boolean NOT NULL DEFAULT false;
