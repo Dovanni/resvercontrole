@@ -24,6 +24,7 @@ const EXPENSE_CATS = ["estoque", "embalagem", "marketing", "frete", "operacional
 function FinancePage() {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [expandedBalance, setExpandedBalance] = useState(false);
 
   const { data: bankAccounts } = useQuery({
