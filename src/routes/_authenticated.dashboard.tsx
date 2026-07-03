@@ -6,8 +6,9 @@ import { PageHeader } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { brl } from "@/lib/format";
-import { TrendingUp, TrendingDown, ShoppingBag, Wallet, AlertTriangle, ChevronDown, LineChart as LineChartIcon, ArrowRight } from "lucide-react";
+import { TrendingUp, TrendingDown, ShoppingBag, Wallet, AlertTriangle, ChevronDown, LineChart as LineChartIcon, ArrowRight, HelpCircle } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Rosé" }] }),
