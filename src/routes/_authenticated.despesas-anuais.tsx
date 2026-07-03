@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { FileSpreadsheet, CheckCircle2 } from "lucide-react";
+import { FileSpreadsheet, CheckCircle2, HelpCircle } from "lucide-react";
 import { brl, dateBR } from "@/lib/format";
 import { toast } from "sonner";
 
@@ -42,6 +42,7 @@ function AnnualExpensesPage() {
   const [year, setYear] = useState(currentYear);
   const [category, setCategory] = useState("todos");
   const [selectedCell, setSelectedCell] = useState<{ row: string; monthIdx: number; items: Payable[] } | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   // Range: Jan/year .. Jan/(year+1)
   const startDate = `${year}-01-01`;
@@ -169,6 +170,9 @@ function AnnualExpensesPage() {
             </Select>
           </div>
           <div className="flex-1" />
+          <Button variant="ghost" size="sm" onClick={() => setShowHelp(true)}>
+            <HelpCircle className="size-4 mr-1" /> Como funciona
+          </Button>
           <Button variant="outline" onClick={exportXlsx}>
             <FileSpreadsheet className="size-4 mr-2" /> Exportar Excel
           </Button>
@@ -320,6 +324,87 @@ function AnnualExpensesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSelectedCell(null)}>Fechar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Como funciona Despesas Anuais</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5 text-sm">
+            <section>
+              <h3 className="font-semibold mb-1">📌 Objetivo desta tela</h3>
+              <p className="text-muted-foreground">
+                Despesas Anuais oferece uma visão panorâmica de todos os seus gastos mês a mês ao longo do ano
+                inteiro, permitindo identificar padrões, picos de despesa e planejar o fluxo de caixa com
+                antecedência.
+              </p>
+              <p className="text-muted-foreground mt-2">
+                É o seu "mapa anual de despesas" — uma planilha visual que mostra quanto você gasta com cada
+                fornecedor/categoria em cada mês.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">📊 Como ler a tabela</h3>
+              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                <li><b>Linhas</b> = Fornecedores ou categorias de despesa</li>
+                <li><b>Colunas</b> = Meses do ano (Jan a Dez) + Jan do ano seguinte</li>
+                <li><b>Células com valor</b>: há despesa lançada naquele mês — clique para ver os detalhes</li>
+                <li><b>Células vazias</b>: sem lançamento naquele mês</li>
+                <li><b>Coluna TOTAL ANO</b>: soma de todos os meses daquela linha</li>
+                <li><b>Linha DÉBITO TOTAL</b>: soma de todas as despesas de cada mês</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">🎨 Cores das células</h3>
+              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                <li><span className="text-amber-600 font-medium">Âmbar</span>: valor pendente (ainda não pago)</li>
+                <li>Sem cor: valor já pago</li>
+                <li>Coluna destacada em <span className="text-primary font-medium">azul</span>: mês atual</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">⚙️ De onde vêm os dados</h3>
+              <p className="text-muted-foreground">
+                Todos os valores são puxados automaticamente da tela <b>Contas a Pagar</b>. Cada conta a pagar
+                lançada aparece aqui na coluna correspondente ao seu vencimento. Não é necessário lançar nada
+                nesta tela — ela é apenas uma visualização consolidada.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">🔎 Filtros disponíveis</h3>
+              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                <li><b>Ano</b>: escolha o ano de referência (mostra Jan..Dez + Jan do ano seguinte)</li>
+                <li><b>Categoria</b>: filtre por tipo de despesa (fornecedor, logística, marketing, etc.)</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">✅ Ações rápidas</h3>
+              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                <li>Clique em qualquer célula com valor para ver os lançamentos daquele mês</li>
+                <li>No detalhe, você pode <b>marcar como pago</b> diretamente</li>
+                <li>Use <b>Exportar Excel</b> para gerar uma planilha completa do ano</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">💡 Cards de resumo</h3>
+              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                <li><span className="text-green-600 font-medium">Total pago no ano</span>: soma de tudo já quitado</li>
+                <li><span className="text-amber-600 font-medium">Total pendente no ano</span>: soma do que ainda vai vencer</li>
+                <li><span className="text-destructive font-medium">Total geral do ano</span>: pago + pendente</li>
+              </ul>
+            </section>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHelp(false)}>Entendi ✓</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
