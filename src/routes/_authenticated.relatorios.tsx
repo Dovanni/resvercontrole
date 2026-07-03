@@ -29,6 +29,7 @@ function ReportsPage() {
   const todayStr = today.toISOString().slice(0, 10);
   const [from, setFrom] = useState(monthStart);
   const [to, setTo] = useState(todayStr);
+  const [showHelp, setShowHelp] = useState(false);
 
   const { data: sales } = useQuery({
     queryKey: ["rep-sales", from, to],
