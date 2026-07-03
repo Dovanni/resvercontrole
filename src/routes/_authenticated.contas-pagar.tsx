@@ -343,18 +343,23 @@ function PayablesPage() {
         title="Contas a pagar"
         subtitle="Despesas, fornecedores e compromissos"
         action={
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-primary text-primary-foreground"><Plus className="size-4 mr-1" /> Nova conta</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle className="font-display">Nova conta a pagar</DialogTitle></DialogHeader>
-              <PayableForm
-                suppliers={suppliers ?? []}
-                onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["payables"] }); }}
-              />
-            </DialogContent>
-          </Dialog>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={() => setShowHelp(true)}>
+              <HelpCircle className="size-4 mr-1" /> Como funciona esta etapa
+            </Button>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-primary text-primary-foreground"><Plus className="size-4 mr-1" /> Nova conta</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle className="font-display">Nova conta a pagar</DialogTitle></DialogHeader>
+                <PayableForm
+                  suppliers={suppliers ?? []}
+                  onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["payables"] }); }}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         }
       />
 
