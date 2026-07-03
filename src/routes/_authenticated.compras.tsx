@@ -153,16 +153,21 @@ function ComprasPage() {
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <PageHeader title="Compras de Mercadorias" subtitle="Registre compras e gere automaticamente contas a pagar e entradas de estoque" action={
-        <Dialog open={openNova} onOpenChange={setOpenNova}>
-          <DialogTrigger asChild><Button><Plus className="size-4 mr-1" /> Nova compra</Button></DialogTrigger>
-          <NovaCompraDialog
-            userId={user?.id ?? ""}
-            fornecedores={fornecedores as any}
-            produtos={produtos as any}
-            contas={contas as any}
-            onDone={() => { setOpenNova(false); qc.invalidateQueries({ queryKey: ["compras"] }); qc.invalidateQueries({ queryKey: ["payables_compras_link"] }); qc.invalidateQueries({ queryKey: ["produtos_simple"] }); }}
-          />
-        </Dialog>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => setShowHelp(true)}>
+            <HelpCircle className="size-4 mr-1" /> Como funciona esta etapa
+          </Button>
+          <Dialog open={openNova} onOpenChange={setOpenNova}>
+            <DialogTrigger asChild><Button><Plus className="size-4 mr-1" /> Nova compra</Button></DialogTrigger>
+            <NovaCompraDialog
+              userId={user?.id ?? ""}
+              fornecedores={fornecedores as any}
+              produtos={produtos as any}
+              contas={contas as any}
+              onDone={() => { setOpenNova(false); qc.invalidateQueries({ queryKey: ["compras"] }); qc.invalidateQueries({ queryKey: ["payables_compras_link"] }); qc.invalidateQueries({ queryKey: ["produtos_simple"] }); }}
+            />
+          </Dialog>
+        </div>
       } />
 
       {/* Resumo */}
