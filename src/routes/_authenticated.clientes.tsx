@@ -162,6 +162,79 @@ function CustomersPage() {
           <DataPagination page={page} totalPages={totalPages} total={total} onChange={setPage} />
         </CardContent>
       </Card>
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">👥 Clientes — Cadastro e Gestão da Carteira</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm leading-relaxed">
+            <section>
+              <h3 className="font-semibold text-base mb-1">🎯 Objetivo desta etapa</h3>
+              <p>O módulo Clientes é responsável pelo cadastro, organização e gerenciamento de todos os clientes da empresa. Mantém uma base de dados completa e confiável, alimentando automaticamente os demais módulos do Rosé (vendas, recebimentos, análises e indicadores).</p>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">📌 O que pode ser feito</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>Cadastrar, editar, consultar e excluir clientes</li>
+                <li>Definir o tipo de cliente</li>
+                <li>Informar documentos e contatos</li>
+                <li>Definir limite de crédito</li>
+                <li>Organizar a carteira e apoiar o controle comercial e financeiro</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">👥 Tipos de Clientes</h3>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>🏢 <strong>Atacado</strong> — compras em maior volume; revendedores, distribuidores ou empresas.</li>
+                <li>🛍️ <strong>Varejo</strong> — compras para consumo próprio ou pequenas quantidades.</li>
+                <li>💼 <strong>Recursos Financeiros</strong> — pessoas ou entidades que realizam aportes financeiros. Não representam vendas, não geram faturamento e não participam da Curva ABC.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">🔄 Fluxo recomendado</h3>
+              <ol className="list-decimal pl-5 space-y-1">
+                <li><strong>Cadastrar novo cliente</strong> — clique em "➕ Novo cliente" e informe nome, tipo, CPF/CNPJ, contato, endereço, limite de crédito e observações.</li>
+                <li><strong>Conferir os dados</strong> — nome, documento, contato, tipo e limite de crédito.</li>
+                <li><strong>Atualizar informações</strong> — manter telefone, endereço e limite de crédito revisados.</li>
+                <li><strong>Utilizar nas vendas</strong> — os cadastros ficam disponíveis automaticamente no módulo Vendas.</li>
+                <li><strong>Acompanhar o relacionamento</strong> — manter a carteira organizada para vendas, atendimento e análises.</li>
+              </ol>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">🎯 Objetivo do resultado</h3>
+              <p>Cadastro organizado e atualizado da carteira, permitindo realizar vendas, controlar relacionamento, acompanhar faturamento por cliente, controlar limites de crédito e apoiar decisões comerciais.</p>
+              <p className="mt-1">Alimenta automaticamente: Vendas, Contas a Receber, BI, Curva ABC, Dashboard, Relatórios Gerenciais e Indicadores Comerciais.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">📈 Como interpretar os dados</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li><strong>Tipo de Cliente</strong> — perfil comercial usado em análises e relatórios.</li>
+                <li><strong>Limite de Crédito</strong> — valor máximo autorizado para operações a prazo.</li>
+                <li><strong>Documento</strong> — identifica unicamente o cliente no sistema.</li>
+                <li><strong>Contato</strong> — facilita o relacionamento e o atendimento.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">✅ Boas práticas</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>Manter cadastros atualizados e evitar duplicidades</li>
+                <li>Definir corretamente o tipo de cliente</li>
+                <li>Revisar periodicamente os limites de crédito</li>
+                <li>Conferir CPF/CNPJ antes do cadastro</li>
+                <li>Utilizar informações completas para facilitar negociações</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">⚠️ Importante</h3>
+              <p>O cadastro de clientes é uma das principais bases de dados do Rosé. Diversos módulos dependem dessas informações para cálculos, indicadores e relatórios — mantenha-as sempre atualizadas.</p>
+            </section>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHelp(false)}>Entendi ✓</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
