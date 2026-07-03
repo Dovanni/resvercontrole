@@ -182,6 +182,8 @@ function BIPage() {
   const defaultTo = today.toISOString().slice(0, 10);
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
+  const [showHelp, setShowHelp] = useState(false);
+
 
   const months = useMemo(() => monthRange(from, to), [from, to]);
 
