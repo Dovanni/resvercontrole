@@ -8,11 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowDownRight, ArrowUpRight, Wallet, Landmark } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Wallet, Landmark, HelpCircle } from "lucide-react";
 import { brl, dateBR } from "@/lib/format";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend } from "recharts";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { CashProjection } from "@/components/cash-projection";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/fluxo-caixa")({
   head: () => ({ meta: [{ title: "Fluxo de caixa — Rosé" }] }),
