@@ -59,6 +59,7 @@ function CashFlowPage() {
   const endFuture = new Date(today); endFuture.setDate(today.getDate() + 15);
   const [accountFilter, setAccountFilter] = useState<string>("todas");
   const [onlyMovementDays, setOnlyMovementDays] = useState(true);
+  const [showHelp, setShowHelp] = useState(false);
 
   const { data: bankAccounts } = useQuery({
     queryKey: ["bank-accounts-active"],
