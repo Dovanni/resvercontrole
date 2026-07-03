@@ -49,6 +49,7 @@ function CustomersPage() {
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   const { data } = useQuery({
     queryKey: ["customers"],
