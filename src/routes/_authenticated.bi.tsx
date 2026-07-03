@@ -32,7 +32,8 @@ import {
   Line,
   ComposedChart,
 } from "recharts";
-import { Download, TrendingDown, TrendingUp, AlertTriangle } from "lucide-react";
+import { Download, TrendingDown, TrendingUp, AlertTriangle, HelpCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/bi")({
   head: () => ({ meta: [{ title: "BI — Rosé" }] }),
