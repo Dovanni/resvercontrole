@@ -8,11 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { ArrowDownRight, ArrowUpRight, Wallet, Landmark } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Wallet, Landmark, HelpCircle } from "lucide-react";
 import { brl, dateBR } from "@/lib/format";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Legend } from "recharts";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { CashProjection } from "@/components/cash-projection";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/fluxo-caixa")({
   head: () => ({ meta: [{ title: "Fluxo de caixa — Rosé" }] }),
@@ -57,6 +59,7 @@ function CashFlowPage() {
   const endFuture = new Date(today); endFuture.setDate(today.getDate() + 15);
   const [accountFilter, setAccountFilter] = useState<string>("todas");
   const [onlyMovementDays, setOnlyMovementDays] = useState(true);
+  const [showHelp, setShowHelp] = useState(false);
 
   const { data: bankAccounts } = useQuery({
     queryKey: ["bank-accounts-active"],
@@ -468,7 +471,96 @@ function CashFlowPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
-      <PageHeader title="Fluxo de caixa" subtitle="Visão diária com projeção dos próximos 15 dias" />
+      <PageHeader
+        title="Fluxo de caixa"
+        subtitle="Visão diária com projeção dos próximos 15 dias"
+        action={
+          <Button variant="ghost" size="sm" onClick={() => setShowHelp(true)} className="gap-2">
+            <HelpCircle className="size-4" />
+            Como funciona esta etapa
+          </Button>
+        }
+      />
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>💰 Fluxo de Caixa — Controle e Projeção Financeira</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm leading-relaxed">
+            <section>
+              <h3 className="font-semibold text-base mb-1">🎯 Objetivo desta etapa</h3>
+              <p className="text-muted-foreground">
+                O módulo Fluxo de Caixa acompanha diariamente toda a movimentação financeira da empresa,
+                apresentando entradas, saídas, saldo disponível e projeções futuras. Oferece ao gestor uma
+                visão clara da situação financeira atual e futura, permitindo um planejamento seguro das operações.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-1">📌 O que pode ser feito</h3>
+              <ul className="list-disc pl-5 space-y-0.5 text-muted-foreground">
+                <li>Visualizar entradas e saídas financeiras</li>
+                <li>Acompanhar o saldo disponível e consolidado</li>
+                <li>Visualizar projeções futuras do caixa</li>
+                <li>Comparar saldo real e projetado</li>
+                <li>Selecionar contas bancárias específicas</li>
+                <li>Visualizar somente dias com movimentação</li>
+                <li>Alternar entre visão diária e projeção</li>
+                <li>Monitorar indicadores financeiros</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-1">🔄 Fluxo recomendado</h3>
+              <ol className="list-decimal pl-5 space-y-1 text-muted-foreground">
+                <li><strong>Selecionar a conta bancária</strong> — escolha uma conta específica ou "Todas as contas".</li>
+                <li><strong>Escolher o modo de visualização</strong> — aba <em>Diário</em> (movimentação realizada) ou <em>Projeção</em> (previsão dos próximos dias).</li>
+                <li><strong>Utilizar o filtro</strong> — ative "Mostrar somente dias com movimento" para uma análise mais objetiva.</li>
+                <li><strong>Acompanhar os indicadores</strong> — entradas, saídas, saldo do período, contas ativas e saldo consolidado.</li>
+                <li><strong>Analisar o gráfico</strong> — evolução do saldo real, projeção futura e tendência financeira.</li>
+              </ol>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-1">🎯 Objetivo do resultado</h3>
+              <p className="text-muted-foreground mb-1">
+                Visão completa do comportamento financeiro para controlar entradas/saídas, prever necessidades de caixa,
+                identificar períodos críticos, planejar pagamentos e recebimentos e apoiar decisões financeiras.
+              </p>
+              <p className="text-muted-foreground">
+                As informações alimentam: Financeiro, Contas a Pagar, Contas a Receber, BI, Dashboard Financeiro,
+                Indicadores Gerenciais e Planejamento Financeiro.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold text-base mb-1">✅ Boas práticas</h3>
+              <ul className="list-disc pl-5 space-y-0.5 text-muted-foreground">
+                <li>Registrar corretamente todas as movimentações</li>
+                <li>Manter contas bancárias atualizadas</li>
+                <li>Conferir lançamentos diariamente</li>
+                <li>Acompanhar projeções futuras</li>
+                <li>Revisar frequentemente o saldo consolidado</li>
+                <li>Usar o fluxo de caixa como principal ferramenta de planejamento</li>
+              </ul>
+            </section>
+
+            <section className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
+              <h3 className="font-semibold text-base mb-1">⚠️ Importante</h3>
+              <p className="text-muted-foreground">
+                A precisão das informações depende da atualização correta dos módulos Vendas, Compras,
+                Contas a Pagar, Contas a Receber e Contas Bancárias. Quanto mais atualizados, maior a
+                confiabilidade das projeções.
+              </p>
+            </section>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHelp(false)}>Entendi ✓</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       <Tabs defaultValue="diario" className="mb-4">
         <TabsList>
