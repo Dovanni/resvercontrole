@@ -155,6 +155,7 @@ function CartoesPage() {
   const [tab, setTab] = useState("geral");
   const [openCartao, setOpenCartao] = useState(false);
   const [openLanc, setOpenLanc] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const { data: cartoes = [] } = useQuery({
     queryKey: ["cartoes_credito"],
