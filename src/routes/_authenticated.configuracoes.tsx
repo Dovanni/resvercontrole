@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Building2, Moon, Sun, Trash2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Upload, Building2, Moon, Sun, Trash2, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { isValidCNPJ, maskCNPJ } from "@/lib/validators";
@@ -30,6 +31,7 @@ function SettingsPage() {
   const resetFn = useServerFn(resetDemoData);
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ company_name: "", cnpj: "", logo_url: "", theme: "light" as "light" | "dark" });
+  const [showHelp, setShowHelp] = useState(false);
 
   if (!can("view:settings") && location.pathname === "/configuracoes") return <Navigate to="/dashboard" />;
 
@@ -119,11 +121,84 @@ function SettingsPage() {
     <div className="p-6 md:p-8 max-w-3xl mx-auto">
       <PageHeader title="Configurações" subtitle="Identidade e preferências da empresa" />
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
         <Button variant="outline" asChild>
           <Link to="/importar"><Upload className="size-4 mr-1" /> Importar planilha (Excel)</Link>
         </Button>
+        <Button variant="ghost" onClick={() => setShowHelp(true)}>
+          <HelpCircle className="size-4 mr-1" /> Como funciona esta etapa
+        </Button>
       </div>
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display">⚙️ Configurações — Identidade, Preferências e Regras do Sistema</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm leading-relaxed">
+            <section>
+              <h3 className="font-semibold mb-1">🎯 Objetivo desta etapa</h3>
+              <p>Permite personalizar o Rosé conforme a identidade da empresa e definir parâmetros que influenciam diretamente o funcionamento dos módulos financeiros e operacionais. Configuram-se informações institucionais, identidade visual e regras automáticas.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">📌 O que pode ser feito</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>Definir dados e logotipo da empresa</li>
+                <li>Atualizar nome e conferir CNPJ</li>
+                <li>Escolher o tema visual</li>
+                <li>Configurar regras automáticas de recebimento</li>
+                <li>Vincular formas de pagamento às contas bancárias</li>
+                <li>Importar planilhas de configuração</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">🔄 Fluxo recomendado</h3>
+              <ol className="list-decimal pl-5 space-y-0.5">
+                <li>Configurar identidade (nome, CNPJ, logotipo, tema)</li>
+                <li>Atualizar logotipo (📤 Enviar Logo — PNG/JPG quadrado em boa resolução)</li>
+                <li>Escolher tema (apenas visual, não afeta dados)</li>
+                <li>Configurar regras de recebimento — vincular Pix, Dinheiro, Cartão, Boleto, Mercado Pago etc. às contas bancárias</li>
+                <li>Salvar configurações — aplicadas imediatamente</li>
+              </ol>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">🎯 Objetivo do resultado</h3>
+              <p>Rosé configurado com identidade institucional correta, logotipo atualizado, tema definido e regras automáticas de recebimento integrando vendas e contas bancárias.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">📈 Como interpretar</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li><strong>Nome/CNPJ:</strong> identificação oficial da empresa</li>
+                <li><strong>Logotipo:</strong> imagem institucional usada em relatórios e interface</li>
+                <li><strong>Tema:</strong> aparência visual, sem impacto operacional</li>
+                <li><strong>Regras de recebimento:</strong> direcionam automaticamente cada forma de pagamento à conta bancária correta, reduzindo lançamentos manuais</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">🔗 Integração</h3>
+              <p>Influencia diretamente: Dashboard, Vendas, Contas a Receber, Fluxo de Caixa, Balancete, Contas Bancárias, Financeiro, Relatórios e BI.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">✅ Boas práticas</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>Conferir periodicamente os dados da empresa</li>
+                <li>Utilizar logotipo em boa resolução</li>
+                <li>Revisar regras sempre que criar novas contas bancárias</li>
+                <li>Confirmar vínculo correto entre forma de pagamento e conta</li>
+                <li>Evitar alterações desnecessárias em regras financeiras</li>
+                <li>Salvar apenas após revisar tudo</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">⚠️ Importante</h3>
+              <p>Alterações em regras financeiras modificam como recebimentos são registrados nas contas bancárias. Revise cuidadosamente antes de salvar.</p>
+            </section>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHelp(false)}>Entendi ✓</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
 
       <Card className="shadow-soft">
