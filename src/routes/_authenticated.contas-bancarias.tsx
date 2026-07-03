@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Landmark, Pencil, Trash2, Download, AlertTriangle, ArrowLeftRight, ArrowDownCircle, ArrowUpCircle, Lock } from "lucide-react";
+import { Plus, Landmark, Pencil, Trash2, Download, AlertTriangle, ArrowLeftRight, ArrowDownCircle, ArrowUpCircle, Lock, HelpCircle } from "lucide-react";
+import { DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { brl, dateBR } from "@/lib/format";
 import { useConfirm } from "@/components/confirm-dialog";
@@ -49,6 +50,7 @@ function BankAccountsPage() {
   const confirm = useConfirm();
   const [editing, setEditing] = useState<BankAccount | null>(null);
   const [openForm, setOpenForm] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [extractFor, setExtractFor] = useState<BankAccount | null>(null);
 
   const { data: accounts } = useQuery({
@@ -102,11 +104,75 @@ function BankAccountsPage() {
         title="Contas bancárias"
         subtitle="Gerencie suas contas e movimentações financeiras"
         action={
-          <Button className="bg-gradient-primary text-primary-foreground" onClick={() => { setEditing(null); setOpenForm(true); }}>
-            <Plus className="size-4 mr-1" /> Nova conta
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button className="bg-gradient-primary text-primary-foreground" onClick={() => { setEditing(null); setOpenForm(true); }}>
+              <Plus className="size-4 mr-1" /> Nova conta
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => setShowHelp(true)}>
+              <HelpCircle className="size-4 mr-1" /> Como funciona esta etapa
+            </Button>
+          </div>
         }
       />
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>🏦 CONTAS BANCÁRIAS — GESTÃO DAS CONTAS FINANCEIRAS</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <section>
+              <h3 className="font-semibold mb-1">🎯 Objetivo desta etapa</h3>
+              <p className="text-muted-foreground">O módulo Contas Bancárias é responsável pelo cadastro, organização e gerenciamento de todas as contas financeiras utilizadas pela empresa. Seu principal objetivo é centralizar o controle dos saldos bancários, permitindo acompanhar a movimentação financeira de cada instituição e fornecer dados confiáveis para os demais módulos do Rosé.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">📌 O que pode ser feito</h3>
+              <ul className="list-disc pl-5 text-muted-foreground space-y-0.5">
+                <li>Cadastrar novas contas bancárias;</li>
+                <li>Consultar contas existentes;</li>
+                <li>Editar informações das contas;</li>
+                <li>Excluir contas quando permitido;</li>
+                <li>Visualizar o saldo atualizado de cada conta;</li>
+                <li>Identificar o banco e o tipo da conta;</li>
+                <li>Organizar as contas utilizadas pela empresa;</li>
+                <li>Apoiar o controle financeiro consolidado.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">🔄 Fluxo recomendado</h3>
+              <ol className="list-decimal pl-5 text-muted-foreground space-y-0.5">
+                <li>Cadastrar uma nova conta (➕ Nova conta) — instituição, nome, tipo, saldo inicial;</li>
+                <li>Conferir os dados após o cadastro;</li>
+                <li>Atualizar quando necessário (editar informações);</li>
+                <li>Acompanhar os saldos exibidos em cada cartão;</li>
+                <li>Manter apenas contas ativas, evitando exclusões que comprometam históricos.</li>
+              </ol>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">🎯 Objetivo do resultado</h3>
+              <p className="text-muted-foreground">Cadastro completo das contas bancárias utilizadas, permitindo controlar saldos, organizar recursos, consolidar movimentações e alimentar os módulos financeiros. As informações alimentam automaticamente: Fluxo de Caixa, Financeiro, Balancete, BI, Relatórios e Indicadores Financeiros.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">✅ Boas práticas</h3>
+              <ul className="list-disc pl-5 text-muted-foreground space-y-0.5">
+                <li>Manter somente contas realmente utilizadas;</li>
+                <li>Atualizar os saldos sempre que necessário;</li>
+                <li>Utilizar nomenclaturas padronizadas;</li>
+                <li>Conferir banco e tipo da conta;</li>
+                <li>Evitar excluir contas com histórico financeiro;</li>
+                <li>Revisar periodicamente os cadastros bancários.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">⚠️ Importante</h3>
+              <p className="text-muted-foreground">As Contas Bancárias representam a origem dos recursos financeiros. Diversos módulos utilizam automaticamente essas informações para cálculos, consolidações e projeções — mantenha os dados atualizados para garantir a precisão dos indicadores e relatórios.</p>
+            </section>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHelp(false)} className="bg-gradient-primary text-primary-foreground">Entendi ✓</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {active.length === 0 && (
