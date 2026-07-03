@@ -97,15 +97,20 @@ function CustomersPage() {
         title="Clientes"
         subtitle="Atacado e varejo"
         action={
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-primary text-primary-foreground"><Plus className="size-4 mr-1" /> Novo cliente</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader><DialogTitle className="font-display">{editing ? "Editar" : "Novo"} cliente</DialogTitle></DialogHeader>
-              <CustomerForm initial={editing} onSubmit={(v) => save.mutate(v)} busy={save.isPending} />
-            </DialogContent>
-          </Dialog>
+          <div className="flex flex-wrap items-center gap-2">
+            <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-primary text-primary-foreground"><Plus className="size-4 mr-1" /> Novo cliente</Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader><DialogTitle className="font-display">{editing ? "Editar" : "Novo"} cliente</DialogTitle></DialogHeader>
+                <CustomerForm initial={editing} onSubmit={(v) => save.mutate(v)} busy={save.isPending} />
+              </DialogContent>
+            </Dialog>
+            <Button variant="ghost" onClick={() => setShowHelp(true)}>
+              <HelpCircle className="size-4" /> Como funciona esta etapa
+            </Button>
+          </div>
         }
       />
 
