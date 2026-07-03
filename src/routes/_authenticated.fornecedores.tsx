@@ -31,6 +31,7 @@ function SuppliersPage() {
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   const { data } = useQuery({
     queryKey: ["suppliers"],
