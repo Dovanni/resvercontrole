@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Trash2, Upload, Package, Search, ArrowUp, ArrowDown, ArrowUpDown, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Upload, Package, Search, ArrowUp, ArrowDown, ArrowUpDown, X, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
 import { useConfirm } from "@/components/confirm-dialog";
@@ -36,6 +36,7 @@ function ProductsPage() {
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   const { data: products } = useQuery({
     queryKey: ["products"],
@@ -155,19 +156,90 @@ function ProductsPage() {
         title="Produtos"
         subtitle="Cadastro de cosméticos e controle de estoque"
         action={
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-primary text-primary-foreground">
-                <Plus className="size-4 mr-1" /> Novo produto
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle className="font-display">{editing ? "Editar" : "Novo"} produto</DialogTitle></DialogHeader>
-              <ProductForm initial={editing} onSubmit={(v) => save.mutate(v)} busy={save.isPending} />
-            </DialogContent>
-          </Dialog>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="ghost" onClick={() => setShowHelp(true)}>
+              <HelpCircle className="size-4 mr-1" /> Como funciona esta etapa
+            </Button>
+            <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-primary text-primary-foreground">
+                  <Plus className="size-4 mr-1" /> Novo produto
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle className="font-display">{editing ? "Editar" : "Novo"} produto</DialogTitle></DialogHeader>
+                <ProductForm initial={editing} onSubmit={(v) => save.mutate(v)} busy={save.isPending} />
+              </DialogContent>
+            </Dialog>
+          </div>
         }
       />
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display">📦 Produtos — Cadastro, Estoque e Gestão do Portfólio</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm leading-relaxed">
+            <section>
+              <h3 className="font-semibold mb-1">🎯 Objetivo desta etapa</h3>
+              <p>O módulo Produtos é responsável pelo cadastro, organização e gerenciamento de todos os produtos comercializados pela empresa. Mantém um catálogo completo e atualizado, permitindo controlar custos, preços, estoque, marcas e categorias, e disponibiliza essas informações para os demais módulos do Rosé.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">📌 O que pode ser feito</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>Cadastrar, editar, consultar e excluir produtos</li>
+                <li>Definir custo e preço de venda</li>
+                <li>Controlar estoque atual e mínimo</li>
+                <li>Organizar por marca e categoria</li>
+                <li>Pesquisar e filtrar por marca, categoria, status e estoque</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">🔄 Fluxo recomendado</h3>
+              <ol className="list-decimal pl-5 space-y-0.5">
+                <li>Cadastrar novo produto (nome, SKU, marca, categoria, unidade, custo, preço, estoque inicial e mínimo)</li>
+                <li>Conferir dados (nome, marca, categoria, custo, preço, estoque)</li>
+                <li>Atualizar sempre que houver alteração de preço, custo, marca, categoria, estoque ou status</li>
+                <li>Utilizar os filtros para localizar produtos rapidamente</li>
+                <li>Acompanhar o estoque — atualizado por compras, vendas e movimentações</li>
+              </ol>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">🎯 Objetivo do resultado</h3>
+              <p>Catálogo completo, organizado e atualizado. Alimenta automaticamente: Vendas, Compras, Estoque, Dashboard, Business Intelligence, Curva ABC, Financeiro e Relatórios Gerenciais.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">📈 Como interpretar os dados</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li><strong>Nome:</strong> identifica o produto</li>
+                <li><strong>Marca:</strong> agrupa produtos por fabricante</li>
+                <li><strong>Custo:</strong> valor de aquisição — base para margem e rentabilidade</li>
+                <li><strong>Preço:</strong> valor de venda praticado</li>
+                <li><strong>Estoque:</strong> quantidade disponível — produtos reduzidos aparecem nos indicadores de reposição</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">✅ Boas práticas</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>Utilizar nomes padronizados e evitar duplicados</li>
+                <li>Atualizar preços periodicamente</li>
+                <li>Revisar custos após novas compras</li>
+                <li>Manter estoque sempre atualizado</li>
+                <li>Definir corretamente marca e categoria</li>
+                <li>Monitorar produtos próximos do estoque mínimo</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">⚠️ Importante</h3>
+              <p>O cadastro de produtos é uma das principais bases do Rosé. Diversos módulos dependem dessas informações para gerar indicadores, controlar estoque, calcular margens e produzir relatórios confiáveis.</p>
+            </section>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHelp(false)}>Entendi ✓</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Card className="shadow-soft mb-4">
         <CardContent className="p-4 space-y-3">
