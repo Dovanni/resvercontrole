@@ -44,6 +44,7 @@ function rangeFor(p: Period): { from: string; to: string } {
 
 function BalancetePage() {
   const [period, setPeriod] = useState<Period>("este_mes");
+  const [showHelp, setShowHelp] = useState(false);
   const init = rangeFor("este_mes");
   const [from, setFrom] = useState(init.from);
   const [to, setTo] = useState(init.to);
