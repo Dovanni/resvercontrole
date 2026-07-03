@@ -32,7 +32,8 @@ import {
   Line,
   ComposedChart,
 } from "recharts";
-import { Download, TrendingDown, TrendingUp, AlertTriangle } from "lucide-react";
+import { Download, TrendingDown, TrendingUp, AlertTriangle, HelpCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/bi")({
   head: () => ({ meta: [{ title: "BI — Rosé" }] }),
@@ -181,6 +182,8 @@ function BIPage() {
   const defaultTo = today.toISOString().slice(0, 10);
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
+  const [showHelp, setShowHelp] = useState(false);
+
 
   const months = useMemo(() => monthRange(from, to), [from, to]);
 
@@ -800,7 +803,13 @@ function BIPage() {
       <PageHeader
         title="Business Intelligence"
         subtitle="Indicadores e análises do seu negócio"
+        action={
+          <Button variant="ghost" onClick={() => setShowHelp(true)}>
+            <HelpCircle className="size-4" /> Como funciona esta etapa
+          </Button>
+        }
       />
+
 
       {/* Filtro de período */}
       <Card className="shadow-soft mb-6">
@@ -1251,6 +1260,78 @@ function BIPage() {
           </BarChart>
         </ChartCard>
       </div>
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">📊 Business Intelligence (BI) — Inteligência Estratégica do Negócio</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm leading-relaxed">
+            <section>
+              <h3 className="font-semibold text-base mb-1">🎯 Objetivo desta etapa</h3>
+              <p>O módulo BI transforma os dados operacionais do Rosé em informações estratégicas para apoiar a tomada de decisões. Permite acompanhar a evolução comercial, financeira e operacional através de indicadores, gráficos, comparativos e tendências. O BI não altera informações — apenas interpreta automaticamente os dados registrados nos demais módulos.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">📌 O que pode ser acompanhado</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li><strong>📦 Vendas</strong> — faturamento mensal, evolução, canais, ticket médio, formas de pagamento, produtos mais vendidos, status dos pedidos.</li>
+                <li><strong>💰 Financeiro</strong> — receitas, despesas, resultado, saldo consolidado, contas a pagar/receber, evolução financeira.</li>
+                <li><strong>📊 Controle Comercial</strong> — lucro, margem, composição dos resultados, custos, fretes, despesas operacionais.</li>
+                <li><strong>📦 Produtos</strong> — mais vendidos, maior faturamento, maior margem, estoque mínimo, necessidade de reposição.</li>
+                <li><strong>👥 Clientes</strong> — novos clientes, distribuição por tipo, principais compradores, faturamento por cliente, inadimplência.</li>
+                <li><strong>💳 Cartões de Crédito</strong> — gastos por categoria, utilização dos limites, despesas por cartão, comportamento financeiro.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">🔄 Fluxo recomendado</h3>
+              <ol className="list-decimal pl-5 space-y-1">
+                <li><strong>Selecionar o período</strong> — informe Data Inicial e Data Final; todos os indicadores serão recalculados automaticamente.</li>
+                <li><strong>Analisar os indicadores superiores</strong> — faturamento atual, anterior e variação percentual.</li>
+                <li><strong>Interpretar os gráficos</strong> — crescimento, redução, sazonalidade, comportamento de clientes e vendas, desempenho financeiro.</li>
+                <li><strong>Identificar tendências</strong> — as vendas estão crescendo? O ticket médio melhorou? Os custos estão aumentando? Existe concentração em poucos produtos?</li>
+                <li><strong>Tomar decisões</strong> — planejar compras/vendas, reduzir custos, aumentar faturamento, melhorar margens, controlar estoque, orientar ações comerciais.</li>
+              </ol>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">🎯 Objetivo do resultado</h3>
+              <p>Visão completa do desempenho: acompanhar indicadores, identificar tendências, comparar períodos, monitorar resultados, apoiar decisões estratégicas e melhorar desempenho comercial e financeiro.</p>
+              <p className="mt-1">Consolida dados de: Dashboard, Clientes, Fornecedores, Produtos, Compras, Vendas, Contas a Receber, Contas a Pagar, Fluxo de Caixa, Financeiro, Balancete, Contas Bancárias e Cartões de Crédito.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">📈 Como interpretar os indicadores</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li><strong>Faturamento</strong> — total vendido no período.</li>
+                <li><strong>Variação</strong> — crescimento ou redução em relação ao período anterior.</li>
+                <li><strong>Ticket Médio</strong> — valor médio por venda.</li>
+                <li><strong>Lucro</strong> — resultado financeiro após custos.</li>
+                <li><strong>Margem</strong> — percentual de rentabilidade das vendas.</li>
+                <li><strong>Produtos</strong> — itens de maior desempenho.</li>
+                <li><strong>Clientes</strong> — comportamento da carteira.</li>
+                <li><strong>Financeiro</strong> — situação econômica da empresa.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">✅ Boas práticas</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>Consultar o BI regularmente</li>
+                <li>Comparar diferentes períodos</li>
+                <li>Acompanhar tendências</li>
+                <li>Utilizar gráficos como apoio à decisão</li>
+                <li>Monitorar indicadores de crescimento</li>
+                <li>Revisar periodicamente margens e custos</li>
+                <li>Utilizar o BI como ferramenta estratégica</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">⚠️ Importante</h3>
+              <p>O BI não realiza lançamentos — interpreta automaticamente os dados dos demais módulos. Caso algum indicador pareça inconsistente, verifique os registros em Vendas, Compras, Produtos, Financeiro, Fluxo de Caixa, Contas Bancárias, Contas a Receber, Contas a Pagar e Cartões de Crédito. A qualidade das análises depende diretamente da qualidade das informações registradas no sistema.</p>
+            </section>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHelp(false)}>Entendi ✓</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
