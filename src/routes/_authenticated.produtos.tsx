@@ -36,6 +36,7 @@ function ProductsPage() {
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   const { data: products } = useQuery({
     queryKey: ["products"],
