@@ -98,6 +98,8 @@ function CurvaABCPage() {
   const [channel, setChannel] = useState<"todos" | "atacado" | "varejo">("todos");
   const [applied, setApplied] = useState({ from: defaultFrom, to: defaultTo, channel: "todos" as typeof channel });
   const [preset, setPreset] = useState("3m");
+  const [showHelp, setShowHelp] = useState(false);
+
 
   const { data: sales } = useQuery({
     queryKey: ["abc-sales", applied],
