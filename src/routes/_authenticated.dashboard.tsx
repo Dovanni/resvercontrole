@@ -144,7 +144,15 @@ function Dashboard() {
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
-      <PageHeader title="Dashboard" subtitle="Visão geral do mês atual" />
+      <PageHeader
+        title="Dashboard"
+        subtitle="Visão geral do mês atual"
+        action={
+          <Button variant="ghost" onClick={() => setShowHelp(true)}>
+            <HelpCircle className="size-4" /> Como funciona esta etapa
+          </Button>
+        }
+      />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <BankBalanceCard total={bankData?.total ?? 0} accounts={bankData?.perAccount ?? []} />
