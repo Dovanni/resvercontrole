@@ -327,9 +327,71 @@ function BalancetePage() {
           <div className="flex flex-wrap gap-2 pt-1">
             <Button onClick={exportPdf} variant="outline"><FileText className="size-4 mr-1" /> Exportar PDF</Button>
             <Button onClick={exportXlsx} variant="outline"><FileSpreadsheet className="size-4 mr-1" /> Exportar Excel</Button>
+            <Button onClick={() => setShowHelp(true)} variant="ghost" size="sm"><HelpCircle className="size-4 mr-1" /> Como funciona esta etapa</Button>
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>📊 BALANCETE — RESULTADO FINANCEIRO CONSOLIDADO</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <section>
+              <h3 className="font-semibold mb-1">🎯 Objetivo desta etapa</h3>
+              <p className="text-muted-foreground">O módulo Balancete apresenta uma visão consolidada da situação financeira da empresa em um determinado período, permitindo acompanhar receitas, despesas, saldo bancário e o resultado financeiro (superávit ou déficit). Seu principal objetivo é fornecer uma análise financeira resumida e confiável para apoiar decisões gerenciais, planejamento financeiro e acompanhamento da saúde econômica da empresa.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">📌 O que pode ser feito</h3>
+              <ul className="list-disc pl-5 text-muted-foreground space-y-0.5">
+                <li>Visualizar o resultado financeiro consolidado;</li>
+                <li>Consultar receitas por conta bancária;</li>
+                <li>Consultar despesas consolidadas;</li>
+                <li>Comparar entradas e saídas;</li>
+                <li>Verificar o saldo atualizado das contas bancárias;</li>
+                <li>Identificar superávit ou déficit;</li>
+                <li>Filtrar informações por período;</li>
+                <li>Exportar em PDF ou Excel;</li>
+                <li>Utilizar os dados para análises gerenciais e auditorias.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">🔄 Fluxo recomendado</h3>
+              <ol className="list-decimal pl-5 text-muted-foreground space-y-0.5">
+                <li>Selecionar o período (Este mês, Mês anterior, 3m, 6m, Ano, Personalizado);</li>
+                <li>Analisar os indicadores superiores (entradas, saídas, resultado, superávit/déficit);</li>
+                <li>Consultar Receitas — Contas Bancárias (contas, entradas, saldo atualizado, total);</li>
+                <li>Consultar Despesas — Contas a Pagar (despesas, pagamentos, compromissos, total);</li>
+                <li>Interpretar o Resultado (Superávit ou Déficit);</li>
+                <li>Exportar o Balancete em PDF ou Excel quando necessário.</li>
+              </ol>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">🎯 Objetivo do resultado</h3>
+              <p className="text-muted-foreground">Ao final, o gestor terá uma visão consolidada do desempenho financeiro, permitindo acompanhar receitas e despesas, verificar saldo disponível, identificar superávit ou déficit, apoiar decisões estratégicas, controlar a evolução financeira e fornecer informações para auditorias e planejamento. As informações são alimentadas automaticamente por: Vendas, Compras, Contas a Receber, Contas a Pagar, Fluxo de Caixa, Contas Bancárias, Financeiro e BI.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">✅ Boas práticas</h3>
+              <ul className="list-disc pl-5 text-muted-foreground space-y-0.5">
+                <li>Conferir periodicamente receitas e despesas;</li>
+                <li>Atualizar diariamente os lançamentos financeiros;</li>
+                <li>Revisar contas bancárias;</li>
+                <li>Utilizar períodos comparativos para análise;</li>
+                <li>Exportar relatórios para acompanhamento gerencial;</li>
+                <li>Utilizar o Balancete como apoio ao planejamento financeiro.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">⚠️ Importante</h3>
+              <p className="text-muted-foreground">O Balancete consolida informações registradas em todo o sistema. Sua confiabilidade depende da correta atualização de: Vendas, Compras, Contas a Receber, Contas a Pagar, Fluxo de Caixa e Contas Bancárias.</p>
+            </section>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHelp(false)} className="bg-gradient-primary text-primary-foreground">Entendi ✓</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card className="shadow-soft"><CardContent className="p-5">
