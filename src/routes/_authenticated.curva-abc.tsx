@@ -177,7 +177,7 @@ function CurvaABCPage() {
       <PageHeader title="Curva ABC" subtitle="Classificação A/B/C de clientes e produtos por faturamento ou quantidade" />
 
       <Card className="shadow-soft mb-6">
-        <CardContent className="p-4 grid md:grid-cols-5 gap-3 items-end">
+        <CardContent className="p-4 grid md:grid-cols-4 gap-3 items-end">
           <div className="space-y-1.5">
             <Label className="text-xs">Período</Label>
             <Select value={preset} onValueChange={applyPreset}>
@@ -210,7 +210,7 @@ function CurvaABCPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2 md:col-span-4">
             <Button onClick={() => setApplied({ from, to, channel })}>Aplicar filtro</Button>
             <Button variant="ghost" onClick={() => setShowHelp(true)}>
               <HelpCircle className="size-4" /> Como funciona esta etapa
