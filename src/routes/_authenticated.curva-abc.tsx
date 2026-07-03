@@ -14,7 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { brl } from "@/lib/format";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
-import { Download } from "lucide-react";
+import { Download, HelpCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/curva-abc")({
   head: () => ({ meta: [{ title: "Curva ABC — Rosé" }] }),
@@ -97,6 +98,8 @@ function CurvaABCPage() {
   const [channel, setChannel] = useState<"todos" | "atacado" | "varejo">("todos");
   const [applied, setApplied] = useState({ from: defaultFrom, to: defaultTo, channel: "todos" as typeof channel });
   const [preset, setPreset] = useState("3m");
+  const [showHelp, setShowHelp] = useState(false);
+
 
   const { data: sales } = useQuery({
     queryKey: ["abc-sales", applied],
@@ -207,7 +210,12 @@ function CurvaABCPage() {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={() => setApplied({ from, to, channel })}>Aplicar filtro</Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setApplied({ from, to, channel })}>Aplicar filtro</Button>
+            <Button variant="ghost" onClick={() => setShowHelp(true)}>
+              <HelpCircle className="size-4" /> Como funciona esta etapa
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -241,6 +249,83 @@ function CurvaABCPage() {
           />
         </TabsContent>
       </Tabs>
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">📊 Curva ABC — Análise Estratégica de Clientes e Produtos</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm leading-relaxed">
+            <section>
+              <h3 className="font-semibold text-base mb-1">🎯 Objetivo desta etapa</h3>
+              <p>A Curva ABC classifica automaticamente clientes e produtos conforme sua importância para o faturamento ou volume de vendas. Permite identificar quais geram maior impacto financeiro, apoiando estratégias comerciais, controle de estoque e planejamento de compras. Baseia-se no Princípio de Pareto (80/20).</p>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">📌 O que pode ser analisado</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>Classificar clientes por faturamento ou quantidade de compras</li>
+                <li>Classificar produtos por faturamento ou quantidade vendida</li>
+                <li>Identificar clientes e produtos estratégicos</li>
+                <li>Comparar períodos e filtrar canais de venda</li>
+                <li>Exportar análises para Excel</li>
+                <li>Apoiar decisões comerciais e de estoque</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">🔄 Fluxo recomendado</h3>
+              <ol className="list-decimal pl-5 space-y-1">
+                <li><strong>Selecionar o período</strong> — pré-definido ou data inicial/final.</li>
+                <li><strong>Escolher o canal</strong> — Todos, Atacado, Varejo ou outro disponível.</li>
+                <li><strong>Aplicar o filtro</strong> — o Rosé recalculará automaticamente a Curva ABC.</li>
+                <li><strong>Escolher o tipo de análise</strong> — Clientes ou Produtos.</li>
+                <li><strong>Escolher o critério</strong> — Valor (R$) ou Quantidade.</li>
+                <li>
+                  <strong>Interpretar as Classes:</strong>
+                  <ul className="list-disc pl-5 mt-1 space-y-0.5">
+                    <li>🟢 <strong>Classe A</strong> — mais importantes; poucos registros que geram a maior parte do faturamento. Prioridade máxima.</li>
+                    <li>🟡 <strong>Classe B</strong> — importância intermediária; necessitam acompanhamento constante.</li>
+                    <li>🔴 <strong>Classe C</strong> — menor participação; podem oferecer oportunidades de crescimento ou otimização.</li>
+                  </ul>
+                </li>
+                <li><strong>Analisar os gráficos</strong> — ranking dos principais clientes ou produtos.</li>
+                <li><strong>Exportar os resultados</strong> — use "📄 Exportar Excel" para análises, apresentações ou auditorias.</li>
+              </ol>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">🎯 Objetivo do resultado</h3>
+              <p>Identificar principais clientes e produtos, concentração do faturamento, oportunidades de crescimento, necessidade de diversificação e prioridades comerciais, de estoque e de compras.</p>
+              <p className="mt-1">Auxilia diretamente: Vendas, Compras, Estoque, Dashboard, BI, Planejamento Comercial e Financeiro.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">📈 Como interpretar</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li><strong>Classe A</strong> — geram a maior parte do faturamento. Prioridade máxima.</li>
+                <li><strong>Classe B</strong> — importantes com menor representatividade. Acompanhar para crescimento.</li>
+                <li><strong>Classe C</strong> — baixa participação. Oportunidades futuras ou itens que precisam de reavaliação.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">✅ Boas práticas</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>Atualizar regularmente os dados de vendas</li>
+                <li>Comparar diferentes períodos</li>
+                <li>Avaliar mudanças de classificação ao longo do tempo</li>
+                <li>Utilizar a Curva ABC para planejar estoque</li>
+                <li>Priorizar atendimento aos clientes Classe A</li>
+                <li>Garantir disponibilidade dos produtos Classe A</li>
+                <li>Revisar periodicamente produtos Classe C</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">⚠️ Importante</h3>
+              <p>A Curva ABC não altera dados do sistema — realiza apenas análises estatísticas baseadas nos módulos: Vendas, Produtos, Clientes, Compras, Estoque e BI. A qualidade da análise depende da correta atualização desses módulos.</p>
+            </section>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHelp(false)}>Entendi ✓</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
