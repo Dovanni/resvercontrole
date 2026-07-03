@@ -8,10 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
 import { isValidCPF, isValidCNPJ, maskCPF, maskCNPJ } from "@/lib/validators";
@@ -49,6 +49,7 @@ function CustomersPage() {
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   const { data } = useQuery({
     queryKey: ["customers"],
@@ -96,15 +97,20 @@ function CustomersPage() {
         title="Clientes"
         subtitle="Atacado e varejo"
         action={
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-primary text-primary-foreground"><Plus className="size-4 mr-1" /> Novo cliente</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader><DialogTitle className="font-display">{editing ? "Editar" : "Novo"} cliente</DialogTitle></DialogHeader>
-              <CustomerForm initial={editing} onSubmit={(v) => save.mutate(v)} busy={save.isPending} />
-            </DialogContent>
-          </Dialog>
+          <div className="flex flex-wrap items-center gap-2">
+            <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-primary text-primary-foreground"><Plus className="size-4 mr-1" /> Novo cliente</Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader><DialogTitle className="font-display">{editing ? "Editar" : "Novo"} cliente</DialogTitle></DialogHeader>
+                <CustomerForm initial={editing} onSubmit={(v) => save.mutate(v)} busy={save.isPending} />
+              </DialogContent>
+            </Dialog>
+            <Button variant="ghost" onClick={() => setShowHelp(true)}>
+              <HelpCircle className="size-4" /> Como funciona esta etapa
+            </Button>
+          </div>
         }
       />
 
@@ -156,6 +162,79 @@ function CustomersPage() {
           <DataPagination page={page} totalPages={totalPages} total={total} onChange={setPage} />
         </CardContent>
       </Card>
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">👥 Clientes — Cadastro e Gestão da Carteira</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm leading-relaxed">
+            <section>
+              <h3 className="font-semibold text-base mb-1">🎯 Objetivo desta etapa</h3>
+              <p>O módulo Clientes é responsável pelo cadastro, organização e gerenciamento de todos os clientes da empresa. Mantém uma base de dados completa e confiável, alimentando automaticamente os demais módulos do Rosé (vendas, recebimentos, análises e indicadores).</p>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">📌 O que pode ser feito</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>Cadastrar, editar, consultar e excluir clientes</li>
+                <li>Definir o tipo de cliente</li>
+                <li>Informar documentos e contatos</li>
+                <li>Definir limite de crédito</li>
+                <li>Organizar a carteira e apoiar o controle comercial e financeiro</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">👥 Tipos de Clientes</h3>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>🏢 <strong>Atacado</strong> — compras em maior volume; revendedores, distribuidores ou empresas.</li>
+                <li>🛍️ <strong>Varejo</strong> — compras para consumo próprio ou pequenas quantidades.</li>
+                <li>💼 <strong>Recursos Financeiros</strong> — pessoas ou entidades que realizam aportes financeiros. Não representam vendas, não geram faturamento e não participam da Curva ABC.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">🔄 Fluxo recomendado</h3>
+              <ol className="list-decimal pl-5 space-y-1">
+                <li><strong>Cadastrar novo cliente</strong> — clique em "➕ Novo cliente" e informe nome, tipo, CPF/CNPJ, contato, endereço, limite de crédito e observações.</li>
+                <li><strong>Conferir os dados</strong> — nome, documento, contato, tipo e limite de crédito.</li>
+                <li><strong>Atualizar informações</strong> — manter telefone, endereço e limite de crédito revisados.</li>
+                <li><strong>Utilizar nas vendas</strong> — os cadastros ficam disponíveis automaticamente no módulo Vendas.</li>
+                <li><strong>Acompanhar o relacionamento</strong> — manter a carteira organizada para vendas, atendimento e análises.</li>
+              </ol>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">🎯 Objetivo do resultado</h3>
+              <p>Cadastro organizado e atualizado da carteira, permitindo realizar vendas, controlar relacionamento, acompanhar faturamento por cliente, controlar limites de crédito e apoiar decisões comerciais.</p>
+              <p className="mt-1">Alimenta automaticamente: Vendas, Contas a Receber, BI, Curva ABC, Dashboard, Relatórios Gerenciais e Indicadores Comerciais.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">📈 Como interpretar os dados</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li><strong>Tipo de Cliente</strong> — perfil comercial usado em análises e relatórios.</li>
+                <li><strong>Limite de Crédito</strong> — valor máximo autorizado para operações a prazo.</li>
+                <li><strong>Documento</strong> — identifica unicamente o cliente no sistema.</li>
+                <li><strong>Contato</strong> — facilita o relacionamento e o atendimento.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">✅ Boas práticas</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>Manter cadastros atualizados e evitar duplicidades</li>
+                <li>Definir corretamente o tipo de cliente</li>
+                <li>Revisar periodicamente os limites de crédito</li>
+                <li>Conferir CPF/CNPJ antes do cadastro</li>
+                <li>Utilizar informações completas para facilitar negociações</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">⚠️ Importante</h3>
+              <p>O cadastro de clientes é uma das principais bases de dados do Rosé. Diversos módulos dependem dessas informações para cálculos, indicadores e relatórios — mantenha-as sempre atualizadas.</p>
+            </section>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHelp(false)}>Entendi ✓</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
