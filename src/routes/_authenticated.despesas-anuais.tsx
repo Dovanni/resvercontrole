@@ -42,6 +42,7 @@ function AnnualExpensesPage() {
   const [year, setYear] = useState(currentYear);
   const [category, setCategory] = useState("todos");
   const [selectedCell, setSelectedCell] = useState<{ row: string; monthIdx: number; items: Payable[] } | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   // Range: Jan/year .. Jan/(year+1)
   const startDate = `${year}-01-01`;
