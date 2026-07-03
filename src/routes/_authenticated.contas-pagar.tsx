@@ -90,6 +90,7 @@ function PayablesPage() {
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [payTarget, setPayTarget] = useState<Payable | null>(null);
   const [editTarget, setEditTarget] = useState<Payable | null>(null);
 
