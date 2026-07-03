@@ -331,76 +331,96 @@ function AnnualExpensesPage() {
       <Dialog open={showHelp} onOpenChange={setShowHelp}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Como funciona Despesas Anuais</DialogTitle>
+            <DialogTitle>📊 Despesas Anuais — Planejamento e Acompanhamento Financeiro</DialogTitle>
           </DialogHeader>
           <div className="space-y-5 text-sm">
             <section>
-              <h3 className="font-semibold mb-1">📌 Objetivo desta tela</h3>
+              <h3 className="font-semibold mb-1">🎯 Objetivo desta etapa</h3>
               <p className="text-muted-foreground">
-                Despesas Anuais oferece uma visão panorâmica de todos os seus gastos mês a mês ao longo do ano
-                inteiro, permitindo identificar padrões, picos de despesa e planejar o fluxo de caixa com
-                antecedência.
+                O módulo Despesas Anuais permite visualizar, acompanhar e analisar todas as despesas previstas e realizadas ao longo do ano, organizadas por fornecedor, categoria e período.
               </p>
               <p className="text-muted-foreground mt-2">
-                É o seu "mapa anual de despesas" — uma planilha visual que mostra quanto você gasta com cada
-                fornecedor/categoria em cada mês.
+                Oferece uma visão consolidada dos compromissos financeiros da empresa, auxiliando no planejamento financeiro, no controle do fluxo de caixa e na tomada de decisões estratégicas.
               </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">📌 O que pode ser feito</h3>
+              <ul className="list-disc pl-5 space-y-0.5 text-muted-foreground">
+                <li>Visualizar todas as despesas do ano</li>
+                <li>Consultar despesas por fornecedor</li>
+                <li>Consultar despesas por categoria</li>
+                <li>Comparar despesas entre os meses</li>
+                <li>Identificar despesas recorrentes</li>
+                <li>Analisar a evolução anual dos gastos</li>
+                <li>Filtrar informações por ano e categoria</li>
+                <li>Exportar os dados para Excel</li>
+                <li>Apoiar auditorias financeiras</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">🔄 Fluxo recomendado</h3>
+              <ol className="list-decimal pl-5 space-y-1 text-muted-foreground">
+                <li><b>Selecionar o ano</b> — escolha o exercício financeiro que deseja analisar.</li>
+                <li><b>Filtrar por categoria</b> (opcional) — Administrativas, Impostos, Serviços, Cartões, Fretes, Tecnologia, Telefonia, Internet, Outros.</li>
+                <li><b>Consultar a matriz anual</b> — fornecedor, categoria, despesas por mês, evolução mensal e total acumulado anual.</li>
+                <li><b>Identificar oportunidades</b> — aumento de custos, despesas recorrentes, gastos extraordinários, concentração de despesas, economia possível.</li>
+                <li><b>Exportar informações</b> — use "Exportar Excel" para relatórios externos, apresentações ou análises complementares.</li>
+              </ol>
             </section>
 
             <section>
               <h3 className="font-semibold mb-1">📊 Como ler a tabela</h3>
               <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                <li><b>Linhas</b> = Fornecedores ou categorias de despesa</li>
-                <li><b>Colunas</b> = Meses do ano (Jan a Dez) + Jan do ano seguinte</li>
-                <li><b>Células com valor</b>: há despesa lançada naquele mês — clique para ver os detalhes</li>
-                <li><b>Células vazias</b>: sem lançamento naquele mês</li>
-                <li><b>Coluna TOTAL ANO</b>: soma de todos os meses daquela linha</li>
-                <li><b>Linha DÉBITO TOTAL</b>: soma de todas as despesas de cada mês</li>
-              </ul>
-            </section>
-
-            <section>
-              <h3 className="font-semibold mb-1">🎨 Cores das células</h3>
-              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                <li><span className="text-amber-600 font-medium">Âmbar</span>: valor pendente (ainda não pago)</li>
-                <li>Sem cor: valor já pago</li>
-                <li>Coluna destacada em <span className="text-primary font-medium">azul</span>: mês atual</li>
+                <li><b>Linhas</b> = fornecedores ou categorias de despesa</li>
+                <li><b>Colunas</b> = meses do ano (Jan a Dez) + Jan do ano seguinte</li>
+                <li><b>Células com valor</b>: há despesa lançada no mês — clique para ver detalhes</li>
+                <li><b>Células vazias</b>: sem lançamento no mês</li>
+                <li><b>Coluna TOTAL ANO</b>: soma de todos os meses da linha</li>
+                <li><b>Linha DÉBITO TOTAL</b>: soma das despesas de cada mês</li>
+                <li><span className="text-amber-600 font-medium">Âmbar</span>: valor pendente · Sem cor: já pago · <span className="text-primary font-medium">Azul</span>: mês atual</li>
               </ul>
             </section>
 
             <section>
               <h3 className="font-semibold mb-1">⚙️ De onde vêm os dados</h3>
               <p className="text-muted-foreground">
-                Todos os valores são puxados automaticamente da tela <b>Contas a Pagar</b>. Cada conta a pagar
-                lançada aparece aqui na coluna correspondente ao seu vencimento. Não é necessário lançar nada
-                nesta tela — ela é apenas uma visualização consolidada.
+                Todos os valores são puxados automaticamente da tela <b>Contas a Pagar</b>. Esta tela é apenas uma visualização consolidada — não é necessário lançar nada aqui.
               </p>
             </section>
 
             <section>
-              <h3 className="font-semibold mb-1">🔎 Filtros disponíveis</h3>
-              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                <li><b>Ano</b>: escolha o ano de referência (mostra Jan..Dez + Jan do ano seguinte)</li>
-                <li><b>Categoria</b>: filtre por tipo de despesa (fornecedor, logística, marketing, etc.)</li>
+              <h3 className="font-semibold mb-1">🎯 Objetivo do resultado</h3>
+              <p className="text-muted-foreground mb-1">Visão completa das despesas anuais permitindo acompanhar a evolução dos gastos, controlar despesas recorrentes, apoiar o planejamento financeiro, prever necessidades de caixa, identificar oportunidades de redução de custos e subsidiar decisões estratégicas. Alimenta:</p>
+              <ul className="list-disc pl-5 space-y-0.5 text-muted-foreground">
+                <li>Financeiro</li>
+                <li>Fluxo de Caixa</li>
+                <li>Business Intelligence (BI)</li>
+                <li>Relatórios Gerenciais</li>
+                <li>Indicadores Financeiros</li>
+                <li>Planejamento Orçamentário</li>
               </ul>
             </section>
 
             <section>
-              <h3 className="font-semibold mb-1">✅ Ações rápidas</h3>
-              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                <li>Clique em qualquer célula com valor para ver os lançamentos daquele mês</li>
-                <li>No detalhe, você pode <b>marcar como pago</b> diretamente</li>
-                <li>Use <b>Exportar Excel</b> para gerar uma planilha completa do ano</li>
+              <h3 className="font-semibold mb-1">✅ Boas práticas</h3>
+              <ul className="list-disc pl-5 space-y-0.5 text-muted-foreground">
+                <li>Registrar corretamente todas as despesas</li>
+                <li>Classificar despesas na categoria adequada</li>
+                <li>Conferir valores antes da confirmação</li>
+                <li>Atualizar despesas recorrentes quando houver alteração</li>
+                <li>Revisar periodicamente os gastos por fornecedor</li>
+                <li>Utilizar os filtros para análises específicas</li>
+                <li>Exportar relatórios sempre que necessário para auditorias e planejamento</li>
               </ul>
             </section>
 
             <section>
-              <h3 className="font-semibold mb-1">💡 Cards de resumo</h3>
-              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-                <li><span className="text-green-600 font-medium">Total pago no ano</span>: soma de tudo já quitado</li>
-                <li><span className="text-amber-600 font-medium">Total pendente no ano</span>: soma do que ainda vai vencer</li>
-                <li><span className="text-destructive font-medium">Total geral do ano</span>: pago + pendente</li>
-              </ul>
+              <h3 className="font-semibold mb-1">⚠️ Importante</h3>
+              <p className="text-muted-foreground">
+                As informações refletem diretamente a saúde financeira da empresa. A correta classificação e atualização das despesas garante maior precisão nos indicadores, fluxo de caixa, relatórios gerenciais e BI do Rosé.
+              </p>
             </section>
           </div>
           <DialogFooter>
