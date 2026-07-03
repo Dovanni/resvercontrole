@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FileSpreadsheet, FileText, TrendingUp, TrendingDown, Scale } from "lucide-react";
+import { FileSpreadsheet, FileText, TrendingUp, TrendingDown, Scale, HelpCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { brl, dateBR } from "@/lib/format";
 import { CashProjection } from "@/components/cash-projection";
 import {
