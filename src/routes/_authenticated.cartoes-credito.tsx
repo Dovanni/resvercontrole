@@ -17,7 +17,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { brl, dateBR } from "@/lib/format";
 import { toast } from "sonner";
-import { Plus, CreditCard as CCIcon, Fuel, Home, User, AlertTriangle, Clock, CheckCircle2, Pencil, Trash2, Factory, Info } from "lucide-react";
+import { Plus, CreditCard as CCIcon, Fuel, Home, User, AlertTriangle, Clock, CheckCircle2, Pencil, Trash2, Factory, Info, HelpCircle } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend, LineChart, Line } from "recharts";
 import { useConfirm } from "@/components/confirm-dialog";
 
@@ -155,6 +155,7 @@ function CartoesPage() {
   const [tab, setTab] = useState("geral");
   const [openCartao, setOpenCartao] = useState(false);
   const [openLanc, setOpenLanc] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const { data: cartoes = [] } = useQuery({
     queryKey: ["cartoes_credito"],
@@ -238,7 +239,81 @@ function CartoesPage() {
           </DialogTrigger>
           <LancDialog cartoes={cartoes} lancamentos={lancamentos} faturas={faturas} userId={user?.id ?? ""} onDone={() => { setOpenLanc(false); invalidate(); }} />
         </Dialog>
+        <Button variant="ghost" onClick={() => setShowHelp(true)}>
+          <HelpCircle className="size-4 mr-1" /> Como funciona esta etapa
+        </Button>
       </div>
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>💳 Cartões de Crédito — Gestão de Limites e Lançamentos</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm leading-relaxed">
+            <section>
+              <h3 className="font-semibold mb-1">🎯 Objetivo desta etapa</h3>
+              <p>
+                Controlar os gastos realizados nos cartões da empresa, acompanhar limites disponíveis,
+                organizar despesas por categoria e fornecer indicadores financeiros para análise gerencial.
+              </p>
+              <p className="mt-2">
+                <strong>Importante:</strong> este módulo <strong>não realiza o pagamento das faturas</strong>.
+                O pagamento efetivo deverá ser registrado exclusivamente em <strong>Contas a Pagar</strong>,
+                garantindo os impactos corretos em Financeiro, Fluxo de Caixa, Balancete, Despesas Anuais e BI.
+              </p>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">📌 O que pode ser feito</h3>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Cadastrar novos cartões de crédito</li>
+                <li>Registrar lançamentos realizados nos cartões</li>
+                <li>Consultar gastos por cartão e acompanhar limites disponíveis</li>
+                <li>Monitorar utilização do limite e despesas por categoria</li>
+                <li>Consultar histórico mensal e gastos por fornecedor</li>
+                <li>Acompanhar faturas futuras e analisar indicadores financeiros</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">🔄 Fluxo recomendado</h3>
+              <ol className="list-decimal pl-5 space-y-1">
+                <li><strong>Cadastrar cartão:</strong> banco, nome, bandeira, limite, vencimento e fechamento.</li>
+                <li><strong>Registrar lançamento:</strong> cartão, data, fornecedor, categoria, descrição e valor.</li>
+                <li><strong>Classificar corretamente</strong> (Combustível, Casa, Pessoal, Fornecedores, etc.).</li>
+                <li><strong>Acompanhar indicadores:</strong> gastos por categoria, limite disponível, faturas futuras, alertas.</li>
+                <li><strong>Pagamento da fatura:</strong> registrar exclusivamente em <strong>Contas a Pagar</strong>.</li>
+              </ol>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">🎯 Objetivo do resultado</h3>
+              <p>
+                Controle completo dos cartões, permitindo acompanhar limites, despesas, concentração de gastos e
+                vencimentos. Alimenta automaticamente BI, Financeiro Gerencial, Indicadores, Relatórios e Painéis.
+              </p>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">✅ Boas práticas</h3>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Registrar cada compra imediatamente após sua realização</li>
+                <li>Utilizar sempre a categoria correta e conferir valores antes de salvar</li>
+                <li>Revisar periodicamente os limites disponíveis</li>
+                <li>Evitar duplicidade de lançamentos</li>
+                <li>Registrar o pagamento da fatura exclusivamente em Contas a Pagar</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">⚠️ Importante</h3>
+              <p>
+                Módulo com finalidade gerencial e analítica. Não altera saldo bancário, fluxo de caixa,
+                contas bancárias ou resultado financeiro — esses impactos ocorrem apenas após o pagamento
+                da fatura registrado em <strong>Contas a Pagar</strong>.
+              </p>
+            </section>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHelp(false)}>Entendi ✓</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex flex-wrap h-auto">
