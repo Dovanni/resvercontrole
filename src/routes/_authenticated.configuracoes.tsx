@@ -31,6 +31,7 @@ function SettingsPage() {
   const resetFn = useServerFn(resetDemoData);
   const fileRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({ company_name: "", cnpj: "", logo_url: "", theme: "light" as "light" | "dark" });
+  const [showHelp, setShowHelp] = useState(false);
 
   if (!can("view:settings") && location.pathname === "/configuracoes") return <Navigate to="/dashboard" />;
 
