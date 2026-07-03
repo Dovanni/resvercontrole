@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Plus, Trash2, CheckCircle2, AlertCircle, Pencil, ArrowUpDown, Download, ChevronDown, ChevronRight, Settings } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, AlertCircle, Pencil, ArrowUpDown, Download, ChevronDown, ChevronRight, Settings, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
 import { useConfirm } from "@/components/confirm-dialog";
@@ -90,6 +90,7 @@ function PayablesPage() {
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [payTarget, setPayTarget] = useState<Payable | null>(null);
   const [editTarget, setEditTarget] = useState<Payable | null>(null);
 
@@ -342,18 +343,23 @@ function PayablesPage() {
         title="Contas a pagar"
         subtitle="Despesas, fornecedores e compromissos"
         action={
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-gradient-primary text-primary-foreground"><Plus className="size-4 mr-1" /> Nova conta</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle className="font-display">Nova conta a pagar</DialogTitle></DialogHeader>
-              <PayableForm
-                suppliers={suppliers ?? []}
-                onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["payables"] }); }}
-              />
-            </DialogContent>
-          </Dialog>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={() => setShowHelp(true)}>
+              <HelpCircle className="size-4 mr-1" /> Como funciona esta etapa
+            </Button>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-gradient-primary text-primary-foreground"><Plus className="size-4 mr-1" /> Nova conta</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle className="font-display">Nova conta a pagar</DialogTitle></DialogHeader>
+                <PayableForm
+                  suppliers={suppliers ?? []}
+                  onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["payables"] }); }}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         }
       />
 
@@ -546,6 +552,86 @@ function PayablesPage() {
               onDone={() => { setEditTarget(null); qc.invalidateQueries({ queryKey: ["payables"] }); }}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>💰 Contas a Pagar — Controle de Compromissos Financeiros</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5 text-sm">
+            <section>
+              <h3 className="font-semibold mb-1">🎯 Objetivo desta etapa</h3>
+              <p className="text-muted-foreground">
+                O módulo Contas a Pagar é responsável por controlar todas as obrigações financeiras da empresa, permitindo acompanhar vencimentos, pagamentos, despesas recorrentes e compromissos assumidos com fornecedores e prestadores de serviços.
+              </p>
+              <p className="text-muted-foreground mt-2">
+                Garante organização financeira, evita atrasos, mantém o fluxo de caixa equilibrado e fornece informações confiáveis para o planejamento financeiro.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">📌 O que pode ser feito</h3>
+              <ul className="list-disc pl-5 space-y-0.5 text-muted-foreground">
+                <li>Registrar novas contas a pagar</li>
+                <li>Consultar contas cadastradas</li>
+                <li>Editar informações quando necessário</li>
+                <li>Acompanhar vencimentos</li>
+                <li>Controlar contas pagas, pendentes e em atraso</li>
+                <li>Filtrar por fornecedor, categoria e status</li>
+                <li>Agrupar informações para análise</li>
+                <li>Exportar os dados para Excel</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">🔄 Fluxo recomendado</h3>
+              <ol className="list-decimal pl-5 space-y-1 text-muted-foreground">
+                <li><b>Registrar uma nova conta</b> — clique em ➕ Nova conta e informe descrição, fornecedor, categoria, valor, vencimento, condição de pagamento e observações.</li>
+                <li><b>Classificar corretamente</b> — selecione a categoria adequada (Energia, Água, Internet, Telefonia, Impostos, Fretes, Cartões, Serviços, Fornecedores, Outras despesas).</li>
+                <li><b>Acompanhar vencimentos</b> — utilize os indicadores superiores para visualizar contas em aberto, em atraso, pagas, total do período e próximos vencimentos.</li>
+                <li><b>Utilizar filtros</b> — localize rapidamente por período, fornecedor, categoria, status e agrupamento.</li>
+                <li><b>Atualizar o status</b> — após a quitação, atualize a conta para manter financeiro, fluxo de caixa e indicadores refletindo a realidade.</li>
+              </ol>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">🎯 Objetivo do resultado</h3>
+              <p className="text-muted-foreground mb-1">Controle completo das obrigações financeiras permitindo controlar vencimentos, evitar atrasos, acompanhar pagamentos, analisar despesas, planejar o fluxo de caixa e gerar indicadores confiáveis. Alimenta automaticamente:</p>
+              <ul className="list-disc pl-5 space-y-0.5 text-muted-foreground">
+                <li>Financeiro</li>
+                <li>Fluxo de Caixa</li>
+                <li>Business Intelligence (BI)</li>
+                <li>Despesas Anuais</li>
+                <li>Relatórios Gerenciais</li>
+                <li>Indicadores Financeiros</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">✅ Boas práticas</h3>
+              <ul className="list-disc pl-5 space-y-0.5 text-muted-foreground">
+                <li>Registrar todas as obrigações financeiras</li>
+                <li>Conferir valores antes da confirmação</li>
+                <li>Atualizar imediatamente contas quitadas</li>
+                <li>Classificar corretamente as categorias</li>
+                <li>Revisar periodicamente contas em atraso</li>
+                <li>Utilizar filtros para auditorias financeiras</li>
+                <li>Exportar relatórios sempre que necessário</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">⚠️ Importante</h3>
+              <p className="text-muted-foreground">
+                As informações registradas impactam diretamente o Fluxo de Caixa, Indicadores Financeiros, BI, Planejamento Financeiro e Relatórios Gerenciais. Manter este módulo atualizado garante maior precisão na gestão financeira da empresa.
+              </p>
+            </section>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHelp(false)}>Entendi ✓</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
