@@ -129,6 +129,105 @@ function SalesPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display">📖 Vendas no Rosé — Gestão de Vendas</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-5 text-sm">
+            <section>
+              <h3 className="font-semibold mb-1">📌 Objetivo desta etapa</h3>
+              <p className="text-muted-foreground">
+                O módulo <b>Vendas</b> é responsável por registrar todas as vendas realizadas pela empresa,
+                garantindo o controle completo do processo comercial, atualização automática dos indicadores
+                financeiros e geração das informações utilizadas pelo BI do Rosé. Cada venda registrada
+                representa uma operação comercial efetivamente realizada entre a empresa e o cliente.
+              </p>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">🛠️ O que pode ser feito nesta etapa</h3>
+              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                <li>Registrar novas vendas</li>
+                <li>Consultar vendas já realizadas</li>
+                <li>Visualizar detalhes completos de cada pedido</li>
+                <li>Editar informações da venda quando permitido</li>
+                <li>Acompanhar status dos pedidos</li>
+                <li>Controlar vendas de Atacado e Varejo</li>
+                <li>Consultar histórico comercial</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">🔁 Fluxo recomendado</h3>
+              <ol className="list-decimal pl-5 space-y-2 text-muted-foreground">
+                <li>
+                  <b>Selecionar o cliente</b> — escolha um cliente previamente cadastrado. Caso não exista,
+                  realize primeiro o cadastro do cliente.
+                </li>
+                <li>
+                  <b>Informar os produtos</b> — adicione todos os produtos vendidos, informando quantidade,
+                  valor unitário e descontos (quando houver).
+                </li>
+                <li>
+                  <b>Definir o canal da venda</b> — selecione <b>Atacado</b> ou <b>Varejo</b>. Essa
+                  informação é utilizada pelos relatórios e indicadores do BI.
+                </li>
+                <li>
+                  <b>Informar forma de pagamento</b> — PIX, Dinheiro, Cartão, Transferência ou outros meios
+                  disponíveis.
+                </li>
+                <li>
+                  <b>Confirmar a venda</b> — após salvar, a venda é registrada, o faturamento atualizado, o
+                  estoque movimentado (quando aplicável) e o BI atualizado automaticamente.
+                </li>
+              </ol>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">🎯 Objetivo do resultado</h3>
+              <p className="text-muted-foreground">
+                Ao final desta etapa o Rosé possuirá um registro completo da venda contendo: cliente,
+                produtos vendidos, quantidades, valores, canal de venda, forma de pagamento, status e total
+                da operação.
+              </p>
+              <p className="text-muted-foreground mt-2">Essas informações alimentam automaticamente:</p>
+              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                <li>Dashboard</li>
+                <li>Business Intelligence (BI)</li>
+                <li>Fluxo de Caixa</li>
+                <li>Financeiro</li>
+                <li>Curva ABC</li>
+                <li>Indicadores Comerciais</li>
+                <li>Relatórios Gerenciais</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">✅ Boas práticas</h3>
+              <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+                <li>Registrar somente vendas efetivamente realizadas</li>
+                <li>Conferir valores antes da confirmação</li>
+                <li>Manter os cadastros de clientes e produtos sempre atualizados</li>
+                <li>Evitar alterações em vendas já concluídas, preservando a consistência dos relatórios</li>
+              </ul>
+            </section>
+
+            <section>
+              <h3 className="font-semibold mb-1">⚠️ Importante</h3>
+              <p className="text-muted-foreground">
+                As informações registradas nesta etapa impactam diretamente os indicadores financeiros e
+                gerenciais do Rosé. A qualidade dos dados inseridos influencia a precisão dos relatórios,
+                dashboards e análises utilizadas para apoiar as decisões da empresa.
+              </p>
+            </section>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHelp(false)}>Entendi ✓</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Card className="shadow-soft">
         <CardContent className="p-0 overflow-x-auto">
           <Table>
