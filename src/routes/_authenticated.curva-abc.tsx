@@ -177,7 +177,7 @@ function CurvaABCPage() {
       <PageHeader title="Curva ABC" subtitle="Classificação A/B/C de clientes e produtos por faturamento ou quantidade" />
 
       <Card className="shadow-soft mb-6">
-        <CardContent className="p-4 grid md:grid-cols-5 gap-3 items-end">
+        <CardContent className="p-4 grid md:grid-cols-4 gap-3 items-end">
           <div className="space-y-1.5">
             <Label className="text-xs">Período</Label>
             <Select value={preset} onValueChange={applyPreset}>
