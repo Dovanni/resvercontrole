@@ -353,7 +353,83 @@ function ReportsPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
-      <PageHeader title="Relatórios" subtitle="Exporte relatórios em PDF ou Excel" />
+      <PageHeader
+        title="Relatórios"
+        subtitle="Exporte relatórios em PDF ou Excel"
+        action={
+          <Button variant="ghost" onClick={() => setShowHelp(true)}>
+            <HelpCircle className="size-4 mr-1" /> Como funciona esta etapa
+          </Button>
+        }
+      />
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display">📑 Relatórios — Exportação e Análise Gerencial</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm leading-relaxed">
+            <section>
+              <h3 className="font-semibold mb-1">🎯 Objetivo desta etapa</h3>
+              <p>O módulo Relatórios reúne e organiza as principais informações geradas pelo Rosé, permitindo exportar documentos gerenciais em PDF ou Excel para análise, auditoria, controle financeiro e apoio à tomada de decisões. Consolida dados de Vendas, Compras, Estoque, Financeiro e Contas Bancárias.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">📌 O que pode ser feito</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>Selecionar período desejado</li>
+                <li>Gerar relatórios em PDF ou Excel</li>
+                <li>Consultar indicadores financeiros, vendas e estoque</li>
+                <li>Compartilhar com contabilidade, administração ou gestão</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">🔄 Fluxo recomendado</h3>
+              <ol className="list-decimal pl-5 space-y-0.5">
+                <li>Definir período (data inicial e final)</li>
+                <li>Escolher o relatório (Vendas, DRE, Estoque, Bancário)</li>
+                <li>Selecionar formato — 📄 PDF (impressão/auditoria) ou 📊 Excel (análises/filtros)</li>
+                <li>Gerar o relatório</li>
+                <li>Utilizar para gestão, reuniões, planejamento, auditorias, apoio ao contador</li>
+              </ol>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">🎯 Objetivo do resultado</h3>
+              <p>Documentos gerenciais confiáveis, organizados e prontos para consulta ou compartilhamento, permitindo acompanhar o desempenho da empresa e apoiar decisões estratégicas.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">📈 Como interpretar os relatórios</h3>
+              <ul className="list-disc pl-5 space-y-1">
+                <li><strong>Vendas por período:</strong> quantidade, faturamento, desempenho e evolução comercial</li>
+                <li><strong>DRE Simplificado:</strong> receitas, despesas e resultado (lucro/prejuízo) — indicador central da saúde financeira</li>
+                <li><strong>Posição de Estoque:</strong> quantidade, valor e posição dos itens — auxilia planejamento de compras</li>
+                <li><strong>Bancário:</strong> contas, saldos e movimentações — acompanha disponibilidade financeira</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">✅ Boas práticas</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>Selecionar corretamente o período</li>
+                <li>Conferir se os lançamentos estão atualizados antes da emissão</li>
+                <li>PDF para documentação oficial; Excel para análises detalhadas</li>
+                <li>Arquivar relatórios periodicamente</li>
+                <li>Compartilhar apenas com pessoas autorizadas</li>
+                <li>Revisar indicadores antes de decisões estratégicas</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">⚠️ Importante</h3>
+              <p>Os relatórios dependem da qualidade das informações registradas nos demais módulos. Quanto mais completos e atualizados, mais precisos os documentos gerados.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold mb-1">🔗 Integração</h3>
+              <p>Consolida automaticamente informações de: Dashboard, BI, Curva ABC, Clientes, Fornecedores, Produtos, Vendas, Compras, Contas a Pagar, Contas a Receber, Fluxo de Caixa, Balancete, Contas Bancárias e Cartões de Crédito.</p>
+            </section>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHelp(false)}>Entendi ✓</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Card className="shadow-soft mb-6">
         <CardContent className="p-4 grid md:grid-cols-2 gap-3">
