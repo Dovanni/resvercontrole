@@ -282,6 +282,80 @@ function Dashboard() {
           </CardContent>
         </Card>
       </Link>
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">📊 Dashboard — Visão Executiva do Negócio</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm leading-relaxed">
+            <section>
+              <h3 className="font-semibold text-base mb-1">🎯 Objetivo desta etapa</h3>
+              <p>O Dashboard é o painel executivo do Rosé. Reúne, em uma única tela, os principais indicadores comerciais, financeiros e operacionais, permitindo acompanhar rapidamente a situação do negócio e identificar oportunidades ou pontos de atenção. Foi desenvolvido para facilitar decisões baseadas em informações atualizadas e consolidadas.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">📌 O que pode ser acompanhado</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>Saldo consolidado do caixa</li>
+                <li>Faturamento do mês</li>
+                <li>Ticket médio de vendas</li>
+                <li>Entradas e saídas financeiras</li>
+                <li>Saldo do período</li>
+                <li>Evolução diária do faturamento</li>
+                <li>Situação do caixa do mês</li>
+                <li>Produtos com maior faturamento</li>
+                <li>Produtos com estoque baixo</li>
+                <li>Indicadores consolidados do negócio</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">🔄 Fluxo recomendado</h3>
+              <ol className="list-decimal pl-5 space-y-1">
+                <li><strong>Consultar os indicadores superiores</strong> — resumo imediato da situação financeira e comercial (disponibilidade, faturamento, vendas, ticket médio).</li>
+                <li><strong>Analisar o gráfico de faturamento</strong> — evolução diária das vendas para identificar crescimento, redução, sazonalidade e comportamento comercial.</li>
+                <li><strong>Acompanhar o Caixa do mês</strong> — entradas, saídas e saldo financeiro do período.</li>
+                <li><strong>Consultar os produtos de maior desempenho</strong> — apoia planejamento comercial e de estoque.</li>
+                <li><strong>Monitorar o estoque</strong> — acompanhe "Estoque Baixo" para evitar ruptura e perda de vendas.</li>
+                <li><strong>Utilizar o Dashboard diariamente</strong> — principal painel de acompanhamento da empresa.</li>
+              </ol>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">🎯 Objetivo do resultado</h3>
+              <p>Visão consolidada da empresa: desempenho comercial e financeiro, tendências, controle de caixa, monitoramento de estoque, acompanhamento de faturamento e apoio a decisões estratégicas.</p>
+              <p className="mt-1">Alimentado automaticamente por: Vendas, Compras, Produtos, Clientes, Contas a Receber, Contas a Pagar, Fluxo de Caixa, Financeiro, Contas Bancárias, Cartões de Crédito e BI.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">📈 Como interpretar os indicadores</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li><strong>Saldo de Caixa</strong> — saldo financeiro consolidado disponível.</li>
+                <li><strong>Faturamento</strong> — valor total das vendas realizadas no período.</li>
+                <li><strong>Ticket Médio</strong> — valor médio por venda realizada.</li>
+                <li><strong>Caixa do Mês</strong> — entradas, saídas e saldo financeiro.</li>
+                <li><strong>Top Produtos</strong> — produtos com melhor desempenho comercial.</li>
+                <li><strong>Estoque Baixo</strong> — produtos que necessitam reposição imediata.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">✅ Boas práticas</h3>
+              <ul className="list-disc pl-5 space-y-0.5">
+                <li>Consultar o Dashboard diariamente</li>
+                <li>Utilizar os indicadores antes de tomar decisões</li>
+                <li>Monitorar produtos com estoque reduzido</li>
+                <li>Acompanhar o comportamento das vendas</li>
+                <li>Comparar entradas e saídas financeiras</li>
+                <li>Revisar periodicamente o desempenho do negócio</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">⚠️ Importante</h3>
+              <p>O Dashboard é um painel consolidado. Não realiza lançamentos nem alterações de dados — todas as informações são geradas automaticamente pelos demais módulos. Caso algum indicador pareça incorreto, verifique primeiro os registros em Vendas, Compras, Produtos, Contas a Receber, Contas a Pagar, Fluxo de Caixa, Financeiro e Contas Bancárias.</p>
+            </section>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHelp(false)}>Entendi ✓</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
