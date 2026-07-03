@@ -50,6 +50,7 @@ function BankAccountsPage() {
   const confirm = useConfirm();
   const [editing, setEditing] = useState<BankAccount | null>(null);
   const [openForm, setOpenForm] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [extractFor, setExtractFor] = useState<BankAccount | null>(null);
 
   const { data: accounts } = useQuery({
