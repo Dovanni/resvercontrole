@@ -171,7 +171,7 @@ function AnnualExpensesPage() {
           </div>
           <div className="flex-1" />
           <Button variant="ghost" size="sm" onClick={() => setShowHelp(true)}>
-            <HelpCircle className="size-4 mr-1" /> Como funciona
+            <HelpCircle className="size-4 mr-1" /> Como funciona esta etapa
           </Button>
           <Button variant="outline" onClick={exportXlsx}>
             <FileSpreadsheet className="size-4 mr-2" /> Exportar Excel
