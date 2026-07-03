@@ -49,6 +49,7 @@ function ComprasPage() {
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [openNova, setOpenNova] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [verCompra, setVerCompra] = useState<Compra | null>(null);
   const [fFornecedor, setFFornecedor] = useState("todos");
   const [fStatus, setFStatus] = useState("todos");
