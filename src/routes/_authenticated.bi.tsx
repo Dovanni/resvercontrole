@@ -803,7 +803,13 @@ function BIPage() {
       <PageHeader
         title="Business Intelligence"
         subtitle="Indicadores e análises do seu negócio"
+        action={
+          <Button variant="ghost" onClick={() => setShowHelp(true)}>
+            <HelpCircle className="size-4" /> Como funciona esta etapa
+          </Button>
+        }
       />
+
 
       {/* Filtro de período */}
       <Card className="shadow-soft mb-6">
