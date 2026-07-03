@@ -210,7 +210,12 @@ function CurvaABCPage() {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={() => setApplied({ from, to, channel })}>Aplicar filtro</Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setApplied({ from, to, channel })}>Aplicar filtro</Button>
+            <Button variant="ghost" onClick={() => setShowHelp(true)}>
+              <HelpCircle className="size-4" /> Como funciona esta etapa
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
