@@ -16,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
+  const [showHelp, setShowHelp] = useState(false);
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
