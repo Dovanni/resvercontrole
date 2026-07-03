@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useConfirm } from "@/components/confirm-dialog";
 import { brl, dateBR } from "@/lib/format";
 import { toast } from "sonner";
-import { Plus, Trash2, Eye, ShoppingCart } from "lucide-react";
+import { Plus, Trash2, Eye, ShoppingCart, HelpCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/compras")({
   head: () => ({ meta: [{ title: "Compras de Mercadorias — Rosé" }] }),
@@ -49,6 +49,7 @@ function ComprasPage() {
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [openNova, setOpenNova] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [verCompra, setVerCompra] = useState<Compra | null>(null);
   const [fFornecedor, setFFornecedor] = useState("todos");
   const [fStatus, setFStatus] = useState("todos");
@@ -152,16 +153,21 @@ function ComprasPage() {
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
       <PageHeader title="Compras de Mercadorias" subtitle="Registre compras e gere automaticamente contas a pagar e entradas de estoque" action={
-        <Dialog open={openNova} onOpenChange={setOpenNova}>
-          <DialogTrigger asChild><Button><Plus className="size-4 mr-1" /> Nova compra</Button></DialogTrigger>
-          <NovaCompraDialog
-            userId={user?.id ?? ""}
-            fornecedores={fornecedores as any}
-            produtos={produtos as any}
-            contas={contas as any}
-            onDone={() => { setOpenNova(false); qc.invalidateQueries({ queryKey: ["compras"] }); qc.invalidateQueries({ queryKey: ["payables_compras_link"] }); qc.invalidateQueries({ queryKey: ["produtos_simple"] }); }}
-          />
-        </Dialog>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => setShowHelp(true)}>
+            <HelpCircle className="size-4 mr-1" /> Como funciona esta etapa
+          </Button>
+          <Dialog open={openNova} onOpenChange={setOpenNova}>
+            <DialogTrigger asChild><Button><Plus className="size-4 mr-1" /> Nova compra</Button></DialogTrigger>
+            <NovaCompraDialog
+              userId={user?.id ?? ""}
+              fornecedores={fornecedores as any}
+              produtos={produtos as any}
+              contas={contas as any}
+              onDone={() => { setOpenNova(false); qc.invalidateQueries({ queryKey: ["compras"] }); qc.invalidateQueries({ queryKey: ["payables_compras_link"] }); qc.invalidateQueries({ queryKey: ["produtos_simple"] }); }}
+            />
+          </Dialog>
+        </div>
       } />
 
       {/* Resumo */}
@@ -244,6 +250,75 @@ function ComprasPage() {
 
       <Dialog open={!!verCompra} onOpenChange={(o) => !o && setVerCompra(null)}>
         {verCompra && <DetalheCompra compra={verCompra} fornName={fornName(verCompra.fornecedor_id)} payables={compraPayables(verCompra)} />}
+      </Dialog>
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>📖 Compras de Mercadorias — Registro, Estoque e Contas a Pagar</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm">
+            <section>
+              <h4 className="font-semibold mb-1">📌 Objetivo desta etapa</h4>
+              <p className="text-muted-foreground">O módulo Compras de Mercadorias é responsável por registrar as compras feitas junto aos fornecedores, controlar os valores comprados, gerar automaticamente contas a pagar quando aplicável e atualizar as entradas de estoque dos produtos adquiridos.</p>
+            </section>
+            <section>
+              <h4 className="font-semibold mb-1">🛠️ O que pode ser feito</h4>
+              <ul className="list-disc pl-5 space-y-0.5 text-muted-foreground">
+                <li>Registrar novas compras de mercadorias</li>
+                <li>Informar fornecedor, data, número da nota fiscal ou pedido</li>
+                <li>Informar os produtos comprados</li>
+                <li>Registrar quantidade, custo e valor total</li>
+                <li>Definir condição de pagamento</li>
+                <li>Acompanhar compras pagas, pendentes ou parceladas</li>
+                <li>Consultar compras por período, fornecedor e status</li>
+                <li>Apoiar o controle financeiro e o controle de estoque</li>
+              </ul>
+            </section>
+            <section>
+              <h4 className="font-semibold mb-1">🔁 Fluxo recomendado</h4>
+              <ol className="list-decimal pl-5 space-y-0.5 text-muted-foreground">
+                <li>Selecionar o fornecedor previamente cadastrado</li>
+                <li>Informar a data da compra</li>
+                <li>Preencher o número da nota fiscal ou pedido</li>
+                <li>Adicionar os produtos comprados</li>
+                <li>Conferir quantidades, custos e total da compra</li>
+                <li>Definir a condição de pagamento: à vista, parcelado ou pendente</li>
+                <li>Salvar a compra</li>
+                <li>Conferir se a conta a pagar e a entrada de estoque foram geradas corretamente, quando aplicável</li>
+              </ol>
+            </section>
+            <section>
+              <h4 className="font-semibold mb-1">🎯 Objetivo do resultado</h4>
+              <p className="text-muted-foreground mb-1">Registro completo da compra contendo fornecedor, data, NF/pedido, produtos, quantidades, custos, total, condição de pagamento e status. Alimenta:</p>
+              <ul className="list-disc pl-5 space-y-0.5 text-muted-foreground">
+                <li>Contas a Pagar</li>
+                <li>Estoque</li>
+                <li>Financeiro</li>
+                <li>Fluxo de Caixa</li>
+                <li>Relatórios e BI</li>
+                <li>Indicadores de compras e fornecedores</li>
+              </ul>
+            </section>
+            <section>
+              <h4 className="font-semibold mb-1">✅ Boas práticas</h4>
+              <ul className="list-disc pl-5 space-y-0.5 text-muted-foreground">
+                <li>Registrar somente compras reais e conferidas</li>
+                <li>Manter fornecedores e produtos atualizados</li>
+                <li>Conferir valores antes de salvar</li>
+                <li>Evitar excluir compras já vinculadas ao financeiro ou estoque</li>
+                <li>Usar filtros por período, fornecedor e status para auditoria</li>
+              </ul>
+            </section>
+            <section>
+              <h4 className="font-semibold mb-1">⚠️ Importante</h4>
+              <p className="text-muted-foreground">As compras registradas impactam diretamente o estoque, contas a pagar, fluxo de caixa, despesas e indicadores financeiros. Preencha os dados com atenção para preservar a consistência dos relatórios e dashboards.</p>
+            </section>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHelp(false)}>Entendi ✓</Button>
+          </DialogFooter>
+        </DialogContent>
       </Dialog>
     </div>
   );
