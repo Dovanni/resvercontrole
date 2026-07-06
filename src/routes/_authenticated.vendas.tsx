@@ -283,7 +283,7 @@ function SalesPage() {
   );
 }
 
-type Product = { id: string; name: string; sale_price: number; wholesale_price: number; cost_price: number; stock: number };
+type Product = { id: string; name: string; sku: string | null; sale_price: number; wholesale_price: number; cost_price: number; stock: number };
 type LineItem = { product_id: string; quantity: number; unit_price: number; unit_cost: number; name: string; max: number };
 
 function SaleView({ saleId }: { saleId: string }) {
@@ -336,7 +336,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id,name,sale_price,wholesale_price,cost_price,stock")
+        .select("id,name,sku,sale_price,wholesale_price,cost_price,stock")
         .order("name");
       if (error) throw error;
       return data as Product[];
@@ -706,16 +706,11 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
         <>
           <div className="space-y-1.5">
             <Label>Adicionar produto</Label>
-            <Select value="" onValueChange={addProduct}>
-              <SelectTrigger><SelectValue placeholder="Selecionar produto…" /></SelectTrigger>
-              <SelectContent>
-                {products?.map(p => (
-                  <SelectItem key={p.id} value={p.id} disabled={p.stock <= 0}>
-                    {p.name} — {brl(priceFor(p))} ({p.stock} em estoque)
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <ProductSearch
+              products={products ?? []}
+              priceFor={priceFor}
+              onPick={(id) => addProduct(id)}
+            />
           </div>
 
           {items.length > 0 && (
@@ -804,6 +799,57 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
         className="w-full bg-gradient-primary text-primary-foreground">
         {submit.isPending ? "Salvando…" : (editing ? "Salvar alterações" : (isAporte ? "Registrar aporte" : "Registrar venda"))}
       </Button>
+    </div>
+  );
+}
+
+function ProductSearch({ products, priceFor, onPick }: { products: Product[]; priceFor: (p: Product) => number; onPick: (id: string) => void }) {
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const results = useMemo(() => {
+    const term = q.trim().toLowerCase();
+    if (!term) return products.slice(0, 20);
+    return products
+      .filter(p => p.name.toLowerCase().includes(term) || (p.sku ?? "").toLowerCase().includes(term))
+      .slice(0, 20);
+  }, [q, products]);
+  return (
+    <div className="relative">
+      <Input
+        value={q}
+        placeholder="Buscar produto por nome ou código..."
+        onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+      />
+      {open && results.length > 0 && (
+        <div className="absolute z-50 mt-1 w-full max-h-72 overflow-auto rounded-md border bg-popover shadow-md">
+          {results.map(p => {
+            const disabled = p.stock <= 0;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                disabled={disabled}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => { if (!disabled) { onPick(p.id); setQ(""); setOpen(false); } }}
+                className={`w-full text-left px-3 py-2 text-sm hover:bg-accent focus:bg-accent border-b last:border-b-0 ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                <div className="font-medium">
+                  <span className="text-muted-foreground mr-1">[{p.sku?.trim() ? p.sku : "—"}]</span>
+                  {p.name}
+                </div>
+                <div className="text-xs text-muted-foreground">Estoque: {p.stock} un | {brl(priceFor(p))}</div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {open && q.trim() && results.length === 0 && (
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md px-3 py-2 text-sm text-muted-foreground">
+          Nenhum produto encontrado.
+        </div>
+      )}
     </div>
   );
 }
