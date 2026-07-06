@@ -795,6 +795,11 @@ function ControleVendasPage() {
                     )}>{brl(r.saldo_acumulado)}</td>
                     <td className="p-2">
                       <div className="flex gap-1">
+                        {r.sale_id && (
+                          <Button size="icon" variant="ghost" onClick={() => setAuditoriaId(r.sale_id!)} title="Auditoria do Lucro">
+                            <ScanSearch className="size-4 text-primary" />
+                          </Button>
+                        )}
                         <Button size="icon" variant="ghost" onClick={() => onEdit(r)} title={auto ? "Editar venda original" : "Editar"}><Pencil className="size-4" /></Button>
                         <Button size="icon" variant="ghost" onClick={() => onDelete(r)}><Trash2 className="size-4" /></Button>
                       </div>
