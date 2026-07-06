@@ -706,16 +706,11 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
         <>
           <div className="space-y-1.5">
             <Label>Adicionar produto</Label>
-            <Select value="" onValueChange={addProduct}>
-              <SelectTrigger><SelectValue placeholder="Selecionar produto…" /></SelectTrigger>
-              <SelectContent>
-                {products?.map(p => (
-                  <SelectItem key={p.id} value={p.id} disabled={p.stock <= 0}>
-                    {p.name} — {brl(priceFor(p))} ({p.stock} em estoque)
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <ProductSearch
+              products={products ?? []}
+              priceFor={priceFor}
+              onPick={(id) => addProduct(id)}
+            />
           </div>
 
           {items.length > 0 && (
