@@ -295,6 +295,13 @@ export function AuditoriaLucroDialog({ saleId, onClose }: Props) {
               </div>
             )}
 
+            <Tabs defaultValue="lucro" className="w-full">
+              <TabsList>
+                <TabsTrigger value="lucro">Formação do Lucro</TabsTrigger>
+                <TabsTrigger value="rastreabilidade">Rastreabilidade do Custo</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="lucro" className="space-y-6 mt-4">
             {/* Dados Gerais */}
             <section>
               <h3 className="font-display text-base mb-2">📦 Dados Gerais</h3>
