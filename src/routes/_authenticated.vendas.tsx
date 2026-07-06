@@ -466,7 +466,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     () => discountMode === "percent" ? (subtotal * Math.min(100, Math.max(0, discount))) / 100 : discount,
     [discountMode, discount, subtotal]
   );
-  const total = useMemo(() => Math.max(0, subtotal - discountValue + (Number(shipping) || 0) + (Number(mercadoPagoFees) || 0)), [subtotal, discountValue, shipping, mercadoPagoFees]);
+  const total = useMemo(() => Math.max(0, subtotal - discountValue + (Number(shipping) || 0) - (Number(mercadoPagoFees) || 0)), [subtotal, discountValue, shipping, mercadoPagoFees]);
 
   function pickCustomer(id: string) {
     setCustomerId(id);
@@ -778,7 +778,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
             <div className="text-xs text-muted-foreground flex justify-between"><span>Subtotal produtos</span><span>{brl(subtotal)}</span></div>
             <div className="text-xs text-muted-foreground flex justify-between"><span>Desconto</span><span>-{brl(discountValue)}</span></div>
             <div className="text-xs text-muted-foreground flex justify-between"><span>Frete cliente</span><span>+{brl(Number(shipping) || 0)}</span></div>
-            <div className="text-xs text-muted-foreground flex justify-between"><span>Juros Mercado Pago</span><span>+{brl(Number(mercadoPagoFees) || 0)}</span></div>
+            <div className="text-xs text-muted-foreground flex justify-between"><span>Juros Mercado Pago</span><span>−{brl(Number(mercadoPagoFees) || 0)}</span></div>
             <div className="border-t pt-1 flex items-end justify-between">
               <span className="text-xs text-muted-foreground">TOTAL</span>
               <span className="font-display text-3xl">{brl(total)}</span>
