@@ -15,6 +15,7 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { brl, dateBR } from "@/lib/format";
 import { DataPagination, usePagination } from "@/components/data-pagination";
+import { ResumoFinanceiroVenda } from "@/components/resumo-financeiro-venda";
 
 export const Route = createFileRoute("/_authenticated/vendas")({
   head: () => ({ meta: [{ title: "Vendas — Rosé" }] }),
@@ -773,6 +774,17 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
               <div className="text-xs text-muted-foreground">Custo de envio pago aos Correios — não soma no total</div>
             </div>
           </div>
+
+          <ResumoFinanceiroVenda
+            items={items.map(i => ({ product_id: i.product_id, quantity: i.quantity, unit_price: i.unit_price }))}
+            subtotal={subtotal}
+            discountValue={discountValue}
+            shipping={Number(shipping) || 0}
+            mercadoPagoFees={Number(mercadoPagoFees) || 0}
+            freteEmpresa={Number(freteEmpresa) || 0}
+            receber={total}
+            saleId={editing ? saleId : null}
+          />
 
           <div className="rounded-md border p-3 space-y-1 text-right">
             <div className="text-xs text-muted-foreground flex justify-between"><span>Subtotal produtos</span><span>{brl(subtotal)}</span></div>
