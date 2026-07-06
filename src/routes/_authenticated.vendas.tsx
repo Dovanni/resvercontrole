@@ -336,7 +336,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id,name,sale_price,wholesale_price,cost_price,stock")
+        .select("id,name,sku,sale_price,wholesale_price,cost_price,stock")
         .order("name");
       if (error) throw error;
       return data as Product[];
