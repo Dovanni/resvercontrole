@@ -55,7 +55,7 @@ export function AuditoriaLucroDialog({ saleId, onClose }: Props) {
       if (productIds.length > 0) {
         const { data: cItens } = await supabase
           .from("compras_itens")
-          .select("produto_id, quantidade, preco_unitario, compras(id, data_compra, numero_nf, subtotal, desconto, fornecedor_id, suppliers(name))")
+          .select("id, produto_id, quantidade, preco_unitario, compra_id, compras(id, data_compra, numero_nf, subtotal, desconto, fornecedor_id, suppliers(name, delivery_days, payment_terms))")
           .eq("user_id", sale.user_id)
           .in("produto_id", productIds);
         compraRows = cItens ?? [];
