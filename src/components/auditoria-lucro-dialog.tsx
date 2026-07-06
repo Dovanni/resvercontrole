@@ -4,10 +4,11 @@ import * as XLSX from "xlsx";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { brl } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { FileSpreadsheet, FileText, AlertTriangle } from "lucide-react";
+import { FileSpreadsheet, FileText, AlertTriangle, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 
 type Props = {
   saleId: string | null;
