@@ -91,6 +91,7 @@ function ControleVendasPage() {
   const [vendaStatus, setVendaStatus] = useState<string>("todos");
   const [vendaDetalheId, setVendaDetalheId] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [auditoriaId, setAuditoriaId] = useState<string | null>(null);
 
   const { data: vendasMes = [] } = useQuery({
     queryKey: ["controle-vendas-pedidos", YEAR, mes],
