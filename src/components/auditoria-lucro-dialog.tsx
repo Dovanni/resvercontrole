@@ -492,6 +492,12 @@ export function AuditoriaLucroDialog({ saleId, onClose }: Props) {
                 </div>
               </section>
             )}
+              </TabsContent>
+
+              <TabsContent value="rastreabilidade" className="space-y-4 mt-4">
+                <RastreabilidadeCusto items={data.items} saleDate={data.sale.sold_at} />
+              </TabsContent>
+            </Tabs>
           </div>
         )}
       </DialogContent>
