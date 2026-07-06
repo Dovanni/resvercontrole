@@ -74,15 +74,16 @@ export function ResumoFinanceiroVenda({
   });
 
   const custoProdutos = useMemo(() => {
-    if (!netCostByProduct) return null;
+    if (!costData) return null;
     let total = 0;
     for (const it of items) {
-      const c = netCostByProduct[it.product_id];
-      if (c == null) return null;
+      const net = costData.net[it.product_id];
+      const fallback = costData.fallback[it.product_id] ?? 0;
+      const c = net != null ? net : fallback;
       total += c * Number(it.quantity ?? 0);
     }
     return total;
-  }, [items, netCostByProduct]);
+  }, [items, costData]);
 
   const canCompute = custoProdutos !== null && !isLoading;
   const lucro = canCompute ? receber - (custoProdutos as number) - (Number(freteEmpresa) || 0) : 0;
