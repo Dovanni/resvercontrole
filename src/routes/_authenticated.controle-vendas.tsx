@@ -1026,7 +1026,7 @@ function VendasClienteCard({
   );
 }
 
-function VendaDetalheDialog({ venda, onClose }: { venda: any | null; onClose: () => void }) {
+function VendaDetalheDialog({ venda, onClose, onAuditar }: { venda: any | null; onClose: () => void; onAuditar?: (id: string) => void }) {
   const open = !!venda;
   const items = venda?.sale_items ?? [];
   const subtotal = items.reduce((a: number, it: any) => a + Number(it.quantity ?? 0) * Number(it.unit_price ?? 0), 0);
@@ -1034,7 +1034,14 @@ function VendaDetalheDialog({ venda, onClose }: { venda: any | null; onClose: ()
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Detalhes do pedido</DialogTitle>
+          <DialogTitle className="flex items-center justify-between gap-2">
+            <span>Detalhes do pedido</span>
+            {venda && onAuditar && (
+              <Button size="sm" variant="outline" onClick={() => onAuditar(venda.id)}>
+                <ScanSearch className="size-4 mr-1" /> Auditoria do Lucro
+              </Button>
+            )}
+          </DialogTitle>
         </DialogHeader>
         {venda && (
           <div className="space-y-4 text-sm">
