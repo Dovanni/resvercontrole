@@ -846,7 +846,10 @@ function ControleVendasPage() {
       <VendaDetalheDialog
         venda={vendasMes.find((v) => v.id === vendaDetalheId) ?? null}
         onClose={() => setVendaDetalheId(null)}
+        onAuditar={(id) => { setVendaDetalheId(null); setAuditoriaId(id); }}
       />
+
+      <AuditoriaLucroDialog saleId={auditoriaId} onClose={() => setAuditoriaId(null)} />
     </div>
   );
 }
