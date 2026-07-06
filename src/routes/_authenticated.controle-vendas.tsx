@@ -9,7 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileSpreadsheet, FileText, Pencil, Trash2, Save, Eraser, Lock, LockOpen, History, ChevronDown, ChevronUp, Eye, Search, Link2, HelpCircle } from "lucide-react";
+import { FileSpreadsheet, FileText, Pencil, Trash2, Save, Eraser, Lock, LockOpen, History, ChevronDown, ChevronUp, Eye, Search, Link2, HelpCircle, ScanSearch } from "lucide-react";
+import { AuditoriaLucroDialog } from "@/components/auditoria-lucro-dialog";
 // jspdf and jspdf-autotable are lazy-loaded inside exportPdfAnual to avoid bundling them on initial page load
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Textarea } from "@/components/ui/textarea";
@@ -90,6 +91,7 @@ function ControleVendasPage() {
   const [vendaStatus, setVendaStatus] = useState<string>("todos");
   const [vendaDetalheId, setVendaDetalheId] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [auditoriaId, setAuditoriaId] = useState<string | null>(null);
 
   const { data: vendasMes = [] } = useQuery({
     queryKey: ["controle-vendas-pedidos", YEAR, mes],
@@ -793,6 +795,11 @@ function ControleVendasPage() {
                     )}>{brl(r.saldo_acumulado)}</td>
                     <td className="p-2">
                       <div className="flex gap-1">
+                        {r.sale_id && (
+                          <Button size="icon" variant="ghost" onClick={() => setAuditoriaId(r.sale_id!)} title="Auditoria do Lucro">
+                            <ScanSearch className="size-4 text-primary" />
+                          </Button>
+                        )}
                         <Button size="icon" variant="ghost" onClick={() => onEdit(r)} title={auto ? "Editar venda original" : "Editar"}><Pencil className="size-4" /></Button>
                         <Button size="icon" variant="ghost" onClick={() => onDelete(r)}><Trash2 className="size-4" /></Button>
                       </div>
@@ -839,7 +846,10 @@ function ControleVendasPage() {
       <VendaDetalheDialog
         venda={vendasMes.find((v) => v.id === vendaDetalheId) ?? null}
         onClose={() => setVendaDetalheId(null)}
+        onAuditar={(id) => { setVendaDetalheId(null); setAuditoriaId(id); }}
       />
+
+      <AuditoriaLucroDialog saleId={auditoriaId} onClose={() => setAuditoriaId(null)} />
     </div>
   );
 }
@@ -1016,7 +1026,7 @@ function VendasClienteCard({
   );
 }
 
-function VendaDetalheDialog({ venda, onClose }: { venda: any | null; onClose: () => void }) {
+function VendaDetalheDialog({ venda, onClose, onAuditar }: { venda: any | null; onClose: () => void; onAuditar?: (id: string) => void }) {
   const open = !!venda;
   const items = venda?.sale_items ?? [];
   const subtotal = items.reduce((a: number, it: any) => a + Number(it.quantity ?? 0) * Number(it.unit_price ?? 0), 0);
@@ -1024,7 +1034,14 @@ function VendaDetalheDialog({ venda, onClose }: { venda: any | null; onClose: ()
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Detalhes do pedido</DialogTitle>
+          <DialogTitle className="flex items-center justify-between gap-2">
+            <span>Detalhes do pedido</span>
+            {venda && onAuditar && (
+              <Button size="sm" variant="outline" onClick={() => onAuditar(venda.id)}>
+                <ScanSearch className="size-4 mr-1" /> Auditoria do Lucro
+              </Button>
+            )}
+          </DialogTitle>
         </DialogHeader>
         {venda && (
           <div className="space-y-4 text-sm">
