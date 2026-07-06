@@ -774,6 +774,17 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
             </div>
           </div>
 
+          <ResumoFinanceiroVenda
+            items={items.map(i => ({ product_id: i.product_id, quantity: i.quantity, unit_price: i.unit_price }))}
+            subtotal={subtotal}
+            discountValue={discountValue}
+            shipping={Number(shipping) || 0}
+            mercadoPagoFees={Number(mercadoPagoFees) || 0}
+            freteEmpresa={Number(freteEmpresa) || 0}
+            receber={total}
+            saleId={editing ? saleId : null}
+          />
+
           <div className="rounded-md border p-3 space-y-1 text-right">
             <div className="text-xs text-muted-foreground flex justify-between"><span>Subtotal produtos</span><span>{brl(subtotal)}</span></div>
             <div className="text-xs text-muted-foreground flex justify-between"><span>Desconto</span><span>-{brl(discountValue)}</span></div>
