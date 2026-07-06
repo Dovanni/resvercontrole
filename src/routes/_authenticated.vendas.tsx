@@ -15,6 +15,7 @@ import { DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { brl, dateBR } from "@/lib/format";
 import { DataPagination, usePagination } from "@/components/data-pagination";
+import { ResumoFinanceiroVenda } from "@/components/resumo-financeiro-venda";
 
 export const Route = createFileRoute("/_authenticated/vendas")({
   head: () => ({ meta: [{ title: "Vendas — Rosé" }] }),
