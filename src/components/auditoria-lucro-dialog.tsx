@@ -38,7 +38,7 @@ export function AuditoriaLucroDialog({ saleId, onClose }: Props) {
 
       const { data: sale, error: sErr } = await supabase
         .from("sales")
-        .select("id, sold_at, customer_name, channel, payment_method, total, discount, status, mercado_pago_fees, frete_empresa, notes, user_id, customers(name), sale_items(id, quantity, unit_price, unit_cost, product_id, products(id, name, sku, cost_price))")
+        .select("id, sold_at, customer_name, channel, payment_method, total, discount, status, mercado_pago_fees, frete_empresa, notes, user_id, customers(name), sale_items(id, quantity, unit_price, unit_cost, product_id, products(id, name, sku, cost_price, brand, category))")
         .eq("id", saleId)
         .maybeSingle();
       if (sErr) throw sErr;
