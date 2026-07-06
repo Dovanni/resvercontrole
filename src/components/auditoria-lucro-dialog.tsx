@@ -535,3 +535,349 @@ function Metric({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+type TraceItem = {
+  id: string;
+  product_id: string | null;
+  name: string;
+  sku: string;
+  brand: string;
+  category: string;
+  quantity: number;
+  unit_price: number;
+  total_price: number;
+  gross_cost: number;
+  net_cost: number;
+  discount_value: number;
+  discount_pct: number;
+  total_cost: number;
+  supplier: string | null;
+  supplier_delivery_days: number | null;
+  supplier_payment_terms: string | null;
+  last_purchase_date: string | null;
+  last_purchase_nf: string | null;
+  last_compra_id: string | null;
+  last_item_id: string | null;
+  last_pct: number;
+  last_gross_price: number;
+  last_net_price: number;
+  purchases: Array<{
+    compra_id?: string; item_id?: string;
+    date?: string; nf?: string; supplier?: string;
+    preco: number; qty: number; subtotal: number; desconto: number; pct: number;
+  }>;
+};
+
+function RastreabilidadeCusto({ items, saleDate }: { items: TraceItem[]; saleDate: string }) {
+  if (items.length === 0) {
+    return <div className="p-6 text-center text-sm text-muted-foreground">Nenhum item nesta venda.</div>;
+  }
+  return (
+    <div className="space-y-4">
+      <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-xs text-blue-900">
+        <strong>🔍 Rastreabilidade do Custo</strong> — Auditoria detalhada, item por item, de onde veio o custo aplicado a esta venda. Consulta 100% read-only.
+      </div>
+      {items.map((it) => (
+        <TraceCard key={it.id} item={it} saleDate={saleDate} />
+      ))}
+    </div>
+  );
+}
+
+function TraceCard({ item, saleDate }: { item: TraceItem; saleDate: string }) {
+  const saleDt = new Date(saleDate);
+  const purchaseDt = item.last_purchase_date ? new Date(item.last_purchase_date) : null;
+
+  // Auditorias
+  const semCompra = item.purchases.length === 0;
+  const posterior = purchaseDt ? purchaseDt > saleDt : false;
+  const semFornecedor = !item.supplier;
+  const semDesconto = item.purchases.length > 0 && item.purchases.every((p) => p.desconto === 0);
+  const custoNegativo = item.net_cost < 0;
+  const descMaiorQueSub = item.purchases.some((p) => p.desconto > p.subtotal && p.subtotal > 0);
+  const semProduto = !item.product_id;
+
+  const alertas: string[] = [];
+  if (semCompra) alertas.push("Sem compra registrada para este produto");
+  if (posterior) alertas.push("Compra utilizada é posterior à data da venda");
+  if (semFornecedor) alertas.push("Fornecedor não identificado");
+  if (semDesconto && item.purchases.length > 0) alertas.push("Nenhuma compra deste produto possui desconto registrado");
+  if (custoNegativo) alertas.push("Custo líquido negativo detectado");
+  if (descMaiorQueSub) alertas.push("Desconto maior que subtotal em alguma compra");
+  if (semProduto) alertas.push("Produto inexistente / referência quebrada");
+  if (item.gross_cost <= 0 && !semCompra) alertas.push("Custo bruto do produto cadastrado como zero");
+
+  // Origem do custo
+  const origem = semCompra
+    ? item.gross_cost > 0 ? "Produto (cadastro)" : "Valor manual / zerado"
+    : "Média ponderada de compras";
+
+  // Diagnóstico
+  let diagnostico: { level: "ok" | "warn" | "err"; texto: string };
+  if (custoNegativo || descMaiorQueSub || semProduto) {
+    diagnostico = { level: "err", texto: "Divergência encontrada" };
+  } else if (posterior) {
+    diagnostico = { level: "err", texto: "Divergência temporal — compra posterior à venda" };
+  } else if (semCompra) {
+    diagnostico = { level: "warn", texto: "Custo obtido do cadastro do produto — sem histórico de compras" };
+  } else if (semFornecedor || semDesconto) {
+    diagnostico = { level: "warn", texto: "Atenção — dados incompletos" };
+  } else {
+    diagnostico = { level: "ok", texto: "Custo correto — todas as regras validadas" };
+  }
+
+  // Conclusão
+  let conclusao: string;
+  if (diagnostico.level === "ok") {
+    conclusao = "O custo apresentado nesta venda é compatível com todas as regras financeiras do Rosé.";
+  } else if (posterior) {
+    conclusao = "Foi encontrada divergência temporal — a compra considerada é posterior à venda.";
+  } else if (semCompra) {
+    conclusao = "Não há compra registrada para este produto; custo derivado do cadastro.";
+  } else if (semFornecedor) {
+    conclusao = "Foi encontrada divergência de fornecedor.";
+  } else if (semDesconto) {
+    conclusao = "Foi encontrada divergência de desconto.";
+  } else {
+    conclusao = "Foi encontrada divergência de origem do custo.";
+  }
+
+  const purchasesSorted = [...item.purchases].sort((a, b) =>
+    String(b.date ?? "").localeCompare(String(a.date ?? "")));
+  const totalQtyCompras = purchasesSorted.reduce((s, p) => s + p.qty, 0);
+
+  return (
+    <div className="rounded-lg border overflow-hidden">
+      {/* Header */}
+      <div className={cn(
+        "px-4 py-3 border-b flex items-center justify-between gap-3",
+        diagnostico.level === "ok" && "bg-emerald-50",
+        diagnostico.level === "warn" && "bg-amber-50",
+        diagnostico.level === "err" && "bg-red-50",
+      )}>
+        <div>
+          <div className="font-semibold">{item.name}</div>
+          <div className="text-xs text-muted-foreground">
+            SKU {item.sku} · {item.brand} · {item.category}
+          </div>
+        </div>
+        <DiagnosticoBadge level={diagnostico.level} texto={diagnostico.texto} />
+      </div>
+
+      <div className="p-4 space-y-4 text-sm">
+        {/* 2. Venda */}
+        <TraceBlock title="1. Venda">
+          <TraceRow label="Data" value={saleDt.toLocaleDateString("pt-BR")} />
+          <TraceRow label="Quantidade vendida" value={String(item.quantity)} />
+          <TraceRow label="Preço unitário" value={brl(item.unit_price)} />
+          <TraceRow label="Preço total" value={brl(item.total_price)} />
+        </TraceBlock>
+
+        {/* 3+4. Compra + Fornecedor */}
+        <TraceBlock title="2. Compra utilizada (referência)">
+          {semCompra ? (
+            <div className="text-xs text-muted-foreground">Nenhuma compra encontrada para este produto.</div>
+          ) : (
+            <>
+              <TraceRow label="Fornecedor" value={item.supplier ?? "—"} />
+              <TraceRow label="NF" value={item.last_purchase_nf ?? "—"} />
+              <TraceRow label="Data da compra" value={purchaseDt ? purchaseDt.toLocaleDateString("pt-BR") : "—"} />
+              <TraceRow label="ID da compra" value={item.last_compra_id ? String(item.last_compra_id).slice(0, 8) : "—"} mono />
+              <TraceRow label="ID do item" value={item.last_item_id ? String(item.last_item_id).slice(0, 8) : "—"} mono />
+              <TraceRow label="Prazo entrega (fornec.)" value={item.supplier_delivery_days != null ? `${item.supplier_delivery_days} dia(s)` : "—"} />
+              <TraceRow label="Condição comercial" value={item.supplier_payment_terms ?? "—"} />
+            </>
+          )}
+        </TraceBlock>
+
+        {/* 5-7. Valores */}
+        <TraceBlock title="3. Formação do valor (último compra)">
+          <TraceRow label="Preço bruto (última compra)" value={brl(item.last_gross_price || item.gross_cost)} />
+          <TraceRow
+            label="Desconto aplicado"
+            value={`${item.last_pct.toFixed(2)}%  ·  ${brl((item.last_gross_price || item.gross_cost) * item.last_pct / 100)}`}
+          />
+          <TraceRow label="Origem do desconto" value={item.last_purchase_nf ? `Compra NF ${item.last_purchase_nf}` : "—"} />
+          <TraceRow
+            label="Preço líquido (última compra)"
+            value={brl(item.last_net_price || item.net_cost)}
+            bold
+          />
+          <div className="rounded bg-muted/40 px-3 py-2 font-mono text-xs mt-2">
+            {brl(item.last_gross_price || item.gross_cost)} − {brl((item.last_gross_price || item.gross_cost) * item.last_pct / 100)} = {brl(item.last_net_price || item.net_cost)}
+          </div>
+        </TraceBlock>
+
+        {/* 8. Quantidade */}
+        <TraceBlock title="4. Quantidade e custo total (aplicado à venda)">
+          <TraceRow label="Custo líquido unitário (média ponderada)" value={brl(item.net_cost)} bold />
+          <TraceRow label="Quantidade vendida" value={String(item.quantity)} />
+          <TraceRow label="Custo total do item" value={brl(item.total_cost)} bold />
+        </TraceBlock>
+
+        {/* 11. Origem */}
+        <TraceBlock title="5. Origem do custo">
+          <div className="text-xs">{origem}</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-1 text-xs mt-2">
+            <OrigemFlag label="Compra" on={!semCompra} />
+            <OrigemFlag label="Produto" on={semCompra && item.gross_cost > 0} />
+            <OrigemFlag label="Valor Manual" on={semCompra && item.gross_cost <= 0} />
+            <OrigemFlag label="Média Ponderada" on={item.purchases.length > 1} />
+            <OrigemFlag label="Última Compra" on={item.purchases.length === 1} />
+            <OrigemFlag label="Estoque" on={false} />
+            <OrigemFlag label="FIFO" on={false} />
+          </div>
+        </TraceBlock>
+
+        {/* 12-14. Auditorias */}
+        <TraceBlock title="6. Auditorias automáticas">
+          <AuditRow ok={!posterior && !!purchaseDt} label="Compra ocorreu antes da venda?"
+            detail={purchaseDt ? `Venda ${saleDt.toLocaleDateString("pt-BR")} · Compra ${purchaseDt.toLocaleDateString("pt-BR")}` : "Sem data de compra"} />
+          <AuditRow ok={!semDesconto || item.purchases.length === 0} label="Desconto aplicado corretamente?"
+            detail={`Percentual aplicado: ${item.discount_pct.toFixed(2)}%`} />
+          <AuditRow ok={!semFornecedor} label="Fornecedor identificado?"
+            detail={item.supplier ?? "sem fornecedor"} />
+          <AuditRow ok={!custoNegativo && !descMaiorQueSub} label="Consistência numérica?"
+            detail={custoNegativo ? "custo negativo" : descMaiorQueSub ? "desconto > subtotal" : "ok"} />
+        </TraceBlock>
+
+        {/* 15. Custo médio (todas compras) */}
+        <TraceBlock title="7. Todas as compras do produto (base do custo médio)">
+          {purchasesSorted.length === 0 ? (
+            <div className="text-xs text-muted-foreground">Nenhuma compra registrada.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs border rounded">
+                <thead className="bg-muted/40">
+                  <tr className="text-left border-b">
+                    <th className="p-2">Data</th>
+                    <th className="p-2">Fornecedor</th>
+                    <th className="p-2">NF</th>
+                    <th className="p-2 text-right">Qtd</th>
+                    <th className="p-2 text-right">Preço</th>
+                    <th className="p-2 text-right">Desc.%</th>
+                    <th className="p-2 text-right">Preço Líq.</th>
+                    <th className="p-2 text-right">Participação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {purchasesSorted.map((p, i) => {
+                    const liq = p.preco * Math.max(1 - p.pct / 100, 0);
+                    const peso = totalQtyCompras > 0 ? (p.qty / totalQtyCompras) * 100 : 0;
+                    return (
+                      <tr key={i} className="border-b last:border-0">
+                        <td className="p-2">{p.date ? new Date(p.date).toLocaleDateString("pt-BR") : "—"}</td>
+                        <td className="p-2">{p.supplier ?? "—"}</td>
+                        <td className="p-2">{p.nf ?? "—"}</td>
+                        <td className="p-2 text-right">{p.qty}</td>
+                        <td className="p-2 text-right">{brl(p.preco)}</td>
+                        <td className="p-2 text-right">{p.pct.toFixed(2)}%</td>
+                        <td className="p-2 text-right font-medium">{brl(liq)}</td>
+                        <td className="p-2 text-right">{peso.toFixed(1)}%</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </TraceBlock>
+
+        {/* 16. Linha do tempo */}
+        <TraceBlock title="8. Linha do tempo">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <TimelineStep label="Compra" date={purchaseDt ? purchaseDt.toLocaleDateString("pt-BR") : "—"} />
+            <span>→</span>
+            <TimelineStep label="Entrada Estoque" date={purchaseDt ? purchaseDt.toLocaleDateString("pt-BR") : "—"} />
+            <span>→</span>
+            <TimelineStep label="Venda" date={saleDt.toLocaleDateString("pt-BR")} />
+            <span>→</span>
+            <TimelineStep label="Controle de Vendas" date="sync" />
+            <span>→</span>
+            <TimelineStep label="Lucro" date="calculado" />
+          </div>
+        </TraceBlock>
+
+        {/* 17. Alertas */}
+        {alertas.length > 0 && (
+          <div className="rounded border border-amber-300 bg-amber-50 p-3">
+            <div className="flex items-center gap-2 font-semibold text-amber-900 text-xs">
+              <AlertCircle className="size-4" /> Alertas
+            </div>
+            <ul className="mt-1 text-xs text-amber-900 space-y-0.5 list-disc list-inside">
+              {alertas.map((a, i) => <li key={i}>{a}</li>)}
+            </ul>
+          </div>
+        )}
+
+        {/* 19. Conclusão */}
+        <div className={cn(
+          "rounded p-3 text-xs border",
+          diagnostico.level === "ok" && "border-emerald-300 bg-emerald-50 text-emerald-900",
+          diagnostico.level === "warn" && "border-amber-300 bg-amber-50 text-amber-900",
+          diagnostico.level === "err" && "border-red-300 bg-red-50 text-red-900",
+        )}>
+          <strong>Conclusão: </strong>{conclusao}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TraceBlock({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded border">
+      <div className="px-3 py-2 bg-muted/30 border-b text-xs font-semibold">{title}</div>
+      <div className="p-3 space-y-1">{children}</div>
+    </div>
+  );
+}
+
+function TraceRow({ label, value, bold, mono }: { label: string; value: string; bold?: boolean; mono?: boolean }) {
+  return (
+    <div className="flex justify-between text-xs">
+      <span className="text-muted-foreground">{label}</span>
+      <span className={cn(bold && "font-semibold", mono && "font-mono")}>{value}</span>
+    </div>
+  );
+}
+
+function AuditRow({ ok, label, detail }: { ok: boolean; label: string; detail?: string }) {
+  return (
+    <div className="flex items-center justify-between text-xs py-1">
+      <div className="flex items-center gap-2">
+        {ok ? <CheckCircle2 className="size-4 text-emerald-600" /> : <XCircle className="size-4 text-red-600" />}
+        <span>{label}</span>
+      </div>
+      {detail && <span className="text-muted-foreground">{detail}</span>}
+    </div>
+  );
+}
+
+function OrigemFlag({ label, on }: { label: string; on: boolean }) {
+  return (
+    <div className={cn("flex items-center gap-1", !on && "text-muted-foreground/60")}>
+      <span>{on ? "☑" : "☐"}</span>
+      <span>{label}</span>
+    </div>
+  );
+}
+
+function TimelineStep({ label, date }: { label: string; date: string }) {
+  return (
+    <div className="rounded border bg-background px-2 py-1">
+      <div className="font-medium text-foreground text-[11px]">{label}</div>
+      <div className="text-[10px]">{date}</div>
+    </div>
+  );
+}
+
+function DiagnosticoBadge({ level, texto }: { level: "ok" | "warn" | "err"; texto: string }) {
+  const cls = level === "ok" ? "bg-emerald-600" : level === "warn" ? "bg-amber-500" : "bg-red-600";
+  const icon = level === "ok" ? "🟢" : level === "warn" ? "🟡" : "🔴";
+  return (
+    <div className={cn("text-white text-xs rounded px-2 py-1 font-medium whitespace-nowrap", cls)}>
+      {icon} {texto}
+    </div>
+  );
+}
