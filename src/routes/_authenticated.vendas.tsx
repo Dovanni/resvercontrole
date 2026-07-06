@@ -283,7 +283,7 @@ function SalesPage() {
   );
 }
 
-type Product = { id: string; name: string; sale_price: number; wholesale_price: number; cost_price: number; stock: number };
+type Product = { id: string; name: string; sku: string | null; sale_price: number; wholesale_price: number; cost_price: number; stock: number };
 type LineItem = { product_id: string; quantity: number; unit_price: number; unit_cost: number; name: string; max: number };
 
 function SaleView({ saleId }: { saleId: string }) {
