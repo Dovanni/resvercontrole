@@ -27,20 +27,34 @@ export function ResumoFinanceiroVenda({
     [items]
   );
 
-  const { data: netCostByProduct, isLoading } = useQuery({
+  const { data: costData, isLoading } = useQuery({
     enabled: productIds.length > 0,
     queryKey: ["resumo-financeiro-net-cost", productIds.slice().sort()],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("compras_itens")
-        .select("produto_id, quantidade, preco_unitario, compras(subtotal, desconto)")
-        .in("produto_id", productIds);
-      if (error) throw error;
-      const map: Record<string, number> = {};
+      const [comprasRes, produtosRes] = await Promise.all([
+        supabase
+          .from("compras_itens")
+          .select("produto_id, quantidade, preco_unitario, compras(subtotal, desconto)")
+          .in("produto_id", productIds),
+        supabase
+          .from("products")
+          .select("id, cost")
+          .in("id", productIds),
+      ]);
+      if (comprasRes.error) throw comprasRes.error;
+      if (produtosRes.error) throw produtosRes.error;
+
+      const fallbackByProd: Record<string, number> = {};
+      for (const p of (produtosRes.data ?? []) as any[]) {
+        fallbackByProd[p.id] = Number(p.cost ?? 0);
+      }
+
       const byProd: Record<string, any[]> = {};
-      for (const r of (data ?? []) as any[]) {
+      for (const r of (comprasRes.data ?? []) as any[]) {
         (byProd[r.produto_id] ||= []).push(r);
       }
+
+      const net: Record<string, number | null> = {};
       for (const pid of productIds) {
         const rows = byProd[pid] ?? [];
         let sumWeighted = 0;
@@ -53,9 +67,9 @@ export function ResumoFinanceiroVenda({
           sumWeighted += q * Number(r.preco_unitario ?? 0) * factor;
           sumQ += q;
         }
-        map[pid] = sumQ > 0 ? sumWeighted / sumQ : 0;
+        net[pid] = sumQ > 0 ? sumWeighted / sumQ : null;
       }
-      return map;
+      return { net, fallback: fallbackByProd };
     },
   });
 
