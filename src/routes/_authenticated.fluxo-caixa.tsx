@@ -734,7 +734,7 @@ function CashFlowPage() {
             </div>
             {divergence ? (
               <div className="text-sm text-destructive font-medium">
-                ⚠️ Divergência de {brl(Math.abs(daily.finalBalance - displayedBalance))} — verificar movimentações não registradas
+                ⚠️ Divergência de {brl(Math.abs(realFinalBalance - displayedBalance))} — verificar movimentações não registradas
               </div>
             ) : (
               <div className="text-sm text-success">✓ Confere com saldo bancário {accountFilter === "todas" ? "consolidado" : "da conta"}</div>
