@@ -410,15 +410,43 @@ function CashFlowPage() {
 
   const displayedBalance = accountFilter === "todas" ? totalBankBalance : (bankBalances[accountFilter] ?? 0);
 
-  // Tabela diária com saldo acumulado real (do mais antigo p/ mais recente, depois invertido p/ exibir)
+  // Tabela diária: Entradas/Saídas/Líquido usam filteredMovements (visão operacional
+  // com fallbacks). Saldo acumulado usa SOMENTE bank_movements reais + saldos iniciais
+  // sintéticos — mesma fonte de realFinalBalance / Posição Bancária (SSoT).
   const daily = useMemo(() => {
     const todayKey = isoDay(today);
     const startKey = isoDay(startPast);
 
-    // 1) Saldo anterior = todas as movimentações ANTES do startKey.
-    // Saldos iniciais sem movimento gravado entram como movimentações sintéticas em filteredMovements.
+    // Fonte homogênea ao rodapé: bank_movements + saldos iniciais sintéticos.
+    const accountsWithInitialMovement = new Set(
+      (bankMovements ?? []).filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id),
+    );
+    const syntheticInitial = (bankAccounts ?? [])
+      .filter((a) => Number(a.initial_balance ?? 0) > 0 && !accountsWithInitialMovement.has(a.id))
+      .map((a) => ({
+        account_id: a.id,
+        destination_account_id: null as string | null,
+        type: "entrada",
+        amount: Number(a.initial_balance ?? 0),
+        movement_date: String(a.created_at).slice(0, 10),
+      }));
+    const realAll = [
+      ...((bankMovements ?? []).map((m) => ({
+        account_id: m.account_id,
+        destination_account_id: m.destination_account_id,
+        type: m.type,
+        amount: Number(m.amount),
+        movement_date: m.movement_date,
+      }))),
+      ...syntheticInitial,
+    ];
+    const realScoped = accountFilter === "todas"
+      ? realAll
+      : realAll.filter((m) => m.account_id === accountFilter || m.destination_account_id === accountFilter);
+
+    // 1) Saldo anterior (real) = movimentações reais ANTES do startKey.
     let opening = 0;
-    for (const m of filteredMovements) {
+    for (const m of realScoped) {
       if (m.movement_date >= startKey) continue;
       const amt = Number(m.amount);
       if (m.type === "entrada") opening += amt;
@@ -430,15 +458,15 @@ function CashFlowPage() {
     }
 
     // 2) Gera todos os dias do intervalo (inclui dias sem movimento)
-    const days: Record<string, { date: string; income: number; expense: number }> = {};
+    const days: Record<string, { date: string; income: number; expense: number; realNet: number }> = {};
     const cursor = new Date(startPast);
     while (isoDay(cursor) <= todayKey) {
       const k = isoDay(cursor);
-      days[k] = { date: k, income: 0, expense: 0 };
+      days[k] = { date: k, income: 0, expense: 0, realNet: 0 };
       cursor.setDate(cursor.getDate() + 1);
     }
 
-    // 3) Soma movimentações de cada dia
+    // 3a) Entradas/Saídas exibidas: filteredMovements (visão operacional c/ fallbacks)
     for (const m of filteredMovements) {
       const k = m.movement_date;
       if (!days[k]) continue;
@@ -451,13 +479,26 @@ function CashFlowPage() {
       }
     }
 
-    // 4) Acumula dia a dia (ASC)
+    // 3b) Delta do saldo acumulado: SOMENTE bank_movements reais
+    for (const m of realScoped) {
+      const k = m.movement_date;
+      if (!days[k]) continue;
+      const amt = Number(m.amount);
+      if (m.type === "entrada") days[k].realNet += amt;
+      else if (m.type === "saida") days[k].realNet -= amt;
+      else if (m.type === "transferencia" && accountFilter !== "todas") {
+        if (m.account_id === accountFilter) days[k].realNet -= amt;
+        if (m.destination_account_id === accountFilter) days[k].realNet += amt;
+      }
+    }
+
+    // 4) Acumula dia a dia (ASC) usando o delta real
     let saldo = opening;
     const asc = Object.values(days)
       .sort((a, b) => a.date.localeCompare(b.date))
       .map((d) => {
-        saldo += d.income - d.expense;
-        return { ...d, saldoAcumulado: saldo };
+        saldo += d.realNet;
+        return { date: d.date, income: d.income, expense: d.expense, saldoAcumulado: saldo };
       });
 
     const mostRecentBalance = asc.length ? asc[asc.length - 1].saldoAcumulado : opening;
@@ -465,7 +506,7 @@ function CashFlowPage() {
     const rows = visibleDays.slice(-15);
 
     return { rows, finalBalance: mostRecentBalance };
-  }, [filteredMovements, accountFilter, onlyMovementDays]);
+  }, [filteredMovements, bankMovements, bankAccounts, accountFilter, onlyMovementDays]);
 
   // Saldo acumulado usando SOMENTE bank_movements reais (+ saldos iniciais sintéticos),
   // sem os fallbacks de payables/receivables/sales/compras. Fonte homogênea à do
