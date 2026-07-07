@@ -776,7 +776,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
           </div>
 
           <ResumoFinanceiroVenda
-            items={items.map(i => ({ product_id: i.product_id, quantity: i.quantity, unit_price: i.unit_price }))}
+            items={items.map(i => ({ product_id: i.product_id, quantity: i.quantity, unit_price: i.unit_price, unit_cost: i.unit_cost }))}
             subtotal={subtotal}
             discountValue={discountValue}
             shipping={Number(shipping) || 0}
