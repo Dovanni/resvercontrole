@@ -467,7 +467,51 @@ function CashFlowPage() {
     return { rows, finalBalance: mostRecentBalance };
   }, [filteredMovements, accountFilter, onlyMovementDays]);
 
-  const divergence = Math.abs(daily.finalBalance - displayedBalance) > 0.01;
+  // Saldo acumulado usando SOMENTE bank_movements reais (+ saldos iniciais sintéticos),
+  // sem os fallbacks de payables/receivables/sales/compras. Fonte homogênea à do
+  // saldo bancário consolidado — evita alerta indevido por artefato de fallback.
+  const realFinalBalance = useMemo(() => {
+    const todayKey = isoDay(today);
+    const accountsWithInitialMovement = new Set(
+      (bankMovements ?? []).filter((m) => m.origin === "saldo_inicial").map((m) => m.account_id),
+    );
+    const syntheticInitial = (bankAccounts ?? [])
+      .filter((a) => Number(a.initial_balance ?? 0) > 0 && !accountsWithInitialMovement.has(a.id))
+      .map((a) => ({
+        account_id: a.id,
+        destination_account_id: null as string | null,
+        type: "entrada",
+        amount: Number(a.initial_balance ?? 0),
+        movement_date: String(a.created_at).slice(0, 10),
+      }));
+    const all = [
+      ...((bankMovements ?? []).map((m) => ({
+        account_id: m.account_id,
+        destination_account_id: m.destination_account_id,
+        type: m.type,
+        amount: Number(m.amount),
+        movement_date: m.movement_date,
+      }))),
+      ...syntheticInitial,
+    ];
+    const scoped = accountFilter === "todas"
+      ? all
+      : all.filter((m) => m.account_id === accountFilter || m.destination_account_id === accountFilter);
+    let saldo = 0;
+    for (const m of scoped) {
+      if (m.movement_date > todayKey) continue;
+      const amt = Number(m.amount);
+      if (m.type === "entrada") saldo += amt;
+      else if (m.type === "saida") saldo -= amt;
+      else if (m.type === "transferencia" && accountFilter !== "todas") {
+        if (m.account_id === accountFilter) saldo -= amt;
+        if (m.destination_account_id === accountFilter) saldo += amt;
+      }
+    }
+    return saldo;
+  }, [bankMovements, bankAccounts, accountFilter]);
+
+  const divergence = Math.abs(realFinalBalance - displayedBalance) > 0.01;
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto">
@@ -690,7 +734,7 @@ function CashFlowPage() {
             </div>
             {divergence ? (
               <div className="text-sm text-destructive font-medium">
-                ⚠️ Divergência de {brl(Math.abs(daily.finalBalance - displayedBalance))} — verificar movimentações não registradas
+                ⚠️ Divergência de {brl(Math.abs(realFinalBalance - displayedBalance))} — verificar movimentações não registradas
               </div>
             ) : (
               <div className="text-sm text-success">✓ Confere com saldo bancário {accountFilter === "todas" ? "consolidado" : "da conta"}</div>
