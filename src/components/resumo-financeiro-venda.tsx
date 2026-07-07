@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { AuditoriaLucroDialog } from "@/components/auditoria-lucro-dialog";
 
-type Item = { product_id: string; quantity: number; unit_price: number };
+type Item = { product_id: string; quantity: number; unit_price: number; unit_cost?: number };
 
 type Props = {
   items: Item[];
@@ -27,34 +27,20 @@ export function ResumoFinanceiroVenda({
     [items]
   );
 
-  const { data: costData, isLoading } = useQuery({
+  const { data: netCostByProduct, isLoading } = useQuery({
     enabled: productIds.length > 0,
     queryKey: ["resumo-financeiro-net-cost", productIds.slice().sort()],
     queryFn: async () => {
-      const [comprasRes, produtosRes] = await Promise.all([
-        supabase
-          .from("compras_itens")
-          .select("produto_id, quantidade, preco_unitario, compras(subtotal, desconto)")
-          .in("produto_id", productIds),
-        supabase
-          .from("products")
-          .select("id, cost")
-          .in("id", productIds),
-      ]);
-      if (comprasRes.error) throw comprasRes.error;
-      if (produtosRes.error) throw produtosRes.error;
-
-      const fallbackByProd: Record<string, number> = {};
-      for (const p of (produtosRes.data ?? []) as any[]) {
-        fallbackByProd[p.id] = Number(p.cost ?? 0);
-      }
-
+      const { data, error } = await supabase
+        .from("compras_itens")
+        .select("produto_id, quantidade, preco_unitario, compras(subtotal, desconto)")
+        .in("produto_id", productIds);
+      if (error) throw error;
       const byProd: Record<string, any[]> = {};
-      for (const r of (comprasRes.data ?? []) as any[]) {
+      for (const r of (data ?? []) as any[]) {
         (byProd[r.produto_id] ||= []).push(r);
       }
-
-      const net: Record<string, number | null> = {};
+      const map: Record<string, number | null> = {};
       for (const pid of productIds) {
         const rows = byProd[pid] ?? [];
         let sumWeighted = 0;
@@ -67,23 +53,22 @@ export function ResumoFinanceiroVenda({
           sumWeighted += q * Number(r.preco_unitario ?? 0) * factor;
           sumQ += q;
         }
-        net[pid] = sumQ > 0 ? sumWeighted / sumQ : null;
+        map[pid] = sumQ > 0 ? sumWeighted / sumQ : null;
       }
-      return { net, fallback: fallbackByProd };
+      return map;
     },
   });
 
   const custoProdutos = useMemo(() => {
-    if (!costData) return null;
+    if (!netCostByProduct) return null;
     let total = 0;
     for (const it of items) {
-      const net = costData.net[it.product_id];
-      const fallback = costData.fallback[it.product_id] ?? 0;
-      const c = net != null ? net : fallback;
+      const net = netCostByProduct[it.product_id];
+      const c = net != null ? net : Number(it.unit_cost ?? 0);
       total += c * Number(it.quantity ?? 0);
     }
     return total;
-  }, [items, costData]);
+  }, [items, netCostByProduct]);
 
   const canCompute = custoProdutos !== null && !isLoading;
   const lucro = canCompute ? receber - (custoProdutos as number) - (Number(freteEmpresa) || 0) : 0;
