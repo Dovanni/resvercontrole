@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 import { AuditoriaLucroDialog } from "@/components/auditoria-lucro-dialog";
 
-type Item = { product_id: string; quantity: number; unit_price: number };
+type Item = { product_id: string; quantity: number; unit_price: number; unit_cost?: number };
 
 type Props = {
   items: Item[];
