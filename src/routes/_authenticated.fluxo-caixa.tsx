@@ -730,7 +730,7 @@ function CashFlowPage() {
           <div className="px-5 py-4 border-t flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm">
               <span className="text-muted-foreground">Saldo acumulado: </span>
-              <span className={`font-display text-lg ${daily.finalBalance < 0 ? "text-destructive" : ""}`}>{brl(daily.finalBalance)}</span>
+              <span className={`font-display text-lg ${realFinalBalance < 0 ? "text-destructive" : ""}`}>{brl(realFinalBalance)}</span>
             </div>
             {divergence ? (
               <div className="text-sm text-destructive font-medium">
