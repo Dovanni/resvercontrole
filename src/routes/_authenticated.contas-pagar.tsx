@@ -712,7 +712,7 @@ function InlineDate({ value, onSave }: { value: string; onSave: (v: string) => P
 
 // ===== Edit Form =====
 
-function EditPayableForm({ payable, all, suppliers, onDone }: { payable: Payable; all: Payable[]; suppliers: { id: string; name: string }[]; onDone: () => void }) {
+function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { payable: Payable; all: Payable[]; suppliers: { id: string; name: string }[]; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
   const series = useMemo(() => findSeriesItems(all, payable), [all, payable]);
   const [scope, setScope] = useState<"one" | "forward" | "all">("one");
   const navCats = useNavigate();
@@ -726,6 +726,7 @@ function EditPayableForm({ payable, all, suppliers, onDone }: { payable: Payable
     amount: Number(payable.amount),
     due_date: payable.due_date,
     payment_method: payable.payment_method ?? "pix",
+    bank_account_id: payable.bank_account_id ?? "",
     recurrence: payable.recurrence,
   });
 
