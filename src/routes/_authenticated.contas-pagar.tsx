@@ -60,6 +60,7 @@ const PAYMENT_METHODS = ["pix", "boleto", "transferência", "dinheiro", "cartão
 type Payable = {
   id: string; supplier_id: string | null; description: string; category: string;
   amount: number; due_date: string; payment_method: string | null;
+  bank_account_id: string | null;
   status: "pendente" | "pago" | "atrasado" | "cancelado";
   paid_amount: number; paid_at: string | null;
   recurrence: "nenhuma" | "semanal" | "mensal";
@@ -355,6 +356,7 @@ function PayablesPage() {
                 <DialogHeader><DialogTitle className="font-display">Nova conta a pagar</DialogTitle></DialogHeader>
                 <PayableForm
                   suppliers={suppliers ?? []}
+                  bankAccounts={bankAccounts ?? []}
                   onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["payables"] }); }}
                 />
               </DialogContent>
@@ -549,6 +551,7 @@ function PayablesPage() {
               payable={editTarget}
               all={data ?? []}
               suppliers={suppliers ?? []}
+              bankAccounts={bankAccounts ?? []}
               onDone={() => { setEditTarget(null); qc.invalidateQueries({ queryKey: ["payables"] }); }}
             />
           )}
@@ -711,7 +714,7 @@ function InlineDate({ value, onSave }: { value: string; onSave: (v: string) => P
 
 // ===== Edit Form =====
 
-function EditPayableForm({ payable, all, suppliers, onDone }: { payable: Payable; all: Payable[]; suppliers: { id: string; name: string }[]; onDone: () => void }) {
+function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { payable: Payable; all: Payable[]; suppliers: { id: string; name: string }[]; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
   const series = useMemo(() => findSeriesItems(all, payable), [all, payable]);
   const [scope, setScope] = useState<"one" | "forward" | "all">("one");
   const navCats = useNavigate();
@@ -725,6 +728,7 @@ function EditPayableForm({ payable, all, suppliers, onDone }: { payable: Payable
     amount: Number(payable.amount),
     due_date: payable.due_date,
     payment_method: payable.payment_method ?? "pix",
+    bank_account_id: payable.bank_account_id ?? "",
     recurrence: payable.recurrence,
   });
 
@@ -750,8 +754,9 @@ function EditPayableForm({ payable, all, suppliers, onDone }: { payable: Payable
           amount: f.amount,
           due_date: f.due_date,
           payment_method: f.payment_method,
+          bank_account_id: f.bank_account_id || null,
           recurrence: f.recurrence,
-        }).eq("id", payable.id);
+        } as any).eq("id", payable.id);
         if (error) throw error;
         return 1;
       }
@@ -782,8 +787,9 @@ function EditPayableForm({ payable, all, suppliers, onDone }: { payable: Payable
           amount: f.amount,
           due_date: newDue,
           payment_method: f.payment_method,
+          bank_account_id: f.bank_account_id || null,
           recurrence: f.recurrence,
-        }).eq("id", it.id);
+        } as any).eq("id", it.id);
         if (error) throw error;
         count++;
       }
@@ -856,6 +862,23 @@ function EditPayableForm({ payable, all, suppliers, onDone }: { payable: Payable
           </Select>
         </div>
         <div className="space-y-1.5">
+          <Label>Conta bancária de pagamento</Label>
+          <Select value={f.bank_account_id || "__none__"} onValueChange={(v) => setF({ ...f, bank_account_id: v === "__none__" ? "" : v })}>
+            <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Não definir agora</SelectItem>
+              {bankAccounts.map((b) => (
+                <SelectItem key={b.id} value={b.id}>
+                  <span className="inline-flex items-center gap-2">
+                    <span className="size-2 rounded-full" style={{ background: b.color }} />
+                    {b.name} <span className="text-muted-foreground">— {b.bank}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
           <Label>Recorrência</Label>
           <Select value={f.recurrence} onValueChange={(v: any) => setF({ ...f, recurrence: v })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -879,7 +902,7 @@ function EditPayableForm({ payable, all, suppliers, onDone }: { payable: Payable
 
 function PayPayableForm({ payable, bankAccounts, onDone }: { payable: Payable; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
   const [paid_at, setPaidAt] = useState(new Date().toISOString().slice(0, 10));
-  const [bank_account_id, setBankAccountId] = useState<string>("");
+  const [bank_account_id, setBankAccountId] = useState<string>(payable.bank_account_id ?? "");
   const [amount, setAmount] = useState(Number(payable.amount));
 
   const save = useMutation({
@@ -955,12 +978,12 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: string }[]; onDone: () => void }) {
+function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: string; name: string }[]; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
   const confirm = useConfirm();
   const [f, setF] = useState({
     supplier_id: "", description: "", category: "fornecedor",
     amount: 0, due_date: new Date().toISOString().slice(0, 10),
-    payment_method: "pix", recurrence: "nenhuma" as "nenhuma" | "semanal" | "mensal",
+    payment_method: "pix", bank_account_id: "", recurrence: "nenhuma" as "nenhuma" | "semanal" | "mensal",
   });
   const [repeatCount, setRepeatCount] = useState(1);
   const navCats2 = useNavigate();
@@ -989,6 +1012,7 @@ function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: str
           amount: f.amount,
           due_date: due,
           payment_method: f.payment_method,
+          bank_account_id: f.bank_account_id || null,
           recurrence: f.recurrence,
           user_id: user.id,
         };
@@ -1085,6 +1109,23 @@ function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: str
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {PAYMENT_METHODS.map(m => <SelectItem key={m} value={m} className="capitalize">{m}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Conta bancária de pagamento</Label>
+          <Select value={f.bank_account_id || "__none__"} onValueChange={(v) => setF({ ...f, bank_account_id: v === "__none__" ? "" : v })}>
+            <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Não definir agora</SelectItem>
+              {bankAccounts.map((b) => (
+                <SelectItem key={b.id} value={b.id}>
+                  <span className="inline-flex items-center gap-2">
+                    <span className="size-2 rounded-full" style={{ background: b.color }} />
+                    {b.name} <span className="text-muted-foreground">— {b.bank}</span>
+                  </span>
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
