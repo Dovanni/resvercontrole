@@ -60,6 +60,7 @@ const PAYMENT_METHODS = ["pix", "boleto", "transferência", "dinheiro", "cartão
 type Payable = {
   id: string; supplier_id: string | null; description: string; category: string;
   amount: number; due_date: string; payment_method: string | null;
+  bank_account_id: string | null;
   status: "pendente" | "pago" | "atrasado" | "cancelado";
   paid_amount: number; paid_at: string | null;
   recurrence: "nenhuma" | "semanal" | "mensal";
