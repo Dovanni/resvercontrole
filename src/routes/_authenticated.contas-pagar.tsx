@@ -550,6 +550,7 @@ function PayablesPage() {
               payable={editTarget}
               all={data ?? []}
               suppliers={suppliers ?? []}
+              bankAccounts={bankAccounts ?? []}
               onDone={() => { setEditTarget(null); qc.invalidateQueries({ queryKey: ["payables"] }); }}
             />
           )}
