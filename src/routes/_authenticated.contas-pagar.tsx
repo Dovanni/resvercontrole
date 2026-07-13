@@ -978,12 +978,12 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function PayableForm({ suppliers, onDone }: { suppliers: { id: string; name: string }[]; onDone: () => void }) {
+function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: string; name: string }[]; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
   const confirm = useConfirm();
   const [f, setF] = useState({
     supplier_id: "", description: "", category: "fornecedor",
     amount: 0, due_date: new Date().toISOString().slice(0, 10),
-    payment_method: "pix", recurrence: "nenhuma" as "nenhuma" | "semanal" | "mensal",
+    payment_method: "pix", bank_account_id: "", recurrence: "nenhuma" as "nenhuma" | "semanal" | "mensal",
   });
   const [repeatCount, setRepeatCount] = useState(1);
   const navCats2 = useNavigate();
