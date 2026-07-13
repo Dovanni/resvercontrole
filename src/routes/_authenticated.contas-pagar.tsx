@@ -356,6 +356,7 @@ function PayablesPage() {
                 <DialogHeader><DialogTitle className="font-display">Nova conta a pagar</DialogTitle></DialogHeader>
                 <PayableForm
                   suppliers={suppliers ?? []}
+                  bankAccounts={bankAccounts ?? []}
                   onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["payables"] }); }}
                 />
               </DialogContent>
