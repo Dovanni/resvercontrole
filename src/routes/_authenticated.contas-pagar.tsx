@@ -786,8 +786,9 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
           amount: f.amount,
           due_date: newDue,
           payment_method: f.payment_method,
+          bank_account_id: f.bank_account_id || null,
           recurrence: f.recurrence,
-        }).eq("id", it.id);
+        } as any).eq("id", it.id);
         if (error) throw error;
         count++;
       }
