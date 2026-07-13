@@ -861,6 +861,23 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
           </Select>
         </div>
         <div className="space-y-1.5">
+          <Label>Conta bancária de pagamento</Label>
+          <Select value={f.bank_account_id || "__none__"} onValueChange={(v) => setF({ ...f, bank_account_id: v === "__none__" ? "" : v })}>
+            <SelectTrigger><SelectValue placeholder="Opcional" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Não definir agora</SelectItem>
+              {bankAccounts.map((b) => (
+                <SelectItem key={b.id} value={b.id}>
+                  <span className="inline-flex items-center gap-2">
+                    <span className="size-2 rounded-full" style={{ background: b.color }} />
+                    {b.name} <span className="text-muted-foreground">— {b.bank}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
           <Label>Recorrência</Label>
           <Select value={f.recurrence} onValueChange={(v: any) => setF({ ...f, recurrence: v })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
