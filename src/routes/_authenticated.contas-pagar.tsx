@@ -1012,6 +1012,7 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
           amount: f.amount,
           due_date: due,
           payment_method: f.payment_method,
+          bank_account_id: f.bank_account_id || null,
           recurrence: f.recurrence,
           user_id: user.id,
         };
