@@ -902,7 +902,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
 
 function PayPayableForm({ payable, bankAccounts, onDone }: { payable: Payable; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
   const [paid_at, setPaidAt] = useState(new Date().toISOString().slice(0, 10));
-  const [bank_account_id, setBankAccountId] = useState<string>("");
+  const [bank_account_id, setBankAccountId] = useState<string>(payable.bank_account_id ?? "");
   const [amount, setAmount] = useState(Number(payable.amount));
 
   const save = useMutation({
