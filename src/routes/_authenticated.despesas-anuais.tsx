@@ -12,6 +12,12 @@ import { FileSpreadsheet, CheckCircle2, HelpCircle } from "lucide-react";
 import { brl, dateBR } from "@/lib/format";
 import { toast } from "sonner";
 import { TotalizacaoPersonalizadaDespesas } from "@/components/totalizacao-personalizada-despesas";
+import {
+  DespesaPayable,
+  getAnnualExpenseMonthIndex,
+  getAnnualExpenseValue,
+  isAnnualExpenseIncluded,
+} from "@/lib/despesas-anuais";
 
 export const Route = createFileRoute("/_authenticated/despesas-anuais")({
   head: () => ({ meta: [{ title: "Despesas Anuais — Rosé" }] }),
@@ -84,17 +90,8 @@ function AnnualExpensesPage() {
     const filtered = (data ?? []).filter(p => category === "todos" || p.category === category);
     const rowMap = new Map<string, CellAgg[]>();
 
-    const colIndex = (dateStr: string): number => {
-      const d = new Date(dateStr + "T00:00:00");
-      const y = d.getFullYear();
-      const m = d.getMonth();
-      if (y === year) return m;
-      if (y === year + 1 && m === 0) return 12;
-      return -1;
-    };
-
     for (const p of filtered) {
-      const idx = colIndex(p.due_date);
+      const idx = getAnnualExpenseMonthIndex(p, year);
       if (idx < 0) continue;
       const rowKey = p.suppliers?.name || p.description || "Sem descrição";
       if (!rowMap.has(rowKey)) {
@@ -103,9 +100,11 @@ function AnnualExpensesPage() {
       const cells = rowMap.get(rowKey)!;
       const cell = cells[idx];
       cell.items.push(p);
-      const amt = Number(p.status === "pago" ? (p.paid_amount ?? p.amount) : p.amount);
+      // Helper compartilhado — cancelado retorna 0 (não impacta paid/pending; ainda listado no drilldown).
+      const amt = getAnnualExpenseValue(p);
+      if (!isAnnualExpenseIncluded(p)) continue;
       if (p.status === "pago") cell.paid += amt;
-      else if (p.status !== "cancelado") cell.pending += amt;
+      else cell.pending += amt;
     }
 
     const rows = Array.from(rowMap.keys()).sort((a, b) => a.localeCompare(b));
