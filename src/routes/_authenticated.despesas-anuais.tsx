@@ -13,7 +13,6 @@ import { brl, dateBR } from "@/lib/format";
 import { toast } from "sonner";
 import { TotalizacaoPersonalizadaDespesas } from "@/components/totalizacao-personalizada-despesas";
 import {
-  DespesaPayable,
   getAnnualExpenseMonthIndex,
   getAnnualExpenseValue,
   isAnnualExpenseIncluded,
