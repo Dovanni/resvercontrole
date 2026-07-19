@@ -108,7 +108,16 @@ function AuthPage() {
                 <Button type="submit" disabled={busy} className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95">
                   Entrar
                 </Button>
+                <button
+                  type="button"
+                  onClick={handleForgot}
+                  disabled={busy}
+                  className="w-full text-sm text-muted-foreground hover:text-foreground underline underline-offset-2"
+                >
+                  Esqueci minha senha
+                </button>
               </form>
+
             </TabsContent>
             <TabsContent value="signup">
               <form onSubmit={signUp} className="space-y-4">
