@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { FileSpreadsheet, CheckCircle2, HelpCircle } from "lucide-react";
 import { brl, dateBR } from "@/lib/format";
 import { toast } from "sonner";
+import { TotalizacaoPersonalizadaDespesas } from "@/components/totalizacao-personalizada-despesas";
 
 export const Route = createFileRoute("/_authenticated/despesas-anuais")({
   head: () => ({ meta: [{ title: "Despesas Anuais — Rosé" }] }),
@@ -267,6 +268,10 @@ function AnnualExpensesPage() {
           </table>
         </CardContent>
       </Card>
+
+      <TotalizacaoPersonalizadaDespesas payables={data ?? []} year={year} />
+
+
 
       <div className="grid md:grid-cols-3 gap-3 mt-4">
         <Card className="shadow-soft border-green-500/30">
