@@ -269,6 +269,10 @@ function AnnualExpensesPage() {
         </CardContent>
       </Card>
 
+      <TotalizacaoPersonalizadaDespesas payables={data ?? []} year={year} />
+
+
+
       <div className="grid md:grid-cols-3 gap-3 mt-4">
         <Card className="shadow-soft border-green-500/30">
           <CardContent className="p-4">
