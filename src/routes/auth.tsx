@@ -57,6 +57,21 @@ function AuthPage() {
     else toast.success("Conta criada! Você já pode usar.");
   }
 
+  async function handleForgot() {
+    if (!email) {
+      toast.error("Digite seu email no campo acima e clique em 'Esqueci minha senha' novamente.");
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setBusy(false);
+    if (error) toast.error(translateAuthError(error.message));
+    else toast.success("Enviamos um link de redefinição para seu email. Verifique também a caixa de spam.");
+  }
+
+
   return (
     <div className="min-h-screen bg-gradient-rose flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -93,7 +108,16 @@ function AuthPage() {
                 <Button type="submit" disabled={busy} className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95">
                   Entrar
                 </Button>
+                <button
+                  type="button"
+                  onClick={handleForgot}
+                  disabled={busy}
+                  className="w-full text-sm text-muted-foreground hover:text-foreground underline underline-offset-2"
+                >
+                  Esqueci minha senha
+                </button>
               </form>
+
             </TabsContent>
             <TabsContent value="signup">
               <form onSubmit={signUp} className="space-y-4">
