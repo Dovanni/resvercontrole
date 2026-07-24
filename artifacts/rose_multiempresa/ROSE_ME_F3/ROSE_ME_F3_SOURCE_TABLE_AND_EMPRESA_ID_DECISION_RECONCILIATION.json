@@ -1,0 +1,135 @@
+{
+  "tables_total": 25,
+  "direct": 17,
+  "inherited": 6,
+  "user_scoped": 2,
+  "candidate_tables": 23,
+  "decisions": [
+    {
+      "table": "aportes_financeiros",
+      "decision": "DIRECT_EMPRESA_ID",
+      "classification": "TENANT_SCOPED_ENTITY"
+    },
+    {
+      "table": "bank_accounts",
+      "decision": "DIRECT_EMPRESA_ID",
+      "classification": "TENANT_SCOPED_ENTITY"
+    },
+    {
+      "table": "cartoes_credito",
+      "decision": "DIRECT_EMPRESA_ID",
+      "classification": "TENANT_SCOPED_ENTITY"
+    },
+    {
+      "table": "categorias_contas_pagar",
+      "decision": "DIRECT_EMPRESA_ID",
+      "classification": "TENANT_SCOPED_ENTITY"
+    },
+    {
+      "table": "company_settings",
+      "decision": "DIRECT_EMPRESA_ID",
+      "classification": "TENANT_SCOPED_ENTITY"
+    },
+    {
+      "table": "compras",
+      "decision": "DIRECT_EMPRESA_ID",
+      "classification": "TENANT_SCOPED_ENTITY"
+    },
+    {
+      "table": "controle_vendas_diario",
+      "decision": "DIRECT_EMPRESA_ID",
+      "classification": "TENANT_SCOPED_ENTITY"
+    },
+    {
+      "table": "controle_vendas_fornecedor",
+      "decision": "DIRECT_EMPRESA_ID",
+      "classification": "TENANT_SCOPED_ENTITY"
+    },
+    {
+      "table": "customers",
+      "decision": "DIRECT_EMPRESA_ID",
+      "classification": "TENANT_SCOPED_ENTITY"
+    },
+    {
+      "table": "finance_entries",
+      "decision": "DIRECT_EMPRESA_ID",
+      "classification": "TENANT_SCOPED_ENTITY"
+    },
+    {
+      "table": "payables",
+      "decision": "DIRECT_EMPRESA_ID",
+      "classification": "TENANT_SCOPED_ENTITY"
+    },
+    {
+      "table": "payment_routing_rules",
+      "decision": "DIRECT_EMPRESA_ID",
+      "classification": "TENANT_SCOPED_ENTITY"
+    },
+    {
+      "table": "products",
+      "decision": "DIRECT_EMPRESA_ID",
+      "classification": "TENANT_SCOPED_ENTITY"
+    },
+    {
+      "table": "receivables",
+      "decision": "DIRECT_EMPRESA_ID",
+      "classification": "TENANT_SCOPED_ENTITY"
+    },
+    {
+      "table": "sales",
+      "decision": "DIRECT_EMPRESA_ID",
+      "classification": "TENANT_SCOPED_ENTITY"
+    },
+    {
+      "table": "suppliers",
+      "decision": "DIRECT_EMPRESA_ID",
+      "classification": "TENANT_SCOPED_ENTITY"
+    },
+    {
+      "table": "user_roles",
+      "decision": "DIRECT_EMPRESA_ID",
+      "classification": "TENANT_SCOPED_ENTITY"
+    },
+    {
+      "table": "bank_movements",
+      "decision": "INHERITED_TENANT_PATH",
+      "classification": "CHILD_OF_TENANT_PARENT"
+    },
+    {
+      "table": "cartoes_faturas",
+      "decision": "INHERITED_TENANT_PATH",
+      "classification": "CHILD_OF_TENANT_PARENT"
+    },
+    {
+      "table": "cartoes_lancamentos",
+      "decision": "INHERITED_TENANT_PATH",
+      "classification": "CHILD_OF_TENANT_PARENT"
+    },
+    {
+      "table": "compras_itens",
+      "decision": "INHERITED_TENANT_PATH",
+      "classification": "CHILD_OF_TENANT_PARENT"
+    },
+    {
+      "table": "controle_vendas_fornecedor_historico",
+      "decision": "INHERITED_TENANT_PATH",
+      "classification": "CHILD_OF_TENANT_PARENT"
+    },
+    {
+      "table": "sale_items",
+      "decision": "INHERITED_TENANT_PATH",
+      "classification": "CHILD_OF_TENANT_PARENT"
+    },
+    {
+      "table": "audit_log",
+      "decision": "USER_SCOPED",
+      "classification": "USER_AUDIT"
+    },
+    {
+      "table": "profiles",
+      "decision": "USER_SCOPED",
+      "classification": "USER_IDENTITY"
+    }
+  ],
+  "unresolved": 0
+}

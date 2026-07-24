@@ -1,0 +1,83 @@
+{
+  "count": 6,
+  "tables": [
+    {
+      "table": "bank_movements",
+      "parent": "bank_accounts",
+      "path_to_empresa": "bank_movements -> bank_accounts -> empresas",
+      "parent_fk_required": true,
+      "cardinality": "MANY_TO_ONE",
+      "nullability_of_parent": "NOT_NULL",
+      "orphan_risk": "MUST_VALIDATE",
+      "ambiguity": "NONE_EXPECTED",
+      "rls_impact": "EXISTS_PARENT_TENANT_MATCH",
+      "reclassification_condition": "REQUIRES_DIRECT_EMPRESA_ID_REASSESSMENT_IF_ORPHANS_OR_AMBIGUITY",
+      "rollback": "R1_REVERT_VALIDATION"
+    },
+    {
+      "table": "cartoes_faturas",
+      "parent": "cartoes_credito",
+      "path_to_empresa": "cartoes_faturas -> cartoes_credito -> empresas",
+      "parent_fk_required": true,
+      "cardinality": "MANY_TO_ONE",
+      "nullability_of_parent": "NOT_NULL",
+      "orphan_risk": "MUST_VALIDATE",
+      "ambiguity": "NONE_EXPECTED",
+      "rls_impact": "EXISTS_PARENT_TENANT_MATCH",
+      "reclassification_condition": "REQUIRES_DIRECT_EMPRESA_ID_REASSESSMENT_IF_ORPHANS_OR_AMBIGUITY",
+      "rollback": "R1_REVERT_VALIDATION"
+    },
+    {
+      "table": "cartoes_lancamentos",
+      "parent": "cartoes_faturas",
+      "path_to_empresa": "cartoes_lancamentos -> cartoes_faturas -> empresas",
+      "parent_fk_required": true,
+      "cardinality": "MANY_TO_ONE",
+      "nullability_of_parent": "NOT_NULL",
+      "orphan_risk": "MUST_VALIDATE",
+      "ambiguity": "NONE_EXPECTED",
+      "rls_impact": "EXISTS_PARENT_TENANT_MATCH",
+      "reclassification_condition": "REQUIRES_DIRECT_EMPRESA_ID_REASSESSMENT_IF_ORPHANS_OR_AMBIGUITY",
+      "rollback": "R1_REVERT_VALIDATION"
+    },
+    {
+      "table": "compras_itens",
+      "parent": "compras",
+      "path_to_empresa": "compras_itens -> compras -> empresas",
+      "parent_fk_required": true,
+      "cardinality": "MANY_TO_ONE",
+      "nullability_of_parent": "NOT_NULL",
+      "orphan_risk": "MUST_VALIDATE",
+      "ambiguity": "NONE_EXPECTED",
+      "rls_impact": "EXISTS_PARENT_TENANT_MATCH",
+      "reclassification_condition": "REQUIRES_DIRECT_EMPRESA_ID_REASSESSMENT_IF_ORPHANS_OR_AMBIGUITY",
+      "rollback": "R1_REVERT_VALIDATION"
+    },
+    {
+      "table": "controle_vendas_fornecedor_historico",
+      "parent": "controle_vendas_fornecedor",
+      "path_to_empresa": "controle_vendas_fornecedor_historico -> controle_vendas_fornecedor -> empresas",
+      "parent_fk_required": true,
+      "cardinality": "MANY_TO_ONE",
+      "nullability_of_parent": "NOT_NULL",
+      "orphan_risk": "MUST_VALIDATE",
+      "ambiguity": "NONE_EXPECTED",
+      "rls_impact": "EXISTS_PARENT_TENANT_MATCH",
+      "reclassification_condition": "REQUIRES_DIRECT_EMPRESA_ID_REASSESSMENT_IF_ORPHANS_OR_AMBIGUITY",
+      "rollback": "R1_REVERT_VALIDATION"
+    },
+    {
+      "table": "sale_items",
+      "parent": "sales",
+      "path_to_empresa": "sale_items -> sales -> empresas",
+      "parent_fk_required": true,
+      "cardinality": "MANY_TO_ONE",
+      "nullability_of_parent": "NOT_NULL",
+      "orphan_risk": "MUST_VALIDATE",
+      "ambiguity": "NONE_EXPECTED",
+      "rls_impact": "EXISTS_PARENT_TENANT_MATCH",
+      "reclassification_condition": "REQUIRES_DIRECT_EMPRESA_ID_REASSESSMENT_IF_ORPHANS_OR_AMBIGUITY",
+      "rollback": "R1_REVERT_VALIDATION"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "storage_path_pattern": "empresa_id/modulo/recurso_id/arquivo",
+  "integrations_per_tenant": true,
+  "jobs_partitioned_by_empresa": true,
+  "storage_changed": false,
+  "integrations_called": false,
+  "jobs_executed": false
+}

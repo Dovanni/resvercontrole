@@ -1,0 +1,69 @@
+{
+  "helpers": [
+    {
+      "name": "current_user_company_memberships",
+      "stability": "STABLE",
+      "security": "SECURITY_DEFINER_MINIMAL",
+      "search_path": "public",
+      "identity": "auth.uid()",
+      "rollback": "DROP_FUNCTION_IF_EXISTS"
+    },
+    {
+      "name": "current_user_active_company",
+      "stability": "STABLE",
+      "security": "SECURITY_DEFINER_MINIMAL",
+      "search_path": "public",
+      "identity": "auth.uid()",
+      "rollback": "DROP_FUNCTION_IF_EXISTS"
+    },
+    {
+      "name": "has_company_permission",
+      "stability": "STABLE",
+      "security": "SECURITY_DEFINER_MINIMAL",
+      "search_path": "public",
+      "identity": "auth.uid()",
+      "rollback": "DROP_FUNCTION_IF_EXISTS"
+    },
+    {
+      "name": "is_company_member",
+      "stability": "STABLE",
+      "security": "SECURITY_DEFINER_MINIMAL",
+      "search_path": "public",
+      "identity": "auth.uid()",
+      "rollback": "DROP_FUNCTION_IF_EXISTS"
+    },
+    {
+      "name": "assert_company_member",
+      "stability": "STABLE",
+      "security": "SECURITY_DEFINER_MINIMAL",
+      "search_path": "public",
+      "identity": "auth.uid()",
+      "rollback": "DROP_FUNCTION_IF_EXISTS"
+    },
+    {
+      "name": "company_role_of_user",
+      "stability": "STABLE",
+      "security": "SECURITY_DEFINER_MINIMAL",
+      "search_path": "public",
+      "identity": "auth.uid()",
+      "rollback": "DROP_FUNCTION_IF_EXISTS"
+    },
+    {
+      "name": "user_can_switch_company",
+      "stability": "STABLE",
+      "security": "SECURITY_DEFINER_MINIMAL",
+      "search_path": "public",
+      "identity": "auth.uid()",
+      "rollback": "DROP_FUNCTION_IF_EXISTS"
+    },
+    {
+      "name": "platform_admin_readonly_scope",
+      "stability": "STABLE",
+      "security": "SECURITY_DEFINER_MINIMAL",
+      "search_path": "public",
+      "identity": "auth.uid()",
+      "rollback": "DROP_FUNCTION_IF_EXISTS"
+    }
+  ],
+  "count": 8
+}

@@ -1,0 +1,12 @@
+{
+  "capability": "UNKNOWN_WITH_EVIDENCE_GAP",
+  "transaction_profile_default": "PER_UNIT_TX",
+  "lock_profile_default": "UNKNOWN_WITH_EVIDENCE_GAP",
+  "maintenance_window_required_for": [
+    "U_TENANT_INDEX_EXPANSION",
+    "U_UNIQUENESS_TRANSITION",
+    "U_CONSTRAINT_VALIDATION",
+    "U_RLS_TRANSITION_TO_FINAL"
+  ],
+  "concurrency_notes": "Postgres CREATE INDEX CONCURRENTLY não pode rodar em TX; documentar sem executar."
+}

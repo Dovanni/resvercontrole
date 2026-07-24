@@ -1,0 +1,20 @@
+{
+  "environment": "ISOLATED_OR_PROVEN_SAFE",
+  "data": "SANITIZED_OR_SYNTHETIC",
+  "validates": [
+    "sequence",
+    "dependencies",
+    "locks",
+    "duration",
+    "volume",
+    "backfill",
+    "constraints",
+    "indexes",
+    "RLS",
+    "application",
+    "rollback",
+    "baseline"
+  ],
+  "no_external_side_effects": true,
+  "dry_run_executed": false
+}

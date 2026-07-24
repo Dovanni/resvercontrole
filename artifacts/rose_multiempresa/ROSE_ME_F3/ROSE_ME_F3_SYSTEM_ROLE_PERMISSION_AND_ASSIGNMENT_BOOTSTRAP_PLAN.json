@@ -1,0 +1,18 @@
+{
+  "roles": [
+    "OWNER",
+    "ADMIN",
+    "FINANCIAL",
+    "COMMERCIAL",
+    "OPERATOR",
+    "AUDITOR",
+    "VIEWER"
+  ],
+  "roles_count": 7,
+  "permissions_count": 42,
+  "role_permission_assignments": 294,
+  "assignment_source": "F1_MATRIX",
+  "prohibited": "PLATFORM_ADMIN_FINANCIAL_ACCESS",
+  "roles_created": 0,
+  "permissions_created": 0
+}

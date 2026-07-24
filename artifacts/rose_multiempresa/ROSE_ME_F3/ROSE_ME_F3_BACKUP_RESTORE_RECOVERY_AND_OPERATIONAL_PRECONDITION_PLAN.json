@@ -1,0 +1,13 @@
+{
+  "backup_required_before_first_mutation": true,
+  "restore_test_required": true,
+  "rpo": "UNKNOWN_WITH_EVIDENCE_GAP",
+  "rto": "UNKNOWN_WITH_EVIDENCE_GAP",
+  "retention": "UNKNOWN_WITH_EVIDENCE_GAP",
+  "responsible_role": "HUMAN_DATABASE_OWNER",
+  "storage_preservation": true,
+  "auth_preservation": true,
+  "integration_preservation": true,
+  "backup_executed": false,
+  "restore_test_executed": false
+}

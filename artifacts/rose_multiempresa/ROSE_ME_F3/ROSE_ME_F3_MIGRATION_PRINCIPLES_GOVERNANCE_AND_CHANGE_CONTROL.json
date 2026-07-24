@@ -1,0 +1,25 @@
+{
+  "principles": [
+    "EXPAND_TRANSITION_CONTRACT",
+    "DENY_BY_DEFAULT_RLS",
+    "LEAST_PRIVILEGE",
+    "IDEMPOTENT_BACKFILL",
+    "ZERO_WINDOW_WITHOUT_RLS",
+    "NO_CROSS_TENANT_TEMPORARY_ACCESS",
+    "FOUR_EYES_APPROVAL",
+    "HUMAN_GATE_PER_STAGE",
+    "REVERSIBLE_BY_DEFAULT",
+    "BASELINE_PRESERVATION",
+    "NO_IRREVERSIBLE_WITHOUT_BACKUP",
+    "FEATURE_FLAG_AND_KILL_SWITCH",
+    "AUDIT_EVIDENCE",
+    "FAIL_CLOSED",
+    "NO_FRONTEND_ONLY_SECURITY"
+  ],
+  "change_control": {
+    "four_eyes_required": true,
+    "human_approval_required_for_f4": true,
+    "ownership_model_required": true,
+    "ownership_assigned": false
+  }
+}

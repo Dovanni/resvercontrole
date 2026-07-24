@@ -1,0 +1,25 @@
+{
+  "levels": [
+    {
+      "id": "R0",
+      "name": "ABORT_BEFORE_MUTATION",
+      "authority": "HUMAN_CHANGE_APPROVER"
+    },
+    {
+      "id": "R1",
+      "name": "UNIT_ROLLBACK",
+      "authority": "HUMAN_TECHNICAL_OWNER"
+    },
+    {
+      "id": "R2",
+      "name": "STAGE_ROLLBACK",
+      "authority": "HUMAN_TECHNICAL_OWNER + HUMAN_DATABASE_OWNER"
+    },
+    {
+      "id": "R3",
+      "name": "FULL_RESTORE",
+      "authority": "HUMAN_DATABASE_OWNER + HUMAN_PRODUCT_OWNER"
+    }
+  ],
+  "levels_defined": 4
+}

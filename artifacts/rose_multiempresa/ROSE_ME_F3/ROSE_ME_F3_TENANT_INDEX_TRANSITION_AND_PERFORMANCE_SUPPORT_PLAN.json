@@ -1,0 +1,14 @@
+{
+  "current_indexes": 53,
+  "classification": {
+    "PRESERVE_UNCHANGED": 25,
+    "EXTEND_WITH_EMPRESA_ID": 17,
+    "REPLACE_BY_TENANT_COMPOSITE_INDEX": 0,
+    "ADD_NEW_TENANT_INDEX": 17,
+    "REMOVE_ONLY_AFTER_VALIDATED_REPLACEMENT": 0,
+    "POTENTIALLY_REDUNDANT_REQUIRES_PERFORMANCE_EVIDENCE": 0
+  },
+  "future_indexes_planned": 34,
+  "creation_mode": "CONCURRENTLY_OUT_OF_TX",
+  "rollback": "DROP_INDEX_IF_EXISTS"
+}

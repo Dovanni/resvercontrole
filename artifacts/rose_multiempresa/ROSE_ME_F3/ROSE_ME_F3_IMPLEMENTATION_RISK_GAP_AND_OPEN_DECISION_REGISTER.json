@@ -1,0 +1,276 @@
+{
+  "risks": [
+    {
+      "id": "R01",
+      "topic": "BACKUP_CAPABILITY",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R02",
+      "topic": "RESTORE_CAPABILITY",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R03",
+      "topic": "MAINTENANCE_WINDOW",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R04",
+      "topic": "LOCK_PROFILE",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R05",
+      "topic": "TABLE_VOLUME",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R06",
+      "topic": "BACKFILL_BATCHES",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R07",
+      "topic": "CONCURRENCY",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R08",
+      "topic": "INDEX_CREATION",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R09",
+      "topic": "CONSTRAINT_VALIDATION",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R10",
+      "topic": "RLS_COMPAT",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R11",
+      "topic": "FRONTEND_TRANSITION",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R12",
+      "topic": "BACKEND_TRANSITION",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R13",
+      "topic": "INHERITED_TENANT",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R14",
+      "topic": "EMPRESA_UNIQUENESS",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R15",
+      "topic": "CANONICAL_COMPANY",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R16",
+      "topic": "OWNER_MEMBERSHIP",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R17",
+      "topic": "LAST_OWNER",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R18",
+      "topic": "LEGACY_STORAGE",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R19",
+      "topic": "INTEGRATIONS",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R20",
+      "topic": "JOBS",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R21",
+      "topic": "REPORTS",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R22",
+      "topic": "CACHE",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R23",
+      "topic": "COSTS",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R24",
+      "topic": "SUPPORT",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R25",
+      "topic": "ROLLBACK",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R26",
+      "topic": "TRAINING",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    },
+    {
+      "id": "R27",
+      "topic": "EXTERNAL_RELEASE",
+      "probability": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "impact": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "severity": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "stage": "MULTI",
+      "owner": "HUMAN_TECHNICAL_OWNER",
+      "state": "OPEN"
+    }
+  ],
+  "risks_count": 27,
+  "unresolved_material_gaps": 0
+}
