@@ -1,0 +1,9 @@
+{"op_06":{"previous_status":"BLOCKED_BY_HUMAN_ASSIGNMENT","new_status":"BLOCKED_BY_HUMAN_ASSIGNMENT","justification":"Zero papéis com aceite verificável; 10 UNASSIGNED."},
+"op_07":{"previous_status":"BLOCKED_BY_HUMAN_ASSIGNMENT","new_status":"BLOCKED_BY_HUMAN_ASSIGNMENT","justification":"Executor e aprovador não confirmados; sem duas identidades humanas distintas."},
+"op_05_reclassified_after_h1":false,"op_12_reclassified_after_h1":false,"op_13_reclassified_after_h1":false,"op_14_reclassified_after_h1":false,"op_15_reclassified_after_h1":false,
+"h1_assessment_completed":true,"h1_formally_homologated":false,"f4_human_governance_ready":false,
+"official_decision":"ROSE_ME_F4_OPR_H1_HUMAN_OWNERSHIP_AND_FOUR_EYES_FORMALIZATION_PARTIALLY_COMPLETED",
+"classification":"ROSE_ME_F4_HUMAN_GOVERNANCE_NOT_YET_COMPLETE_DUE_TO_UNASSIGNED_UNACCEPTED_OR_CONFLICTING_HUMAN_ROLES",
+"status":"ROSE_ME_F4_OPR_H1_COMPLETED_WITH_HUMAN_ASSIGNMENT_OR_ACCEPTANCE_GAPS_AWAITING_H1_REMEDIATION",
+"next_step":"ROSE-ME-F4-OPR-H1-R1","next_step_requires_explicit_human_authorization":true,
+"f4_eligible":true,"f4_authorized":false,"f4_started":false,"sql_authorized":false,"migration_authorized":false,"backfill_authorized":false,"implementation_authorized":false,"production_change_authorized":false}

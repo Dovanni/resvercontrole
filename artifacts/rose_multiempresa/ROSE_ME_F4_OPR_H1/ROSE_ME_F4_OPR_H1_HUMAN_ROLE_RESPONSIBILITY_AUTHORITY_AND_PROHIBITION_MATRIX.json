@@ -1,0 +1,12 @@
+{"matrix":[
+{"role":"HUMAN_PRODUCT_OWNER","authority":"autorizar F4 e mudança de produção","allowed":["autorizar","suspender","revogar"],"prohibited":["executar","aprovar sozinho execução técnica","substituir aprovador"]},
+{"role":"HUMAN_TECHNICAL_OWNER","authority":"revisar plano e pacote SQL","allowed":["revisar","exigir correção"],"prohibited":["autoaprovação","execução sem four-eyes"]},
+{"role":"HUMAN_DATABASE_OWNER","authority":"backup, restore, migração","allowed":["executar backup","executar restore","aplicar DDL autorizado"],"prohibited":["ignorar rollback","alterar baseline"]},
+{"role":"HUMAN_SECURITY_OWNER","authority":"RLS e isolamento","allowed":["revisar","bloquear cutover"],"prohibited":["conceder bypass permanente"]},
+{"role":"HUMAN_PRIVACY_OWNER","authority":"LGPD","allowed":["revisar","exigir minimização"],"prohibited":["autorizar coleta desnecessária"]},
+{"role":"HUMAN_FINANCIAL_VALIDATOR","authority":"validar baseline financeira","allowed":["validar","bloquear cutover","exigir rollback"],"prohibited":["executar backfill","alterar dados","validar a própria evidência"]},
+{"role":"HUMAN_CHANGE_APPROVER","authority":"aprovar gate","allowed":["aprovar","negar","suspender","revogar"],"prohibited":["executar","autoaprovação"]},
+{"role":"HUMAN_AUDIT_OBSERVER","authority":"observar e registrar","allowed":["observar","registrar","apontar divergência"],"prohibited":["modificar execução","ser executor"]},
+{"role":"HUMAN_EXECUTION_OPERATOR","authority":"executar unidades autorizadas","allowed":["executar conforme aprovado","registrar evidência","interromper"],"prohibited":["ampliar escopo","improvisar SQL","autoaprovar","alterar rollback"]},
+{"role":"HUMAN_ROLLBACK_AUTHORITY","authority":"abort e rollback","allowed":["R0","R1","R2","R3","interromper","bloquear cutover"],"prohibited":["depender do executor em incidente crítico"]}
+]}

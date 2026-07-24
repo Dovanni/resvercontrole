@@ -1,0 +1,9 @@
+{"mandatory_SOD_rules_defined":7,"rules":[
+{"id":"SOD-01","rule":"EXECUTION_OPERATOR != CHANGE_APPROVER"},
+{"id":"SOD-02","rule":"EXECUTION_OPERATOR != AUDIT_OBSERVER"},
+{"id":"SOD-03","rule":"EXECUTION_OPERATOR != FINANCIAL_VALIDATOR"},
+{"id":"SOD-04","rule":"EXECUTION_OPERATOR != ROLLBACK_AUTHORITY"},
+{"id":"SOD-05","rule":"mesma pessoa não executa e emite aprovação final"},
+{"id":"SOD-06","rule":"mesma pessoa não produz única evidência e é única validadora"},
+{"id":"SOD-07","rule":"IA não aprova, executa, audita ou ordena rollback"}
+],"mandatory_SOD_conflicts_found":0,"mandatory_SOD_conflicts_resolved":0,"mandatory_SOD_conflicts_unresolved":0,"note":"Conflitos não avaliáveis enquanto papéis UNASSIGNED."}

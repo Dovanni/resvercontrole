@@ -1,0 +1,1 @@
+{"execution_authority_defined":true,"execution_authority_activated":false,"execution_operator_assigned":false,"allowed":["executar somente unidades autorizadas","respeitar ordem aprovada","interromper por critério de abort","registrar evidência"],"prohibited":["ampliar escopo","improvisar SQL","alterar rollback","ignorar falha","autoaprovar"]}

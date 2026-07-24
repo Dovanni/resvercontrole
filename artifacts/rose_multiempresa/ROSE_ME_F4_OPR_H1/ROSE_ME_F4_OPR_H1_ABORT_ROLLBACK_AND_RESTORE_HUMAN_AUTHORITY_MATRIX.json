@@ -1,0 +1,6 @@
+{"rollback_authority_defined":true,"rollback_authority_activated":false,"rollback_authority_assigned":false,"rollback_authority_independent_from_executor":false,"rollback_authority_available":false,"levels":[
+{"level":"R0","name":"ABORT_BEFORE_MUTATION"},
+{"level":"R1","name":"UNIT_ROLLBACK"},
+{"level":"R2","name":"STAGE_ROLLBACK"},
+{"level":"R3","name":"FULL_RESTORE"}
+]}

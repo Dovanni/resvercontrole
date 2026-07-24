@@ -1,0 +1,12 @@
+{"human_roles_required":10,"roles":[
+{"id":"HR-01","name":"HUMAN_PRODUCT_OWNER","purpose":"finalidade, escopo, valor e limites do programa"},
+{"id":"HR-02","name":"HUMAN_TECHNICAL_OWNER","purpose":"arquitetura técnica e coerência das dependências"},
+{"id":"HR-03","name":"HUMAN_DATABASE_OWNER","purpose":"banco, backup, restore, locks, migrations, integridade"},
+{"id":"HR-04","name":"HUMAN_SECURITY_OWNER","purpose":"RLS, isolamento, ameaças, testes negativos, incidentes"},
+{"id":"HR-05","name":"HUMAN_PRIVACY_OWNER","purpose":"LGPD, minimização, finalidade, proteção de dados"},
+{"id":"HR-06","name":"HUMAN_FINANCIAL_VALIDATOR","purpose":"baseline, totais financeiros, não regressão"},
+{"id":"HR-07","name":"HUMAN_CHANGE_APPROVER","purpose":"aprovação formal do gate operacional"},
+{"id":"HR-08","name":"HUMAN_AUDIT_OBSERVER","purpose":"observar, registrar, contestar execução"},
+{"id":"HR-09","name":"HUMAN_EXECUTION_OPERATOR","purpose":"executar unidades autorizadas"},
+{"id":"HR-10","name":"HUMAN_ROLLBACK_AUTHORITY","purpose":"abort, rollback, restore"}
+],"ai_may_occupy_human_role":false}

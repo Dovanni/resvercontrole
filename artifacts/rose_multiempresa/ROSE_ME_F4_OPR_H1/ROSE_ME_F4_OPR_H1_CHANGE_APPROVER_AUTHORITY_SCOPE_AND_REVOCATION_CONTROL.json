@@ -1,0 +1,1 @@
+{"approval_authority_defined":true,"approval_authority_activated":false,"change_approver_assigned":false,"allowed":["aprovar","negar","suspender","exigir correção","limitar janela","revogar autorização","verificar precondições"],"prohibited":["executar a própria aprovação","autoaprovar"]}
