@@ -1,0 +1,9 @@
+{
+  "remaining_gaps": 0,
+  "corrected_risks": [
+    {"id": "R-CORR-01", "desc": "F0 risk register assumed no physical FKs; rollback plan must be revised to respect 47 validated FKs with CASCADE/SET NULL/RESTRICT semantics.", "sev": "MEDIUM", "state": "DOCUMENTED_FOR_F1"},
+    {"id": "R-CORR-02", "desc": "Unique constraints on (user_id, ...) will conflict when empresa_id is introduced; must be recreated as (empresa_id, ...) in F6.", "sev": "HIGH", "state": "CARRIED_FROM_F0"},
+    {"id": "R-CORR-03", "desc": "Two partial indexes exist in public schema; verify predicates remain valid after empresa_id column addition.", "sev": "LOW", "state": "DOCUMENTED_FOR_F1"}
+  ],
+  "new_gaps_opened": 0
+}

@@ -1,0 +1,19 @@
+{
+  "scope": "public schema, application tables only",
+  "source": "pg_index + pg_indexes (read-only)",
+  "original_indexes_value": -1,
+  "original_indexes_value_valid": false,
+  "index_reconciliation_status": "RECONCILED",
+  "index_reconciliation_cause": "Original F0 collector emitted sentinel -1 because the pg_index query was not instrumented. Catalog is accessible; reconciled by direct read-only query.",
+  "indexes_total": 53,
+  "primary_key_indexes": 25,
+  "unique_indexes": 7,
+  "non_unique_indexes": 21,
+  "partial_indexes": 2,
+  "expression_indexes": 0,
+  "composite_indexes": 19,
+  "single_column_indexes": 34,
+  "invalid_indexes": 0,
+  "indexes_not_ready": 0,
+  "indexes_with_unknown_classification": 0
+}

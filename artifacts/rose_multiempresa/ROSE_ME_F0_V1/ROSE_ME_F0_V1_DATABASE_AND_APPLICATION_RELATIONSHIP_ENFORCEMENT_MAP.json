@@ -1,0 +1,22 @@
+{
+  "relationship_enforcement_reviewed": true,
+  "database_enforced_foreign_key_relationships": 47,
+  "database_enforced_other_relationships": 5,
+  "trigger_enforced_relationships": 21,
+  "application_only_relationships": 0,
+  "inferred_not_enforced_relationships": 0,
+  "unresolved_relationships": 0,
+  "on_delete_actions": {
+    "CASCADE": 31,
+    "SET_NULL": 14,
+    "RESTRICT": 2,
+    "NO_ACTION": 0
+  },
+  "validated_constraints": 47,
+  "not_validated_constraints": 0,
+  "multitenancy_risks": [
+    "FKs cascade to auth.users(id) — deleting a user cascades to tenant data; must be preserved when introducing empresa_id.",
+    "SET NULL on customer_id/supplier_id/bank_account_id allows orphaned tenant rows; empresa_id backfill must remain intact regardless.",
+    "Unique constraints scoped to user_id (categorias_contas_pagar, payment_routing_rules) must become (empresa_id, ...) in F6."
+  ]
+}

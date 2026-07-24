@@ -1,0 +1,45 @@
+{
+  "original_evidence_gaps_declared": 2,
+  "evidence_gaps_identified": 2,
+  "evidence_gaps_resolved": 2,
+  "evidence_gaps_partially_resolved": 0,
+  "evidence_gaps_unresolved": 0,
+  "non_material_gaps": 0,
+  "material_non_blocking_gaps": 2,
+  "material_blocking_gaps": 0,
+  "critical_gaps": 0,
+  "gaps": [
+    {
+      "evidence_gap_id": "GAP-01",
+      "title": "Index count not instrumented (sentinel -1)",
+      "description": "F0 reported database_indexes_found = -1, an impossible negative object count.",
+      "source_artifact": "ROSE_ME_F0_DATABASE_CATALOG_AND_OBJECT_INVENTORY.json",
+      "affected_field": "database_indexes_found",
+      "cause": "Collector emitted sentinel value; pg_index query was not executed in F0.",
+      "evidence_available": "pg_index read-only query in V1 returned 53 indexes across public schema.",
+      "impact": "Prevented accurate structural inventory; does not affect baseline or tenant data.",
+      "materiality": "MATERIAL_BUT_NOT_BLOCKING_F1",
+      "risk": "Underestimation of migration surface for index rebuilds during multitenancy backfill.",
+      "read_only_remediation_possible": true,
+      "state_after_v1": "RESOLVED_IN_V1",
+      "future_action_required": "None — reconciled count adopted.",
+      "responsible_gate": "ROSE-ME-F0-V1"
+    },
+    {
+      "evidence_gap_id": "GAP-02",
+      "title": "Constraint count zero and 'no physical FKs' misstatement",
+      "description": "F0 reported database_constraints_found = 0 and stated 'no physical FKs detected'; both are incorrect.",
+      "source_artifact": "ROSE_ME_F0_DATABASE_CATALOG_AND_OBJECT_INVENTORY.json + ROSE_ME_F0_SINGLE_COMPANY_ASSUMPTION_AND_HARDCODED_DEPENDENCY_MAP.json (SCD-005 wording)",
+      "affected_field": "database_constraints_found; SCD-005 evidence text",
+      "cause": "pg_constraint query not instrumented in F0.",
+      "evidence_available": "pg_constraint read-only query in V1 returned 100 constraints (25 PK + 47 FK + 5 UNIQUE + 23 CHECK).",
+      "impact": "Under-reported referential integrity coverage; would have led to over-engineering trigger-based integrity in F1.",
+      "materiality": "MATERIAL_BUT_NOT_BLOCKING_F1",
+      "risk": "Rollback/migration plan must account for existing CASCADE and SET NULL semantics.",
+      "read_only_remediation_possible": true,
+      "state_after_v1": "RESOLVED_IN_V1",
+      "future_action_required": "F1 rollback design must respect the 47 existing FKs and their actions.",
+      "responsible_gate": "ROSE-ME-F0-V1"
+    }
+  ]
+}

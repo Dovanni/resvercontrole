@@ -1,0 +1,15 @@
+{
+  "scope": "public schema",
+  "source": "pg_constraint (read-only)",
+  "original_constraints_value": 0,
+  "constraint_reconciliation_status": "RECONCILED",
+  "constraints_total": 100,
+  "primary_key_constraints": 25,
+  "foreign_key_constraints": 47,
+  "unique_constraints": 5,
+  "check_constraints": 23,
+  "exclusion_constraints": 0,
+  "other_pg_constraint_objects": 0,
+  "not_null_columns": 208,
+  "notes": "not_null_columns are tracked separately and are NOT summed into constraints_total (pg_constraint source). Original F0 statement 'no physical FKs detected' is corrected: 47 validated FKs exist in public schema."
+}
