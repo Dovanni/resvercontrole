@@ -1,0 +1,7 @@
+{
+  "operational_window_requirements_defined": true,
+  "operational_window_defined": false,
+  "operational_window_approved": false,
+  "criteria": ["date/time","timezone","max duration","observation window","low usage period","communication","change freeze","responsibles available","backup done","restore proven","dry-run approved","rollback ready","monitoring","extension criteria","cancellation criteria","downtime plan","return plan"],
+  "future_gate": "ROSE-ME-F4-OPR-W1"
+}

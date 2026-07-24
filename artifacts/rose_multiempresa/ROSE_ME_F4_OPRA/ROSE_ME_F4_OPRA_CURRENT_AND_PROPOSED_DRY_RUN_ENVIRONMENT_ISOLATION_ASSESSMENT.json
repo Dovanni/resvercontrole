@@ -1,0 +1,17 @@
+{
+  "current_environment_code": "ROSE-CURRENT-01",
+  "current_environment_role": "OPERATIONAL_PRODUCTION",
+  "current_environment_may_be_used_for_dry_run": false,
+  "proposed_dry_run_environment_code": "ROSE-ME-DRYRUN-01",
+  "proposed_environment_classification": "PROPOSED_ISOLATED_ROSE_MULTITENANCY_DRY_RUN_ENVIRONMENT",
+  "dry_run_environment_contract_defined": true,
+  "dry_run_environment_created": false,
+  "isolation_requirements": [
+    "database isolation","auth isolation","storage isolation","secrets isolation",
+    "integrations isolation","no real billing","no real emails","no real webhooks",
+    "no real Mercado Pago","synthetic or sanitized data","known region",
+    "unique identity","non-production banner","own kill switch","separated logs",
+    "restricted access","controlled destruction","no METRIXHR connectivity"
+  ],
+  "status": "DRY_RUN_ENVIRONMENT_NOT_DEFINED"
+}

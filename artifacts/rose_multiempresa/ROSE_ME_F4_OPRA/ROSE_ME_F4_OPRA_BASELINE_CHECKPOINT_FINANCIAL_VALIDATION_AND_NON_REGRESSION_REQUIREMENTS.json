@@ -1,0 +1,10 @@
+{
+  "baseline_sha256": "689af23fb305255932cf86b48d4774775877d4a65061528e11b61487192a9a39",
+  "baseline_changed": false,
+  "baseline_validation_requirements_defined": true,
+  "financial_validator_required": true,
+  "checkpoints_defined": 9,
+  "validation_dimensions": ["per-table counts","records","sales","revenue","expenses","payables","receivables","cash flow","costs","profits","cards","reports","dashboards","monthly totals","annual totals","orphans","duplicates","null tenants","unexpected tenants"],
+  "divergence_actions": ["stop","block cutover","trigger rollback","require human decision"],
+  "recomputation_performed": false
+}

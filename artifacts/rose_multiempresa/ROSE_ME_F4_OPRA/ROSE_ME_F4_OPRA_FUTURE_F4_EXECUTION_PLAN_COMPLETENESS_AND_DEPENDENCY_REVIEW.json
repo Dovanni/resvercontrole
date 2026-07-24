@@ -1,0 +1,19 @@
+{
+  "execution_plan_documentarily_reviewable": true,
+  "execution_plan_human_reviewed": false,
+  "reconciled": {
+    "stages": 12,
+    "units": 51,
+    "dependencies": 47,
+    "direct_tables": 17,
+    "inherited_tables": 6,
+    "future_indexes": 34,
+    "future_constraints": 40,
+    "helpers": 8,
+    "rls_transition_plans": 100,
+    "baseline_checkpoints": 9,
+    "rollback_levels": 4
+  },
+  "properties_evaluated": ["completeness","ordering","dependencies","idempotency","reversibility","unknown locks","unknown duration","unknown capacity","EXPAND/TRANSITION/CONTRACT segregation","no early removals","no backfill in initial EXPAND"],
+  "future_gate": "ROSE-ME-F4-OPR-P1"
+}

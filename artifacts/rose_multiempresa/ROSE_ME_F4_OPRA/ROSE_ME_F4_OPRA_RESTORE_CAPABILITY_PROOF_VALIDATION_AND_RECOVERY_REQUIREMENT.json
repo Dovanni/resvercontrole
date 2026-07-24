@@ -1,0 +1,9 @@
+{
+  "restore_capability_status": "UNKNOWN_EVIDENCE_REQUIRED",
+  "restore_test_status": "NOT_EXECUTED",
+  "restore_proven": false,
+  "requirements": ["destination environment","scope","responsible","integrity","sequence","dependencies","validation","baseline","auth","storage","integrations","risk","limitations"],
+  "capability_vs_proof_separation": true,
+  "backup_without_restore_is_insufficient": true,
+  "future_gate": "ROSE-ME-F4-OPR-R1"
+}

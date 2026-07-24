@@ -1,0 +1,27 @@
+{
+  "dry_run_plan_defined": true,
+  "dry_run_environment_created": false,
+  "dry_run_executed": false,
+  "coverage": {
+    "stages": 12,
+    "migration_units": 51,
+    "direct_tables": 17,
+    "inherited_tables": 6,
+    "current_indexes": 53,
+    "future_indexes": 34,
+    "rls_contracts": 100,
+    "future_constraints": 40,
+    "helpers": 8,
+    "baseline_checkpoints": 9,
+    "rollback_levels": 4,
+    "unknown_batching_tables": ["compras","controle_vendas_diario","finance_entries","sales"]
+  },
+  "acceptance_criteria": [
+    "only approved package executed",
+    "feature flag tested","kill switch tested",
+    "no external side effects",
+    "locks and duration measured (no invented values)",
+    "human homologation required"
+  ],
+  "future_gate": "ROSE-ME-F4-OPR-D1"
+}

@@ -1,0 +1,7 @@
+{
+  "future_sql_package_contract_defined": true,
+  "future_sql_package_created": false,
+  "future_sql_package_reviewed": false,
+  "requirements": ["generated only at own gate","split by unit","no secrets","no real data","DDL/DML separated","institutional comments","preconditions","idempotency","transaction boundaries","lock warnings","forward checks","correlated rollback","hashes","human review","security review","database review","four-eyes approval","no automatic execution"],
+  "future_gate": "ROSE-ME-F4-OPR-P1"
+}

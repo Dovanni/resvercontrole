@@ -1,0 +1,10 @@
+{
+  "direct_tables_reconciled": 17,
+  "single_transaction_candidates": 13,
+  "unknown_pending_f4": 4,
+  "unknown_tables": ["compras","controle_vendas_diario","finance_entries","sales"],
+  "single_transaction_classification": "SINGLE_TRANSACTION_POTENTIALLY_ACCEPTABLE_PENDING_F4_PREFLIGHT",
+  "unknown_classification": "UNKNOWN_REQUIRES_F4_CAPABILITY_AND_VOLUME_VALIDATION",
+  "future_measurements_required": ["row count","table size","index size","trigger impact","FK impact","lock level","lock duration","timeout","WAL","concurrency","window activity","safe batch","pause","resume","idempotency"],
+  "measurements_executed": false
+}

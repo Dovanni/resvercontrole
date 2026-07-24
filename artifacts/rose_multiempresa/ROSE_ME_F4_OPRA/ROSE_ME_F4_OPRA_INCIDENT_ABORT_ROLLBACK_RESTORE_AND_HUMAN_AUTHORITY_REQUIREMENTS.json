@@ -1,0 +1,12 @@
+{
+  "rollback_levels_reconciled": 4,
+  "rollback_authority_assigned": false,
+  "levels": [
+    {"level":"R0","name":"ABORT_BEFORE_MUTATION","trigger":"any precondition failure before write","authority":"HUMAN_ROLLBACK_AUTHORITY"},
+    {"level":"R1","name":"UNIT_ROLLBACK","trigger":"single unit failure","authority":"HUMAN_ROLLBACK_AUTHORITY"},
+    {"level":"R2","name":"STAGE_ROLLBACK","trigger":"stage-level failure","authority":"HUMAN_ROLLBACK_AUTHORITY"},
+    {"level":"R3","name":"FULL_RESTORE","trigger":"catastrophic failure or baseline divergence","authority":"HUMAN_DATABASE_OWNER + HUMAN_ROLLBACK_AUTHORITY"}
+  ],
+  "future_blockers": ["rollback without owner","restore not proven","baseline divergence","cross-tenant RLS","wrong tenant","loss","duplication","excessive lock","timeout","function with bypass","kill switch unavailable","backup absent"],
+  "executed": false
+}
