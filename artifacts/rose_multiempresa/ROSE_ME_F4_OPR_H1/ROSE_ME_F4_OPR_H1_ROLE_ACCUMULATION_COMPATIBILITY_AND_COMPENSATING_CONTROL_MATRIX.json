@@ -1,0 +1,9 @@
+{"role_accumulations_found":0,"role_accumulations_compatible":0,"role_accumulations_with_compensating_controls":0,"role_accumulations_conflicting":0,"potential_compatible_pairs":[
+{"pair":["PRODUCT_OWNER","PRIVACY_OWNER"],"classification":"COMPATIBLE"},
+{"pair":["PRODUCT_OWNER","CHANGE_APPROVER"],"classification":"COMPATIBLE_WITH_ADDITIONAL_CONTROL"},
+{"pair":["TECHNICAL_OWNER","DATABASE_OWNER"],"classification":"COMPATIBLE_WITH_ADDITIONAL_CONTROL"},
+{"pair":["TECHNICAL_OWNER","EXECUTION_OPERATOR"],"classification":"COMPATIBLE_WITH_ADDITIONAL_CONTROL"},
+{"pair":["SECURITY_OWNER","AUDIT_OBSERVER"],"classification":"COMPATIBLE"},
+{"pair":["DATABASE_OWNER","ROLLBACK_AUTHORITY"],"classification":"COMPATIBLE_WITH_ADDITIONAL_CONTROL"},
+{"pair":["FINANCIAL_VALIDATOR","AUDIT_OBSERVER"],"classification":"COMPATIBLE"}
+],"note":"Avaliação real requer papéis atribuídos."}
