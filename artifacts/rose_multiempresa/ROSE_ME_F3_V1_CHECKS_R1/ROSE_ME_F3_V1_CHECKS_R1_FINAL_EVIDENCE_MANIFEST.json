@@ -1,0 +1,31 @@
+{
+  "framework": "ROSE-ME-F3-V1-CHECKS-R1",
+  "version": "1.0",
+  "artifacts_total": 6,
+  "documentation_files": 1,
+  "json_evidence_files": 4,
+  "manifest_files": 1,
+  "files": [
+    {"name":"docs/ROSE_ME_F3_V1_CHECKS_R1_NON_DUPLICATIVE_ADDITIONAL_VALIDATION_AND_FORMAL_HOMOLOGATION_v1.md","sha256":"ba3fa9db421ac9f8eb6299d89db65d04a0c41ab41b421c22bd060cd199293953"},
+    {"name":"artifacts/rose_multiempresa/ROSE_ME_F3_V1_CHECKS_R1/ROSE_ME_F3_V1_CHECKS_R1_PRECONDITION_ARTIFACT_HASH_AND_BASELINE_RECONCILIATION.json","sha256":"e41e1efcedd77710a5d9b7899d11a394d5b3591e5d84921e90dec27f60641e0c"},
+    {"name":"artifacts/rose_multiempresa/ROSE_ME_F3_V1_CHECKS_R1/ROSE_ME_F3_V1_CHECKS_R1_ADDITIONAL_NON_DUPLICATIVE_CHECK_REGISTER.json","sha256":"23324f7c635f5ffe0ac15dca4dfc7204a32ed8bca305662e03375098c5fcd6de"},
+    {"name":"artifacts/rose_multiempresa/ROSE_ME_F3_V1_CHECKS_R1/ROSE_ME_F3_V1_CHECKS_R1_CUMULATIVE_MINIMUM_CHECK_RECONCILIATION.json","sha256":"8a146a05255f37e92698f89a2b02b451fef2f7d67319d8a6f4307bcc0f986392"},
+    {"name":"artifacts/rose_multiempresa/ROSE_ME_F3_V1_CHECKS_R1/ROSE_ME_F3_V1_CHECKS_R1_SECURITY_NO_MUTATION_AND_FORMAL_HOMOLOGATION_DECISION.json","sha256":"de4edc3d01030ac6e5c03aeb2b17c33dd77c743039f4dde951d09ac5bd241302"}
+  ],
+  "baseline_sha256": "689af23fb305255932cf86b48d4774775877d4a65061528e11b61487192a9a39",
+  "baseline_changed": false,
+  "original_f3_files_modified": 0,
+  "original_f3_v1_files_modified": 0,
+  "database_modified": false,
+  "project_published": false,
+  "previous_checks_passed": 334,
+  "additional_checks_passed": 106,
+  "cumulative_checks_inventory": 440,
+  "cumulative_checks_executed": 440,
+  "cumulative_checks_passed": 440,
+  "cumulative_checks_failed": 0,
+  "f3_formally_homologated": true,
+  "f4_eligible": true,
+  "f4_authorized": false,
+  "status": "ROSE_ME_F3_V1_CHECKS_R1_COMPLETED_F3_FORMALLY_HOMOLOGATED_AWAITING_EXPLICIT_HUMAN_AUTHORIZATION_AND_OPERATIONAL_PRECONDITIONS_FOR_ROSE_ME_F4"
+}
