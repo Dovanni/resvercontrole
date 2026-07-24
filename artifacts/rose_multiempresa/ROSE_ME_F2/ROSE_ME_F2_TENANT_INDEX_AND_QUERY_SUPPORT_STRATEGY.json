@@ -1,0 +1,136 @@
+{
+  "current_indexes": 53,
+  "new_indexes": [
+    {
+      "table": "empresa_membros",
+      "cols": [
+        "empresa_id",
+        "status"
+      ]
+    },
+    {
+      "table": "empresa_membros",
+      "cols": [
+        "usuario_id",
+        "status"
+      ]
+    },
+    {
+      "table": "empresa_convites",
+      "cols": [
+        "empresa_id",
+        "status"
+      ]
+    },
+    {
+      "table": "empresa_audit_logs",
+      "cols": [
+        "empresa_id",
+        "occurred_at"
+      ]
+    },
+    {
+      "table": "aportes_financeiros",
+      "cols": [
+        "empresa_id"
+      ]
+    },
+    {
+      "table": "audit_log",
+      "cols": [
+        "empresa_id"
+      ]
+    },
+    {
+      "table": "bank_accounts",
+      "cols": [
+        "empresa_id"
+      ]
+    },
+    {
+      "table": "cartoes_credito",
+      "cols": [
+        "empresa_id"
+      ]
+    },
+    {
+      "table": "categorias_contas_pagar",
+      "cols": [
+        "empresa_id"
+      ]
+    },
+    {
+      "table": "company_settings",
+      "cols": [
+        "empresa_id"
+      ]
+    },
+    {
+      "table": "compras",
+      "cols": [
+        "empresa_id"
+      ]
+    },
+    {
+      "table": "controle_vendas_diario",
+      "cols": [
+        "empresa_id"
+      ]
+    },
+    {
+      "table": "controle_vendas_fornecedor",
+      "cols": [
+        "empresa_id"
+      ]
+    },
+    {
+      "table": "customers",
+      "cols": [
+        "empresa_id"
+      ]
+    },
+    {
+      "table": "finance_entries",
+      "cols": [
+        "empresa_id"
+      ]
+    },
+    {
+      "table": "payables",
+      "cols": [
+        "empresa_id"
+      ]
+    },
+    {
+      "table": "payment_routing_rules",
+      "cols": [
+        "empresa_id"
+      ]
+    },
+    {
+      "table": "products",
+      "cols": [
+        "empresa_id"
+      ]
+    },
+    {
+      "table": "receivables",
+      "cols": [
+        "empresa_id"
+      ]
+    },
+    {
+      "table": "sales",
+      "cols": [
+        "empresa_id"
+      ]
+    },
+    {
+      "table": "suppliers",
+      "cols": [
+        "empresa_id"
+      ]
+    }
+  ],
+  "created": false
+}

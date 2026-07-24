@@ -1,0 +1,17 @@
+{
+  "framework_parent": "ROSE-ME-F1",
+  "f1_artifacts_expected": 24,
+  "f1_artifacts_found": 24,
+  "f1_hashes_verified": 24,
+  "f1_hash_mismatches": 0,
+  "f1_checks_verified": 728,
+  "f1_checks_failed": 0,
+  "principles": 15,
+  "roles": 7,
+  "permissions": 42,
+  "membership_statuses": 5,
+  "trust_boundaries": 15,
+  "constitutional_threats": 30,
+  "target_architecture": "ROSE_NATIVE_SHARED_APPLICATION_ISOLATED_TENANT_DATA_ARCHITECTURE",
+  "readiness": "READY_FOR_CANONICAL_MULTITENANCY_DATA_MODEL"
+}

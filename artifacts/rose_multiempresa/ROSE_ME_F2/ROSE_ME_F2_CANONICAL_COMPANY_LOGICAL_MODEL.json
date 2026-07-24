@@ -1,0 +1,36 @@
+{
+  "entity": "empresas",
+  "attributes": [
+    "id",
+    "nome_empresarial",
+    "nome_fantasia",
+    "documento_empresarial",
+    "documento_normalizado",
+    "status",
+    "modalidade",
+    "timezone",
+    "moeda",
+    "locale",
+    "criado_em",
+    "atualizado_em",
+    "criado_por",
+    "suspenso_em",
+    "encerrado_em",
+    "metadata_minimizada"
+  ],
+  "statuses": [
+    "ACTIVE",
+    "SUSPENDED",
+    "CLOSING",
+    "CLOSED"
+  ],
+  "pk": "id (uuid)",
+  "unique": [
+    "documento_normalizado"
+  ],
+  "checks": [
+    "status IN domain",
+    "documento_empresarial protegido"
+  ],
+  "created": false
+}

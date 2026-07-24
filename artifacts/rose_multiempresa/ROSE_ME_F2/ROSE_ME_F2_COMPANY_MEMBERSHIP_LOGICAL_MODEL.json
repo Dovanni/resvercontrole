@@ -1,0 +1,36 @@
+{
+  "entity": "empresa_membros",
+  "attributes": [
+    "id",
+    "empresa_id",
+    "usuario_id",
+    "papel_id",
+    "status",
+    "convidado_por",
+    "convidado_em",
+    "aceito_em",
+    "suspenso_em",
+    "removido_em",
+    "criado_em",
+    "atualizado_em",
+    "motivo_status",
+    "versao"
+  ],
+  "statuses": [
+    "INVITED",
+    "ACTIVE",
+    "SUSPENDED",
+    "REMOVED",
+    "EXPIRED"
+  ],
+  "pk": "id (uuid)",
+  "fks": [
+    "empresa_id->empresas",
+    "usuario_id->auth.users",
+    "papel_id->empresa_papeis"
+  ],
+  "unique": [
+    "(empresa_id,usuario_id) WHERE status='ACTIVE'"
+  ],
+  "created": false
+}

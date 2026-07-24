@@ -1,0 +1,28 @@
+{
+  "entity": "empresa_audit_logs",
+  "attributes": [
+    "id",
+    "empresa_id",
+    "membership_id",
+    "actor_user_id",
+    "action",
+    "resource_type",
+    "resource_id",
+    "result",
+    "reason_code",
+    "correlation_id",
+    "source",
+    "occurred_at",
+    "metadata_redacted",
+    "ip_hash",
+    "user_agent_reduced"
+  ],
+  "append_only": true,
+  "redacted_fields": [
+    "secrets",
+    "senhas",
+    "cartoes",
+    "payloads_financeiros"
+  ],
+  "created": false
+}

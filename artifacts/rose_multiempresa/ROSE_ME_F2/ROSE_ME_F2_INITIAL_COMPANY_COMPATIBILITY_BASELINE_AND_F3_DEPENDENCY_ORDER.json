@@ -1,0 +1,31 @@
+{
+  "initial_canonical_company_candidate": "Angela Maria Momo Rodrigues MEI",
+  "initial_company_created": false,
+  "initial_company_backfill_executed": false,
+  "baseline_sha256": "689af23fb305255932cf86b48d4774775877d4a65061528e11b61487192a9a39",
+  "baseline_changed": false,
+  "f3_dependency_order": [
+    "helpers",
+    "empresas",
+    "empresa_papeis",
+    "empresa_permissoes",
+    "empresa_papel_permissoes",
+    "empresa_membros",
+    "empresa_convites",
+    "usuario_empresa_preferencias",
+    "empresa_audit_logs",
+    "add_empresa_id",
+    "initial_indexes",
+    "backfill_initial_company",
+    "orphan_validation",
+    "additional_constraints",
+    "not_null_final",
+    "rls",
+    "storage",
+    "integrations",
+    "interface",
+    "synthetic_company",
+    "isolation_tests",
+    "homologation"
+  ]
+}

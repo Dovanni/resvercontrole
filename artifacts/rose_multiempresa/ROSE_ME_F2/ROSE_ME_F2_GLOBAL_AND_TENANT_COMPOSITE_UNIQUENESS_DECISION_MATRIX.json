@@ -1,0 +1,34 @@
+{
+  "decisions": [
+    {
+      "target": "products.sku",
+      "action": "TENANT_COMPOSITE_UNIQUENESS_REQUIRED",
+      "final": "(empresa_id,sku)"
+    },
+    {
+      "target": "customers.email",
+      "action": "TENANT_COMPOSITE_UNIQUENESS_REQUIRED",
+      "final": "(empresa_id,email)"
+    },
+    {
+      "target": "suppliers.documento",
+      "action": "TENANT_COMPOSITE_UNIQUENESS_REQUIRED",
+      "final": "(empresa_id,documento)"
+    },
+    {
+      "target": "empresas.documento_normalizado",
+      "action": "GLOBAL_UNIQUENESS_REMAINS_VALID"
+    },
+    {
+      "target": "empresa_permissoes.codigo",
+      "action": "GLOBAL_UNIQUENESS_REMAINS_VALID"
+    },
+    {
+      "target": "empresa_papeis (codigo)",
+      "action": "TENANT_COMPOSITE_UNIQUENESS_REQUIRED",
+      "final": "(empresa_id,codigo)"
+    }
+  ],
+  "current_unique_constraints": 5,
+  "created": false
+}
