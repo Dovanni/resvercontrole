@@ -1,0 +1,292 @@
+{
+  "tables_reviewed": 25,
+  "rls_enabled_tables": 25,
+  "rls_forced_tables": 0,
+  "policies_total": 25,
+  "roles_used": [
+    "authenticated",
+    "public"
+  ],
+  "critical_findings": [
+    "Multiple policies target the 'public' role rather than 'authenticated' — functionally similar via auth.uid() but not best-practice.",
+    "audit_log has no INSERT policy — only SELECT for own rows; writes rely on SECURITY DEFINER trigger.",
+    "No empresa_id predicate exists in any policy."
+  ],
+  "policies": [
+    {
+      "table": "aportes_financeiros",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "authenticated",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "audit_log",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "authenticated",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "NOT_EXPOSED_TO_CLIENT"
+    },
+    {
+      "table": "bank_accounts",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "bank_movements",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "cartoes_credito",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "cartoes_faturas",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "cartoes_lancamentos",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "categorias_contas_pagar",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "company_settings",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "authenticated",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "compras",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "compras_itens",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "controle_vendas_diario",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "authenticated",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "controle_vendas_fornecedor",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "authenticated",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "controle_vendas_fornecedor_historico",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "customers",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "finance_entries",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "payables",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "payment_routing_rules",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "products",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "profiles",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "DENY_BY_DEFAULT_COMPATIBLE"
+    },
+    {
+      "table": "receivables",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "sale_items",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "sales",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "suppliers",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "public",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "ISOLATED_FOR_CURRENT_SINGLE_COMPANY_ONLY"
+    },
+    {
+      "table": "user_roles",
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies_count": 1,
+      "policy_role": "authenticated",
+      "policy_predicate": "auth.uid() = user_id",
+      "cross_tenant_risk_today": "NONE (single operator)",
+      "future_multi_tenant_risk": "HIGH — no empresa_id filter; multi-company users would see only their own auth.uid rows but any user with membership in multiple companies would see mixed data unless empresa_id is added",
+      "classification": "DENY_BY_DEFAULT_COMPATIBLE"
+    }
+  ]
+}

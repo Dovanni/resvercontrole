@@ -1,0 +1,116 @@
+{
+  "phases": [
+    {
+      "code": "F1",
+      "name": "Constituição Multiempresa",
+      "goal": "Definir princípios, glossário, escopos",
+      "gate": "human",
+      "actions": [
+        "Documentar arquitetura alvo",
+        "Definir vocabulário empresas/membros/papéis"
+      ]
+    },
+    {
+      "code": "F2",
+      "name": "Modelo Canônico",
+      "goal": "Schema empresas/empresa_membros/empresa_papeis",
+      "actions": [
+        "Especificar tabelas",
+        "Especificar RLS futura",
+        "Especificar auditoria"
+      ]
+    },
+    {
+      "code": "F3",
+      "name": "Migration + Backfill + Rollback",
+      "goal": "Projeto SQL reversível",
+      "actions": [
+        "Migration idempotente",
+        "Script backfill",
+        "Script rollback",
+        "Baseline pré-migração"
+      ]
+    },
+    {
+      "code": "F4",
+      "name": "Implementação Estrutural",
+      "goal": "Aplicar CREATE/ALTER controlado",
+      "actions": [
+        "Adicionar empresa_id nullable",
+        "Adicionar tabelas empresas/empresa_membros"
+      ]
+    },
+    {
+      "code": "F5",
+      "name": "Associação da Empresa Atual",
+      "goal": "Backfill 100% linhas → empresa canônica",
+      "actions": [
+        "INSERT empresa Angela Maria Momo Rodrigues MEI",
+        "UPDATE empresa_id em 22 tabelas + audit_log"
+      ]
+    },
+    {
+      "code": "F6",
+      "name": "RLS + Isolamento",
+      "goal": "Reescrever policies para (empresa_id, membership)",
+      "actions": [
+        "Drop policies user_id-only",
+        "Create policies empresa_id",
+        "Tornar empresa_id NOT NULL"
+      ]
+    },
+    {
+      "code": "F7",
+      "name": "UI Empresa Ativa",
+      "goal": "Contexto de empresa no frontend",
+      "actions": [
+        "Company switcher",
+        "Gestão de membros",
+        "Convites"
+      ]
+    },
+    {
+      "code": "F8",
+      "name": "Empresa Sintética de Homologação",
+      "goal": "Empresa teste isolada",
+      "actions": [
+        "Criar empresa sandbox",
+        "Popular dados falsos",
+        "Validar isolamento"
+      ]
+    },
+    {
+      "code": "F9",
+      "name": "Testes de Isolamento e Não Regressão",
+      "goal": "Zero leak / baseline preservada",
+      "actions": [
+        "Diff baseline SHA-256",
+        "Testes RLS negativos"
+      ]
+    },
+    {
+      "code": "F10",
+      "name": "Liberação Externa Controlada",
+      "goal": "Onboarding de novas empresas",
+      "actions": [
+        "Habilitar signup multi-empresa",
+        "Ativar billing por empresa se aplicável"
+      ]
+    }
+  ],
+  "rollback_plan": {
+    "prerequisites": [
+      "Backup lógico pré-F4",
+      "Baseline SHA-256 pré-F5",
+      "Migration reversível"
+    ],
+    "steps": [
+      "DROP empresa_id constraints",
+      "Restaurar policies user_id-only",
+      "DROP empresa_membros",
+      "DROP empresas",
+      "Restaurar user_roles global se substituído"
+    ],
+    "kill_switch": "Feature flag 'multitenancy_active' — se false, sistema opera exclusivamente por user_id como hoje"
+  }
+}

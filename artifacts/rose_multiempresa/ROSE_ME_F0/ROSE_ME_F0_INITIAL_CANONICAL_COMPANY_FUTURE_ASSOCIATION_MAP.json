@@ -1,0 +1,37 @@
+{
+  "initial_canonical_company_candidate": "Angela Maria Momo Rodrigues MEI",
+  "canonical_company_creation_executed": false,
+  "company_backfill_executed": false,
+  "existing_records_modified": false,
+  "future_association_plan": {
+    "step_1": "Criar tabela empresas e inserir Angela Maria Momo Rodrigues MEI como empresa 001 (não executado)",
+    "step_2": "Adicionar empresa_id nullable em 22 tabelas tenant-scoped + audit_log (não executado)",
+    "step_3": "Backfill empresa_id = empresa canônica em 100% das linhas existentes por user_id owner atual",
+    "step_4": "Criar empresa_membros e migrar user_roles → (empresa_id, user_id, role)",
+    "step_5": "Tornar empresa_id NOT NULL, reescrever RLS, adicionar unique compostos"
+  },
+  "records_that_will_be_associated_to_initial_company": {
+    "compras": 2,
+    "sale_items": 65,
+    "sales": 11,
+    "bank_movements": 102,
+    "cartoes_credito": 6,
+    "payables": 307,
+    "payment_routing_rules": 84,
+    "aportes_financeiros": 0,
+    "compras_itens": 11,
+    "finance_entries": 94,
+    "controle_vendas_diario": 17,
+    "controle_vendas_fornecedor": 5,
+    "controle_vendas_fornecedor_historico": 4,
+    "cartoes_lancamentos": 111,
+    "suppliers": 42,
+    "bank_accounts": 12,
+    "customers": 16,
+    "company_settings": 1,
+    "products": 33,
+    "categorias_contas_pagar": 79,
+    "cartoes_faturas": 8,
+    "receivables": 11
+  }
+}

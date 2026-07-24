@@ -1,0 +1,32 @@
+{
+  "generated_at": "2026-07-24T21:26:53.758396Z",
+  "record_counts": {
+    "aportes_financeiros": 0,
+    "audit_log": 802,
+    "bank_accounts": 12,
+    "bank_movements": 102,
+    "cartoes_credito": 6,
+    "cartoes_faturas": 8,
+    "cartoes_lancamentos": 111,
+    "categorias_contas_pagar": 79,
+    "company_settings": 1,
+    "compras": 2,
+    "compras_itens": 11,
+    "controle_vendas_diario": 17,
+    "controle_vendas_fornecedor": 5,
+    "controle_vendas_fornecedor_historico": 4,
+    "customers": 16,
+    "finance_entries": 94,
+    "payables": 307,
+    "payment_routing_rules": 84,
+    "products": 33,
+    "profiles": 7,
+    "receivables": 11,
+    "sale_items": 65,
+    "sales": 11,
+    "suppliers": 42,
+    "user_roles": 7
+  },
+  "total_rows": 1837,
+  "notes": "Contagens obtidas por SELECT count(*) somente leitura no schema public."
+}

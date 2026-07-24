@@ -1,0 +1,113 @@
+{
+  "dependencies_found": 15,
+  "critical": 2,
+  "high": 10,
+  "medium": 3,
+  "dependencies": [
+    {
+      "id": "SCD-001",
+      "location": "public.handle_new_user()",
+      "type": "AUTO_PROVISION",
+      "evidence": "Every new auth user gets default categorias, routing rules and profile — no company scoping",
+      "severity": "HIGH"
+    },
+    {
+      "id": "SCD-002",
+      "location": "public.ensure_default_routing()",
+      "type": "HARDCODED_DEFAULT",
+      "evidence": "Creates a 'Mercado Pago' bank account per user; assumes single operational context",
+      "severity": "MEDIUM"
+    },
+    {
+      "id": "SCD-003",
+      "location": "public.assign_default_role()",
+      "type": "GLOBAL_ROLE",
+      "evidence": "First user becomes global admin; role is not scoped to a company",
+      "severity": "HIGH"
+    },
+    {
+      "id": "SCD-004",
+      "location": "company_settings (1 row)",
+      "type": "SINGLETON_COMPANY",
+      "evidence": "Table holds a single set of company settings per user_id, but there is no empresa entity",
+      "severity": "HIGH"
+    },
+    {
+      "id": "SCD-005",
+      "location": "all tenant-scoped tables",
+      "type": "MISSING_EMPRESA_ID",
+      "evidence": "22 tables carry user_id but no empresa_id",
+      "severity": "CRITICAL"
+    },
+    {
+      "id": "SCD-006",
+      "location": "public.seed_default_categorias_contas_pagar()",
+      "type": "GLOBAL_SEED",
+      "evidence": "Seeds categories per user; multi-company setup would need per-company seed",
+      "severity": "MEDIUM"
+    },
+    {
+      "id": "SCD-007",
+      "location": "triggers create_finance_for_sale / payable_to_finance / receivable_to_finance / *_to_bank_movement",
+      "type": "CROSS_TABLE_PROPAGATION",
+      "evidence": "Financial propagation carries user_id only — needs empresa_id propagation in target model",
+      "severity": "HIGH"
+    },
+    {
+      "id": "SCD-008",
+      "location": "controle_vendas_diario RPC sync_cvd_from_sale",
+      "type": "CROSS_TABLE_PROPAGATION",
+      "evidence": "CVD sync joins compras_itens by user_id only",
+      "severity": "HIGH"
+    },
+    {
+      "id": "SCD-009",
+      "location": "user_roles.role app_role",
+      "type": "GLOBAL_ROLE_ENUM",
+      "evidence": "Roles are global — no per-company role mapping",
+      "severity": "HIGH"
+    },
+    {
+      "id": "SCD-010",
+      "location": "has_role(_user_id, _role)",
+      "type": "GLOBAL_AUTHORIZATION",
+      "evidence": "Authorization check is not tenant-scoped",
+      "severity": "HIGH"
+    },
+    {
+      "id": "SCD-011",
+      "location": "storage buckets product-photos & company-logos",
+      "type": "UNSCOPED_FILES",
+      "evidence": "No empresa_id prefix in object paths",
+      "severity": "MEDIUM"
+    },
+    {
+      "id": "SCD-012",
+      "location": "src/lib/auth.tsx",
+      "type": "NO_COMPANY_CONTEXT",
+      "evidence": "Auth context exposes only user; no active company selection",
+      "severity": "HIGH"
+    },
+    {
+      "id": "SCD-013",
+      "location": "All frontend queries",
+      "type": "NO_TENANT_FILTER",
+      "evidence": "Queries rely on RLS user_id filter — no empresa_id filter available",
+      "severity": "CRITICAL"
+    },
+    {
+      "id": "SCD-014",
+      "location": "payment_routing_rules unique(user_id, payment_method)",
+      "type": "GLOBAL_UNIQUE",
+      "evidence": "Unique constraints scoped to user_id, not (user_id, empresa_id)",
+      "severity": "HIGH"
+    },
+    {
+      "id": "SCD-015",
+      "location": "categorias_contas_pagar unique(user_id, nome)",
+      "type": "GLOBAL_UNIQUE",
+      "evidence": "Same — will collide across companies of same user",
+      "severity": "HIGH"
+    }
+  ]
+}

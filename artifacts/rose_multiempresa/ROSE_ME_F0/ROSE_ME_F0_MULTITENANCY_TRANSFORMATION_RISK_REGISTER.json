@@ -1,0 +1,101 @@
+{
+  "risks_count": 12,
+  "risks": [
+    {
+      "id": "R-01",
+      "desc": "Perda de linhas ao migrar RLS baseada em user_id para empresa_id",
+      "prob": "MEDIUM",
+      "impact": "CRITICAL",
+      "sev": "HIGH",
+      "control": "Backfill idempotente + baseline SHA-256"
+    },
+    {
+      "id": "R-02",
+      "desc": "Registros órfãos sem owner mapeável para empresa",
+      "prob": "LOW",
+      "impact": "HIGH",
+      "sev": "MEDIUM",
+      "control": "Report pré-migração de linhas sem user_id"
+    },
+    {
+      "id": "R-03",
+      "desc": "Vazamento cross-tenant após adição de novos usuários pré-RLS composta",
+      "prob": "HIGH se ativado antes",
+      "impact": "CRITICAL",
+      "sev": "CRITICAL",
+      "control": "Bloquear onboarding externo até F6 concluído"
+    },
+    {
+      "id": "R-04",
+      "desc": "Constraints unique globais colidem entre empresas",
+      "prob": "HIGH",
+      "impact": "HIGH",
+      "sev": "HIGH",
+      "control": "Recriar unique como (empresa_id, ...)"
+    },
+    {
+      "id": "R-05",
+      "desc": "Triggers propagam user_id sem empresa_id",
+      "prob": "CERTAIN sem alteração",
+      "impact": "HIGH",
+      "sev": "HIGH",
+      "control": "Reescrever todas as 15+ funções para carregar empresa_id"
+    },
+    {
+      "id": "R-06",
+      "desc": "Dashboards agregam sem escopo empresarial",
+      "prob": "CERTAIN",
+      "impact": "HIGH",
+      "sev": "HIGH",
+      "control": "Refatorar queries em todos os módulos após F6"
+    },
+    {
+      "id": "R-07",
+      "desc": "Storage compartilhado permite listagem cruzada",
+      "prob": "MEDIUM",
+      "impact": "HIGH",
+      "sev": "HIGH",
+      "control": "Migrar objetos para prefixo empresa_id/... + policies"
+    },
+    {
+      "id": "R-08",
+      "desc": "Alteração de fórmulas financeiras durante migração",
+      "prob": "LOW",
+      "impact": "CRITICAL",
+      "sev": "HIGH",
+      "control": "Baseline financeira SHA-256 pré e pós"
+    },
+    {
+      "id": "R-09",
+      "desc": "Role global permite admin cross-tenant",
+      "prob": "CERTAIN",
+      "impact": "CRITICAL",
+      "sev": "CRITICAL",
+      "control": "Substituir user_roles por empresa_membros com role por empresa"
+    },
+    {
+      "id": "R-10",
+      "desc": "Rollback complexo por ausência de FKs físicas",
+      "prob": "MEDIUM",
+      "impact": "HIGH",
+      "sev": "HIGH",
+      "control": "Snapshot lógico + migration reversível"
+    },
+    {
+      "id": "R-11",
+      "desc": "Regressão do usuário atual (sac@resverarevenda)",
+      "prob": "MEDIUM",
+      "impact": "HIGH",
+      "sev": "HIGH",
+      "control": "Empresa canônica criada e vinculada antes de tornar empresa_id NOT NULL"
+    },
+    {
+      "id": "R-12",
+      "desc": "Custos e volume Supabase crescem com múltiplas empresas",
+      "prob": "MEDIUM",
+      "impact": "MEDIUM",
+      "sev": "MEDIUM",
+      "control": "Monitorar plano após F8"
+    }
+  ]
+}

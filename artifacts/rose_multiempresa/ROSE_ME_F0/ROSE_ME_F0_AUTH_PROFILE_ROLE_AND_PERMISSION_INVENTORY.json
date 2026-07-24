@@ -1,0 +1,21 @@
+{
+  "auth_provider": "Supabase Auth",
+  "profile_table": "profiles (columns: id, full_name)",
+  "profile_has_empresa_id": false,
+  "membership_table_present": false,
+  "role_table": "user_roles",
+  "role_enum": "public.app_role (admin, vendedor, ... — full list not queried)",
+  "role_is_global": true,
+  "role_per_company": false,
+  "has_role_function": "public.has_role(_user_id, _role) SECURITY DEFINER",
+  "handle_new_user_trigger_function": "public.handle_new_user (creates profile + defaults)",
+  "assign_default_role_function": "public.assign_default_role (first user becomes admin)",
+  "distinct_users_in_sales": 1,
+  "profiles_count": 7,
+  "user_roles_count": 7,
+  "observations": [
+    "All ownership is by auth.uid() = user_id — no empresa/tenant column exists anywhere.",
+    "Single operational owner drives the whole data set today.",
+    "Multi-user model exists in profiles/user_roles but no isolation by company."
+  ]
+}

@@ -1,0 +1,162 @@
+{
+  "objects_classified": 25,
+  "tenant_scoped": 22,
+  "user_scoped": 1,
+  "membership_scoped": 1,
+  "audit_scoped": 1,
+  "global_shared": 0,
+  "system_scoped": 0,
+  "requires_decision": 0,
+  "objects": [
+    {
+      "object": "aportes_financeiros",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "audit_log",
+      "kind": "table",
+      "classification": "AUDIT_SCOPED",
+      "justification": "Change events; must record empresa_id in future"
+    },
+    {
+      "object": "bank_accounts",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "bank_movements",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "cartoes_credito",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "cartoes_faturas",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "cartoes_lancamentos",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "categorias_contas_pagar",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "company_settings",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "compras",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "compras_itens",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "controle_vendas_diario",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "controle_vendas_fornecedor",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "controle_vendas_fornecedor_historico",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "customers",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "finance_entries",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "payables",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "payment_routing_rules",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "products",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "profiles",
+      "kind": "table",
+      "classification": "USER_SCOPED",
+      "justification": "Personal profile of the authenticated user"
+    },
+    {
+      "object": "receivables",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "sale_items",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "sales",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "suppliers",
+      "kind": "table",
+      "classification": "TENANT_SCOPED",
+      "justification": "Records represent commercial/financial operations that belong to a company"
+    },
+    {
+      "object": "user_roles",
+      "kind": "table",
+      "classification": "MEMBERSHIP_SCOPED",
+      "justification": "Represents user↔role assignment; future: user↔empresa↔role"
+    }
+  ]
+}
