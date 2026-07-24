@@ -1,0 +1,42 @@
+{
+  "company_onboarding_defined": true,
+  "invitation_lifecycle_defined": true,
+  "membership_offboarding_defined": true,
+  "ownership_transfer_defined": true,
+  "onboarding_flow": [
+    "validar_usuario",
+    "validar_autorizacao",
+    "criar_empresa",
+    "criar_membership_OWNER",
+    "criar_configuracoes",
+    "criar_papeis_permissoes",
+    "registrar_auditoria",
+    "confirmar_transacao"
+  ],
+  "invitation_processes": [
+    "INVITE_MEMBER",
+    "ACCEPT_INVITATION",
+    "CHANGE_MEMBER_ROLE",
+    "SUSPEND_MEMBER",
+    "REACTIVATE_MEMBER",
+    "REMOVE_MEMBER",
+    "TRANSFER_OWNERSHIP"
+  ],
+  "offboarding_rules": [
+    "suspensao",
+    "remocao",
+    "transferencia_ownership",
+    "suspensao_empresa",
+    "encerramento_empresa",
+    "retencao",
+    "exportacao",
+    "anonimizacao",
+    "exclusao_legal",
+    "preservacao_auditoria",
+    "revogacao_sessoes",
+    "revogacao_integracoes",
+    "bloqueio_jobs",
+    "bloqueio_storage",
+    "plano_recuperacao"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "storage_isolation_defined": true,
+  "path_pattern": "empresa_id/modulo/recurso_id/arquivo",
+  "rules": [
+    "sem_bucket_publico_sensivel",
+    "upload_com_membership",
+    "download_com_membership",
+    "listagem_por_tenant",
+    "exclusao_auditada",
+    "URLs_assinadas_com_expiracao",
+    "nomes_sanitizados",
+    "tamanho_e_tipo_controlados",
+    "sem_traversal",
+    "sem_pasta_compartilhada",
+    "mapear_arquivos_antigos",
+    "sem_service_role_no_navegador"
+  ],
+  "current_buckets_reviewed": [
+    "product-photos",
+    "company-logos"
+  ],
+  "buckets_changed": false
+}

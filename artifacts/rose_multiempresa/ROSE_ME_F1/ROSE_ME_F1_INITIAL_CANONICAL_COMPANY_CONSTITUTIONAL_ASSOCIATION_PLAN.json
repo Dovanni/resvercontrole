@@ -1,0 +1,8 @@
+{
+  "initial_canonical_company_candidate": "Angela Maria Momo Rodrigues MEI",
+  "classification": "INITIAL_CANONICAL_ROSE_TENANT_CANDIDATE",
+  "state": "EXISTING_SINGLE_COMPANY_DATASET_AWAITING_FUTURE_CONTROLLED_ASSOCIATION",
+  "initial_company_candidate_defined": true,
+  "initial_company_created": false,
+  "initial_company_backfill_executed": false
+}

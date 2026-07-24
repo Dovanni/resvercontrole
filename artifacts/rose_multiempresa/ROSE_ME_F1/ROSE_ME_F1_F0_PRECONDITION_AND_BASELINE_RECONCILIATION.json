@@ -1,0 +1,13 @@
+{
+  "parent_framework": "ROSE-ME-F0",
+  "f0_status_confirmed": "ROSE_ME_F0_READ_ONLY_AUDIT_INVENTORY_BASELINE_AND_MULTITENANCY_TRANSFORMATION_MAP_COMPLETED_AWAITING_ROSE_ME_F1",
+  "f0_artifacts_expected": 20,
+  "f0_artifacts_found": 20,
+  "f0_hashes_verified": 20,
+  "f0_hash_mismatches": 0,
+  "f0_checks_verified": 612,
+  "f0_checks_failed": 0,
+  "f0_database_modified": false,
+  "f0_baseline_reconciled": true,
+  "baseline_sha256": "689af23fb305255932cf86b48d4774775877d4a65061528e11b61487192a9a39"
+}

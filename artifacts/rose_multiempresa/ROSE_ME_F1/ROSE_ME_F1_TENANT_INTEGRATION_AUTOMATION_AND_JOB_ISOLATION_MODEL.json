@@ -1,0 +1,30 @@
+{
+  "integration_isolation_defined": true,
+  "automation_job_isolation_defined": true,
+  "scope": [
+    "meios_pagamento",
+    "MercadoPago",
+    "email",
+    "webhooks",
+    "APIs",
+    "importacoes",
+    "exportacoes",
+    "servicos_externos",
+    "notificacoes"
+  ],
+  "rules": [
+    "config_por_empresa",
+    "credentials_server_side",
+    "criptografia",
+    "rotacao",
+    "revogacao",
+    "auditoria",
+    "sem_exposicao_frontend",
+    "sem_credencial_global_sem_decisao",
+    "jobs_com_tenant",
+    "callbacks_reconciliados",
+    "idempotencia",
+    "prevencao_evento_cruzado",
+    "sem_acesso_metrixhr"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "audit_model_defined": true,
+  "entity": "empresa_audit_logs",
+  "fields": [
+    "id",
+    "empresa_id",
+    "membership_id",
+    "actor_user_id",
+    "action",
+    "resource_type",
+    "resource_id",
+    "result",
+    "reason",
+    "correlation_id",
+    "occurred_at",
+    "source",
+    "metadata_redacted"
+  ],
+  "rules": [
+    "sem_secrets",
+    "sem_senhas",
+    "sem_cartoes",
+    "sem_payload_financeiro_integral",
+    "sem_respostas_psicologicas",
+    "minimizar_pessoais",
+    "registra_troca_empresa",
+    "registra_convite",
+    "registra_alteracao_papel",
+    "registra_exportacao",
+    "registra_acesso_excepcional",
+    "registra_mudanca_config",
+    "integridade",
+    "retencao_futura",
+    "auditoria_propria_empresa"
+  ]
+}

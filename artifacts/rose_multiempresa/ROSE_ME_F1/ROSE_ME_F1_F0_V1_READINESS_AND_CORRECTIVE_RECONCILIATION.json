@@ -1,0 +1,16 @@
+{
+  "parent_framework": "ROSE-ME-F0-V1",
+  "f0_v1_status_confirmed": "ROSE_ME_F0_V1_CORRECTIVE_RECONCILIATION_COMPLETED_AND_F0_HOMOLOGABLE_AWAITING_EXPLICIT_AUTHORIZATION_FOR_ROSE_ME_F1",
+  "f0_v1_artifacts_expected": 12,
+  "f0_v1_artifacts_found": 12,
+  "f0_v1_hashes_verified": 12,
+  "f0_v1_hash_mismatches": 0,
+  "f0_v1_checks_verified": 360,
+  "f0_v1_checks_failed": 0,
+  "f0_homologable": true,
+  "documentary_f1_eligibility": "ELIGIBLE",
+  "f1_implementation_authorized": false,
+  "indexes_reconciled": 53,
+  "constraints_reconciled": 100,
+  "foreign_keys": 47
+}

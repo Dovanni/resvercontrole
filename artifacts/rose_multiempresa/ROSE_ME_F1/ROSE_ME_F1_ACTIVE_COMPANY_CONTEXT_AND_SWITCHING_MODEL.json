@@ -1,0 +1,17 @@
+{
+  "concept": "ACTIVE_COMPANY_CONTEXT",
+  "active_company_context_defined": true,
+  "browser_company_parameter_trusted": false,
+  "rules": [
+    "entrada_direta_se_uma_empresa",
+    "selecao_se_varias",
+    "exibicao_clara",
+    "troca_explicita",
+    "troca_auditada",
+    "validacao_por_operacao",
+    "localStorage_apenas_preferencia",
+    "nao_por_URL",
+    "bloqueia_suspensa",
+    "valida_em_queries_e_mutations"
+  ]
+}

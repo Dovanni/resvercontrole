@@ -1,0 +1,31 @@
+{
+  "entity": "empresas",
+  "attributes": [
+    "id",
+    "nome_empresarial",
+    "nome_fantasia",
+    "documento_empresarial",
+    "status",
+    "modalidade",
+    "timezone",
+    "moeda",
+    "locale",
+    "criado_em",
+    "atualizado_em",
+    "criado_por",
+    "suspenso_em",
+    "encerrado_em"
+  ],
+  "rules": [
+    "id_tecnico_imutavel",
+    "documento_protegido",
+    "status_governado",
+    "sem_exclusao_fisica_automatica",
+    "criacao_auditada",
+    "suspensao_auditada",
+    "encerramento_auditado",
+    "dados_comerciais_fora_da_entidade",
+    "identidade_nao_por_texto"
+  ],
+  "created": false
+}
