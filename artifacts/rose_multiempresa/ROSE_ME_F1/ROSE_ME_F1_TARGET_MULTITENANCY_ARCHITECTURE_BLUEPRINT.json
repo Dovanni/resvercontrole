@@ -1,0 +1,22 @@
+{
+  "target_architecture": "ROSE_NATIVE_SHARED_APPLICATION_ISOLATED_TENANT_DATA_ARCHITECTURE",
+  "target_architecture_defined": true,
+  "target_architecture_implemented": false,
+  "characteristics": [
+    "shared_application",
+    "logical_multitenancy",
+    "tenant_by_empresa",
+    "isolated_data",
+    "memberships_per_user_and_company",
+    "roles_per_membership",
+    "permissions_per_role",
+    "mandatory_RLS",
+    "isolated_storage",
+    "isolated_integrations",
+    "tenant_scoped_audit",
+    "tenant_scoped_reports",
+    "tenant_partitioned_jobs",
+    "no_per_client_app_copy",
+    "no_data_mixing"
+  ]
+}

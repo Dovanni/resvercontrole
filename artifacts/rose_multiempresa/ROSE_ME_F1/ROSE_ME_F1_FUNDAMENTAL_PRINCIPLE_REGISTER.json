@@ -1,0 +1,80 @@
+{
+  "principles_count": 15,
+  "principles": [
+    {
+      "id": "P01",
+      "name": "ISOLAMENTO_EMPRESARIAL",
+      "statement": "Cada registro empresarial possui escopo de tenant direto ou derivado por relacionamento seguro."
+    },
+    {
+      "id": "P02",
+      "name": "MENOR_PRIVILEGIO",
+      "statement": "Cada membro terá somente as permissões necessárias à sua função."
+    },
+    {
+      "id": "P03",
+      "name": "NEGAR_POR_PADRAO",
+      "statement": "A ausência de autorização explícita resulta em DENY."
+    },
+    {
+      "id": "P04",
+      "name": "EMPRESA_NAO_CONFIADA_AO_NAVEGADOR",
+      "statement": "empresa_id enviado pelo cliente não é prova de autorização."
+    },
+    {
+      "id": "P05",
+      "name": "MEMBERSHIP_ATIVA_OBRIGATORIA",
+      "statement": "Toda operação empresarial depende de vínculo ativo e validado."
+    },
+    {
+      "id": "P06",
+      "name": "PROTECAO_FINANCEIRA",
+      "statement": "Dados financeiros são privados da empresa proprietária."
+    },
+    {
+      "id": "P07",
+      "name": "AUTONOMIA_EMPRESARIAL",
+      "statement": "Cada empresa administra seus membros, dados, configurações e integrações."
+    },
+    {
+      "id": "P08",
+      "name": "SEDE_SEM_ACESSO_AUTOMATICO",
+      "statement": "Administração central e METRIXHR não recebem acesso automático a dados comerciais ou financeiros."
+    },
+    {
+      "id": "P09",
+      "name": "AUDITORIA_PROPORCIONAL",
+      "statement": "Ações relevantes produzem trilha sem registrar payloads sensíveis."
+    },
+    {
+      "id": "P10",
+      "name": "REVERSIBILIDADE",
+      "statement": "Toda evolução estrutural possui rollback definido."
+    },
+    {
+      "id": "P11",
+      "name": "COMPATIBILIDADE",
+      "statement": "Empresa atual e seus dados são preservados integralmente."
+    },
+    {
+      "id": "P12",
+      "name": "SUPERVISAO_HUMANA",
+      "statement": "Ações administrativas e acessos excepcionais dependem de autoridade humana."
+    },
+    {
+      "id": "P13",
+      "name": "NAO_DISCRIMINACAO",
+      "statement": "Nenhum algoritmo limita acesso com base em inferências pessoais ou atributos protegidos."
+    },
+    {
+      "id": "P14",
+      "name": "TRANSPARENCIA",
+      "statement": "Usuários compreendem qual empresa está ativa e quais dados estão sendo administrados."
+    },
+    {
+      "id": "P15",
+      "name": "LGPD_MINIMIZACAO",
+      "statement": "Coletar, processar e registrar somente o necessário."
+    }
+  ]
+}

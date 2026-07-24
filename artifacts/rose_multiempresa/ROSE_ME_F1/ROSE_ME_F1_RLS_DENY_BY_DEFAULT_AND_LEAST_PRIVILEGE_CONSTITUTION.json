@@ -1,0 +1,25 @@
+{
+  "rls_constitution_defined": true,
+  "deny_by_default_required": true,
+  "least_privilege_required": true,
+  "service_role_in_browser_prohibited": true,
+  "tenant_id_mutation_by_common_user_prohibited": true,
+  "rules": [
+    "rls_obrigatoria",
+    "policies_por_operacao",
+    "select_membership_ativa",
+    "insert_membership_e_permissao",
+    "update_tenant_imutavel",
+    "delete_permissao_especifica",
+    "empresa_id_imutavel_operacao_comum",
+    "with_check",
+    "using",
+    "funcoes_privilegiadas_minimas",
+    "security_definer_excepcional_search_path_seguro",
+    "rpc_nao_confia_client",
+    "service_role_proibida_no_navegador",
+    "grants_publicos_minimos",
+    "force_rls_para_criticos",
+    "testes_negativos_obrigatorios"
+  ]
+}

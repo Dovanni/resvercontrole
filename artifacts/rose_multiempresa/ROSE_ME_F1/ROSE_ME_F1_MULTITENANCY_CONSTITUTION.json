@@ -1,0 +1,26 @@
+{
+  "constitution_established": true,
+  "declaration": "O GESTOR COMERCIAL E FINANCEIRO ROSÉ será transformado de aplicação de empresa única para plataforma multiempresa nativa, segura, auditável, reversível e orientada à proteção integral dos dados de cada empresa.",
+  "operating_pillars": [
+    "DENY_BY_DEFAULT",
+    "LEAST_PRIVILEGE",
+    "VALIDATED_MEMBERSHIP",
+    "TENANT_ISOLATION",
+    "HUMAN_OVERSIGHT",
+    "AUDITABILITY",
+    "REVERSIBILITY",
+    "PRIVACY_BY_DESIGN",
+    "SECURITY_BY_DESIGN",
+    "ZERO_AUTOMATIC_HEADQUARTERS_FINANCIAL_ACCESS"
+  ],
+  "cross_tenant_prohibitions": [
+    "view_other",
+    "modify_other",
+    "export_other",
+    "use_private_settings_other",
+    "use_integration_credentials_other",
+    "access_files_other",
+    "receive_financial_totals_other",
+    "assume_context_without_membership"
+  ]
+}

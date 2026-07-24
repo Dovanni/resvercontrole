@@ -1,0 +1,18 @@
+{
+  "tenant_contract_defined": true,
+  "scoping_options": [
+    "empresa_id_direto",
+    "relacionamento_obrigatorio_com_pai_com_empresa_id"
+  ],
+  "prohibitions": [
+    "associacao_por_texto",
+    "associacao_por_nome",
+    "apenas_por_criador",
+    "filtro_so_frontend",
+    "empresa_fixa_no_codigo",
+    "empresa_fixa_em_global",
+    "empresa_confiada_a_parametro_nao_validado"
+  ],
+  "preference": "empresa_id_direto_para_criticas_comerciais_e_financeiras",
+  "detailed_matrix_deferred_to": "ROSE-ME-F2"
+}

@@ -1,0 +1,49 @@
+{
+  "roadmap": [
+    {
+      "gate": "ROSE-ME-F1",
+      "name": "Constituição, princípios, arquitetura e governança"
+    },
+    {
+      "gate": "ROSE-ME-F2",
+      "name": "Modelo canônico de empresas, memberships, papéis, permissões e contexto"
+    },
+    {
+      "gate": "ROSE-ME-F3",
+      "name": "Projeto detalhado de migration, backfill, constraints, índices e rollback"
+    },
+    {
+      "gate": "ROSE-ME-F4",
+      "name": "Implementação estrutural controlada"
+    },
+    {
+      "gate": "ROSE-ME-F5",
+      "name": "Criação e associação da empresa atual"
+    },
+    {
+      "gate": "ROSE-ME-F6",
+      "name": "RLS, isolamento e testes negativos entre tenants"
+    },
+    {
+      "gate": "ROSE-ME-F7",
+      "name": "Interface de empresa ativa, membros, convites e permissões"
+    },
+    {
+      "gate": "ROSE-ME-F8",
+      "name": "Empresa sintética de homologação"
+    },
+    {
+      "gate": "ROSE-ME-F9",
+      "name": "Testes de isolamento, segurança, baseline e não regressão"
+    },
+    {
+      "gate": "ROSE-ME-F10",
+      "name": "Liberação externa controlada e benefício gratuito vinculado ao METRIXHR"
+    }
+  ],
+  "readiness": "READY_FOR_CANONICAL_MULTITENANCY_DATA_MODEL",
+  "constitutional_gaps_found": 0,
+  "critical_constitutional_conflicts_found": 0,
+  "f2_authorized": false,
+  "next_step_requires_explicit_human_authorization": true
+}

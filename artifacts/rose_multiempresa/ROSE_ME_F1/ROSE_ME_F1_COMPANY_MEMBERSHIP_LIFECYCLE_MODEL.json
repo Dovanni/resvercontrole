@@ -1,0 +1,36 @@
+{
+  "entity": "empresa_membros",
+  "attributes": [
+    "id",
+    "empresa_id",
+    "usuario_id",
+    "papel_id",
+    "status",
+    "convidado_por",
+    "convidado_em",
+    "aceito_em",
+    "suspenso_em",
+    "removido_em",
+    "criado_em",
+    "atualizado_em"
+  ],
+  "statuses": [
+    "INVITED",
+    "ACTIVE",
+    "SUSPENDED",
+    "REMOVED",
+    "EXPIRED"
+  ],
+  "statuses_count": 5,
+  "rules": [
+    "multi_empresa_por_usuario",
+    "vinculos_independentes",
+    "papel_no_vinculo",
+    "suspensao_isolada",
+    "remocao_preserva_auditoria",
+    "inativa_sem_acesso",
+    "onboarding_autorizado",
+    "sem_membership_global_padrao"
+  ],
+  "created": false
+}

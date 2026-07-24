@@ -1,0 +1,33 @@
+{
+  "humanized_management_principles_incorporated": true,
+  "privacy_by_design_required": true,
+  "lgpd_governance_defined": true,
+  "principles": [
+    "dignidade",
+    "privacidade",
+    "autonomia",
+    "transparencia",
+    "acessibilidade",
+    "proporcionalidade",
+    "nao_discriminacao",
+    "explicabilidade",
+    "supervisao_humana",
+    "contestabilidade",
+    "correcao_erros",
+    "sem_vigilancia_indevida",
+    "sem_inferencia_psicologica",
+    "sem_decisao_exclusivamente_algoritmica"
+  ],
+  "ownership_functions": [
+    "HUMAN_PRODUCT_OWNER",
+    "HUMAN_TECHNICAL_OWNER",
+    "HUMAN_SECURITY_OWNER",
+    "HUMAN_DATABASE_OWNER",
+    "HUMAN_PRIVACY_OWNER",
+    "HUMAN_FINANCIAL_OWNER",
+    "HUMAN_CHANGE_APPROVER",
+    "HUMAN_AUDIT_OBSERVER"
+  ],
+  "ownership_model_defined": true,
+  "ownership_assigned": false
+}

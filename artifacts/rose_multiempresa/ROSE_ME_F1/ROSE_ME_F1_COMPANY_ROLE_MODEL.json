@@ -1,0 +1,29 @@
+{
+  "roles": [
+    "OWNER",
+    "ADMIN",
+    "FINANCIAL",
+    "COMMERCIAL",
+    "OPERATOR",
+    "AUDITOR",
+    "VIEWER"
+  ],
+  "roles_count": 7,
+  "rules": [
+    "por_empresa",
+    "sem_acesso_a_outra_empresa",
+    "OWNER_nao_e_admin_plataforma",
+    "extensivel",
+    "permissoes_criticas_explicitas",
+    "nao_expor_role_db",
+    "sem_auto_elevacao",
+    "mudancas_auditadas"
+  ],
+  "platform_roles": [
+    "PLATFORM_ADMIN",
+    "PLATFORM_SUPPORT"
+  ],
+  "platform_admin_separated_from_company_roles": true,
+  "automatic_platform_financial_access_prohibited": true,
+  "automatic_metrixhr_financial_access_prohibited": true
+}
