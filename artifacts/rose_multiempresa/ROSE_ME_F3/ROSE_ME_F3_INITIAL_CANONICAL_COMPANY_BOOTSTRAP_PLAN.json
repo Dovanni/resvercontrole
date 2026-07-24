@@ -1,0 +1,7 @@
+{
+  "candidate": "Angela Maria Momo Rodrigues MEI",
+  "idempotency_key": "DETERMINISTIC_SLUG",
+  "creation_transactional": true,
+  "audit_event": "COMPANY_BOOTSTRAP",
+  "initial_company_created": false
+}

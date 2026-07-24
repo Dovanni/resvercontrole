@@ -1,0 +1,43 @@
+{
+  "baseline_sha256": "689af23fb305255932cf86b48d4774775877d4a65061528e11b61487192a9a39",
+  "checkpoints_defined": 9,
+  "checkpoints": [
+    {
+      "id": "B0",
+      "description": "PRE_IMPLEMENTATION"
+    },
+    {
+      "id": "B1",
+      "description": "AFTER_STRUCTURAL_EXPANSION"
+    },
+    {
+      "id": "B2",
+      "description": "AFTER_CANONICAL_BOOTSTRAP"
+    },
+    {
+      "id": "B3",
+      "description": "AFTER_EMPRESA_ID_NULLABLE"
+    },
+    {
+      "id": "B4",
+      "description": "AFTER_BACKFILL"
+    },
+    {
+      "id": "B5",
+      "description": "AFTER_CONSTRAINTS_AND_INDEXES"
+    },
+    {
+      "id": "B6",
+      "description": "AFTER_RLS_TRANSITION"
+    },
+    {
+      "id": "B7",
+      "description": "AFTER_CUTOVER"
+    },
+    {
+      "id": "B8",
+      "description": "AFTER_CONTRACT"
+    }
+  ],
+  "abort_on": "FINANCIAL_DIVERGENCE"
+}

@@ -1,0 +1,14 @@
+{
+  "current_constraints": 100,
+  "future_constraints_planned": "17_EMPRESA_ID_FKS_PLUS_23_NOT_NULL",
+  "steps": [
+    "ADD_STRUCTURES_COMPATIBLE",
+    "BACKFILL",
+    "VALIDATE_ORPHANS",
+    "ADD_NOT_VALID_CONSTRAINTS",
+    "VALIDATE",
+    "APPLY_NOT_NULL",
+    "REMOVE_LEGACY_IN_CONTRACT"
+  ],
+  "rollback": "R1_R2_R3"
+}

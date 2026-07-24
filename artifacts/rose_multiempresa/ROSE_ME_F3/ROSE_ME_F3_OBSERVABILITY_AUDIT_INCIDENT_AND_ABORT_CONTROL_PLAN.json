@@ -1,0 +1,28 @@
+{
+  "evidence_fields": [
+    "migration_unit_id",
+    "correlation_id",
+    "stage",
+    "start",
+    "end",
+    "result",
+    "counts",
+    "divergences",
+    "locks",
+    "timeouts",
+    "retries",
+    "aborts",
+    "rollback",
+    "human",
+    "approval",
+    "hash",
+    "checkpoint"
+  ],
+  "prohibitions": [
+    "NO_SECRETS",
+    "NO_PASSWORDS",
+    "NO_FULL_CARDS",
+    "NO_FULL_FINANCIAL_PAYLOAD",
+    "NO_PII_UNNECESSARY"
+  ]
+}

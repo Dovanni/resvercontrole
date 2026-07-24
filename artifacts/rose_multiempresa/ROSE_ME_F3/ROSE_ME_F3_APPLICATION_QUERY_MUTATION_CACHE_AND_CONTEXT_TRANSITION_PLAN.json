@@ -1,0 +1,31 @@
+{
+  "surfaces": [
+    "auth",
+    "memberships_loader",
+    "active_company_selector",
+    "queries",
+    "mutations",
+    "forms",
+    "dashboards",
+    "reports",
+    "exports",
+    "cache",
+    "localStorage",
+    "sessionStorage",
+    "routes",
+    "jobs",
+    "integrations",
+    "storage"
+  ],
+  "requirements": [
+    "NO_QUERY_WITHOUT_TENANT",
+    "NO_MUTATION_WITHOUT_MEMBERSHIP",
+    "ACTIVE_COMPANY_VISIBLE",
+    "CACHE_PARTITIONED",
+    "STATE_RESET_ON_SWITCH",
+    "FEATURE_FLAG",
+    "KILL_SWITCH"
+  ],
+  "frontend_changed": false,
+  "backend_changed": false
+}

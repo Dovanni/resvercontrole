@@ -1,0 +1,1257 @@
+{
+  "units_defined": 51,
+  "units": [
+    {
+      "migration_unit_id": "U01",
+      "stage": "S2",
+      "name": "CREATE_CANONICAL_ENTITIES",
+      "purpose": "Create empresas, empresa_membros, roles, permissions, role_permissions, invitations, active_company_pref, audit tables",
+      "tables_affected": [
+        "empresas",
+        "empresa_membros",
+        "roles",
+        "permissions",
+        "role_permissions",
+        "empresa_invitations",
+        "user_active_company",
+        "tenant_audit"
+      ],
+      "dependencies": [],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U02",
+      "stage": "S3",
+      "name": "BOOTSTRAP_ROLES_PERMISSIONS",
+      "purpose": "Seed 7 roles and 42 permissions and 294 assignments",
+      "tables_affected": [
+        "roles",
+        "permissions",
+        "role_permissions"
+      ],
+      "dependencies": [
+        "U01"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U03",
+      "stage": "S3",
+      "name": "CREATE_INITIAL_CANONICAL_COMPANY",
+      "purpose": "Insert Angela Maria Momo Rodrigues MEI",
+      "tables_affected": [
+        "empresas"
+      ],
+      "dependencies": [
+        "U01"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U04",
+      "stage": "S3",
+      "name": "CREATE_INITIAL_OWNER_MEMBERSHIP",
+      "purpose": "Insert OWNER membership for sac@resverarevenda.com.br",
+      "tables_affected": [
+        "empresa_membros"
+      ],
+      "dependencies": [
+        "U02",
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U05",
+      "stage": "S4",
+      "name": "ADD_EMPRESA_ID_NULLABLE_APORTES_FINANCEIROS",
+      "purpose": "Add nullable empresa_id column to aportes_financeiros",
+      "tables_affected": [
+        "aportes_financeiros"
+      ],
+      "dependencies": [
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U06",
+      "stage": "S4",
+      "name": "ADD_EMPRESA_ID_NULLABLE_BANK_ACCOUNTS",
+      "purpose": "Add nullable empresa_id column to bank_accounts",
+      "tables_affected": [
+        "bank_accounts"
+      ],
+      "dependencies": [
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U07",
+      "stage": "S4",
+      "name": "ADD_EMPRESA_ID_NULLABLE_CARTOES_CREDITO",
+      "purpose": "Add nullable empresa_id column to cartoes_credito",
+      "tables_affected": [
+        "cartoes_credito"
+      ],
+      "dependencies": [
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U08",
+      "stage": "S4",
+      "name": "ADD_EMPRESA_ID_NULLABLE_CATEGORIAS_CONTAS_PAGAR",
+      "purpose": "Add nullable empresa_id column to categorias_contas_pagar",
+      "tables_affected": [
+        "categorias_contas_pagar"
+      ],
+      "dependencies": [
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U09",
+      "stage": "S4",
+      "name": "ADD_EMPRESA_ID_NULLABLE_COMPANY_SETTINGS",
+      "purpose": "Add nullable empresa_id column to company_settings",
+      "tables_affected": [
+        "company_settings"
+      ],
+      "dependencies": [
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U10",
+      "stage": "S4",
+      "name": "ADD_EMPRESA_ID_NULLABLE_COMPRAS",
+      "purpose": "Add nullable empresa_id column to compras",
+      "tables_affected": [
+        "compras"
+      ],
+      "dependencies": [
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U11",
+      "stage": "S4",
+      "name": "ADD_EMPRESA_ID_NULLABLE_CONTROLE_VENDAS_DIARIO",
+      "purpose": "Add nullable empresa_id column to controle_vendas_diario",
+      "tables_affected": [
+        "controle_vendas_diario"
+      ],
+      "dependencies": [
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U12",
+      "stage": "S4",
+      "name": "ADD_EMPRESA_ID_NULLABLE_CONTROLE_VENDAS_FORNECEDOR",
+      "purpose": "Add nullable empresa_id column to controle_vendas_fornecedor",
+      "tables_affected": [
+        "controle_vendas_fornecedor"
+      ],
+      "dependencies": [
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U13",
+      "stage": "S4",
+      "name": "ADD_EMPRESA_ID_NULLABLE_CUSTOMERS",
+      "purpose": "Add nullable empresa_id column to customers",
+      "tables_affected": [
+        "customers"
+      ],
+      "dependencies": [
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U14",
+      "stage": "S4",
+      "name": "ADD_EMPRESA_ID_NULLABLE_FINANCE_ENTRIES",
+      "purpose": "Add nullable empresa_id column to finance_entries",
+      "tables_affected": [
+        "finance_entries"
+      ],
+      "dependencies": [
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U15",
+      "stage": "S4",
+      "name": "ADD_EMPRESA_ID_NULLABLE_PAYABLES",
+      "purpose": "Add nullable empresa_id column to payables",
+      "tables_affected": [
+        "payables"
+      ],
+      "dependencies": [
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U16",
+      "stage": "S4",
+      "name": "ADD_EMPRESA_ID_NULLABLE_PAYMENT_ROUTING_RULES",
+      "purpose": "Add nullable empresa_id column to payment_routing_rules",
+      "tables_affected": [
+        "payment_routing_rules"
+      ],
+      "dependencies": [
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U17",
+      "stage": "S4",
+      "name": "ADD_EMPRESA_ID_NULLABLE_PRODUCTS",
+      "purpose": "Add nullable empresa_id column to products",
+      "tables_affected": [
+        "products"
+      ],
+      "dependencies": [
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U18",
+      "stage": "S4",
+      "name": "ADD_EMPRESA_ID_NULLABLE_RECEIVABLES",
+      "purpose": "Add nullable empresa_id column to receivables",
+      "tables_affected": [
+        "receivables"
+      ],
+      "dependencies": [
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U19",
+      "stage": "S4",
+      "name": "ADD_EMPRESA_ID_NULLABLE_SALES",
+      "purpose": "Add nullable empresa_id column to sales",
+      "tables_affected": [
+        "sales"
+      ],
+      "dependencies": [
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U20",
+      "stage": "S4",
+      "name": "ADD_EMPRESA_ID_NULLABLE_SUPPLIERS",
+      "purpose": "Add nullable empresa_id column to suppliers",
+      "tables_affected": [
+        "suppliers"
+      ],
+      "dependencies": [
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U21",
+      "stage": "S4",
+      "name": "ADD_EMPRESA_ID_NULLABLE_USER_ROLES",
+      "purpose": "Add nullable empresa_id column to user_roles",
+      "tables_affected": [
+        "user_roles"
+      ],
+      "dependencies": [
+        "U03"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U22",
+      "stage": "S5",
+      "name": "BACKFILL_APORTES_FINANCEIROS",
+      "purpose": "Idempotent tenant backfill for aportes_financeiros",
+      "tables_affected": [
+        "aportes_financeiros"
+      ],
+      "dependencies": [
+        "U05"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U23",
+      "stage": "S5",
+      "name": "BACKFILL_BANK_ACCOUNTS",
+      "purpose": "Idempotent tenant backfill for bank_accounts",
+      "tables_affected": [
+        "bank_accounts"
+      ],
+      "dependencies": [
+        "U06"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U24",
+      "stage": "S5",
+      "name": "BACKFILL_CARTOES_CREDITO",
+      "purpose": "Idempotent tenant backfill for cartoes_credito",
+      "tables_affected": [
+        "cartoes_credito"
+      ],
+      "dependencies": [
+        "U07"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U25",
+      "stage": "S5",
+      "name": "BACKFILL_CATEGORIAS_CONTAS_PAGAR",
+      "purpose": "Idempotent tenant backfill for categorias_contas_pagar",
+      "tables_affected": [
+        "categorias_contas_pagar"
+      ],
+      "dependencies": [
+        "U08"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U26",
+      "stage": "S5",
+      "name": "BACKFILL_COMPANY_SETTINGS",
+      "purpose": "Idempotent tenant backfill for company_settings",
+      "tables_affected": [
+        "company_settings"
+      ],
+      "dependencies": [
+        "U09"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U27",
+      "stage": "S5",
+      "name": "BACKFILL_COMPRAS",
+      "purpose": "Idempotent tenant backfill for compras",
+      "tables_affected": [
+        "compras"
+      ],
+      "dependencies": [
+        "U10"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U28",
+      "stage": "S5",
+      "name": "BACKFILL_CONTROLE_VENDAS_DIARIO",
+      "purpose": "Idempotent tenant backfill for controle_vendas_diario",
+      "tables_affected": [
+        "controle_vendas_diario"
+      ],
+      "dependencies": [
+        "U11"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U29",
+      "stage": "S5",
+      "name": "BACKFILL_CONTROLE_VENDAS_FORNECEDOR",
+      "purpose": "Idempotent tenant backfill for controle_vendas_fornecedor",
+      "tables_affected": [
+        "controle_vendas_fornecedor"
+      ],
+      "dependencies": [
+        "U12"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U30",
+      "stage": "S5",
+      "name": "BACKFILL_CUSTOMERS",
+      "purpose": "Idempotent tenant backfill for customers",
+      "tables_affected": [
+        "customers"
+      ],
+      "dependencies": [
+        "U13"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U31",
+      "stage": "S5",
+      "name": "BACKFILL_FINANCE_ENTRIES",
+      "purpose": "Idempotent tenant backfill for finance_entries",
+      "tables_affected": [
+        "finance_entries"
+      ],
+      "dependencies": [
+        "U14"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U32",
+      "stage": "S5",
+      "name": "BACKFILL_PAYABLES",
+      "purpose": "Idempotent tenant backfill for payables",
+      "tables_affected": [
+        "payables"
+      ],
+      "dependencies": [
+        "U15"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U33",
+      "stage": "S5",
+      "name": "BACKFILL_PAYMENT_ROUTING_RULES",
+      "purpose": "Idempotent tenant backfill for payment_routing_rules",
+      "tables_affected": [
+        "payment_routing_rules"
+      ],
+      "dependencies": [
+        "U16"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U34",
+      "stage": "S5",
+      "name": "BACKFILL_PRODUCTS",
+      "purpose": "Idempotent tenant backfill for products",
+      "tables_affected": [
+        "products"
+      ],
+      "dependencies": [
+        "U17"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U35",
+      "stage": "S5",
+      "name": "BACKFILL_RECEIVABLES",
+      "purpose": "Idempotent tenant backfill for receivables",
+      "tables_affected": [
+        "receivables"
+      ],
+      "dependencies": [
+        "U18"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U36",
+      "stage": "S5",
+      "name": "BACKFILL_SALES",
+      "purpose": "Idempotent tenant backfill for sales",
+      "tables_affected": [
+        "sales"
+      ],
+      "dependencies": [
+        "U19"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U37",
+      "stage": "S5",
+      "name": "BACKFILL_SUPPLIERS",
+      "purpose": "Idempotent tenant backfill for suppliers",
+      "tables_affected": [
+        "suppliers"
+      ],
+      "dependencies": [
+        "U20"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U38",
+      "stage": "S5",
+      "name": "BACKFILL_USER_ROLES",
+      "purpose": "Idempotent tenant backfill for user_roles",
+      "tables_affected": [
+        "user_roles"
+      ],
+      "dependencies": [
+        "U21"
+      ],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U39",
+      "stage": "S6",
+      "name": "VALIDATE_INHERITED_PATH_BANK_MOVEMENTS",
+      "purpose": "Validate parent tenant path for bank_movements",
+      "tables_affected": [
+        "bank_movements"
+      ],
+      "dependencies": [],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U40",
+      "stage": "S6",
+      "name": "VALIDATE_INHERITED_PATH_CARTOES_FATURAS",
+      "purpose": "Validate parent tenant path for cartoes_faturas",
+      "tables_affected": [
+        "cartoes_faturas"
+      ],
+      "dependencies": [],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U41",
+      "stage": "S6",
+      "name": "VALIDATE_INHERITED_PATH_CARTOES_LANCAMENTOS",
+      "purpose": "Validate parent tenant path for cartoes_lancamentos",
+      "tables_affected": [
+        "cartoes_lancamentos"
+      ],
+      "dependencies": [],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U42",
+      "stage": "S6",
+      "name": "VALIDATE_INHERITED_PATH_COMPRAS_ITENS",
+      "purpose": "Validate parent tenant path for compras_itens",
+      "tables_affected": [
+        "compras_itens"
+      ],
+      "dependencies": [],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U43",
+      "stage": "S6",
+      "name": "VALIDATE_INHERITED_PATH_CONTROLE_VENDAS_FORNECEDOR_HISTORICO",
+      "purpose": "Validate parent tenant path for controle_vendas_fornecedor_historico",
+      "tables_affected": [
+        "controle_vendas_fornecedor_historico"
+      ],
+      "dependencies": [],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U44",
+      "stage": "S6",
+      "name": "VALIDATE_INHERITED_PATH_SALE_ITEMS",
+      "purpose": "Validate parent tenant path for sale_items",
+      "tables_affected": [
+        "sale_items"
+      ],
+      "dependencies": [],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U45",
+      "stage": "S7",
+      "name": "TENANT_INDEX_EXPANSION",
+      "purpose": "Add tenant-first composite indexes",
+      "tables_affected": [
+        "aportes_financeiros",
+        "bank_accounts",
+        "cartoes_credito",
+        "categorias_contas_pagar",
+        "company_settings",
+        "compras",
+        "controle_vendas_diario",
+        "controle_vendas_fornecedor",
+        "customers",
+        "finance_entries",
+        "payables",
+        "payment_routing_rules",
+        "products",
+        "receivables",
+        "sales",
+        "suppliers",
+        "user_roles"
+      ],
+      "dependencies": [],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U46",
+      "stage": "S7",
+      "name": "UNIQUENESS_TRANSITION",
+      "purpose": "Duplicate global uniques into tenant composites",
+      "tables_affected": [
+        "aportes_financeiros",
+        "bank_accounts",
+        "cartoes_credito",
+        "categorias_contas_pagar",
+        "company_settings",
+        "compras",
+        "controle_vendas_diario",
+        "controle_vendas_fornecedor",
+        "customers",
+        "finance_entries",
+        "payables",
+        "payment_routing_rules",
+        "products",
+        "receivables",
+        "sales",
+        "suppliers",
+        "user_roles"
+      ],
+      "dependencies": [],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U47",
+      "stage": "S8",
+      "name": "CONSTRAINT_VALIDATION",
+      "purpose": "Add NOT VALID FKs+validate; final NOT NULL for empresa_id",
+      "tables_affected": [
+        "aportes_financeiros",
+        "bank_accounts",
+        "cartoes_credito",
+        "categorias_contas_pagar",
+        "company_settings",
+        "compras",
+        "controle_vendas_diario",
+        "controle_vendas_fornecedor",
+        "customers",
+        "finance_entries",
+        "payables",
+        "payment_routing_rules",
+        "products",
+        "receivables",
+        "sales",
+        "suppliers",
+        "user_roles"
+      ],
+      "dependencies": [],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U48",
+      "stage": "S9",
+      "name": "HELPER_FUNCTIONS_DEPLOY",
+      "purpose": "Deploy 8 SECURITY DEFINER helpers minimal privilege",
+      "tables_affected": [
+        "_helpers"
+      ],
+      "dependencies": [],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U49",
+      "stage": "S9",
+      "name": "RLS_TRANSITION_TO_FINAL",
+      "purpose": "Swap policies to tenant-scoped final",
+      "tables_affected": [
+        "aportes_financeiros",
+        "bank_accounts",
+        "cartoes_credito",
+        "categorias_contas_pagar",
+        "company_settings",
+        "compras",
+        "controle_vendas_diario",
+        "controle_vendas_fornecedor",
+        "customers",
+        "finance_entries",
+        "payables",
+        "payment_routing_rules",
+        "products",
+        "receivables",
+        "sales",
+        "suppliers",
+        "user_roles",
+        "bank_movements",
+        "cartoes_faturas",
+        "cartoes_lancamentos",
+        "compras_itens",
+        "controle_vendas_fornecedor_historico",
+        "sale_items",
+        "audit_log",
+        "profiles"
+      ],
+      "dependencies": [],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U50",
+      "stage": "S10",
+      "name": "APPLICATION_CUTOVER",
+      "purpose": "Enable multi-tenant UI + kill switch",
+      "tables_affected": [
+        "_frontend",
+        "_backend"
+      ],
+      "dependencies": [],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    },
+    {
+      "migration_unit_id": "U51",
+      "stage": "S11",
+      "name": "CONTRACT_REMOVE_LEGACY",
+      "purpose": "Drop deprecated policies/indexes/compat",
+      "tables_affected": [
+        "aportes_financeiros",
+        "bank_accounts",
+        "cartoes_credito",
+        "categorias_contas_pagar",
+        "company_settings",
+        "compras",
+        "controle_vendas_diario",
+        "controle_vendas_fornecedor",
+        "customers",
+        "finance_entries",
+        "payables",
+        "payment_routing_rules",
+        "products",
+        "receivables",
+        "sales",
+        "suppliers",
+        "user_roles",
+        "bank_movements",
+        "cartoes_faturas",
+        "cartoes_lancamentos",
+        "compras_itens",
+        "controle_vendas_fornecedor_historico",
+        "sale_items",
+        "audit_log",
+        "profiles"
+      ],
+      "dependencies": [],
+      "transaction_requirement": "SINGLE_TX_WHEN_FEASIBLE",
+      "lock_risk": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "estimated_duration_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "data_volume_class": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "online_or_maintenance_window": "UNKNOWN_WITH_EVIDENCE_GAP",
+      "idempotency": true,
+      "forward_validation": "CATALOG_AND_BASELINE_CHECK",
+      "rollback_strategy": "R1_UNIT_ROLLBACK",
+      "rollback_validation": "BASELINE_RECONCILIATION",
+      "human_gate": true,
+      "state": "DOCUMENTED_NOT_AUTHORIZED"
+    }
+  ]
+}

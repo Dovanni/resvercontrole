@@ -1,0 +1,7 @@
+{
+  "owner_email": "sac@resverarevenda.com.br",
+  "state_initial": "ACTIVE",
+  "role": "OWNER",
+  "idempotency": true,
+  "membership_created": false
+}

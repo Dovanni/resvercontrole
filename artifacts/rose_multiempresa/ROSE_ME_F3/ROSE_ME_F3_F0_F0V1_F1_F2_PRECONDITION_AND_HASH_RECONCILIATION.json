@@ -1,0 +1,46 @@
+{
+  "f0": {
+    "artifacts": 20,
+    "hash_mismatches": 0,
+    "checks": 612,
+    "baseline_sha256": "689af23fb305255932cf86b48d4774775877d4a65061528e11b61487192a9a39",
+    "database_modified": false,
+    "doc_sha256": "6a87e49fefb5572387dbc751816808ca45f4e50a7414b2825640aa7758dc1178",
+    "manifest_sha256": "9a5dfb09575c614f5dfb105cf7015497c072858706304d85d7d26264b4c9bbbc"
+  },
+  "f0_v1": {
+    "artifacts": 12,
+    "hash_mismatches": 0,
+    "checks": 360,
+    "indexes": 53,
+    "constraints": 100,
+    "fks": 47,
+    "doc_sha256": "330cf6849b80fe0a93e5cb40c4a805afe151331bda03584d5eb44365bee47946",
+    "manifest_sha256": "53f916d7ab6a1e3f5362209a10813079836620a3bec2df3680e0f1b6544d78ad"
+  },
+  "f1": {
+    "artifacts": 24,
+    "hash_mismatches": 0,
+    "checks": 728,
+    "principles": 15,
+    "roles": 7,
+    "permissions": 42,
+    "target_architecture": "ROSE_NATIVE_SHARED_APPLICATION_ISOLATED_TENANT_DATA_ARCHITECTURE",
+    "doc_sha256": "65ebd784752fa2e079aaa65bf2d8f5f741e43d5db82c7926468a902e036b7ea8",
+    "constitution_sha256": "d4bf51bb6ae29fbe4620486d75b8226a25f5a8a7bf267148f5d79b6d70421bac",
+    "manifest_sha256": "ed3e9b4621f5ad9605b7d66f80c7ec6f4cd53ced2c70c02c7d9db35a44c12382"
+  },
+  "f2": {
+    "artifacts": 28,
+    "hash_mismatches": 0,
+    "checks": 840,
+    "tables_mapped": 25,
+    "direct": 17,
+    "inherited": 6,
+    "rls_contracts": 100,
+    "helper_functions": 8,
+    "doc_sha256": "4644b9b7468adbb997ff39dc23e90abe455acaff4545e791c8c9181a7dc091da",
+    "manifest_sha256": "e7a529edddcd507ff832d3a86ec4919416cc7654adcd949eea4c854c41a2e42b"
+  },
+  "readiness": "READY_FOR_DETAILED_MIGRATION_BACKFILL_CONSTRAINT_INDEX_AND_ROLLBACK_DESIGN"
+}

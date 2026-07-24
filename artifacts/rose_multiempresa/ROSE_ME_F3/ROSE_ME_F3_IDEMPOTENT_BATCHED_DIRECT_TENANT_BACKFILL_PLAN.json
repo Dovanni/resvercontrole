@@ -1,0 +1,36 @@
+{
+  "source": "INITIAL_CANONICAL_COMPANY",
+  "tables": [
+    "aportes_financeiros",
+    "bank_accounts",
+    "cartoes_credito",
+    "categorias_contas_pagar",
+    "company_settings",
+    "compras",
+    "controle_vendas_diario",
+    "controle_vendas_fornecedor",
+    "customers",
+    "finance_entries",
+    "payables",
+    "payment_routing_rules",
+    "products",
+    "receivables",
+    "sales",
+    "suppliers",
+    "user_roles"
+  ],
+  "idempotent": true,
+  "batching_required_tables": [
+    "UNKNOWN_WITH_EVIDENCE_GAP"
+  ],
+  "abort_on": [
+    "COUNT_DIVERGENCE",
+    "FINANCIAL_DIVERGENCE",
+    "UNEXPECTED_TENANT",
+    "INVALID_FK",
+    "LOCK_EXCESS",
+    "TIMEOUT",
+    "NON_IDEMPOTENT_BEHAVIOR"
+  ],
+  "backfill_executed": false
+}

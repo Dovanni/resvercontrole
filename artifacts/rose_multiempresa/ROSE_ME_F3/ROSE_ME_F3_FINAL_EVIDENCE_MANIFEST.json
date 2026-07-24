@@ -1,0 +1,141 @@
+{
+  "framework": "ROSE-ME-F3",
+  "version": "1.0",
+  "artifacts_total": 32,
+  "documentation": 1,
+  "json_evidence": 30,
+  "manifest": 1,
+  "files": [
+    {
+      "name": "docs/ROSE_ME_F3_DETAILED_MIGRATION_BACKFILL_CONSTRAINT_INDEX_RLS_TRANSITION_VALIDATION_DRY_RUN_AND_ROLLBACK_DESIGN_v1.md",
+      "sha256": "a52e9839399afd38e9ce8bdc31ca8c5c7ae33f1d756d35369b4104afa02b6505"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_F0_F0V1_F1_F2_PRECONDITION_AND_HASH_RECONCILIATION.json",
+      "sha256": "5ebae2f3f569d71fda6faf062ba6aa4c3d68d446d55961176844ba84a0e7d6a8"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_SOURCE_TABLE_AND_EMPRESA_ID_DECISION_RECONCILIATION.json",
+      "sha256": "22905d233ee9d61da7bdbbf4d3ed534c6eb307bb792d57afef89fcfa2d04a43b"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_MIGRATION_PRINCIPLES_GOVERNANCE_AND_CHANGE_CONTROL.json",
+      "sha256": "5c09419413926b816dcd45b725da6b33d23442ac2c58e898d52b73af1cd5ed0f"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_TWELVE_STAGE_EXPAND_TRANSITION_CONTRACT_PLAN.json",
+      "sha256": "a2be86b3f43c21fd644c9978435dd6e028f3e50c0db9444020590b3e6b9920df"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_FUTURE_MIGRATION_UNIT_REGISTRY.json",
+      "sha256": "383136c7c012d07950b95cf1bf5f157b0fe746aabc435dc0ab36f50427975f85"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_MIGRATION_DEPENDENCY_GRAPH.json",
+      "sha256": "74a583563a56e47a38b78fac95a32397eabb2a677ac701b87e7aba94e1f4ac72"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_CAPABILITY_TRANSACTION_LOCK_AND_MAINTENANCE_WINDOW_MATRIX.json",
+      "sha256": "826e3e67d989581227c17929b9c41fa33860f2ea22671eb3c4ac0b0772bc497a"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_BACKUP_RESTORE_RECOVERY_AND_OPERATIONAL_PRECONDITION_PLAN.json",
+      "sha256": "9a5448d31f46a269156842f497f2fe8d208b997087e4bfa19a06c3b8ba2519e7"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_INITIAL_CANONICAL_COMPANY_BOOTSTRAP_PLAN.json",
+      "sha256": "e39e96839d05293fa94a3ed37ad272ebfffd89dc684c80883dc64096ef896cef"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_SYSTEM_ROLE_PERMISSION_AND_ASSIGNMENT_BOOTSTRAP_PLAN.json",
+      "sha256": "b5c81f007429c88bc960f02a29b97792ad89a864e798c7fa5b0903c1b3a6f056"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_INITIAL_OWNER_MEMBERSHIP_BOOTSTRAP_PLAN.json",
+      "sha256": "31766fcd6b39f28652faec7923a6caf661d52b7d5d4be5ecd95fbd521f7994f7"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_SEVENTEEN_DIRECT_EMPRESA_ID_EXPANSION_PLAN.json",
+      "sha256": "59b6d9a117b5234dde813ee256bb68ad75042afa4d62a396606ccec84432e210"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_SIX_INHERITED_TENANT_PATH_VALIDATION_PLAN.json",
+      "sha256": "63c57dc1cbfabf5e0639060f3037ceb0f5e684a94a37edc7aecd0db313520487"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_IDEMPOTENT_BATCHED_DIRECT_TENANT_BACKFILL_PLAN.json",
+      "sha256": "5b31395a593848efa8fa3dbf162a4e5021e25ab5b96e4c001866928cd32cb630"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_ORPHAN_AMBIGUITY_EXCEPTION_AND_HUMAN_DECISION_PLAN.json",
+      "sha256": "1ed276cf73e345cd993b85f71e3152dd322ea1e758ce731cefe8ab3b0328655b"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_CONSTRAINT_VALIDATION_AND_FINAL_NULLABILITY_TRANSITION_PLAN.json",
+      "sha256": "56421f7189f95ad5f3fe1b05be595bf2fa0e15db347ee9d732b01acca121c426"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_TENANT_INDEX_TRANSITION_AND_PERFORMANCE_SUPPORT_PLAN.json",
+      "sha256": "da79dd28b8f2d21b5e712a7d26fdb151b06832e10775112cf353349f32686d2b"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_GLOBAL_TO_TENANT_COMPOSITE_UNIQUENESS_TRANSITION_PLAN.json",
+      "sha256": "80f1d831d6573c4e26cc918f18fd2b9edecdc52761ba974eea08b1ef094b7f81"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_CURRENT_TRANSITION_AND_FINAL_RLS_PLAN.json",
+      "sha256": "3de7b695df847bf84882e9c808667a5ecaecfe8ab070f2cebc97ea8f3a4b21b9"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_MEMBERSHIP_PERMISSION_AND_TENANT_HELPER_TRANSITION_PLAN.json",
+      "sha256": "11318072f305550dfc9dea3b1f200df720e4b299e2caea17d895cd04399e525a"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_APPLICATION_QUERY_MUTATION_CACHE_AND_CONTEXT_TRANSITION_PLAN.json",
+      "sha256": "5238f630e7095a8e9988e2144e56f1dc621243ae84dcc11ce0a67722ee7a485a"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_STORAGE_INTEGRATION_AUTOMATION_AND_JOB_TENANT_TRANSITION_PLAN.json",
+      "sha256": "b240f77137651fcd16344e24e3e8eec48b62a04359bc3cc454694fea566660da"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_BASELINE_CHECKPOINT_AND_NON_REGRESSION_RECONCILIATION_PLAN.json",
+      "sha256": "6fc3437cc6e261e77ab71558ead8b350b0d6230375693dc5eb05404a69aff5d4"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_ISOLATED_DRY_RUN_EXECUTION_AND_ACCEPTANCE_PLAN.json",
+      "sha256": "1a773896f4c25eb94d9a83177df099a099edb50ccc5a04e89629a38aec089dd3"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_STRUCTURAL_DATA_RLS_ISOLATION_AND_ROLLBACK_TEST_MATRIX.json",
+      "sha256": "ae4e64116bb2f16b6cf50695ecb385eb68abf98fc7ecd0a675cc517930afb7e1"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_OBSERVABILITY_AUDIT_INCIDENT_AND_ABORT_CONTROL_PLAN.json",
+      "sha256": "347d77f8535ab6674efee49a54bdfb14521bec1cb55e9bcb820133b6d45bf10c"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_UNIT_STAGE_AND_FULL_RESTORE_ROLLBACK_LADDER.json",
+      "sha256": "509905931d7a56970272a922f4b034b5fa82086cee399353cb439cc388072e57"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_CUTOVER_CONTRACT_CLEANUP_AND_HOMOLOGATION_PLAN.json",
+      "sha256": "de8b23093d1328f286ad948e9582af26ad828aa6f9b65f0b027a178521bc1c0c"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_IMPLEMENTATION_RISK_GAP_AND_OPEN_DECISION_REGISTER.json",
+      "sha256": "37f9696230636e15d5e5b41830531f081ea9b24ef7b74b2efff6cc421d0445f8"
+    },
+    {
+      "name": "artifacts/rose_multiempresa/ROSE_ME_F3/ROSE_ME_F3_SECURITY_BASELINE_PRESERVATION_AND_NO_MUTATION_EVIDENCE.json",
+      "sha256": "e1ebb45d6e1ace9d9c02e21c9d47be3a77539cc4c72df86591223d9ab5490121"
+    }
+  ],
+  "baseline_sha256": "689af23fb305255932cf86b48d4774775877d4a65061528e11b61487192a9a39",
+  "baseline_changed": false,
+  "database_modified": false,
+  "project_published": false,
+  "migration_units_defined": 51,
+  "dependency_edges": 47,
+  "readiness": "READY_FOR_CONTROLLED_STRUCTURAL_EXPAND_IMPLEMENTATION_AFTER_EXPLICIT_HUMAN_AUTHORIZATION_AND_OPERATIONAL_PRECONDITIONS"
+}
