@@ -1,0 +1,14 @@
+{
+  "numeric_consistency_validation_completed": true,
+  "semantic_consistency_validation_completed": true,
+  "negative_object_counts_remaining": 0,
+  "fields": [
+    {"original_field": "database_indexes_found", "original_value": -1, "validation_result": "INVALID_NEGATIVE", "corrected_value": 53, "correction_reason": "Sentinel replaced by real pg_index read.", "materiality": "MATERIAL_BUT_NOT_BLOCKING_F1", "final_value_source": "pg_index"},
+    {"original_field": "database_constraints_found", "original_value": 0, "validation_result": "UNDER_REPORTED", "corrected_value": 100, "correction_reason": "pg_constraint not queried in F0.", "materiality": "MATERIAL_BUT_NOT_BLOCKING_F1", "final_value_source": "pg_constraint"},
+    {"original_field": "database_functions_found", "original_value": 21, "validation_result": "COHERENT", "corrected_value": 21, "correction_reason": "No change.", "materiality": "NON_MATERIAL", "final_value_source": "pg_proc"},
+    {"original_field": "database_triggers_found", "original_value": 21, "validation_result": "COHERENT", "corrected_value": 21, "correction_reason": "No change.", "materiality": "NON_MATERIAL", "final_value_source": "pg_trigger"},
+    {"original_field": "database_tables_found", "original_value": 25, "validation_result": "COHERENT", "corrected_value": 25, "correction_reason": "No change.", "materiality": "NON_MATERIAL", "final_value_source": "pg_class"},
+    {"original_field": "rls_enabled_tables", "original_value": 25, "validation_result": "COHERENT", "corrected_value": 25, "correction_reason": "No change.", "materiality": "NON_MATERIAL", "final_value_source": "pg_class.relrowsecurity"},
+    {"original_field": "evidence_gaps_found", "original_value": 2, "validation_result": "COHERENT_AFTER_IDENTIFICATION", "corrected_value": 2, "correction_reason": "Both gaps identified nominally (GAP-01, GAP-02).", "materiality": "MATERIAL_BUT_NOT_BLOCKING_F1", "final_value_source": "V1 gap register"}
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "original_baseline_sha256": "689af23fb305255932cf86b48d4774775877d4a65061528e11b61487192a9a39",
+  "commercial_baseline_changed": false,
+  "financial_baseline_changed": false,
+  "record_count_baseline_changed": false,
+  "business_calculations_changed": false,
+  "baseline_content_modified": false,
+  "original_baseline_preserved": true,
+  "recomputation_performed": false,
+  "notes": "V1 did not recompute any commercial or financial value. Baseline artifact is untouched."
+}
