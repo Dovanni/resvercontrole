@@ -1,0 +1,14 @@
+{
+  "contract": "ACTIVE_COMPANY_CONTEXT",
+  "preference_storage": "usuario_empresa_preferencias",
+  "authorization_source": "server_side_membership_validation",
+  "rules": [
+    "preferencia_nao_e_autorizacao",
+    "validacao_por_operacao",
+    "troca_auditada",
+    "suspensa_invalida",
+    "url_nao_autoriza",
+    "localStorage_nao_autoriza"
+  ],
+  "created": false
+}

@@ -1,0 +1,710 @@
+{
+  "tables_with_rls_contracts": 25,
+  "operation_level_contracts": 100,
+  "force_rls": true,
+  "deny_by_default": true,
+  "contracts": [
+    {
+      "table": "aportes_financeiros",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "aportes_financeiros",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "aportes_financeiros",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "aportes_financeiros",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "audit_log",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "user_id = auth.uid()",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "audit_log",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "user_id = auth.uid()",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "audit_log",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "user_id = auth.uid()",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "audit_log",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "user_id = auth.uid()",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "bank_accounts",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "bank_accounts",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "bank_accounts",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "bank_accounts",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "bank_movements",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "bank_movements",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "bank_movements",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "bank_movements",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "cartoes_credito",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "cartoes_credito",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "cartoes_credito",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "cartoes_credito",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "cartoes_faturas",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "cartoes_faturas",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "cartoes_faturas",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "cartoes_faturas",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "cartoes_lancamentos",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "cartoes_lancamentos",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "cartoes_lancamentos",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "cartoes_lancamentos",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "categorias_contas_pagar",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "categorias_contas_pagar",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "categorias_contas_pagar",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "categorias_contas_pagar",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "company_settings",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "company_settings",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "company_settings",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "company_settings",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "compras",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "compras",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "compras",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "compras",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "compras_itens",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "compras_itens",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "compras_itens",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "compras_itens",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "controle_vendas_diario",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "controle_vendas_diario",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "controle_vendas_diario",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "controle_vendas_diario",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "controle_vendas_fornecedor",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "controle_vendas_fornecedor",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "controle_vendas_fornecedor",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "controle_vendas_fornecedor",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "controle_vendas_fornecedor_historico",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "controle_vendas_fornecedor_historico",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "controle_vendas_fornecedor_historico",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "controle_vendas_fornecedor_historico",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "customers",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "customers",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "customers",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "customers",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "finance_entries",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "finance_entries",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "finance_entries",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "finance_entries",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "payables",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "payables",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "payables",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "payables",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "payment_routing_rules",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "payment_routing_rules",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "payment_routing_rules",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "payment_routing_rules",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "products",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "products",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "products",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "products",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "profiles",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "user_id = auth.uid()",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "profiles",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "user_id = auth.uid()",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "profiles",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "user_id = auth.uid()",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "profiles",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "user_id = auth.uid()",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "receivables",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "receivables",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "receivables",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "receivables",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "sale_items",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "sale_items",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "sale_items",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "sale_items",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "EXISTS parent tenant match",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "sales",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "sales",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "sales",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "sales",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "suppliers",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "suppliers",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "suppliers",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "suppliers",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "empresa_id = ANY(current_user_company_memberships())",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "user_roles",
+      "op": "SELECT",
+      "require_active_membership": true,
+      "tenant_expression": "user_id = auth.uid()",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "user_roles",
+      "op": "INSERT",
+      "require_active_membership": true,
+      "tenant_expression": "user_id = auth.uid()",
+      "immutable_empresa_id": false
+    },
+    {
+      "table": "user_roles",
+      "op": "UPDATE",
+      "require_active_membership": true,
+      "tenant_expression": "user_id = auth.uid()",
+      "immutable_empresa_id": true
+    },
+    {
+      "table": "user_roles",
+      "op": "DELETE",
+      "require_active_membership": true,
+      "tenant_expression": "user_id = auth.uid()",
+      "immutable_empresa_id": false
+    }
+  ],
+  "contracts_truncated": false,
+  "created": false
+}

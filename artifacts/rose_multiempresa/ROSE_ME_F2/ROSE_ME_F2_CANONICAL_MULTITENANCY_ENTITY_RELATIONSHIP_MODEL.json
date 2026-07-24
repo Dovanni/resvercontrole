@@ -1,0 +1,64 @@
+{
+  "canonical_entities": [
+    "empresas",
+    "empresa_membros",
+    "empresa_papeis",
+    "empresa_permissoes",
+    "empresa_papel_permissoes",
+    "empresa_convites",
+    "usuario_empresa_preferencias",
+    "empresa_audit_logs"
+  ],
+  "canonical_entities_count": 8,
+  "relationships": [
+    {
+      "from": "empresa_membros",
+      "to": "empresas",
+      "fk": "empresa_id",
+      "on_delete": "RESTRICT"
+    },
+    {
+      "from": "empresa_membros",
+      "to": "auth.users",
+      "fk": "usuario_id",
+      "on_delete": "RESTRICT"
+    },
+    {
+      "from": "empresa_membros",
+      "to": "empresa_papeis",
+      "fk": "papel_id",
+      "on_delete": "RESTRICT"
+    },
+    {
+      "from": "empresa_papel_permissoes",
+      "to": "empresa_papeis",
+      "fk": "papel_id",
+      "on_delete": "CASCADE"
+    },
+    {
+      "from": "empresa_papel_permissoes",
+      "to": "empresa_permissoes",
+      "fk": "permissao_id",
+      "on_delete": "CASCADE"
+    },
+    {
+      "from": "empresa_convites",
+      "to": "empresas",
+      "fk": "empresa_id",
+      "on_delete": "CASCADE"
+    },
+    {
+      "from": "empresa_convites",
+      "to": "empresa_papeis",
+      "fk": "papel_id",
+      "on_delete": "RESTRICT"
+    },
+    {
+      "from": "empresa_audit_logs",
+      "to": "empresas",
+      "fk": "empresa_id",
+      "on_delete": "RESTRICT"
+    }
+  ],
+  "created": false
+}

@@ -1,0 +1,14 @@
+{
+  "new_entities_pk": "uuid gen_random_uuid()",
+  "current_pks_preserved": 25,
+  "empresa_id_nullability": {
+    "transition": "NULLABLE",
+    "final": "NOT_NULL"
+  },
+  "check_constraints": [
+    "status domain",
+    "documento_normalizado format",
+    "aceito_em consistency with status"
+  ],
+  "created": false
+}

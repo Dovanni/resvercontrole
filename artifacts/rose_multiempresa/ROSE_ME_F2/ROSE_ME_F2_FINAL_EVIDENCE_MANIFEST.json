@@ -1,0 +1,142 @@
+{
+  "framework": "ROSE-ME-F2",
+  "version": "1.0",
+  "files": [
+    {
+      "key": "technical_document",
+      "path": "docs/ROSE_ME_F2_CANONICAL_MULTITENANCY_LOGICAL_DATA_MODEL_RELATIONSHIP_CONTRACTS_AND_CURRENT_TABLE_MAPPING_v1.md",
+      "sha256": "4644b9b7468adbb997ff39dc23e90abe455acaff4545e791c8c9181a7dc091da"
+    },
+    {
+      "key": "f0_reconciliation",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_F0_SOURCE_INVENTORY_AND_BASELINE_RECONCILIATION.json",
+      "sha256": "e79b2fbfe0e65e995e06ac9819c26c2e988b29591ea37fa15f1c739b05400253"
+    },
+    {
+      "key": "f0_v1_reconciliation",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_F0_V1_CATALOG_INDEX_CONSTRAINT_AND_RELATIONSHIP_RECONCILIATION.json",
+      "sha256": "bbc95cc22cdfafd9f88ec9a564ffd1f19572dd5787ff42e4fa3512de46e3f0a0"
+    },
+    {
+      "key": "f1_reconciliation",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_F1_CONSTITUTION_AND_ARCHITECTURAL_CONTRACT_RECONCILIATION.json",
+      "sha256": "11f94f51ea897d944f5f242615789648a0cfa081e5f5d8d581a1d5320424475a"
+    },
+    {
+      "key": "current_table_inventory",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_CURRENT_TWENTY_FIVE_TABLE_SOURCE_INVENTORY.json",
+      "sha256": "a8964a5c988163a1cf26ae3521ff88d0b8d6030d5e8a458f22481efadac31dd3"
+    },
+    {
+      "key": "canonical_erd",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_CANONICAL_MULTITENANCY_ENTITY_RELATIONSHIP_MODEL.json",
+      "sha256": "b5f5949cd7301ed1681ce9a9bd57d564cce3060ddd997400126ffe73cfbbe21b"
+    },
+    {
+      "key": "entity_attribute_dictionary",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_CANONICAL_ENTITY_AND_ATTRIBUTE_DATA_DICTIONARY.json",
+      "sha256": "08b3fa93d0d0b5f505fbf4166dec6cb0e45e68adbcac254bb4d03b4ec935bff9"
+    },
+    {
+      "key": "company_model",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_CANONICAL_COMPANY_LOGICAL_MODEL.json",
+      "sha256": "83bd631417400eaf65fdbb566d368ef1035e1f6390605cfcd791315ec7932b3c"
+    },
+    {
+      "key": "membership_model",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_COMPANY_MEMBERSHIP_LOGICAL_MODEL.json",
+      "sha256": "8fb4e0778cb3d5f6b08bc9a3a252d290ba896b08ba946f22449c6c96bda244c6"
+    },
+    {
+      "key": "role_model",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_COMPANY_ROLE_LOGICAL_MODEL.json",
+      "sha256": "6dadffc64875ac02af12914ab4d55a093b68aabc67862f9113a3e45480dca71c"
+    },
+    {
+      "key": "permission_model",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_COMPANY_PERMISSION_LOGICAL_MODEL.json",
+      "sha256": "f19f7d39aaea6c003adfaf88e57cdb114d57b33501ba4a353f9c8d2be5e59538"
+    },
+    {
+      "key": "role_permission_matrix",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_SEVEN_ROLE_FORTY_TWO_PERMISSION_ASSIGNMENT_MATRIX.json",
+      "sha256": "7cc68dd5afa87213a2af33453750d3f2c86823dc881516a67c12633fcefb8d26"
+    },
+    {
+      "key": "invitation_model",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_COMPANY_INVITATION_LOGICAL_MODEL.json",
+      "sha256": "6a4a421e4151dab980b430fbb5f5033d046893a0bd2f42dfdda259db980e361d"
+    },
+    {
+      "key": "active_company_context",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_ACTIVE_COMPANY_CONTEXT_LOGICAL_AND_AUTHORIZATION_MODEL.json",
+      "sha256": "eb3cfa9a786752e8f5527397fdc8032c75d728221d2f654c56c2a78a20b90e22"
+    },
+    {
+      "key": "audit_model",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_MULTITENANCY_AUDIT_LOGICAL_MODEL.json",
+      "sha256": "6c6e070c37203de591b5d2287566f8de8f6feaae5421b4e457e33de98c09b83c"
+    },
+    {
+      "key": "table_tenant_classification",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_CURRENT_TABLE_TENANT_SCOPE_CLASSIFICATION_MATRIX.json",
+      "sha256": "1ee6e9b6a354df6021982ac0075e4822e8916bb62f037704de56ba5d37b83dca"
+    },
+    {
+      "key": "empresa_id_decision_matrix",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_TWENTY_THREE_CANDIDATE_EMPRESA_ID_DECISION_MATRIX.json",
+      "sha256": "1bd0539d1324a4d84f60e4bced9465d908c4eec171b5530a488f0884bb3bc4c5"
+    },
+    {
+      "key": "relationship_fk_contract",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_RELATIONSHIP_AND_FOREIGN_KEY_LOGICAL_CONTRACT_MODEL.json",
+      "sha256": "138fa2f9415eefcb54f6e2722e2fc29737421c20877c1e4eafd50fe6c284dee4"
+    },
+    {
+      "key": "key_constraint_nullability",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_PRIMARY_KEY_CONSTRAINT_AND_NULLABILITY_DESIGN.json",
+      "sha256": "49cb5995178d0083a7b9b3fa02bec0e032eed64af977b2e4744a4ca98861d9b9"
+    },
+    {
+      "key": "index_strategy",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_TENANT_INDEX_AND_QUERY_SUPPORT_STRATEGY.json",
+      "sha256": "f3e019c982ca87cb60b65ed72c6c6ce3b43e1bb61926c8c8db66911ac1b5962c"
+    },
+    {
+      "key": "uniqueness_decision",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_GLOBAL_AND_TENANT_COMPOSITE_UNIQUENESS_DECISION_MATRIX.json",
+      "sha256": "f5caf03fc3df562cf6d76201fbe72cf7188bdc2bb0ed2c9d1e97d0ac3dda4d8c"
+    },
+    {
+      "key": "rls_contract_matrix",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_TABLE_OPERATION_PERMISSION_AND_RLS_LOGICAL_CONTRACT_MATRIX.json",
+      "sha256": "1ce52c90504830ce4a4123ed6a1d4452aae706a09f7146e998eb3ce0aed3ff45"
+    },
+    {
+      "key": "helper_contracts",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_MEMBERSHIP_PERMISSION_AND_TENANT_VALIDATION_HELPER_CONTRACTS.json",
+      "sha256": "746753212d0f1505d719f4cff8716c354c38a0c40d4739bd91b4f6816b601816"
+    },
+    {
+      "key": "lifecycle_contracts",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_COMPANY_AND_MEMBERSHIP_TRANSACTIONAL_LIFECYCLE_CONTRACTS.json",
+      "sha256": "b822ed84854d1a710a4bad144bc18baeb0c64c399f08c71a4067b9e988ff708d"
+    },
+    {
+      "key": "compatibility_baseline_f3_order",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_INITIAL_COMPANY_COMPATIBILITY_BASELINE_AND_F3_DEPENDENCY_ORDER.json",
+      "sha256": "539965571ff763a3b8705a1cb9dbf6a4ab3b7326c48e755fa94a6fad7b0d592f"
+    },
+    {
+      "key": "risk_open_decision_register",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_LOGICAL_MODEL_RISK_GAP_AND_OPEN_DECISION_REGISTER.json",
+      "sha256": "84eabd07abef211e9155adff95684a9dad16059118af48ceff5dcc5dda422e0f"
+    },
+    {
+      "key": "security_no_mutation",
+      "path": "artifacts/rose_multiempresa/ROSE_ME_F2/ROSE_ME_F2_SECURITY_BASELINE_PRESERVATION_AND_NO_MUTATION_EVIDENCE.json",
+      "sha256": "81b3c641375719741829705b86521275c7423578440fa5b38946fe7738d16551"
+    }
+  ],
+  "total_files": 28
+}

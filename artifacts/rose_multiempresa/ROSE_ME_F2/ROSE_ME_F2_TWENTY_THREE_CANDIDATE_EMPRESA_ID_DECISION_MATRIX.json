@@ -1,0 +1,126 @@
+{
+  "candidates": 23,
+  "decisions": [
+    {
+      "name": "aportes_financeiros",
+      "decision": "ADD_DIRECT_EMPRESA_ID",
+      "parent": null
+    },
+    {
+      "name": "audit_log",
+      "decision": "ADD_DIRECT_EMPRESA_ID",
+      "parent": null
+    },
+    {
+      "name": "bank_accounts",
+      "decision": "ADD_DIRECT_EMPRESA_ID",
+      "parent": null
+    },
+    {
+      "name": "bank_movements",
+      "decision": "INHERIT_TENANT_FROM_REQUIRED_PARENT",
+      "parent": "bank_accounts"
+    },
+    {
+      "name": "cartoes_credito",
+      "decision": "ADD_DIRECT_EMPRESA_ID",
+      "parent": null
+    },
+    {
+      "name": "cartoes_faturas",
+      "decision": "INHERIT_TENANT_FROM_REQUIRED_PARENT",
+      "parent": "cartoes_credito"
+    },
+    {
+      "name": "cartoes_lancamentos",
+      "decision": "INHERIT_TENANT_FROM_REQUIRED_PARENT",
+      "parent": "cartoes_faturas"
+    },
+    {
+      "name": "categorias_contas_pagar",
+      "decision": "ADD_DIRECT_EMPRESA_ID",
+      "parent": null
+    },
+    {
+      "name": "company_settings",
+      "decision": "ADD_DIRECT_EMPRESA_ID",
+      "parent": null
+    },
+    {
+      "name": "compras",
+      "decision": "ADD_DIRECT_EMPRESA_ID",
+      "parent": null
+    },
+    {
+      "name": "compras_itens",
+      "decision": "INHERIT_TENANT_FROM_REQUIRED_PARENT",
+      "parent": "compras"
+    },
+    {
+      "name": "controle_vendas_diario",
+      "decision": "ADD_DIRECT_EMPRESA_ID",
+      "parent": null
+    },
+    {
+      "name": "controle_vendas_fornecedor",
+      "decision": "ADD_DIRECT_EMPRESA_ID",
+      "parent": null
+    },
+    {
+      "name": "controle_vendas_fornecedor_historico",
+      "decision": "INHERIT_TENANT_FROM_REQUIRED_PARENT",
+      "parent": "controle_vendas_fornecedor"
+    },
+    {
+      "name": "customers",
+      "decision": "ADD_DIRECT_EMPRESA_ID",
+      "parent": null
+    },
+    {
+      "name": "finance_entries",
+      "decision": "ADD_DIRECT_EMPRESA_ID",
+      "parent": null
+    },
+    {
+      "name": "payables",
+      "decision": "ADD_DIRECT_EMPRESA_ID",
+      "parent": null
+    },
+    {
+      "name": "payment_routing_rules",
+      "decision": "ADD_DIRECT_EMPRESA_ID",
+      "parent": null
+    },
+    {
+      "name": "products",
+      "decision": "ADD_DIRECT_EMPRESA_ID",
+      "parent": null
+    },
+    {
+      "name": "receivables",
+      "decision": "ADD_DIRECT_EMPRESA_ID",
+      "parent": null
+    },
+    {
+      "name": "sale_items",
+      "decision": "INHERIT_TENANT_FROM_REQUIRED_PARENT",
+      "parent": "sales"
+    },
+    {
+      "name": "sales",
+      "decision": "ADD_DIRECT_EMPRESA_ID",
+      "parent": null
+    },
+    {
+      "name": "suppliers",
+      "decision": "ADD_DIRECT_EMPRESA_ID",
+      "parent": null
+    }
+  ],
+  "direct": 17,
+  "inherited": 6,
+  "reuse": 0,
+  "reclassified": 0,
+  "unresolved": 0,
+  "total": 23
+}

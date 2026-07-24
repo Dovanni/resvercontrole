@@ -1,0 +1,28 @@
+{
+  "entity": "empresa_papeis",
+  "attributes": [
+    "id",
+    "empresa_id",
+    "codigo",
+    "nome",
+    "descricao",
+    "tipo",
+    "sistema",
+    "ativo",
+    "criado_em",
+    "atualizado_em",
+    "criado_por"
+  ],
+  "roles": [
+    "OWNER",
+    "ADMIN",
+    "FINANCIAL",
+    "COMMERCIAL",
+    "OPERATOR",
+    "AUDITOR",
+    "VIEWER"
+  ],
+  "decision": "HYBRID_SYSTEM_TEMPLATE_AND_COMPANY_CUSTOM_ROLE",
+  "system_roles_immutable": true,
+  "created": false
+}

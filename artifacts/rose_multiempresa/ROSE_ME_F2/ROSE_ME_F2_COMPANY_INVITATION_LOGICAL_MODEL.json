@@ -1,0 +1,28 @@
+{
+  "entity": "empresa_convites",
+  "attributes": [
+    "id",
+    "empresa_id",
+    "email_normalizado",
+    "papel_id",
+    "status",
+    "token_hash",
+    "expira_em",
+    "convidado_por",
+    "criado_em",
+    "aceito_em",
+    "revogado_em",
+    "revogado_por",
+    "correlation_id"
+  ],
+  "statuses": [
+    "PENDING",
+    "ACCEPTED",
+    "EXPIRED",
+    "REVOKED",
+    "CANCELLED"
+  ],
+  "token_stored": "hash_only",
+  "single_use": true,
+  "created": false
+}

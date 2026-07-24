@@ -1,0 +1,193 @@
+{
+  "new_fks": [
+    {
+      "from": "empresa_membros.empresa_id",
+      "to": "empresas.id",
+      "on_delete": "RESTRICT",
+      "on_update": "CASCADE",
+      "nullable": false
+    },
+    {
+      "from": "empresa_membros.usuario_id",
+      "to": "auth.users.id",
+      "on_delete": "RESTRICT",
+      "nullable": false
+    },
+    {
+      "from": "empresa_membros.papel_id",
+      "to": "empresa_papeis.id",
+      "on_delete": "RESTRICT",
+      "nullable": false
+    },
+    {
+      "from": "empresa_papel_permissoes.papel_id",
+      "to": "empresa_papeis.id",
+      "on_delete": "CASCADE",
+      "nullable": false
+    },
+    {
+      "from": "empresa_papel_permissoes.permissao_id",
+      "to": "empresa_permissoes.id",
+      "on_delete": "CASCADE",
+      "nullable": false
+    },
+    {
+      "from": "empresa_convites.empresa_id",
+      "to": "empresas.id",
+      "on_delete": "CASCADE",
+      "nullable": false
+    },
+    {
+      "from": "empresa_convites.papel_id",
+      "to": "empresa_papeis.id",
+      "on_delete": "RESTRICT",
+      "nullable": false
+    },
+    {
+      "from": "empresa_audit_logs.empresa_id",
+      "to": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable": false
+    }
+  ],
+  "tenant_fks_to_add": [
+    {
+      "table": "aportes_financeiros",
+      "column": "empresa_id",
+      "references": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable_transition": true,
+      "nullable_final": false
+    },
+    {
+      "table": "audit_log",
+      "column": "empresa_id",
+      "references": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable_transition": true,
+      "nullable_final": false
+    },
+    {
+      "table": "bank_accounts",
+      "column": "empresa_id",
+      "references": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable_transition": true,
+      "nullable_final": false
+    },
+    {
+      "table": "cartoes_credito",
+      "column": "empresa_id",
+      "references": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable_transition": true,
+      "nullable_final": false
+    },
+    {
+      "table": "categorias_contas_pagar",
+      "column": "empresa_id",
+      "references": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable_transition": true,
+      "nullable_final": false
+    },
+    {
+      "table": "company_settings",
+      "column": "empresa_id",
+      "references": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable_transition": true,
+      "nullable_final": false
+    },
+    {
+      "table": "compras",
+      "column": "empresa_id",
+      "references": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable_transition": true,
+      "nullable_final": false
+    },
+    {
+      "table": "controle_vendas_diario",
+      "column": "empresa_id",
+      "references": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable_transition": true,
+      "nullable_final": false
+    },
+    {
+      "table": "controle_vendas_fornecedor",
+      "column": "empresa_id",
+      "references": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable_transition": true,
+      "nullable_final": false
+    },
+    {
+      "table": "customers",
+      "column": "empresa_id",
+      "references": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable_transition": true,
+      "nullable_final": false
+    },
+    {
+      "table": "finance_entries",
+      "column": "empresa_id",
+      "references": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable_transition": true,
+      "nullable_final": false
+    },
+    {
+      "table": "payables",
+      "column": "empresa_id",
+      "references": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable_transition": true,
+      "nullable_final": false
+    },
+    {
+      "table": "payment_routing_rules",
+      "column": "empresa_id",
+      "references": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable_transition": true,
+      "nullable_final": false
+    },
+    {
+      "table": "products",
+      "column": "empresa_id",
+      "references": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable_transition": true,
+      "nullable_final": false
+    },
+    {
+      "table": "receivables",
+      "column": "empresa_id",
+      "references": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable_transition": true,
+      "nullable_final": false
+    },
+    {
+      "table": "sales",
+      "column": "empresa_id",
+      "references": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable_transition": true,
+      "nullable_final": false
+    },
+    {
+      "table": "suppliers",
+      "column": "empresa_id",
+      "references": "empresas.id",
+      "on_delete": "RESTRICT",
+      "nullable_transition": true,
+      "nullable_final": false
+    }
+  ],
+  "existing_fks_preserved": 47,
+  "created": false
+}

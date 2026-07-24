@@ -1,0 +1,21 @@
+{
+  "helpers": [
+    "current_user_has_active_membership(company_id)",
+    "current_user_has_company_permission(company_id, permission_code)",
+    "current_user_can_access_resource(company_id, resource_type, resource_id)",
+    "current_user_company_memberships()",
+    "validate_active_company_context(company_id)",
+    "can_manage_target_member(company_id, target_membership_id)",
+    "can_assign_target_role(company_id, target_role_id)",
+    "can_transfer_company_ownership(company_id)"
+  ],
+  "count": 8,
+  "requirements": [
+    "stable",
+    "search_path=public",
+    "security_definer_only_when_indispensable",
+    "no_service_role_in_browser",
+    "auditable"
+  ],
+  "created": false
+}

@@ -1,0 +1,18 @@
+{
+  "operations": [
+    "CREATE_COMPANY_AND_OWNER_MEMBERSHIP",
+    "INVITE_COMPANY_MEMBER",
+    "ACCEPT_COMPANY_INVITATION",
+    "CHANGE_COMPANY_MEMBER_ROLE",
+    "SUSPEND_COMPANY_MEMBER",
+    "REACTIVATE_COMPANY_MEMBER",
+    "REMOVE_COMPANY_MEMBER",
+    "TRANSFER_COMPANY_OWNERSHIP",
+    "SUSPEND_COMPANY",
+    "CLOSE_COMPANY"
+  ],
+  "transactional": true,
+  "idempotent": true,
+  "audited": true,
+  "executed": false
+}

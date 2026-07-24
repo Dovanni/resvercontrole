@@ -1,0 +1,67 @@
+{
+  "risks": [
+    {
+      "id": "R01",
+      "topic": "empresa_id direct vs inherited",
+      "decision": "HYBRID by classification",
+      "gate": "F3"
+    },
+    {
+      "id": "R02",
+      "topic": "role template model",
+      "decision": "HYBRID_SYSTEM_TEMPLATE_AND_COMPANY_CUSTOM_ROLE",
+      "gate": "F3"
+    },
+    {
+      "id": "R03",
+      "topic": "active company preference storage",
+      "decision": "usuario_empresa_preferencias",
+      "gate": "F3"
+    },
+    {
+      "id": "R04",
+      "topic": "documento uniqueness",
+      "decision": "GLOBAL on empresas.documento_normalizado",
+      "gate": "F3"
+    },
+    {
+      "id": "R05",
+      "topic": "products.sku uniqueness",
+      "decision": "TENANT COMPOSITE",
+      "gate": "F3"
+    },
+    {
+      "id": "R06",
+      "topic": "user_roles legacy vs empresa_membros",
+      "decision": "MIGRATE",
+      "gate": "F3"
+    },
+    {
+      "id": "R07",
+      "topic": "audit_log extension vs new empresa_audit_logs",
+      "decision": "NEW canonical entity, legacy retained read-only",
+      "gate": "F3"
+    },
+    {
+      "id": "R08",
+      "topic": "orphan historical rows on backfill",
+      "decision": "assign initial canonical company",
+      "gate": "F3"
+    },
+    {
+      "id": "R09",
+      "topic": "last OWNER protection",
+      "decision": "TRANSFER_OWNERSHIP required before removal",
+      "gate": "F3"
+    },
+    {
+      "id": "R10",
+      "topic": "Storage buckets path pattern",
+      "decision": "empresa_id/modulo/recurso_id/arquivo",
+      "gate": "F3"
+    }
+  ],
+  "modeling_gaps_found": 0,
+  "unresolved_material_modeling_gaps": 0,
+  "critical_conflicts": 0
+}

@@ -1,0 +1,157 @@
+{
+  "total_tables": 25,
+  "tables": [
+    {
+      "name": "aportes_financeiros",
+      "schema": "public",
+      "f0_classification": "TENANT_DIRECT",
+      "parent_table": null
+    },
+    {
+      "name": "audit_log",
+      "schema": "public",
+      "f0_classification": "AUDIT_SCOPED",
+      "parent_table": null
+    },
+    {
+      "name": "bank_accounts",
+      "schema": "public",
+      "f0_classification": "TENANT_DIRECT",
+      "parent_table": null
+    },
+    {
+      "name": "bank_movements",
+      "schema": "public",
+      "f0_classification": "TENANT_INHERITED_FROM_PARENT",
+      "parent_table": "bank_accounts"
+    },
+    {
+      "name": "cartoes_credito",
+      "schema": "public",
+      "f0_classification": "TENANT_DIRECT",
+      "parent_table": null
+    },
+    {
+      "name": "cartoes_faturas",
+      "schema": "public",
+      "f0_classification": "TENANT_INHERITED_FROM_PARENT",
+      "parent_table": "cartoes_credito"
+    },
+    {
+      "name": "cartoes_lancamentos",
+      "schema": "public",
+      "f0_classification": "TENANT_INHERITED_FROM_PARENT",
+      "parent_table": "cartoes_faturas"
+    },
+    {
+      "name": "categorias_contas_pagar",
+      "schema": "public",
+      "f0_classification": "TENANT_DIRECT",
+      "parent_table": null
+    },
+    {
+      "name": "company_settings",
+      "schema": "public",
+      "f0_classification": "TENANT_DIRECT",
+      "parent_table": null
+    },
+    {
+      "name": "compras",
+      "schema": "public",
+      "f0_classification": "TENANT_DIRECT",
+      "parent_table": null
+    },
+    {
+      "name": "compras_itens",
+      "schema": "public",
+      "f0_classification": "TENANT_INHERITED_FROM_PARENT",
+      "parent_table": "compras"
+    },
+    {
+      "name": "controle_vendas_diario",
+      "schema": "public",
+      "f0_classification": "TENANT_DIRECT",
+      "parent_table": null
+    },
+    {
+      "name": "controle_vendas_fornecedor",
+      "schema": "public",
+      "f0_classification": "TENANT_DIRECT",
+      "parent_table": null
+    },
+    {
+      "name": "controle_vendas_fornecedor_historico",
+      "schema": "public",
+      "f0_classification": "TENANT_INHERITED_FROM_PARENT",
+      "parent_table": "controle_vendas_fornecedor"
+    },
+    {
+      "name": "customers",
+      "schema": "public",
+      "f0_classification": "TENANT_DIRECT",
+      "parent_table": null
+    },
+    {
+      "name": "finance_entries",
+      "schema": "public",
+      "f0_classification": "TENANT_DIRECT",
+      "parent_table": null
+    },
+    {
+      "name": "payables",
+      "schema": "public",
+      "f0_classification": "TENANT_DIRECT",
+      "parent_table": null
+    },
+    {
+      "name": "payment_routing_rules",
+      "schema": "public",
+      "f0_classification": "TENANT_DIRECT",
+      "parent_table": null
+    },
+    {
+      "name": "products",
+      "schema": "public",
+      "f0_classification": "TENANT_DIRECT",
+      "parent_table": null
+    },
+    {
+      "name": "profiles",
+      "schema": "public",
+      "f0_classification": "USER_SCOPED",
+      "parent_table": null
+    },
+    {
+      "name": "receivables",
+      "schema": "public",
+      "f0_classification": "TENANT_DIRECT",
+      "parent_table": null
+    },
+    {
+      "name": "sale_items",
+      "schema": "public",
+      "f0_classification": "TENANT_INHERITED_FROM_PARENT",
+      "parent_table": "sales"
+    },
+    {
+      "name": "sales",
+      "schema": "public",
+      "f0_classification": "TENANT_DIRECT",
+      "parent_table": null
+    },
+    {
+      "name": "suppliers",
+      "schema": "public",
+      "f0_classification": "TENANT_DIRECT",
+      "parent_table": null
+    },
+    {
+      "name": "user_roles",
+      "schema": "public",
+      "f0_classification": "MEMBERSHIP_SCOPED",
+      "parent_table": null
+    }
+  ],
+  "source": "F0+F0-V1+read_only_catalog",
+  "invented_names": 0
+}
