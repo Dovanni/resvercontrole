@@ -1,0 +1,10 @@
+{
+  "kill_switch_name": "ROSE_NATIVE_MULTITENANCY_KILL_SWITCH",
+  "kill_switch_contract_defined": true,
+  "kill_switch_implemented": false,
+  "kill_switch_validated": false,
+  "kill_switch_safe_initial_value": true,
+  "interpretation": "true = multitenancy evolution disabled/blocked",
+  "requirements": ["server-side","authorized human activation","availability during execution","immediate effect","blocks new multitenancy ops","preserves data","auditable","dry-run tested","operational docs","recovery procedure","access segregation"],
+  "future_gate": "ROSE-ME-F4-OPR-S1"
+}

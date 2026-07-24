@@ -1,0 +1,10 @@
+{
+  "security_preconditions_defined": true,
+  "rls_review_required": true,
+  "negative_isolation_testing_required": true,
+  "platform_financial_access_prohibited": true,
+  "metrixhr_financial_access_prohibited": true,
+  "invariants": ["deny by default","membership ACTIVE","active company validated","empresa_id not trusted from browser","service_role prohibited in browser","PLATFORM_ADMIN no automatic financial access","METRIXHR no automatic financial access","RLS never disabled","storage isolated","integrations isolated","jobs isolated","cache partitioned","URL is not authorization","localStorage is not authorization","no temporary cross-tenant access"],
+  "required_future_tests": ["independent policy review","positive tests","negative tests","Company A vs B","suspended membership","Viewer","Commercial","Financial","PLATFORM_ADMIN","export","Storage","job","cache"],
+  "tests_executed": false
+}

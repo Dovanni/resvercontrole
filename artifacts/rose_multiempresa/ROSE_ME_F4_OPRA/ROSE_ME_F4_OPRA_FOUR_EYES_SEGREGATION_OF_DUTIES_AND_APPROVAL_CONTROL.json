@@ -1,0 +1,20 @@
+{
+  "control_name": "FOUR_EYES_OPERATIONAL_CONTROL",
+  "four_eyes_defined": true,
+  "four_eyes_implemented": false,
+  "four_eyes_participants_confirmed": 0,
+  "minimum_participants": 2,
+  "rules": [
+    "executor != approver",
+    "no self-approval",
+    "no AI approval",
+    "explicit acceptance with timestamp",
+    "scope limited to gate",
+    "abort authority preserved"
+  ],
+  "required_pairs": [
+    {"executor":"HUMAN_EXECUTION_OPERATOR","approver":"HUMAN_CHANGE_APPROVER"},
+    {"executor":"HUMAN_DATABASE_OWNER","approver":"HUMAN_TECHNICAL_OWNER"},
+    {"validator":"HUMAN_FINANCIAL_VALIDATOR","reviewer":"HUMAN_AUDIT_OBSERVER"}
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "framework": "ROSE-ME-F4-OPRA",
+  "operational_preconditions_total": 15,
+  "distribution": {
+    "SATISFIED_WITH_VERIFIABLE_EVIDENCE": 0,
+    "READY_FOR_SEPARATE_CONTROLLED_EXECUTION": 0,
+    "PARTIALLY_SATISFIED": 0,
+    "NOT_SATISFIED": 0,
+    "UNKNOWN_EVIDENCE_REQUIRED": 15,
+    "BLOCKED_BY_HUMAN_ASSIGNMENT": 0,
+    "BLOCKED_BY_PLATFORM_CAPABILITY": 0,
+    "BLOCKED_BY_EXTERNAL_DEPENDENCY": 0,
+    "BLOCKED_BY_SECURITY_RISK": 0,
+    "NOT_APPLICABLE_WITH_JUSTIFICATION": 0
+  },
+  "sum_check": 15,
+  "preconditions": [
+    {"id":"OP-01","name":"BACKUP_EXECUTED","mandatory":true,"state":"UNKNOWN_EVIDENCE_REQUIRED","evidence_found":"none","evidence_missing":"controlled backup identifier with timestamp, scope, integrity, responsible human","human_owner":"HUMAN_DATABASE_OWNER","future_gate":"ROSE-ME-F4-OPR-B1","materiality":"CRITICAL"},
+    {"id":"OP-02","name":"RESTORE_PROVEN","mandatory":true,"state":"UNKNOWN_EVIDENCE_REQUIRED","evidence_found":"none","evidence_missing":"restore test to isolated environment with integrity report","human_owner":"HUMAN_DATABASE_OWNER","future_gate":"ROSE-ME-F4-OPR-R1","materiality":"CRITICAL"},
+    {"id":"OP-03","name":"DRY_RUN_EXECUTED","mandatory":true,"state":"UNKNOWN_EVIDENCE_REQUIRED","evidence_found":"none","evidence_missing":"isolated dry-run execution log with 12-stage validation","human_owner":"HUMAN_EXECUTION_OPERATOR","future_gate":"ROSE-ME-F4-OPR-D1","materiality":"CRITICAL"},
+    {"id":"OP-04","name":"DRY_RUN_ENVIRONMENT_DEFINED","mandatory":true,"state":"UNKNOWN_EVIDENCE_REQUIRED","evidence_found":"conceptual code ROSE-ME-DRYRUN-01","evidence_missing":"provisioned isolated environment","human_owner":"HUMAN_TECHNICAL_OWNER","future_gate":"ROSE-ME-F4-OPR-E1","materiality":"HIGH"},
+    {"id":"OP-05","name":"OPERATIONAL_WINDOW_APPROVED","mandatory":true,"state":"UNKNOWN_EVIDENCE_REQUIRED","evidence_found":"none","evidence_missing":"approved date/time/duration with human sign-off","human_owner":"HUMAN_CHANGE_APPROVER","future_gate":"ROSE-ME-F4-OPR-W1","materiality":"HIGH"},
+    {"id":"OP-06","name":"HUMAN_OWNERS_ASSIGNED","mandatory":true,"state":"UNKNOWN_EVIDENCE_REQUIRED","evidence_found":"none","evidence_missing":"named humans for 10 roles with explicit acceptance","human_owner":"HUMAN_PRODUCT_OWNER","future_gate":"ROSE-ME-F4-OPR-H1","materiality":"CRITICAL"},
+    {"id":"OP-07","name":"FOUR_EYES_OPERATIONAL","mandatory":true,"state":"UNKNOWN_EVIDENCE_REQUIRED","evidence_found":"contract defined","evidence_missing":"two distinct confirmed humans (executor + approver)","human_owner":"HUMAN_CHANGE_APPROVER","future_gate":"ROSE-ME-F4-OPR-H1","materiality":"CRITICAL"},
+    {"id":"OP-08","name":"FEATURE_FLAG_IMPLEMENTED","mandatory":true,"state":"UNKNOWN_EVIDENCE_REQUIRED","evidence_found":"contract defined (name ROSE_NATIVE_MULTITENANCY_ENABLED, default false)","evidence_missing":"server-side implementation with audit","human_owner":"HUMAN_TECHNICAL_OWNER","future_gate":"ROSE-ME-F4-OPR-S1","materiality":"HIGH"},
+    {"id":"OP-09","name":"KILL_SWITCH_VALIDATED","mandatory":true,"state":"UNKNOWN_EVIDENCE_REQUIRED","evidence_found":"contract defined (name ROSE_NATIVE_MULTITENANCY_KILL_SWITCH, default true)","evidence_missing":"implementation and dry-run activation test","human_owner":"HUMAN_TECHNICAL_OWNER","future_gate":"ROSE-ME-F4-OPR-S1","materiality":"CRITICAL"},
+    {"id":"OP-10","name":"EXECUTION_PLAN_REVIEWED","mandatory":true,"state":"UNKNOWN_EVIDENCE_REQUIRED","evidence_found":"documentary plan (12 stages/51 units/47 deps)","evidence_missing":"human review sign-off","human_owner":"HUMAN_TECHNICAL_OWNER","future_gate":"ROSE-ME-F4-OPR-P1","materiality":"HIGH"},
+    {"id":"OP-11","name":"FUTURE_SQL_PACKAGE_REVIEWED","mandatory":true,"state":"UNKNOWN_EVIDENCE_REQUIRED","evidence_found":"contract defined","evidence_missing":"generated SQL package + independent review","human_owner":"HUMAN_DATABASE_OWNER","future_gate":"ROSE-ME-F4-OPR-P1","materiality":"HIGH"},
+    {"id":"OP-12","name":"HUMAN_AUTHORIZATION_FOR_F4","mandatory":true,"state":"UNKNOWN_EVIDENCE_REQUIRED","evidence_found":"none","evidence_missing":"explicit human authorization statement","human_owner":"HUMAN_PRODUCT_OWNER","future_gate":"ROSE-ME-F4-H1","materiality":"CRITICAL"},
+    {"id":"OP-13","name":"MIGRATION_AUTHORIZATION","mandatory":true,"state":"UNKNOWN_EVIDENCE_REQUIRED","evidence_found":"none","evidence_missing":"explicit migration authorization","human_owner":"HUMAN_CHANGE_APPROVER","future_gate":"ROSE-ME-F4-H1","materiality":"CRITICAL"},
+    {"id":"OP-14","name":"BACKFILL_AUTHORIZATION","mandatory":true,"state":"UNKNOWN_EVIDENCE_REQUIRED","evidence_found":"none","evidence_missing":"explicit backfill authorization","human_owner":"HUMAN_CHANGE_APPROVER","future_gate":"ROSE-ME-F4-H1","materiality":"CRITICAL"},
+    {"id":"OP-15","name":"PRODUCTION_AUTHORIZATION","mandatory":true,"state":"UNKNOWN_EVIDENCE_REQUIRED","evidence_found":"none","evidence_missing":"explicit production change authorization","human_owner":"HUMAN_PRODUCT_OWNER","future_gate":"ROSE-ME-F4-H1","materiality":"CRITICAL"}
+  ]
+}

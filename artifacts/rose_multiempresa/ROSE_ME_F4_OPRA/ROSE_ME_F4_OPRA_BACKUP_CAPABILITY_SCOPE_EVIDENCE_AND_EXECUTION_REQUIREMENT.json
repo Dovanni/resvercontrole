@@ -1,0 +1,10 @@
+{
+  "backup_capability_status": "UNKNOWN_EVIDENCE_REQUIRED",
+  "backup_execution_status": "NOT_EXECUTED",
+  "backup_evidence_status": "NONE",
+  "backup_executed": false,
+  "scope_required": ["database","auth","storage","configuration","integrations"],
+  "attributes_required": ["frequency","retention","encryption","access","responsible","point_id","completion_evidence","RPO","RTO","limitations","vendor_dependency","cost","rollback_point"],
+  "capability_vs_execution_separation": true,
+  "future_gate": "ROSE-ME-F4-OPR-B1"
+}

@@ -1,0 +1,19 @@
+{
+  "human_roles_required": 10,
+  "human_roles_assigned": 0,
+  "human_roles_unassigned": 10,
+  "ai_may_occupy_human_role": false,
+  "roles": [
+    {"role":"HUMAN_PRODUCT_OWNER","assignee":"UNASSIGNED","authority":"authorize F4 and production change","participates_in_execution":false,"participates_in_rollback":false,"participates_in_homologation":true},
+    {"role":"HUMAN_TECHNICAL_OWNER","assignee":"UNASSIGNED","authority":"technical review of plan and package","participates_in_execution":true,"participates_in_rollback":true,"participates_in_homologation":true},
+    {"role":"HUMAN_DATABASE_OWNER","assignee":"UNASSIGNED","authority":"backup, restore, locks, migration","participates_in_execution":true,"participates_in_rollback":true,"participates_in_homologation":true},
+    {"role":"HUMAN_SECURITY_OWNER","assignee":"UNASSIGNED","authority":"RLS and isolation review","participates_in_execution":false,"participates_in_rollback":true,"participates_in_homologation":true},
+    {"role":"HUMAN_PRIVACY_OWNER","assignee":"UNASSIGNED","authority":"data protection review","participates_in_execution":false,"participates_in_rollback":false,"participates_in_homologation":true},
+    {"role":"HUMAN_FINANCIAL_VALIDATOR","assignee":"UNASSIGNED","authority":"validate financial baseline","participates_in_execution":false,"participates_in_rollback":true,"participates_in_homologation":true},
+    {"role":"HUMAN_CHANGE_APPROVER","assignee":"UNASSIGNED","authority":"four-eyes approval of migration/backfill","participates_in_execution":false,"participates_in_rollback":false,"participates_in_homologation":true},
+    {"role":"HUMAN_AUDIT_OBSERVER","assignee":"UNASSIGNED","authority":"independent observation and evidence","participates_in_execution":true,"participates_in_rollback":true,"participates_in_homologation":true},
+    {"role":"HUMAN_EXECUTION_OPERATOR","assignee":"UNASSIGNED","authority":"execute approved package","participates_in_execution":true,"participates_in_rollback":true,"participates_in_homologation":false},
+    {"role":"HUMAN_ROLLBACK_AUTHORITY","assignee":"UNASSIGNED","authority":"abort/rollback decision","participates_in_execution":true,"participates_in_rollback":true,"participates_in_homologation":true}
+  ],
+  "segregation_rule":"HUMAN_EXECUTION_OPERATOR must differ from HUMAN_CHANGE_APPROVER and HUMAN_ROLLBACK_AUTHORITY"
+}

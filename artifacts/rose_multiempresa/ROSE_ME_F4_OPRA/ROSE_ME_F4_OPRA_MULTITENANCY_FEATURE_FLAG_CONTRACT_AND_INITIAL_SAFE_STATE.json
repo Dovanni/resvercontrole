@@ -1,0 +1,8 @@
+{
+  "feature_flag_name": "ROSE_NATIVE_MULTITENANCY_ENABLED",
+  "feature_flag_contract_defined": true,
+  "feature_flag_implemented": false,
+  "feature_flag_initial_value": false,
+  "requirements": ["server-side","no browser-only trust","default false","environment scope","tenant scope when needed","auditable","authorized change","rollback","missing-config protection","tests"],
+  "future_gate": "ROSE-ME-F4-OPR-S1"
+}
