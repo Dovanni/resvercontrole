@@ -1,0 +1,292 @@
+{
+  "schemas": [
+    "public"
+  ],
+  "tables_found": 25,
+  "views": 0,
+  "materialized_views": 0,
+  "functions": 21,
+  "triggers_visible_in_functions": 21,
+  "indexes": "managed_by_supabase",
+  "foreign_keys": 0,
+  "extensions_relevant": [
+    "pgcrypto (assumed for gen_random_uuid)"
+  ],
+  "tables": [
+    {
+      "schema": "public",
+      "table": "aportes_financeiros",
+      "row_count": 0,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "audit_log",
+      "row_count": 802,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "AUDIT_SCOPED",
+      "future_empresa_id_required": false
+    },
+    {
+      "schema": "public",
+      "table": "bank_accounts",
+      "row_count": 12,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "bank_movements",
+      "row_count": 102,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "cartoes_credito",
+      "row_count": 6,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "cartoes_faturas",
+      "row_count": 8,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "cartoes_lancamentos",
+      "row_count": 111,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "categorias_contas_pagar",
+      "row_count": 79,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "company_settings",
+      "row_count": 1,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "compras",
+      "row_count": 2,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "compras_itens",
+      "row_count": 11,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "controle_vendas_diario",
+      "row_count": 17,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "controle_vendas_fornecedor",
+      "row_count": 5,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "controle_vendas_fornecedor_historico",
+      "row_count": 4,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "customers",
+      "row_count": 16,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "finance_entries",
+      "row_count": 94,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "payables",
+      "row_count": 307,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "payment_routing_rules",
+      "row_count": 84,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "products",
+      "row_count": 33,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "profiles",
+      "row_count": 7,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "id",
+      "classification": "USER_SCOPED",
+      "future_empresa_id_required": false
+    },
+    {
+      "schema": "public",
+      "table": "receivables",
+      "row_count": 11,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "sale_items",
+      "row_count": 65,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "sales",
+      "row_count": 11,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "suppliers",
+      "row_count": 42,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "TENANT_SCOPED",
+      "future_empresa_id_required": true
+    },
+    {
+      "schema": "public",
+      "table": "user_roles",
+      "row_count": 7,
+      "rls_enabled": true,
+      "rls_forced": false,
+      "policies": 1,
+      "owner_column": "user_id",
+      "classification": "MEMBERSHIP_SCOPED",
+      "future_empresa_id_required": false
+    }
+  ]
+}

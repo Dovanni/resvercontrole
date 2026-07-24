@@ -1,0 +1,28 @@
+{
+  "integrations_found": 2,
+  "secrets_defined": [
+    "SUPABASE_URL",
+    "SUPABASE_PUBLISHABLE_KEY",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_DB_URL",
+    "LOVABLE_API_KEY"
+  ],
+  "integrations": [
+    {
+      "name": "Supabase (Auth + DB + Storage)",
+      "direction": "bidirectional",
+      "tenant_scope": "single project — shared across all users; no empresa_id"
+    },
+    {
+      "name": "Lovable AI Gateway",
+      "direction": "outbound",
+      "tenant_scope": "single API key — global"
+    }
+  ],
+  "webhooks_found": 0,
+  "cron_jobs_found": 0,
+  "edge_functions_found": 0,
+  "docs_referenced": [
+    "docs/WHATSAPP_EVOLUTION_API.md — documentation only; no live integration code found"
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "routes_found": 28,
+  "routes": [
+    "README.md",
+    "__root.tsx",
+    "_authenticated.balancete.tsx",
+    "_authenticated.bi.tsx",
+    "_authenticated.cartoes-credito.tsx",
+    "_authenticated.categorias.tsx",
+    "_authenticated.clientes.tsx",
+    "_authenticated.compras.tsx",
+    "_authenticated.configuracoes.categorias.tsx",
+    "_authenticated.configuracoes.tsx",
+    "_authenticated.contas-bancarias.tsx",
+    "_authenticated.contas-pagar.tsx",
+    "_authenticated.contas-receber.tsx",
+    "_authenticated.controle-vendas.tsx",
+    "_authenticated.curva-abc.tsx",
+    "_authenticated.dashboard.tsx",
+    "_authenticated.despesas-anuais.tsx",
+    "_authenticated.financeiro.tsx",
+    "_authenticated.fluxo-caixa.tsx",
+    "_authenticated.fornecedores.tsx",
+    "_authenticated.importar.tsx",
+    "_authenticated.produtos.tsx",
+    "_authenticated.relatorios.tsx",
+    "_authenticated.tsx",
+    "_authenticated.vendas.tsx",
+    "auth.tsx",
+    "index.tsx",
+    "reset-password.tsx"
+  ],
+  "components_found": 10,
+  "components": [
+    "app-shell.tsx",
+    "auditoria-lucro-dialog.tsx",
+    "cash-projection.tsx",
+    "categorias-contas-pagar-manager.tsx",
+    "confirm-dialog.tsx",
+    "data-pagination.tsx",
+    "notifications.tsx",
+    "resumo-financeiro-venda.tsx",
+    "totalizacao-personalizada-despesas.tsx",
+    "ui"
+  ],
+  "hooks": [
+    "use-mobile.tsx"
+  ],
+  "libs": [
+    "auth.tsx",
+    "auth-errors.ts",
+    "format.ts",
+    "validators.ts",
+    "despesas-anuais.ts",
+    "utils.ts",
+    "config.server.ts",
+    "error-capture.ts",
+    "error-page.ts",
+    "lovable-error-reporting.ts"
+  ],
+  "server_functions_dir": "src/lib/api",
+  "server_functions": [
+    "example.functions.ts",
+    "reset-demo.functions.ts"
+  ],
+  "integrations_supabase": [
+    "client.ts",
+    "client.server.ts",
+    "auth-middleware.ts",
+    "auth-attacher.ts",
+    "types.ts"
+  ]
+}

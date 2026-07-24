@@ -1,0 +1,16 @@
+{
+  "buckets": [
+    {
+      "name": "product-photos",
+      "public": false,
+      "tenant_isolation": "NONE — no empresa_id prefix"
+    },
+    {
+      "name": "company-logos",
+      "public": false,
+      "tenant_isolation": "NONE — no empresa_id prefix"
+    }
+  ],
+  "recommended_future_path": "empresa_id/modulo/recurso/arquivo",
+  "storage_policies_reviewed": "deferred (require storage.objects policy dump in F1)"
+}

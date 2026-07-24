@@ -1,0 +1,150 @@
+{
+  "physical_foreign_keys": 0,
+  "note": "No FK constraints found in public schema; relationships are enforced by application logic and triggers.",
+  "logical_relationships": [
+    {
+      "table": "sale_items",
+      "column": "sale_id",
+      "ref_table": "sales",
+      "ref_column": "id"
+    },
+    {
+      "table": "sale_items",
+      "column": "product_id",
+      "ref_table": "products",
+      "ref_column": "id"
+    },
+    {
+      "table": "sales",
+      "column": "customer_id",
+      "ref_table": "customers",
+      "ref_column": "id"
+    },
+    {
+      "table": "sales",
+      "column": "bank_account_id",
+      "ref_table": "bank_accounts",
+      "ref_column": "id"
+    },
+    {
+      "table": "compras_itens",
+      "column": "compra_id",
+      "ref_table": "compras",
+      "ref_column": "id"
+    },
+    {
+      "table": "compras_itens",
+      "column": "produto_id",
+      "ref_table": "products",
+      "ref_column": "id"
+    },
+    {
+      "table": "compras",
+      "column": "supplier_id",
+      "ref_table": "suppliers",
+      "ref_column": "id"
+    },
+    {
+      "table": "payables",
+      "column": "supplier_id",
+      "ref_table": "suppliers",
+      "ref_column": "id"
+    },
+    {
+      "table": "payables",
+      "column": "bank_account_id",
+      "ref_table": "bank_accounts",
+      "ref_column": "id"
+    },
+    {
+      "table": "receivables",
+      "column": "customer_id",
+      "ref_table": "customers",
+      "ref_column": "id"
+    },
+    {
+      "table": "receivables",
+      "column": "sale_id",
+      "ref_table": "sales",
+      "ref_column": "id"
+    },
+    {
+      "table": "receivables",
+      "column": "bank_account_id",
+      "ref_table": "bank_accounts",
+      "ref_column": "id"
+    },
+    {
+      "table": "bank_movements",
+      "column": "account_id",
+      "ref_table": "bank_accounts",
+      "ref_column": "id"
+    },
+    {
+      "table": "bank_movements",
+      "column": "destination_account_id",
+      "ref_table": "bank_accounts",
+      "ref_column": "id"
+    },
+    {
+      "table": "cartoes_credito",
+      "column": "conta_bancaria_id",
+      "ref_table": "bank_accounts",
+      "ref_column": "id"
+    },
+    {
+      "table": "cartoes_faturas",
+      "column": "cartao_id",
+      "ref_table": "cartoes_credito",
+      "ref_column": "id"
+    },
+    {
+      "table": "cartoes_lancamentos",
+      "column": "cartao_id",
+      "ref_table": "cartoes_credito",
+      "ref_column": "id"
+    },
+    {
+      "table": "controle_vendas_diario",
+      "column": "sale_id",
+      "ref_table": "sales",
+      "ref_column": "id"
+    },
+    {
+      "table": "payment_routing_rules",
+      "column": "bank_account_id",
+      "ref_table": "bank_accounts",
+      "ref_column": "id"
+    },
+    {
+      "table": "aportes_financeiros",
+      "column": "customer_id",
+      "ref_table": "customers",
+      "ref_column": "id"
+    },
+    {
+      "table": "aportes_financeiros",
+      "column": "bank_account_id",
+      "ref_table": "bank_accounts",
+      "ref_column": "id"
+    },
+    {
+      "table": "aportes_financeiros",
+      "column": "bank_movement_id",
+      "ref_table": "bank_movements",
+      "ref_column": "id"
+    },
+    {
+      "table": "profiles",
+      "column": "id",
+      "ref_table": "auth.users",
+      "ref_column": "id"
+    },
+    {
+      "table": "user_roles",
+      "column": "user_id",
+      "ref_table": "auth.users",
+      "ref_column": "id"
+    }
+  ]
+}

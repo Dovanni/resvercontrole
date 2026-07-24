@@ -1,0 +1,246 @@
+{
+  "modules_found": 25,
+  "modules": [
+    {
+      "id": "dashboard",
+      "route_file": "_authenticated.dashboard.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "sales",
+        "payables",
+        "receivables",
+        "bank_movements"
+      ]
+    },
+    {
+      "id": "bi",
+      "route_file": "_authenticated.bi.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "sales",
+        "sale_items",
+        "products",
+        "controle_vendas_diario"
+      ]
+    },
+    {
+      "id": "vendas",
+      "route_file": "_authenticated.vendas.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "sales",
+        "sale_items",
+        "customers",
+        "products",
+        "receivables"
+      ]
+    },
+    {
+      "id": "compras",
+      "route_file": "_authenticated.compras.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "compras",
+        "compras_itens",
+        "suppliers",
+        "products",
+        "payables"
+      ]
+    },
+    {
+      "id": "contas_pagar",
+      "route_file": "_authenticated.contas-pagar.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "payables",
+        "categorias_contas_pagar",
+        "suppliers",
+        "bank_accounts"
+      ]
+    },
+    {
+      "id": "contas_receber",
+      "route_file": "_authenticated.contas-receber.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "receivables",
+        "customers",
+        "sales",
+        "bank_accounts"
+      ]
+    },
+    {
+      "id": "financeiro",
+      "route_file": "_authenticated.financeiro.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "finance_entries",
+        "bank_movements"
+      ]
+    },
+    {
+      "id": "fluxo_caixa",
+      "route_file": "_authenticated.fluxo-caixa.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "bank_movements",
+        "bank_accounts",
+        "payables",
+        "receivables"
+      ]
+    },
+    {
+      "id": "balancete",
+      "route_file": "_authenticated.balancete.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "bank_movements",
+        "finance_entries"
+      ]
+    },
+    {
+      "id": "despesas_anuais",
+      "route_file": "_authenticated.despesas-anuais.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "payables",
+        "suppliers",
+        "categorias_contas_pagar"
+      ]
+    },
+    {
+      "id": "contas_bancarias",
+      "route_file": "_authenticated.contas-bancarias.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "bank_accounts",
+        "bank_movements"
+      ]
+    },
+    {
+      "id": "cartoes",
+      "route_file": "_authenticated.cartoes-credito.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "cartoes_credito",
+        "cartoes_faturas",
+        "cartoes_lancamentos"
+      ]
+    },
+    {
+      "id": "clientes",
+      "route_file": "_authenticated.clientes.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "customers",
+        "sales"
+      ]
+    },
+    {
+      "id": "fornecedores",
+      "route_file": "_authenticated.fornecedores.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "suppliers",
+        "compras",
+        "payables"
+      ]
+    },
+    {
+      "id": "produtos",
+      "route_file": "_authenticated.produtos.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "products"
+      ]
+    },
+    {
+      "id": "categorias",
+      "route_file": "_authenticated.categorias.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "categorias_contas_pagar"
+      ]
+    },
+    {
+      "id": "curva_abc",
+      "route_file": "_authenticated.curva-abc.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "sale_items",
+        "products"
+      ]
+    },
+    {
+      "id": "controle_vendas",
+      "route_file": "_authenticated.controle-vendas.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "controle_vendas_diario",
+        "controle_vendas_fornecedor",
+        "controle_vendas_fornecedor_historico",
+        "sales"
+      ]
+    },
+    {
+      "id": "relatorios",
+      "route_file": "_authenticated.relatorios.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "sales",
+        "payables",
+        "receivables"
+      ]
+    },
+    {
+      "id": "importar",
+      "route_file": "_authenticated.importar.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "compras",
+        "payables",
+        "products"
+      ]
+    },
+    {
+      "id": "configuracoes",
+      "route_file": "_authenticated.configuracoes.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "company_settings",
+        "categorias_contas_pagar",
+        "payment_routing_rules"
+      ]
+    },
+    {
+      "id": "configuracoes_categorias",
+      "route_file": "_authenticated.configuracoes.categorias.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "categorias_contas_pagar"
+      ]
+    },
+    {
+      "id": "auth",
+      "route_file": "auth.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "auth (Supabase)"
+      ]
+    },
+    {
+      "id": "reset_password",
+      "route_file": "reset-password.tsx",
+      "status": "ACTIVE",
+      "tables": [
+        "auth (Supabase)"
+      ]
+    },
+    {
+      "id": "landing",
+      "route_file": "index.tsx",
+      "status": "ACTIVE",
+      "tables": []
+    }
+  ]
+}

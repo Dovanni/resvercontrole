@@ -1,0 +1,15 @@
+{
+  "framework": "ROSE-ME-F0",
+  "version": "1.0",
+  "target_application": "GESTOR_COMERCIAL_E_FINANCEIRO_ROSE",
+  "target_environment_code": "ROSE-CURRENT-01",
+  "target_application_domain": "resvercontrole.lovable.app",
+  "environment_classification": "CURRENT_OPERATIONAL_ROSE_APPLICATION",
+  "execution_intent": "READ_ONLY_CURRENT_STATE_STRUCTURAL_FUNCTIONAL_SECURITY_COMMERCIAL_AND_FINANCIAL_AUDIT_FOR_MULTITENANCY_TRANSFORMATION_MAPPING_ONLY",
+  "current_architecture": "SINGLE_COMPANY",
+  "target_architecture": "NATIVE_MULTITENANCY",
+  "initial_canonical_company_candidate": "Angela Maria Momo Rodrigues MEI",
+  "generated_at": "2026-07-24T21:26:53.758201Z",
+  "read_only": true,
+  "zero_breaking_changes": true
+}

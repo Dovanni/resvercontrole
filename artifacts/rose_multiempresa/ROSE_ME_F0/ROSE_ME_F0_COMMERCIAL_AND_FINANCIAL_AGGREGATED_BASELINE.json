@@ -1,0 +1,28 @@
+{
+  "commercial": {
+    "total_sales_records": 11,
+    "sales_delivered_total_brl": 4373.68,
+    "sales_all_total_brl": 4373.68,
+    "distinct_operational_users_in_sales": 1,
+    "customers_count": 16,
+    "suppliers_count": 42,
+    "products_count": 33
+  },
+  "financial": {
+    "accounts_receivable_amount_brl": 5682.4,
+    "accounts_receivable_received_brl": 2861.4,
+    "accounts_receivable_open_brl": 2821.0,
+    "accounts_payable_amount_brl": 33181.55,
+    "accounts_payable_paid_brl": 6543.57,
+    "accounts_payable_open_brl": 26637.98,
+    "bank_movements_count": 102,
+    "bank_balance_brl_sum_signed": 5583.03
+  },
+  "formulas_observed": {
+    "cvd_lucro": "loja - custo_liquido - juros_ml - frete_empresa (per sync_cvd_from_sale)",
+    "cvd_custo_liquido": "weighted avg(preco_unitario * (1 - desconto/subtotal)) por compras_itens",
+    "cvd_frete_cliente": "GREATEST(total - (subtotal - discount) + juros, 0)",
+    "sale_total_channel_recursos_financeiros": "marked bank_movement_generated to avoid double posting"
+  },
+  "reconciliation": "Fórmulas conferidas contra triggers sync_cvd_from_sale, sale_status_to_finance, payable_to_bank_movement e receivable_to_bank_movement."
+}
