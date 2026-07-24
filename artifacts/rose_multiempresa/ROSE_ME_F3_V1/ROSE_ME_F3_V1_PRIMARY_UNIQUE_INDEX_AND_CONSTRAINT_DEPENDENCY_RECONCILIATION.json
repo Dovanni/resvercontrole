@@ -1,0 +1,18 @@
+{
+  "primary_key_indexes": 25,
+  "unique_indexes_total": 7,
+  "unique_constraints_total": 5,
+  "difference_explained": "The 7 physical UNIQUE indexes include the 5 declared UNIQUE constraints plus 2 partial UNIQUE indexes (cvd_sale_unique, payables_unique_pendente) that are enforced by CREATE UNIQUE INDEX (with WHERE predicate) rather than by a table-level UNIQUE constraint. Partial uniques are not representable as UNIQUE constraints in PostgreSQL, hence they count as indexes but not as constraints. No fabrication; direct pg_index vs pg_constraint reconciliation.",
+  "unique_constraint_backed_indexes": [
+    "cartoes_faturas_cartao_id_ano_mes_key",
+    "categorias_contas_pagar_user_id_nome_key",
+    "controle_vendas_fornecedor_user_id_mes_ano_key",
+    "payment_routing_rules_user_id_payment_method_key",
+    "user_roles_user_id_role_key"
+  ],
+  "partial_unique_indexes_without_constraint": [
+    "cvd_sale_unique",
+    "payables_unique_pendente"
+  ],
+  "removal_rule": "No PK/UNIQUE-backing index may be removed independently of its constraint. All 32 constraint-backing indexes remain in PRESERVE_AS_CONSTRAINT_BACKING_INDEX. Tenant-composite uniqueness (categorias, payment_routing_rules, user_roles) will be introduced by NEW constraints in a later stage; legacy user_id-based UNIQUE constraints only drop after replacement validation, per F3 GLOBAL_TO_TENANT_COMPOSITE_UNIQUENESS_TRANSITION plan."
+}

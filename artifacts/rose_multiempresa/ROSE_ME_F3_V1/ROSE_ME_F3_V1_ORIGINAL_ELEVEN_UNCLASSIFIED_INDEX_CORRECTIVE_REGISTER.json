@@ -1,0 +1,29 @@
+{
+  "original_envelope_declared": {
+    "current_indexes_reconciled": 53,
+    "indexes_to_preserve": 25,
+    "indexes_to_extend": 17,
+    "indexes_to_replace": 0,
+    "potentially_redundant_indexes": 0,
+    "sum": 42,
+    "unclassified": 11
+  },
+  "root_cause": "Original envelope's PRESERVE bucket counted only the 25 PK-backing indexes and the EXTEND bucket counted only the 14 user_id tenant-scoped support indexes plus an aspirational count of 17. The 7 non-PK UNIQUE constraint-backing indexes and the 7 non-user_id FK/support indexes were never mapped into any bucket, and the EXTEND count (17) itself was overstated by 3 relative to the physically observed 14 user_id-based indexes.",
+  "identified_unclassified_indexes": [
+    {"name":"cartoes_faturas_cartao_id_ano_mes_key","table":"cartoes_faturas","kind":"UNIQUE_CONSTRAINT_BACKING","v1_disposition":"PRESERVE_AS_CONSTRAINT_BACKING_INDEX","state":"RESOLVED_IN_F3_V1"},
+    {"name":"categorias_contas_pagar_user_id_nome_key","table":"categorias_contas_pagar","kind":"UNIQUE_CONSTRAINT_BACKING","v1_disposition":"PRESERVE_AS_CONSTRAINT_BACKING_INDEX","state":"RESOLVED_IN_F3_V1"},
+    {"name":"cvd_sale_unique","table":"controle_vendas_diario","kind":"UNIQUE_PARTIAL_CONSTRAINT_BACKING","v1_disposition":"PRESERVE_AS_CONSTRAINT_BACKING_INDEX","state":"RESOLVED_IN_F3_V1"},
+    {"name":"controle_vendas_fornecedor_user_id_mes_ano_key","table":"controle_vendas_fornecedor","kind":"UNIQUE_CONSTRAINT_BACKING","v1_disposition":"PRESERVE_AS_CONSTRAINT_BACKING_INDEX","state":"RESOLVED_IN_F3_V1"},
+    {"name":"payables_unique_pendente","table":"payables","kind":"UNIQUE_PARTIAL_CONSTRAINT_BACKING","v1_disposition":"PRESERVE_AS_CONSTRAINT_BACKING_INDEX","state":"RESOLVED_IN_F3_V1"},
+    {"name":"payment_routing_rules_user_id_payment_method_key","table":"payment_routing_rules","kind":"UNIQUE_CONSTRAINT_BACKING","v1_disposition":"PRESERVE_AS_CONSTRAINT_BACKING_INDEX","state":"RESOLVED_IN_F3_V1"},
+    {"name":"user_roles_user_id_role_key","table":"user_roles","kind":"UNIQUE_CONSTRAINT_BACKING","v1_disposition":"PRESERVE_AS_CONSTRAINT_BACKING_INDEX","state":"RESOLVED_IN_F3_V1"},
+    {"name":"idx_aportes_financeiros_bank_account","table":"aportes_financeiros","kind":"FK_SUPPORT_NO_USER_ID","v1_disposition":"PRESERVE_UNCHANGED","state":"RESOLVED_IN_F3_V1"},
+    {"name":"idx_aportes_financeiros_customer","table":"aportes_financeiros","kind":"FK_SUPPORT_NO_USER_ID","v1_disposition":"PRESERVE_UNCHANGED","state":"RESOLVED_IN_F3_V1"},
+    {"name":"audit_log_row_idx","table":"audit_log","kind":"LOOKUP_NO_USER_ID","v1_disposition":"PRESERVE_UNCHANGED","state":"RESOLVED_IN_F3_V1"},
+    {"name":"cartoes_lancamentos_cartao_fatura_idx","table":"cartoes_lancamentos","kind":"INHERITED_PARENT_LOOKUP","v1_disposition":"PRESERVE_UNCHANGED","state":"RESOLVED_IN_F3_V1"}
+  ],
+  "identified_count": 11,
+  "resolved_count": 11,
+  "unresolved_count": 0,
+  "additional_note": "Two further non-user_id support indexes (cartoes_lancamentos_deleted_at_idx, compras_itens_compra_idx, sale_items_sale_idx) are also PRESERVE_UNCHANGED under the V1 taxonomy but were absorbed into the original PRESERVE bucket ambiguity; documented here for completeness. Final classification totals in ROSE_ME_F3_V1_CURRENT_INDEX_EXCLUSIVE_DISPOSITION_CLASSIFICATION.json still sum to 53."
+}

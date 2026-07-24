@@ -1,0 +1,23 @@
+{
+  "fields_reviewed": 27,
+  "numeric_inconsistencies_found": 1,
+  "semantic_inconsistencies_found": 2,
+  "findings": [
+    {"field":"current_indexes classification sum","original":42,"actual":53,"delta":11,"materiality":"MATERIAL_NON_BLOCKING_AFTER_CORRECTION","resolution":"Reclassified via V1 exclusive taxonomy; totals now reconcile to 53."},
+    {"field":"indexes_to_extend","original":17,"actual_user_id_based_indexes":14,"materiality":"NON_MATERIAL","resolution":"Original count was aspirational per number of direct tenant tables (17), not per number of physical user_id-based indexes (14). Three direct tables (cartoes_credito, company_settings, one gap-filled) do not currently have a user_id support index."},
+    {"field":"REMOVE_ONLY_AFTER_VALIDATED_REPLACEMENT bucket","original":"absent","actual":"required by plan text","resolution":"Introduced explicitly in V1 exclusive taxonomy; count = 0 (no removals authorized in F3)."}
+  ],
+  "preserved_fields": {
+    "migration_stages_defined": 12,
+    "migration_units_defined": 51,
+    "current_tables_reconciled": 25,
+    "direct_table_plans_defined": 17,
+    "inherited_table_plans_defined": 6,
+    "future_constraints_planned": 40,
+    "current_constraints_reconciled": 100,
+    "helper_function_contracts_reconciled": 8,
+    "tables_with_rls_transition_plans": 25,
+    "operation_level_rls_transition_plans": 100,
+    "baseline_checkpoints_defined": 9
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "direct_table_index_plans": 17,
+  "inherited_table_index_plans": 6,
+  "direct_tables": [
+    {"table":"aportes_financeiros","current_tenant_index":"idx_aportes_financeiros_user_date","future_tenant_index":"idx_aportes_financeiros_empresa_date","empresa_id_first":true,"strategy":"PARALLEL_CREATE_CONCURRENTLY","rollback":"DROP_INDEX_IF_EXISTS"},
+    {"table":"bank_accounts","current_tenant_index":"bank_accounts_user_idx","future_tenant_index":"idx_bank_accounts_empresa_status","empresa_id_first":true,"strategy":"PARALLEL_CREATE_CONCURRENTLY","rollback":"DROP_INDEX_IF_EXISTS"},
+    {"table":"cartoes_credito","current_tenant_index":null,"future_tenant_index":"idx_cartoes_credito_empresa","empresa_id_first":true,"strategy":"ADD_NEW_CONCURRENTLY","rollback":"DROP_INDEX_IF_EXISTS"},
+    {"table":"categorias_contas_pagar","current_tenant_index":"categorias_contas_pagar_user_id_nome_key","future_tenant_index":"categorias_contas_pagar_empresa_nome_key","empresa_id_first":true,"strategy":"NEW_UNIQUE_CONSTRAINT_THEN_DROP_LEGACY_AFTER_VALIDATION","rollback":"DROP_INDEX_IF_EXISTS"},
+    {"table":"company_settings","current_tenant_index":"company_settings_pkey","future_tenant_index":"company_settings_empresa_pk_or_unique","empresa_id_first":true,"strategy":"REDEFINE_KEY_ON_EMPRESA_ID_IN_LATER_STAGE","rollback":"REVERT_TO_USER_ID_PK"},
+    {"table":"compras","current_tenant_index":"compras_user_idx","future_tenant_index":"idx_compras_empresa_data","empresa_id_first":true,"strategy":"PARALLEL_CREATE_CONCURRENTLY","rollback":"DROP_INDEX_IF_EXISTS"},
+    {"table":"controle_vendas_diario","current_tenant_index":"idx_cvd_user_mes_ano","future_tenant_index":"idx_cvd_empresa_mes_ano","empresa_id_first":true,"strategy":"PARALLEL_CREATE_CONCURRENTLY","rollback":"DROP_INDEX_IF_EXISTS"},
+    {"table":"controle_vendas_fornecedor","current_tenant_index":"controle_vendas_fornecedor_user_id_mes_ano_key","future_tenant_index":"controle_vendas_fornecedor_empresa_mes_ano_key","empresa_id_first":true,"strategy":"NEW_UNIQUE_CONSTRAINT_THEN_DROP_LEGACY_AFTER_VALIDATION","rollback":"DROP_INDEX_IF_EXISTS"},
+    {"table":"customers","current_tenant_index":"customers_user_idx","future_tenant_index":"idx_customers_empresa","empresa_id_first":true,"strategy":"PARALLEL_CREATE_CONCURRENTLY","rollback":"DROP_INDEX_IF_EXISTS"},
+    {"table":"finance_entries","current_tenant_index":"finance_user_idx","future_tenant_index":"idx_finance_entries_empresa_date","empresa_id_first":true,"strategy":"PARALLEL_CREATE_CONCURRENTLY","rollback":"DROP_INDEX_IF_EXISTS"},
+    {"table":"payables","current_tenant_index":"payables_user_idx","future_tenant_index":"idx_payables_empresa_due","empresa_id_first":true,"strategy":"PARALLEL_CREATE_CONCURRENTLY","rollback":"DROP_INDEX_IF_EXISTS"},
+    {"table":"payment_routing_rules","current_tenant_index":"payment_routing_rules_user_id_payment_method_key","future_tenant_index":"payment_routing_rules_empresa_method_key","empresa_id_first":true,"strategy":"NEW_UNIQUE_CONSTRAINT_THEN_DROP_LEGACY_AFTER_VALIDATION","rollback":"DROP_INDEX_IF_EXISTS"},
+    {"table":"products","current_tenant_index":"products_user_idx","future_tenant_index":"idx_products_empresa","empresa_id_first":true,"strategy":"PARALLEL_CREATE_CONCURRENTLY","rollback":"DROP_INDEX_IF_EXISTS"},
+    {"table":"receivables","current_tenant_index":"receivables_user_idx","future_tenant_index":"idx_receivables_empresa_due","empresa_id_first":true,"strategy":"PARALLEL_CREATE_CONCURRENTLY","rollback":"DROP_INDEX_IF_EXISTS"},
+    {"table":"sales","current_tenant_index":"sales_user_idx","future_tenant_index":"idx_sales_empresa_date","empresa_id_first":true,"strategy":"PARALLEL_CREATE_CONCURRENTLY","rollback":"DROP_INDEX_IF_EXISTS"},
+    {"table":"suppliers","current_tenant_index":"suppliers_user_idx","future_tenant_index":"idx_suppliers_empresa","empresa_id_first":true,"strategy":"PARALLEL_CREATE_CONCURRENTLY","rollback":"DROP_INDEX_IF_EXISTS"},
+    {"table":"user_roles","current_tenant_index":"user_roles_user_id_role_key","future_tenant_index":"user_roles_empresa_user_role_key","empresa_id_first":true,"strategy":"NEW_UNIQUE_CONSTRAINT_THEN_DROP_LEGACY_AFTER_VALIDATION","rollback":"DROP_INDEX_IF_EXISTS"}
+  ],
+  "inherited_tables": [
+    {"table":"bank_movements","parent":"bank_accounts","path":"bank_movements->bank_accounts->empresas","future_tenant_index":"idx_bank_movements_empresa_account_date","rls_impact":"EXISTS_PARENT_TENANT_MATCH"},
+    {"table":"cartoes_faturas","parent":"cartoes_credito","path":"cartoes_faturas->cartoes_credito->empresas","future_tenant_index":null,"rls_impact":"EXISTS_PARENT_TENANT_MATCH"},
+    {"table":"cartoes_lancamentos","parent":"cartoes_faturas","path":"cartoes_lancamentos->cartoes_faturas->empresas","future_tenant_index":"idx_cartoes_lancamentos_empresa","rls_impact":"EXISTS_PARENT_TENANT_MATCH"},
+    {"table":"compras_itens","parent":"compras","path":"compras_itens->compras->empresas","future_tenant_index":null,"rls_impact":"EXISTS_PARENT_TENANT_MATCH"},
+    {"table":"controle_vendas_fornecedor_historico","parent":"controle_vendas_fornecedor","path":"cvfh->cvf->empresas","future_tenant_index":null,"rls_impact":"EXISTS_PARENT_TENANT_MATCH"},
+    {"table":"sale_items","parent":"sales","path":"sale_items->sales->empresas","future_tenant_index":"idx_sale_items_empresa","rls_impact":"EXISTS_PARENT_TENANT_MATCH"}
+  ]
+}

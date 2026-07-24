@@ -1,0 +1,31 @@
+{
+  "backfill_tables_planned": 17,
+  "decision_taxonomy": ["SINGLE_TRANSACTION_POTENTIALLY_ACCEPTABLE_PENDING_F4_PREFLIGHT","BATCHING_RECOMMENDED","BATCHING_REQUIRED","UNKNOWN_REQUIRES_F4_CAPABILITY_AND_VOLUME_VALIDATION","NOT_APPLICABLE"],
+  "decisions": [
+    {"table":"aportes_financeiros","decision":"SINGLE_TRANSACTION_POTENTIALLY_ACCEPTABLE_PENDING_F4_PREFLIGHT","rationale":"Baseline shows small row count in current ROSE tenant; final decision requires F4 preflight measurement of locks/duration."},
+    {"table":"bank_accounts","decision":"SINGLE_TRANSACTION_POTENTIALLY_ACCEPTABLE_PENDING_F4_PREFLIGHT","rationale":"Low-volume catalog table."},
+    {"table":"cartoes_credito","decision":"SINGLE_TRANSACTION_POTENTIALLY_ACCEPTABLE_PENDING_F4_PREFLIGHT","rationale":"Low-volume catalog."},
+    {"table":"categorias_contas_pagar","decision":"SINGLE_TRANSACTION_POTENTIALLY_ACCEPTABLE_PENDING_F4_PREFLIGHT","rationale":"Small seeded catalog."},
+    {"table":"company_settings","decision":"SINGLE_TRANSACTION_POTENTIALLY_ACCEPTABLE_PENDING_F4_PREFLIGHT","rationale":"One row per user."},
+    {"table":"compras","decision":"UNKNOWN_REQUIRES_F4_CAPABILITY_AND_VOLUME_VALIDATION","rationale":"Trigger cascade to compras_itens and CVD may extend lock window; capability envelope not comprovada."},
+    {"table":"controle_vendas_diario","decision":"UNKNOWN_REQUIRES_F4_CAPABILITY_AND_VOLUME_VALIDATION","rationale":"Denormalized daily table; growth trajectory not measured for backfill duration."},
+    {"table":"controle_vendas_fornecedor","decision":"SINGLE_TRANSACTION_POTENTIALLY_ACCEPTABLE_PENDING_F4_PREFLIGHT","rationale":"Aggregated per (user, mes, ano)."},
+    {"table":"customers","decision":"SINGLE_TRANSACTION_POTENTIALLY_ACCEPTABLE_PENDING_F4_PREFLIGHT","rationale":"Low-volume catalog."},
+    {"table":"finance_entries","decision":"UNKNOWN_REQUIRES_F4_CAPABILITY_AND_VOLUME_VALIDATION","rationale":"Financial ledger; growth and audit-log trigger amplification unknown."},
+    {"table":"payables","decision":"SINGLE_TRANSACTION_POTENTIALLY_ACCEPTABLE_PENDING_F4_PREFLIGHT","rationale":"Moderate row count."},
+    {"table":"payment_routing_rules","decision":"SINGLE_TRANSACTION_POTENTIALLY_ACCEPTABLE_PENDING_F4_PREFLIGHT","rationale":"Small routing catalog."},
+    {"table":"products","decision":"SINGLE_TRANSACTION_POTENTIALLY_ACCEPTABLE_PENDING_F4_PREFLIGHT","rationale":"Low-volume catalog."},
+    {"table":"receivables","decision":"SINGLE_TRANSACTION_POTENTIALLY_ACCEPTABLE_PENDING_F4_PREFLIGHT","rationale":"Moderate row count."},
+    {"table":"sales","decision":"UNKNOWN_REQUIRES_F4_CAPABILITY_AND_VOLUME_VALIDATION","rationale":"Trigger cascade (sale_items, CVD, receivables, bank_movements) may extend lock window."},
+    {"table":"suppliers","decision":"SINGLE_TRANSACTION_POTENTIALLY_ACCEPTABLE_PENDING_F4_PREFLIGHT","rationale":"Low-volume catalog."},
+    {"table":"user_roles","decision":"SINGLE_TRANSACTION_POTENTIALLY_ACCEPTABLE_PENDING_F4_PREFLIGHT","rationale":"Very low volume."}
+  ],
+  "totals": {
+    "single_transaction_candidate": 13,
+    "batching_recommended": 0,
+    "batching_required": 0,
+    "unknown_requires_f4_validation": 4,
+    "not_applicable": 0,
+    "sum": 17
+  }
+}

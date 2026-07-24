@@ -1,0 +1,13 @@
+{
+  "matrix_completed": true,
+  "relationships_allowed": ["NO_FUTURE_INDEX_REQUIRED","CURRENT_INDEX_PRESERVED_WITH_NEW_PARALLEL_INDEX","CURRENT_INDEX_REPLACED_BY_ONE_FUTURE_INDEX","CURRENT_INDEX_REPLACED_BY_MULTIPLE_FUTURE_INDEXES","MULTIPLE_CURRENT_INDEXES_CONSOLIDATED_BY_ONE_FUTURE_INDEX","FUTURE_INDEX_HAS_NO_CURRENT_PREDECESSOR","DECISION_DEFERRED"],
+  "totals": {
+    "current_indexes_without_future_requirement": 32,
+    "current_indexes_with_parallel_future_index": 14,
+    "current_indexes_with_replacement_future_index": 0,
+    "current_indexes_with_deferred_decision": 0,
+    "current_indexes_preserve_unchanged_no_future": 7,
+    "future_indexes_without_current_predecessor": 17
+  },
+  "reconciliation_note": "32 constraint-backing indexes require no future counterpart (relationship=NO_FUTURE_INDEX_REQUIRED). 14 user_id-tenant-scoped indexes map 1:1 with new empresa_id-first parallel indexes (relationship=CURRENT_INDEX_PRESERVED_WITH_NEW_PARALLEL_INDEX). 7 non-user_id FK/lookup indexes are PRESERVE_UNCHANGED. 17 future indexes have no current predecessor: 11 for the canonical entities, 3 for inherited-path FK joins, 3 for RLS helper support. No replacement or removal is authorized in F3 — all replacements are deferred to a post-F4 tenant-index validation stage."
+}
