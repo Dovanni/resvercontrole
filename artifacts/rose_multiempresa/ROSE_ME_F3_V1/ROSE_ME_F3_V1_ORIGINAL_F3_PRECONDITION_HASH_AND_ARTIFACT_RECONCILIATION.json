@@ -1,0 +1,14 @@
+{
+  "parent_framework": "ROSE-ME-F3",
+  "artifacts_expected": 32,
+  "artifacts_found": 32,
+  "hash_mismatches": 0,
+  "checks_verified": 960,
+  "checks_failed": 0,
+  "files_modified": 0,
+  "database_modified": false,
+  "baseline_preserved": true,
+  "baseline_sha256": "689af23fb305255932cf86b48d4774775877d4a65061528e11b61487192a9a39",
+  "original_declared_technical_document_sha256": "a52e9839399afd38e9ce8bdc31ca8c5c7ae33f1d756d35369b4104afa02b6505",
+  "note": "Read-only reconciliation. Original F3 envelope preserved verbatim."
+}

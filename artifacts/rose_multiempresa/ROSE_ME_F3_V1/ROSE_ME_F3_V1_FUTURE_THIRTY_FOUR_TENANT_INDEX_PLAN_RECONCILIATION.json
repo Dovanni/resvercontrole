@@ -1,0 +1,24 @@
+{
+  "future_indexes_originally_planned": 34,
+  "future_indexes_reconciled": 34,
+  "future_indexes_unclassified": 0,
+  "primary_classification_counts": {
+    "TENANT_SCOPE_FILTER_SUPPORT": 14,
+    "TENANT_COMPOSITE_UNIQUENESS": 3,
+    "TENANT_FOREIGN_KEY_JOIN_SUPPORT": 3,
+    "RLS_MEMBERSHIP_OR_PERMISSION_SUPPORT": 3,
+    "TENANT_REPORTING_AND_SORT_SUPPORT": 0,
+    "TENANT_JOB_PROCESSING_SUPPORT": 0,
+    "VALIDATED_REPLACEMENT_INDEX": 0,
+    "CANONICAL_ENTITY_SUPPORT": 11,
+    "OTHER_DOCUMENTED_PRIMARY_PURPOSE": 0
+  },
+  "sum": 34,
+  "notes": [
+    "TENANT_SCOPE_FILTER_SUPPORT (14): one composite empresa_id-first index per direct tenant table that currently has a user_id-based access path (aportes_financeiros, audit_log, bank_accounts, bank_movements, compras, controle_vendas_diario, controle_vendas_fornecedor_historico, customers, finance_entries, payables, products, receivables, sales, suppliers).",
+    "TENANT_COMPOSITE_UNIQUENESS (3): tenant-scoped composite uniques replacing user_id-based unique keys on categorias_contas_pagar(empresa_id,nome), payment_routing_rules(empresa_id,payment_method), user_roles(empresa_id,user_id,role).",
+    "TENANT_FOREIGN_KEY_JOIN_SUPPORT (3): empresa_id-first indexes on inherited-path tables where join amplification is expected (bank_movements, cartoes_lancamentos, sale_items) as documented in the F3 tenant index plan.",
+    "RLS_MEMBERSHIP_OR_PERMISSION_SUPPORT (3): support indexes for the canonical membership/role/permission catalog used by has_company_permission and current_user_active_company helpers.",
+    "CANONICAL_ENTITY_SUPPORT (11): PK/UNIQUE-backing indexes for the eight canonical multitenancy entities (empresas, empresa_membros, papeis, permissoes, papel_permissoes, convites, auditoria_membership, contexto_ativo) plus three domain-uniqueness constraints (empresa.documento_normalizado, convite token, membership (empresa_id,user_id))."
+  ]
+}

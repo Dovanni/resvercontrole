@@ -1,0 +1,29 @@
+{
+  "original_f3_preserved": true,
+  "current_indexes_reconciled": 53,
+  "current_indexes_classified": 53,
+  "current_indexes_unclassified": 0,
+  "original_unclassified_indexes_identified": 11,
+  "original_unclassified_indexes_resolved": 11,
+  "future_indexes_reconciled": 34,
+  "future_indexes_unclassified": 0,
+  "current_to_future_index_matrix_completed": true,
+  "backfill_batching_decisions_completed": 17,
+  "index_reconciliation_gap_materiality": "MATERIAL_NON_BLOCKING_AFTER_CORRECTION",
+  "index_reconciliation_gap_resolved": true,
+  "f3_homologable": true,
+  "readiness": "READY_FOR_CONTROLLED_STRUCTURAL_EXPAND_IMPLEMENTATION_AFTER_EXPLICIT_HUMAN_AUTHORIZATION_AND_OPERATIONAL_PRECONDITIONS",
+  "f4_eligible": true,
+  "f4_authorized": false,
+  "sql_authorized": false,
+  "migration_authorized": false,
+  "backfill_authorized": false,
+  "implementation_authorized": false,
+  "production_change_authorized": false,
+  "operational_preconditions_still_open": [
+    "backup_executed","restore_comprovado","dry_run_executed","dry_run_environment_defined","operational_window_approved","human_owners_assigned","four_eyes_operational","feature_flag_implemented","kill_switch_validated","execution_plan_reviewed","future_sql_package_reviewed","human_authorization_for_f4","migration_authorization","backfill_authorization","production_authorization"
+  ],
+  "decision": "ROSE_ME_F3_V1_CURRENT_AND_FUTURE_INDEX_CLASSIFICATION_TRANSITION_AND_BACKFILL_BATCHING_CORRECTIVE_RECONCILIATION_COMPLETED",
+  "classification": "ROSE_ME_F3_CORRECTED_RECONCILED_AND_DOCUMENTARILY_READY_FOR_F4_OPERATIONAL_PRECONDITION_ASSESSMENT_WITHOUT_IMPLEMENTATION_AUTHORIZATION",
+  "status": "ROSE_ME_F3_V1_INDEX_AND_BACKFILL_BATCHING_RECONCILIATION_COMPLETED_F3_HOMOLOGABLE_AWAITING_EXPLICIT_HUMAN_AUTHORIZATION_AND_OPERATIONAL_PRECONDITIONS_FOR_ROSE_ME_F4"
+}
