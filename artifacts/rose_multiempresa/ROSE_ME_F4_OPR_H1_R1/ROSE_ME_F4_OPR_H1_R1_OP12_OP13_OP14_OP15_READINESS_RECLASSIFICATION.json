@@ -1,0 +1,19 @@
+{
+ "op_12": {
+  "previous_status": "BLOCKED_BY_HUMAN_ASSIGNMENT",
+  "new_status": "BLOCKED_BY_HUMAN_ASSIGNMENT"
+ },
+ "op_13": {
+  "previous_status": "BLOCKED_BY_HUMAN_ASSIGNMENT",
+  "new_status": "BLOCKED_BY_HUMAN_ASSIGNMENT"
+ },
+ "op_14": {
+  "previous_status": "BLOCKED_BY_HUMAN_ASSIGNMENT",
+  "new_status": "BLOCKED_BY_HUMAN_ASSIGNMENT"
+ },
+ "op_15": {
+  "previous_status": "BLOCKED_BY_HUMAN_ASSIGNMENT",
+  "new_status": "BLOCKED_BY_HUMAN_ASSIGNMENT"
+ },
+ "reason": "Depende de OP-06 e OP-07 satisfeitas."
+}

@@ -1,0 +1,33 @@
+{
+ "gaps": [
+  {
+   "id": "GAP-01",
+   "description": "Nomes completos não fornecidos (placeholders <NOME COMPLETO DA PESSOA X>)"
+  },
+  {
+   "id": "GAP-02",
+   "description": "Referências de identidade não fornecidas"
+  },
+  {
+   "id": "GAP-03",
+   "description": "Disponibilidade não declarada (placeholder)"
+  },
+  {
+   "id": "GAP-04",
+   "description": "Datas valid_from não fornecidas"
+  },
+  {
+   "id": "GAP-05",
+   "description": "Responsável humano pelo envio não identificado (placeholder)"
+  },
+  {
+   "id": "GAP-06",
+   "description": "Aceites explícitos inválidos por conterem placeholder de nome"
+  },
+  {
+   "id": "GAP-07",
+   "description": "Cobertura 0/10 papéis; four-eyes não operacional"
+  }
+ ],
+ "remediation_next_step": "ROSE-ME-F4-OPR-H1-R2"
+}

@@ -1,0 +1,9 @@
+{
+ "critical_roles_required": 6,
+ "critical_roles_available": 0,
+ "critical_roles_available_with_limitations": 0,
+ "critical_roles_unavailable": 0,
+ "critical_roles_unknown_availability": 6,
+ "substitutes_required": 0,
+ "substitutes_confirmed": 0
+}

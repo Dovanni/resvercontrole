@@ -1,0 +1,126 @@
+{
+ "human_roles_required": 10,
+ "human_roles_processed": 10,
+ "human_roles_confirmed_accepted": 0,
+ "human_roles_nominated_awaiting_acceptance": 0,
+ "human_roles_unassigned": 10,
+ "human_roles_declined": 0,
+ "human_roles_conflicting": 0,
+ "human_roles_temporarily_unavailable": 0,
+ "human_roles_expired": 0,
+ "sum_check": 10,
+ "distinct_humans_identified": 0,
+ "distinct_humans_confirmed": 0,
+ "assignments": [
+  {
+   "role_id": "HR-01",
+   "role_name": "HUMAN_PRODUCT_OWNER",
+   "person_reference": null,
+   "person_name": null,
+   "state": "UNASSIGNED",
+   "acceptance_status": "UNASSIGNED",
+   "availability_status": "UNKNOWN",
+   "conflict_status": "NOT_EVALUABLE",
+   "segregation_status": "NOT_EVALUABLE"
+  },
+  {
+   "role_id": "HR-02",
+   "role_name": "HUMAN_TECHNICAL_OWNER",
+   "person_reference": null,
+   "person_name": null,
+   "state": "UNASSIGNED",
+   "acceptance_status": "UNASSIGNED",
+   "availability_status": "UNKNOWN",
+   "conflict_status": "NOT_EVALUABLE",
+   "segregation_status": "NOT_EVALUABLE"
+  },
+  {
+   "role_id": "HR-03",
+   "role_name": "HUMAN_DATABASE_OWNER",
+   "person_reference": null,
+   "person_name": null,
+   "state": "UNASSIGNED",
+   "acceptance_status": "UNASSIGNED",
+   "availability_status": "UNKNOWN",
+   "conflict_status": "NOT_EVALUABLE",
+   "segregation_status": "NOT_EVALUABLE"
+  },
+  {
+   "role_id": "HR-04",
+   "role_name": "HUMAN_SECURITY_OWNER",
+   "person_reference": null,
+   "person_name": null,
+   "state": "UNASSIGNED",
+   "acceptance_status": "UNASSIGNED",
+   "availability_status": "UNKNOWN",
+   "conflict_status": "NOT_EVALUABLE",
+   "segregation_status": "NOT_EVALUABLE"
+  },
+  {
+   "role_id": "HR-05",
+   "role_name": "HUMAN_PRIVACY_OWNER",
+   "person_reference": null,
+   "person_name": null,
+   "state": "UNASSIGNED",
+   "acceptance_status": "UNASSIGNED",
+   "availability_status": "UNKNOWN",
+   "conflict_status": "NOT_EVALUABLE",
+   "segregation_status": "NOT_EVALUABLE"
+  },
+  {
+   "role_id": "HR-06",
+   "role_name": "HUMAN_FINANCIAL_VALIDATOR",
+   "person_reference": null,
+   "person_name": null,
+   "state": "UNASSIGNED",
+   "acceptance_status": "UNASSIGNED",
+   "availability_status": "UNKNOWN",
+   "conflict_status": "NOT_EVALUABLE",
+   "segregation_status": "NOT_EVALUABLE"
+  },
+  {
+   "role_id": "HR-07",
+   "role_name": "HUMAN_CHANGE_APPROVER",
+   "person_reference": null,
+   "person_name": null,
+   "state": "UNASSIGNED",
+   "acceptance_status": "UNASSIGNED",
+   "availability_status": "UNKNOWN",
+   "conflict_status": "NOT_EVALUABLE",
+   "segregation_status": "NOT_EVALUABLE"
+  },
+  {
+   "role_id": "HR-08",
+   "role_name": "HUMAN_AUDIT_OBSERVER",
+   "person_reference": null,
+   "person_name": null,
+   "state": "UNASSIGNED",
+   "acceptance_status": "UNASSIGNED",
+   "availability_status": "UNKNOWN",
+   "conflict_status": "NOT_EVALUABLE",
+   "segregation_status": "NOT_EVALUABLE"
+  },
+  {
+   "role_id": "HR-09",
+   "role_name": "HUMAN_EXECUTION_OPERATOR",
+   "person_reference": null,
+   "person_name": null,
+   "state": "UNASSIGNED",
+   "acceptance_status": "UNASSIGNED",
+   "availability_status": "UNKNOWN",
+   "conflict_status": "NOT_EVALUABLE",
+   "segregation_status": "NOT_EVALUABLE"
+  },
+  {
+   "role_id": "HR-10",
+   "role_name": "HUMAN_ROLLBACK_AUTHORITY",
+   "person_reference": null,
+   "person_name": null,
+   "state": "UNASSIGNED",
+   "acceptance_status": "UNASSIGNED",
+   "availability_status": "UNKNOWN",
+   "conflict_status": "NOT_EVALUABLE",
+   "segregation_status": "NOT_EVALUABLE"
+  }
+ ]
+}
