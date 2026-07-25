@@ -1,0 +1,36 @@
+{
+ "identity_references_verified": 0,
+ "identity_references_invalid": 3,
+ "acceptances_received": 0,
+ "acceptances_valid": 0,
+ "acceptances_invalid": 3,
+ "acceptances_missing": 0,
+ "acceptances_expired": 0,
+ "reason": "Textos de aceite contêm marcador <NOME DA PESSOA X> não substituído; não constituem manifestação humana válida.",
+ "records": [
+  {
+   "person_reference": "HUMAN-A",
+   "full_name_valid": false,
+   "identity_reference_valid": false,
+   "acceptance_valid": false,
+   "availability_valid": false,
+   "state": "UNASSIGNED"
+  },
+  {
+   "person_reference": "HUMAN-B",
+   "full_name_valid": false,
+   "identity_reference_valid": false,
+   "acceptance_valid": false,
+   "availability_valid": false,
+   "state": "UNASSIGNED"
+  },
+  {
+   "person_reference": "HUMAN-C",
+   "full_name_valid": false,
+   "identity_reference_valid": false,
+   "acceptance_valid": false,
+   "availability_valid": false,
+   "state": "UNASSIGNED"
+  }
+ ]
+}

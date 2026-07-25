@@ -1,0 +1,10 @@
+{
+ "sensitive_data_recorded": false,
+ "cpf_recorded": false,
+ "rg_recorded": false,
+ "address_recorded": false,
+ "phone_recorded": false,
+ "password_recorded": false,
+ "secret_recorded": false,
+ "minimization_applied": true
+}

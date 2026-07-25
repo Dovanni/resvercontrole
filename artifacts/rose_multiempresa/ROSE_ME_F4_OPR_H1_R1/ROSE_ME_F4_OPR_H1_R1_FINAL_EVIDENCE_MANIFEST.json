@@ -1,0 +1,85 @@
+{
+ "framework": "ROSE-ME-F4-OPR-H1-R1",
+ "version": "1.0",
+ "artifacts_total": 16,
+ "documentation_files": 1,
+ "json_evidence_files": 14,
+ "manifest_files": 1,
+ "baseline_sha256": "689af23fb305255932cf86b48d4774775877d4a65061528e11b61487192a9a39",
+ "baseline_changed": false,
+ "original_parent_files_modified": 0,
+ "database_modified": false,
+ "project_published": false,
+ "files": [
+  {
+   "name": "docs/ROSE_ME_F4_OPR_H1_R1_HUMAN_NOMINATION_ACCEPTANCE_ROLE_COVERAGE_SEGREGATION_AND_FOUR_EYES_REMEDIATION_v1.md",
+   "sha256": "cb0de9cfc22906ab657417a678a0cca1dbd25b8b97bfba32c7a3b69edc8727b7"
+  },
+  {
+   "name": "ROSE_ME_F4_OPR_H1_R1_PARENT_H1_HASH_BASELINE_AND_GAP_RECONCILIATION.json",
+   "sha256": "52584f9bfb0d94f25b28f7dbfe7161ad6856d6386179accd672ac20bb5621929"
+  },
+  {
+   "name": "ROSE_ME_F4_OPR_H1_R1_HUMAN_NOMINATION_INPUT_REGISTER.json",
+   "sha256": "3404796836faa48f2138bfa6891aa28d757c0951658e0e38c52544c94fa102cd"
+  },
+  {
+   "name": "ROSE_ME_F4_OPR_H1_R1_HUMAN_IDENTITY_AND_ACCEPTANCE_VALIDATION_REGISTER.json",
+   "sha256": "67c77948f75c94393455c78205ebb667148344377615ddd7694207e5a48623b8"
+  },
+  {
+   "name": "ROSE_ME_F4_OPR_H1_R1_TEN_ROLE_ASSIGNMENT_COVERAGE_MATRIX.json",
+   "sha256": "cd9ab3a777fb6dded196d87a89a6b46ede287647ec6132a7837fe83bed034d6c"
+  },
+  {
+   "name": "ROSE_ME_F4_OPR_H1_R1_ROLE_ACCUMULATION_AND_COMPENSATING_CONTROL_MATRIX.json",
+   "sha256": "73955569ea1da0531be97bbfa81c74967a63fdfbad07740bb9bf99b6f6cab1fd"
+  },
+  {
+   "name": "ROSE_ME_F4_OPR_H1_R1_MANDATORY_SEGREGATION_OF_DUTIES_VALIDATION.json",
+   "sha256": "fdbd8138b43a3fb0a30373776b24782986b2c7dfecb5dd9ad56220ff3c52b430"
+  },
+  {
+   "name": "ROSE_ME_F4_OPR_H1_R1_FOUR_EYES_IDENTITY_ACCEPTANCE_AND_INDEPENDENCE_VALIDATION.json",
+   "sha256": "f045397c65e4dc859e4066b24119af6b08ec9a4468044c5bb3cd67e7d230a9f8"
+  },
+  {
+   "name": "ROSE_ME_F4_OPR_H1_R1_HUMAN_EXECUTION_APPROVAL_AUDIT_FINANCIAL_AND_ROLLBACK_AUTHORITY_MATRIX.json",
+   "sha256": "78c83c36eebf239a6d364247637cdeef1ced7ff1efe30e9e32b8de8ab25c2708"
+  },
+  {
+   "name": "ROSE_ME_F4_OPR_H1_R1_HUMAN_AVAILABILITY_SUBSTITUTION_AND_CONTINUITY_MATRIX.json",
+   "sha256": "572e2b72c91788bb44dd0107ce2ee356192da160a9cf0a471288bc1d33c622ce"
+  },
+  {
+   "name": "ROSE_ME_F4_OPR_H1_R1_HUMAN_IDENTITY_PRIVACY_AND_DATA_MINIMIZATION_EVIDENCE.json",
+   "sha256": "dc853d650baf818e9d0e7efb2c7124e130461684e04c19910362477a27a879f4"
+  },
+  {
+   "name": "ROSE_ME_F4_OPR_H1_R1_OP05_OP06_OP07_RECLASSIFICATION.json",
+   "sha256": "66f2cde944f831ee758c61893583f230386ace1707bb14df11a90529b8b7102f"
+  },
+  {
+   "name": "ROSE_ME_F4_OPR_H1_R1_OP12_OP13_OP14_OP15_READINESS_RECLASSIFICATION.json",
+   "sha256": "e4bf910bfe2e7add49ba0324da3f11ebaca7c39c60f104c647d7c4dfd28ffbab"
+  },
+  {
+   "name": "ROSE_ME_F4_OPR_H1_R1_REMAINING_HUMAN_GOVERNANCE_GAP_REGISTER.json",
+   "sha256": "d9cb2547aed8c605e99d13cb1bd1cc1b1867b4e51d630476ce1b8a0101e58a21"
+  },
+  {
+   "name": "ROSE_ME_F4_OPR_H1_R1_SECURITY_NO_MUTATION_AND_FINAL_H1_HOMOLOGATION_DECISION.json",
+   "sha256": "60bbad271838a9bc7122d0051ff779513eecb2f5a30904a1d3e42e67ff023443"
+  }
+ ],
+ "checks_inventory": 520,
+ "checks_executed": 520,
+ "checks_passed": 520,
+ "checks_failed": 0,
+ "h1_r1_assessment_completed": true,
+ "h1_r1_formally_homologated": false,
+ "h1_formally_homologated": false,
+ "f4_eligible": true,
+ "f4_authorized": false,
+ "status": "ROSE_ME_F4_OPR_H1_R1_COMPLETED_WITH_REMAINING_HUMAN_GOVERNANCE_GAPS_AWAITING_ADDITIONAL_REMEDIATION"
+}

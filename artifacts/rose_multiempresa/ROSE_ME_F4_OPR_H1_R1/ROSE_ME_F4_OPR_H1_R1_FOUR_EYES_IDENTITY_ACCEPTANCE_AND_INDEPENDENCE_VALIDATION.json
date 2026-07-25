@@ -1,0 +1,12 @@
+{
+ "four_eyes_defined": true,
+ "four_eyes_executor_reference": "HUMAN-B",
+ "four_eyes_approver_reference": "HUMAN-A",
+ "four_eyes_executor_confirmed": false,
+ "four_eyes_approver_confirmed": false,
+ "four_eyes_distinct_identities": false,
+ "four_eyes_acceptances_verified": false,
+ "four_eyes_scope_defined": true,
+ "four_eyes_operational": false,
+ "reason": "Identidades reais não confirmadas; aceites inválidos."
+}

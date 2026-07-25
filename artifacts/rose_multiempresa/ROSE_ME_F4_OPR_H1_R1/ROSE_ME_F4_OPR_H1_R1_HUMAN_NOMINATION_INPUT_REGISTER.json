@@ -1,0 +1,17 @@
+{
+ "nomination_input_received": true,
+ "nomination_input_complete": false,
+ "placeholders_detected": true,
+ "placeholders_treated_as": "UNASSIGNED",
+ "persons_declared": 3,
+ "persons_valid": 0,
+ "invented_names": 0,
+ "presumed_acceptances": 0,
+ "ai_assignments": 0,
+ "reason": "Bloco recebido contém marcadores <...> não substituídos para full_name, identity_reference, availability_status, valid_from e submitted_by_human. Conforme regra do prompt, marcadores não substituídos são tratados como UNASSIGNED e não constituem nomeação real.",
+ "raw_person_references": [
+  "HUMAN-A",
+  "HUMAN-B",
+  "HUMAN-C"
+ ]
+}

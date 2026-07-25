@@ -1,0 +1,37 @@
+{
+ "mandatory_sod_rules_defined": 7,
+ "mandatory_sod_checks_executed": 7,
+ "mandatory_sod_conflicts_found": 0,
+ "mandatory_sod_conflicts_resolved": 0,
+ "mandatory_sod_conflicts_unresolved": 0,
+ "rules": [
+  {
+   "id": "SOD-01",
+   "status": "NOT_EVALUABLE_ROLES_UNASSIGNED"
+  },
+  {
+   "id": "SOD-02",
+   "status": "NOT_EVALUABLE_ROLES_UNASSIGNED"
+  },
+  {
+   "id": "SOD-03",
+   "status": "NOT_EVALUABLE_ROLES_UNASSIGNED"
+  },
+  {
+   "id": "SOD-04",
+   "status": "NOT_EVALUABLE_ROLES_UNASSIGNED"
+  },
+  {
+   "id": "SOD-05",
+   "status": "NOT_EVALUABLE_ROLES_UNASSIGNED"
+  },
+  {
+   "id": "SOD-06",
+   "status": "NOT_EVALUABLE_ROLES_UNASSIGNED"
+  },
+  {
+   "id": "SOD-07",
+   "status": "NOT_EVALUABLE_ROLES_UNASSIGNED"
+  }
+ ]
+}

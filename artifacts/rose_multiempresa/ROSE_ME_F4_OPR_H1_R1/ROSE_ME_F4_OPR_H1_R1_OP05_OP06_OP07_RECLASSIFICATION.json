@@ -1,0 +1,16 @@
+{
+ "op_05": {
+  "previous_status": "BLOCKED_BY_HUMAN_ASSIGNMENT",
+  "new_status": "BLOCKED_BY_HUMAN_ASSIGNMENT"
+ },
+ "op_06": {
+  "previous_status": "BLOCKED_BY_HUMAN_ASSIGNMENT",
+  "new_status": "BLOCKED_BY_HUMAN_ASSIGNMENT",
+  "justification": "Zero papéis aceitos; nomeações contêm placeholders."
+ },
+ "op_07": {
+  "previous_status": "BLOCKED_BY_HUMAN_ASSIGNMENT",
+  "new_status": "BLOCKED_BY_HUMAN_ASSIGNMENT",
+  "justification": "Executor e aprovador não confirmados."
+ }
+}

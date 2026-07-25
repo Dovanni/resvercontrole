@@ -1,0 +1,14 @@
+{
+ "execution_authority_defined": true,
+ "execution_authority_activated": false,
+ "approval_authority_defined": true,
+ "approval_authority_activated": false,
+ "rollback_authority_defined": true,
+ "rollback_authority_activated": false,
+ "financial_validation_authority_defined": true,
+ "financial_validation_authority_activated": false,
+ "security_review_authority_defined": true,
+ "security_review_authority_activated": false,
+ "audit_observation_authority_defined": true,
+ "audit_observation_authority_activated": false
+}
