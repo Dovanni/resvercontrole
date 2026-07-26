@@ -1,0 +1,31 @@
+{
+  "compensating_controls_inventory": 18,
+  "compensating_controls_defined": true,
+  "compensating_controls_configured": false,
+  "compensating_controls_tested": false,
+  "compensating_controls_operational": false,
+  "controls": [
+    {"id":"SOCC-01","desc":"Escopo formal e classificação de risco"},
+    {"id":"SOCC-02","desc":"Separação temporal entre criação e autorização"},
+    {"id":"SOCC-03","desc":"Pacote imutável com hash"},
+    {"id":"SOCC-04","desc":"Typecheck, build, lint e testes"},
+    {"id":"SOCC-05","desc":"Validação de schema e RLS"},
+    {"id":"SOCC-06","desc":"Backup executado"},
+    {"id":"SOCC-07","desc":"Restore comprovado"},
+    {"id":"SOCC-08","desc":"Feature flag"},
+    {"id":"SOCC-09","desc":"Kill switch"},
+    {"id":"SOCC-10","desc":"Rollback definido e testado"},
+    {"id":"SOCC-11","desc":"Logs e evidências imutáveis"},
+    {"id":"SOCC-12","desc":"Validação financeira de não regressão"},
+    {"id":"SOCC-13","desc":"Comparação pré e pós-execução"},
+    {"id":"SOCC-14","desc":"Fail-closed diante de divergência"},
+    {"id":"SOCC-15","desc":"Autorização separada para migration"},
+    {"id":"SOCC-16","desc":"Autorização separada para backfill"},
+    {"id":"SOCC-17","desc":"Autorização separada para produção"},
+    {"id":"SOCC-18","desc":"Revisão externa pontual para risco extremo"}
+  ],
+  "permanent_external_reviewer_required": false,
+  "risk_extreme_external_review_may_be_required": true,
+  "external_review_does_not_remove_owner_authority": true,
+  "external_review_is_advisory_or_gate_specific": true
+}

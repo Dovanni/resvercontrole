@@ -1,0 +1,23 @@
+{
+  "op05_status": "BLOCKED_PENDING_FUTURE_SINGLE_OPERATOR_EXPLICIT_WINDOW_AUTHORIZATION",
+  "op06_status": "SATISFIED_BY_CANONICAL_SINGLE_OPERATOR_DESIGNATION_DOCUMENTALLY_ONLY",
+  "op07_status": "SUPERSEDED_BY_SINGLE_OPERATOR_DUAL_CONTROL_NOT_YET_OPERATIONAL",
+  "op12_status": "BLOCKED_NOT_GRANTED",
+  "op13_status": "BLOCKED_NOT_GRANTED",
+  "op14_status": "BLOCKED_NOT_GRANTED",
+  "op15_status": "BLOCKED_NOT_GRANTED",
+  "human_governance_model_defined": true,
+  "human_governance_operationally_ready": false,
+  "single_operator_controls_operational": false,
+  "development_continuation_allowed": true,
+  "documentary_design_allowed": true,
+  "isolated_environment_preparation_allowed_after_specific_gate": true,
+  "synthetic_data_dry_run_may_be_authorized_after_specific_gate": true,
+  "production_change_allowed": false,
+  "F4_authorized": false,
+  "F4_started": false,
+  "SQL_authorized": false,
+  "migration_authorized": false,
+  "backfill_authorized": false,
+  "production_authorized": false
+}

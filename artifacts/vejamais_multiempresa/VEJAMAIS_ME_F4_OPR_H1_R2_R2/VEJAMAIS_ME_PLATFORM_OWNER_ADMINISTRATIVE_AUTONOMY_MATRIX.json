@@ -1,0 +1,27 @@
+{
+  "platform_owner_administrative_authority": "FULL_WITH_MANDATORY_TECHNICAL_SAFEGUARDS",
+  "authorized_administrative_capabilities_future": [
+    "create_companies", "edit_companies", "suspend_companies", "deactivate_companies", "delete_companies_via_secure_process",
+    "create_users", "invite_users", "suspend_users", "remove_memberships", "administer_memberships",
+    "define_roles_and_permissions", "configure_modules", "configure_plans", "toggle_features",
+    "administer_feature_flags", "trigger_kill_switch", "authorize_changes", "execute_technical_procedures",
+    "authorize_publication", "interrupt_execution", "determine_rollback", "administer_platform_evolution"
+  ],
+  "explicitly_not_authorized": [
+    "invisible_indiscriminate_private_tenant_data_access",
+    "silent_RLS_bypass",
+    "permanent_isolation_bypass",
+    "automatic_financial_data_read",
+    "use_of_user_credentials",
+    "password_access",
+    "token_access",
+    "audit_removal",
+    "log_tampering",
+    "uncontrolled_irreversible_deletion",
+    "service_role_in_browser"
+  ],
+  "platform_control_is_not_tenant_data_ownership": true,
+  "platform_administration_is_not_unrestricted_private_data_access": true,
+  "platform_owner_does_not_automatically_own_tenant_content": true,
+  "tenant_private_data_remains_restricted": true
+}

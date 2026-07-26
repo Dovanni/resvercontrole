@@ -1,0 +1,20 @@
+{
+  "canonical_single_operator_name": "Antonio Roberto Rodrigues",
+  "canonical_single_operator_code": "HUMAN-SO-01",
+  "canonical_platform_owner": "Antonio Roberto Rodrigues",
+  "canonical_project_owner": "Antonio Roberto Rodrigues",
+  "canonical_technical_operator": "Antonio Roberto Rodrigues",
+  "canonical_functional_owner": "Antonio Roberto Rodrigues",
+  "canonical_final_human_authorizer": "Antonio Roberto Rodrigues",
+  "single_operator_model": true,
+  "permanent_second_operator_required": false,
+  "permanent_third_party_required": false,
+  "full_project_decision_autonomy": true,
+  "full_development_autonomy": true,
+  "full_platform_administrative_autonomy": true,
+  "human_independence_available": false,
+  "human_four_eyes_available": false,
+  "human_four_eyes_operational": false,
+  "data_minimization_applied": true,
+  "personal_sensitive_data_persisted": false
+}
