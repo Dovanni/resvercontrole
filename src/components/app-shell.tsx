@@ -98,7 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="p-4 border-t border-sidebar-border">
           <div className="text-xs text-muted-foreground mb-0.5 truncate">{user?.email}</div>
           {role && <div className="text-[10px] text-primary font-medium mb-2 uppercase tracking-wider">{ROLE_LABEL[role]}</div>}
-          <Button variant="ghost" size="sm" onClick={() => signOut()} className="w-full justify-start">
+          <Button variant="ghost" size="sm" onClick={handleSignOut} disabled={signingOut} className="w-full justify-start">
             <LogOut className="size-4 mr-2" /> Sair
           </Button>
         </div>
@@ -112,7 +112,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <div className="md:ml-auto flex items-center gap-1">
             <NotificationsBell />
-            <Button variant="ghost" size="sm" onClick={() => signOut()} className="md:hidden">
+            <Button variant="ghost" size="sm" onClick={handleSignOut} disabled={signingOut} className="md:hidden">
               <LogOut className="size-4" />
             </Button>
           </div>
