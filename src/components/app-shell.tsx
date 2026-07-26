@@ -1,10 +1,12 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useRouter, useNavigate } from "@tanstack/react-router";
 import { LayoutDashboard, Package, ShoppingBag, Wallet, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, BarChartBig, FileText, Settings, CalendarDays, TrendingUp, Landmark, CreditCard, ShoppingCart, Scale } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth, type Permission } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { NotificationsBell } from "@/components/notifications";
 import { VejamaisMark } from "@/components/vejamais-logo";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { toast } from "sonner";
 
 const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, perm: "view:dashboard" },
@@ -34,6 +36,34 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { signOut, user, role, can } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const nav = ALL_NAV.filter((n) => can(n.perm));
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const navigate = useNavigate();
+  const [signingOut, setSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      try {
+        await signOut();
+      } catch (err) {
+        console.error("signOut error", err);
+        toast.error("Não foi possível encerrar a sessão. Tente novamente.");
+      }
+      try {
+        await router.invalidate();
+      } catch {
+        /* noop */
+      }
+      navigate({ to: "/auth", replace: true });
+    } finally {
+      setSigningOut(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -68,7 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="p-4 border-t border-sidebar-border">
           <div className="text-xs text-muted-foreground mb-0.5 truncate">{user?.email}</div>
           {role && <div className="text-[10px] text-primary font-medium mb-2 uppercase tracking-wider">{ROLE_LABEL[role]}</div>}
-          <Button variant="ghost" size="sm" onClick={() => signOut()} className="w-full justify-start">
+          <Button variant="ghost" size="sm" onClick={handleSignOut} disabled={signingOut} className="w-full justify-start">
             <LogOut className="size-4 mr-2" /> Sair
           </Button>
         </div>
@@ -82,7 +112,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <div className="md:ml-auto flex items-center gap-1">
             <NotificationsBell />
-            <Button variant="ghost" size="sm" onClick={() => signOut()} className="md:hidden">
+            <Button variant="ghost" size="sm" onClick={handleSignOut} disabled={signingOut} className="md:hidden">
               <LogOut className="size-4" />
             </Button>
           </div>
