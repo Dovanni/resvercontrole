@@ -1,0 +1,18 @@
+{
+  "current_users": {"auth_users":7,"profiles":7,"user_roles":7,"orphans_detected":0},
+  "current_role_enum": ["admin","vendedor"],
+  "target_role_enum": ["OWNER","ADMIN","MANAGER","OPERATOR","VIEWER"],
+  "role_mapping_proposal": [
+    {"from":"admin","to":"OWNER","scope":"tenant","note":"first admin of a tenant becomes OWNER; others become ADMIN"},
+    {"from":"vendedor","to":"OPERATOR","scope":"tenant"}
+  ],
+  "user_migration_rules": [
+    {"case":"user with exactly one implicit tenant (via own data)","action":"create tenant + ACTIVE membership as OWNER"},
+    {"case":"user with no data","action":"create empty tenant + OWNER membership; or defer until first login"},
+    {"case":"user with multiple company_settings (not currently possible)","action":"HUMAN_DECISION"},
+    {"case":"auth user without profile","action":"backfill profile then apply above"},
+    {"case":"inactive user","action":"create membership SUSPENDED"},
+    {"case":"conflicting role","action":"HUMAN_DECISION"}
+  ],
+  "governance_separation": "Platform HUMAN-SO-01 role remains outside tenant_memberships; no automatic per-tenant access."
+}

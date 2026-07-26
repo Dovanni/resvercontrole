@@ -1,0 +1,23 @@
+{
+  "lab_objects": [
+    {"name":"tenants","production_status":"MISSING","action":"REUSE_AS_IS","note":"introduce as canonical tenant entity; company_settings becomes tenant profile"},
+    {"name":"tenant_memberships","production_status":"MISSING","action":"REUSE_AS_IS"},
+    {"name":"tenant_invitations","production_status":"MISSING","action":"REUSE_AS_IS"},
+    {"name":"user_tenant_preferences","production_status":"MISSING","action":"REUSE_AS_IS"},
+    {"name":"tenant_audit_events","production_status":"MERGE_WITH_EXISTING","action":"MERGE_WITH_EXISTING","note":"legacy audit_log retained read-only, new canonical table introduced"},
+    {"name":"tenant_test_records","production_status":"NOT_APPLICABLE","action":"NOT_APPLICABLE"},
+    {"name":"fn current_user_has_active_membership","production_status":"MISSING","action":"REUSE_AS_IS"},
+    {"name":"fn current_user_has_tenant_permission","production_status":"MISSING","action":"REUSE_AS_IS"},
+    {"name":"fn validate_active_tenant_context","production_status":"MISSING","action":"REUSE_AS_IS"},
+    {"name":"fn can_manage_target_member","production_status":"MISSING","action":"ADAPT_REQUIRED"},
+    {"name":"RLS policies (deny-by-default per-tenant)","production_status":"CONFLICTS_WITH_CURRENT","action":"ADAPT_REQUIRED","note":"current 25 policies are auth.uid()=user_id; must be replaced by membership-based policies with WITH CHECK preventing tenant_id change"},
+    {"name":"roles OWNER/ADMIN/FINANCIAL/COMMERCIAL/OPERATOR/AUDITOR/VIEWER","production_status":"CONFLICTS_WITH_CURRENT","action":"MERGE_WITH_EXISTING","note":"current app_role enum has admin/vendedor; requires additive migration and mapping"}
+  ],
+  "compatibility_summary": {
+    "reuse_as_is": 6,
+    "adapt_required": 2,
+    "merge_with_existing": 2,
+    "not_applicable": 1,
+    "blocked_pending_decision": 0
+  }
+}

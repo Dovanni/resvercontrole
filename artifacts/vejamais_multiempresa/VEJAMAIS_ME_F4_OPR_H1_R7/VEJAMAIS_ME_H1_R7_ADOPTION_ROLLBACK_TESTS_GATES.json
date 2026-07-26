@@ -1,0 +1,33 @@
+{
+  "strategies_compared": [
+    {"id":"A","name":"BIG_BANG","pros":["shortest calendar"],"cons":["highest blast radius","irreversible in practice"],"recommendation":"REJECT"},
+    {"id":"B","name":"MIGRATION_BY_DOMAIN","pros":["scoped risk","incremental verification"],"cons":["longer","interdomain FK complexity"],"recommendation":"CONSIDER"},
+    {"id":"C","name":"STRANGLER_COMPAT_LAYER","pros":["dual-read tolerance"],"cons":["permanent tech debt risk"],"recommendation":"CONSIDER"},
+    {"id":"D","name":"FEATURE_FLAG_PER_TENANT","pros":["per-tenant rollout","instant kill switch"],"cons":["requires all code to be tenant-aware from day 1"],"recommendation":"RECOMMENDED (combined with E)"},
+    {"id":"E","name":"SHADOW_READ_DUAL_VALIDATION","pros":["verify RLS parity before cutover"],"cons":["compute overhead"],"recommendation":"RECOMMENDED (with D)"}
+  ],
+  "recommended_strategy":"D+E: Expand-Transition-Contract with per-tenant feature flag and shadow-read validation before write cutover.",
+  "feature_flags_required":["multitenancy_enabled_global","multitenancy_enabled_for_tenant","tenant_creation_open","invitations_open","backfill_write_enabled","dual_read_shadow_enabled"],
+  "kill_switches":["disable_new_tenants","disable_invitations","freeze_backfill","force_legacy_read_path","force_legacy_write_path"],
+  "rollback_plan": {
+    "reversible":["feature flags","frontend tenant selector","RLS additive policies","new helper functions"],
+    "hard_to_reverse":["column drops","enum changes","backfilled tenant_id if legacy policy removed"],
+    "irreversible":["deleted rows (never in rollback)","external emails already sent for invitations"],
+    "principle":"no rollback deletes real data"
+  },
+  "test_matrix": [
+    "unit","integration","RLS cross-tenant","E2E web","E2E mobile","login","logout","invite","onboarding","tenant switch","revoked membership","suspended tenant","cache isolation","Realtime isolation","Storage isolation","exports","perf","concurrency","rollback drill","DR restore","secret scanner","bundle scanner","LGPD checklist"
+  ],
+  "gates_sequence": [
+    "H1-R8 Production Schema Adoption Blueprint",
+    "H1-R9 Automated Test Harness and Migration Simulator",
+    "H1-R10 Production-Compatible Migration Package",
+    "H1-R11 Isolated Production Clone Dry-Run",
+    "H1-R12 Human Review and Go/No-Go",
+    "H1-R13 Controlled Pilot Authorization",
+    "H1-R14 Limited Tenant Pilot",
+    "H1-R15 Post-Pilot Audit",
+    "H1-R16 Broader Rollout Assessment"
+  ],
+  "auto_start_next_gate": false
+}

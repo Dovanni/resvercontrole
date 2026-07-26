@@ -1,0 +1,24 @@
+{
+  "integrations": [
+    {"name":"Supabase Auth","tenant_context":"none today","adaptation":"add tenant provisioning on first login/invite acceptance"},
+    {"name":"Mercado Pago (fees on sales)","tenant_context":"implicit via user_id","adaptation":"switch to tenant_id"},
+    {"name":"Lovable AI Gateway","tenant_context":"n/a","adaptation":"none"},
+    {"name":"METRIXHR (institutional link)","tenant_context":"n/a","adaptation":"none in R7"},
+    {"name":"E-mail transactional","tenant_context":"per-invite","adaptation":"add tenant name in templates"}
+  ],
+  "storage": {
+    "buckets": ["product-photos","company-logos"],
+    "current_path_pattern": "flat / user-scoped (no tenant prefix)",
+    "target_path_pattern": "tenant_id/module/resource_id/file",
+    "policy_change_required": true,
+    "signed_url_review_required": true
+  },
+  "realtime": {
+    "current_usage": "unknown - not systematically observed",
+    "requirement": "filter subscriptions by tenant_id; cancel/reconnect on tenant switch"
+  },
+  "exports": {
+    "types": ["CSV","PDF","impressão"],
+    "requirement": "every export handler must resolve tenant server-side, never trust client param"
+  }
+}

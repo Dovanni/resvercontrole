@@ -1,0 +1,49 @@
+{
+  "gate": "VEJAMAIS-ME-F4-OPR-H1-R7",
+  "mode": "READ_ONLY_DOCUMENTAL_ASSESSMENT_ONLY",
+  "collected_at_utc": "2026-07-26T16:43:30Z",
+  "environment": {
+    "project_name": "VEJAMAIS - GESTÃO COMERCIAL E FINANCEIRA",
+    "environment_alias": "ROSE-CURRENT-01",
+    "lovable_project_id": "c1cf42e3-5ea4-4a1b-a6cc-454256b65835",
+    "supabase_project_ref": "bsrjtmssbnvttzrvnaab",
+    "domains": ["https://vejamais.com.br", "https://www.vejamais.com.br"],
+    "parent_framework": "VEJAMAIS-ME-F4-OPR-H1-R6",
+    "lab_project_id": "0497d836-3738-4091-b3fc-d5f6e13c42a0",
+    "lab_supabase_ref": "kvqcuezzsmvyedmolnau",
+    "lab_hash_frozen": "c3ec706571c70bd56e50ec627a4f5316c1504f95b66ddef2a4e559ee2c0bd615"
+  },
+  "counts": {
+    "public_tables": 25,
+    "public_views": 0,
+    "public_materialized_views": 0,
+    "policies_total": 25,
+    "policies_per_table": 1,
+    "rls_enabled_tables": 25,
+    "rls_disabled_tables": 0,
+    "storage_buckets": 2,
+    "auth_users": 7,
+    "profiles": 7,
+    "user_roles": 7,
+    "sales": 11,
+    "products": 33,
+    "company_settings": 1
+  },
+  "storage_buckets": [
+    {"name": "product-photos", "public": false, "tenant_prefix": false},
+    {"name": "company-logos", "public": false, "tenant_prefix": false}
+  ],
+  "confirmations": {
+    "production_code_changed": false,
+    "production_database_changed": false,
+    "production_auth_changed": false,
+    "production_rls_changed": false,
+    "production_storage_changed": false,
+    "production_data_changed": false,
+    "migration_created": false,
+    "migration_executed": false,
+    "backfill_executed": false,
+    "publication_performed": false,
+    "next_gate_started": false
+  }
+}
