@@ -1,8 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, BarChartBig, FileText, Settings, CalendarDays, TrendingUp, Landmark, CreditCard, ShoppingCart, Scale } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Wallet, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, BarChartBig, FileText, Settings, CalendarDays, TrendingUp, Landmark, CreditCard, ShoppingCart, Scale } from "lucide-react";
 import { useAuth, type Permission } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { NotificationsBell } from "@/components/notifications";
+import { VejamaisMark } from "@/components/vejamais-logo";
 import type { ReactNode } from "react";
 
 const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
