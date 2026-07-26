@@ -1,4 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -75,6 +76,16 @@ function AuthPage() {
   return (
     <div className="min-h-screen bg-gradient-rose flex items-center justify-center px-4">
       <div className="w-full max-w-md">
+        <div className="mb-4">
+          <Link
+            to="/"
+            aria-label="Voltar para o Vejamais"
+            className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Voltar para o Vejamais
+          </Link>
+        </div>
         <div className="text-center mb-8">
           {brand.logo ? (
             <img src={brand.logo} alt={brand.name || "Vejamais"} className="mx-auto mb-4 max-h-20 w-auto object-contain rounded-2xl" />
