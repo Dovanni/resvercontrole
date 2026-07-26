@@ -1,0 +1,12 @@
+{
+  "framework": "VEJAMAIS-ME-F4-OPR-H1-R2",
+  "humans_nominated": 3,
+  "nominees": [
+    {"code": "HUMAN-A", "full_name": "Antonio Roberto Rodrigues", "nomination_status": "NOMINATED_AWAITING_INDIVIDUAL_ACCEPTANCE", "acceptance_status": "NOT_RECEIVED", "authority_status": "INACTIVE", "access_provisioned": false, "operational_power_enabled": false},
+    {"code": "HUMAN-B", "full_name": "Emerson Vinicius Momo Rodrigues", "nomination_status": "NOMINATED_AWAITING_INDIVIDUAL_ACCEPTANCE", "acceptance_status": "NOT_RECEIVED", "authority_status": "INACTIVE", "access_provisioned": false, "operational_power_enabled": false},
+    {"code": "HUMAN-C", "full_name": "Angela Maria Momo Rodrigues", "nomination_status": "NOMINATED_AWAITING_INDIVIDUAL_ACCEPTANCE", "acceptance_status": "NOT_RECEIVED", "authority_status": "INACTIVE", "access_provisioned": false, "operational_power_enabled": false}
+  ],
+  "cpf_persisted": false,
+  "sensitive_personal_data_persisted": false,
+  "data_minimization_applied": true
+}

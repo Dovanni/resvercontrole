@@ -1,0 +1,11 @@
+{
+  "role_accumulation_assessed": true,
+  "compensating_controls_required": true,
+  "accumulations": [
+    {"person": "Antonio Roberto Rodrigues", "roles": ["PRODUCT_OWNER", "PRIVACY_OWNER", "CHANGE_APPROVER"], "classification": "COMPATIBLE_WITH_CONTROLS", "compensating_controls": ["registro de justificativa em cada aprovação", "revisão independente por AUDIT_OBSERVER"]},
+    {"person": "Emerson Vinicius Momo Rodrigues", "roles": ["TECHNICAL_OWNER", "DATABASE_OWNER", "EXECUTION_OPERATOR"], "classification": "CONDITIONALLY_COMPATIBLE", "compensating_controls": ["aprovação obrigatória pelo CHANGE_APPROVER antes de qualquer execução", "revisão pelo SECURITY_OWNER de toda migration", "evidência observada pelo AUDIT_OBSERVER"]},
+    {"person": "Angela Maria Momo Rodrigues", "roles": ["SECURITY_OWNER", "FINANCIAL_VALIDATOR", "AUDIT_OBSERVER", "ROLLBACK_AUTHORITY"], "classification": "CONDITIONALLY_COMPATIBLE", "compensating_controls": ["segunda evidência financeira independente antes de qualquer cutover", "co-revisão de rollback com HUMAN-A antes de acionamento não emergencial", "separação temporal entre atos de observação e atos de decisão", "registro auditável de cada exercício de autoridade"], "explicit_risk_pairs": [{"pair": ["SECURITY_OWNER", "AUDIT_OBSERVER"], "risk": "auto-observação de controles de segurança"}, {"pair": ["AUDIT_OBSERVER", "ROLLBACK_AUTHORITY"], "risk": "quem observa não deveria decidir rollback isoladamente"}, {"pair": ["FINANCIAL_VALIDATOR", "AUDIT_OBSERVER"], "risk": "auto-validação da evidência financeira"}]}
+  ],
+  "full_independence_declared": false,
+  "note": "Concentração de quatro papéis em HUMAN-C exige controles compensatórios formais antes de ativação."
+}

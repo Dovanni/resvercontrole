@@ -1,0 +1,21 @@
+{
+  "roles_inventory": 10,
+  "roles_nominated": 10,
+  "roles_accepted": 0,
+  "roles_rejected": 0,
+  "roles_pending_acceptance": 10,
+  "unassigned_roles": 0,
+  "active_roles": 0,
+  "assignments": [
+    {"role_id": "HR-01", "role_name": "PRODUCT_OWNER", "nominee": "HUMAN-A", "full_name": "Antonio Roberto Rodrigues", "acceptance_status": "NOT_RECEIVED", "authority_status": "INACTIVE"},
+    {"role_id": "HR-02", "role_name": "TECHNICAL_OWNER", "nominee": "HUMAN-B", "full_name": "Emerson Vinicius Momo Rodrigues", "acceptance_status": "NOT_RECEIVED", "authority_status": "INACTIVE"},
+    {"role_id": "HR-03", "role_name": "DATABASE_OWNER", "nominee": "HUMAN-B", "full_name": "Emerson Vinicius Momo Rodrigues", "acceptance_status": "NOT_RECEIVED", "authority_status": "INACTIVE"},
+    {"role_id": "HR-04", "role_name": "SECURITY_OWNER", "nominee": "HUMAN-C", "full_name": "Angela Maria Momo Rodrigues", "acceptance_status": "NOT_RECEIVED", "authority_status": "INACTIVE"},
+    {"role_id": "HR-05", "role_name": "PRIVACY_OWNER", "nominee": "HUMAN-A", "full_name": "Antonio Roberto Rodrigues", "acceptance_status": "NOT_RECEIVED", "authority_status": "INACTIVE"},
+    {"role_id": "HR-06", "role_name": "FINANCIAL_VALIDATOR", "nominee": "HUMAN-C", "full_name": "Angela Maria Momo Rodrigues", "acceptance_status": "NOT_RECEIVED", "authority_status": "INACTIVE"},
+    {"role_id": "HR-07", "role_name": "CHANGE_APPROVER", "nominee": "HUMAN-A", "full_name": "Antonio Roberto Rodrigues", "acceptance_status": "NOT_RECEIVED", "authority_status": "INACTIVE"},
+    {"role_id": "HR-08", "role_name": "AUDIT_OBSERVER", "nominee": "HUMAN-C", "full_name": "Angela Maria Momo Rodrigues", "acceptance_status": "NOT_RECEIVED", "authority_status": "INACTIVE"},
+    {"role_id": "HR-09", "role_name": "EXECUTION_OPERATOR", "nominee": "HUMAN-B", "full_name": "Emerson Vinicius Momo Rodrigues", "acceptance_status": "NOT_RECEIVED", "authority_status": "INACTIVE"},
+    {"role_id": "HR-10", "role_name": "ROLLBACK_AUTHORITY", "nominee": "HUMAN-C", "full_name": "Angela Maria Momo Rodrigues", "acceptance_status": "NOT_RECEIVED", "authority_status": "INACTIVE"}
+  ]
+}
