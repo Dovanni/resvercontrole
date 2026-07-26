@@ -104,7 +104,7 @@ function Header() {
           </Link>
           <Link to="/auth">
             <Button size="sm" className="gap-1">
-              Começar agora <ArrowRight className="size-4" />
+              Entrar <ArrowRight className="size-4" />
             </Button>
           </Link>
         </div>
@@ -136,7 +136,7 @@ function Header() {
                 <Button variant="outline" className="w-full">Entrar</Button>
               </Link>
               <Link to="/auth" onClick={() => setOpen(false)}>
-                <Button className="w-full">Começar agora</Button>
+                <Button className="w-full">Entrar</Button>
               </Link>
             </div>
           </nav>
@@ -665,7 +665,7 @@ function FinalCta() {
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link to="/auth">
               <Button size="lg" className="gap-1.5">
-                Criar minha conta <ArrowRight className="size-4" />
+                Entrar <ArrowRight className="size-4" />
               </Button>
             </Link>
             <a href="#planos">
