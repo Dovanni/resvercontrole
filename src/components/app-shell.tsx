@@ -1,8 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingBag, Wallet, Sparkles, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, BarChartBig, FileText, Settings, CalendarDays, TrendingUp, Landmark, CreditCard, ShoppingCart, Scale } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Wallet, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, BarChartBig, FileText, Settings, CalendarDays, TrendingUp, Landmark, CreditCard, ShoppingCart, Scale } from "lucide-react";
 import { useAuth, type Permission } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { NotificationsBell } from "@/components/notifications";
+import { VejamaisMark } from "@/components/vejamais-logo";
 import type { ReactNode } from "react";
 
 const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
@@ -38,10 +39,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex bg-background">
       <aside className="hidden md:flex w-64 flex-col bg-sidebar border-r border-sidebar-border">
         <div className="px-6 py-6 flex items-center gap-2.5">
-          <div className="size-9 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow">
-            <Sparkles className="size-4 text-primary-foreground" />
+          <VejamaisMark size={36} className="rounded-xl shadow-glow" />
+          <div className="flex flex-col leading-none">
+            <span className="font-display text-2xl">Vejamais</span>
+            <span className="mt-1 text-[9px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Gestão Comercial e Financeira</span>
           </div>
-          <span className="font-display text-2xl">Vejamais</span>
         </div>
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
           {nav.map((n) => {
@@ -75,9 +77,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="border-b px-4 py-3 flex items-center justify-between bg-sidebar md:bg-background md:border-transparent">
           <div className="flex items-center gap-2 md:hidden">
-            <div className="size-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <Sparkles className="size-4 text-primary-foreground" />
-            </div>
+            <VejamaisMark size={32} className="rounded-lg" />
             <span className="font-display text-xl">Vejamais</span>
           </div>
           <div className="md:ml-auto flex items-center gap-1">

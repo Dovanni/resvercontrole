@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sparkles } from "lucide-react";
+import { VejamaisMark } from "@/components/vejamais-logo";
 import { toast } from "sonner";
 import { translateAuthError } from "@/lib/auth-errors";
 
@@ -48,8 +48,8 @@ function ResetPasswordPage() {
     <div className="min-h-screen bg-gradient-rose flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center size-14 rounded-2xl bg-gradient-primary shadow-glow mb-4">
-            <Sparkles className="size-6 text-primary-foreground" />
+          <div className="mx-auto mb-4 flex justify-center">
+            <VejamaisMark size={64} className="rounded-2xl shadow-glow" />
           </div>
           <h1 className="font-display text-3xl text-foreground">Redefinir senha</h1>
           <p className="mt-2 text-sm text-muted-foreground">
