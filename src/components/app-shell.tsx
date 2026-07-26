@@ -41,6 +41,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const navigate = useNavigate();
   const [signingOut, setSigningOut] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Fecha automaticamente o menu mobile ao concluir uma navegação.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   const handleSignOut = async () => {
     if (signingOut) return;
