@@ -1,0 +1,14 @@
+{
+  "roles": [
+    {"id": "HR-01", "name": "PRODUCT_OWNER", "responsibility": "priorização funcional, proteção do escopo, validação de valor", "authority_scope": "escopo funcional", "prohibited": ["executar migration", "aprovar sozinho execução técnica"]},
+    {"id": "HR-02", "name": "TECHNICAL_OWNER", "responsibility": "integridade técnica, arquitetura, revisão, compatibilidade", "authority_scope": "revisão técnica", "prohibited": ["autoaprovação", "execução sem four-eyes"]},
+    {"id": "HR-03", "name": "DATABASE_OWNER", "responsibility": "schema, migrations, backups, restores", "authority_scope": "DDL autorizado, backup, restore", "prohibited": ["autorizar sozinho migration em produção"]},
+    {"id": "HR-04", "name": "SECURITY_OWNER", "responsibility": "segurança, ameaças, controles, incidentes", "authority_scope": "revisão de segurança, bloqueio", "prohibited": ["conceder bypass permanente"]},
+    {"id": "HR-05", "name": "PRIVACY_OWNER", "responsibility": "LGPD, minimização, finalidade, retenção", "authority_scope": "revisão de privacidade", "prohibited": ["autorizar coleta desnecessária"]},
+    {"id": "HR-06", "name": "FINANCIAL_VALIDATOR", "responsibility": "validação humana de cálculos, saldos, conciliações", "authority_scope": "bloquear cutover, exigir rollback", "prohibited": ["executar backfill", "validar a própria evidência"]},
+    {"id": "HR-07", "name": "CHANGE_APPROVER", "responsibility": "aprovação formal de mudanças", "authority_scope": "aprovar, negar, suspender, revogar", "prohibited": ["executar", "autoaprovação"]},
+    {"id": "HR-08", "name": "AUDIT_OBSERVER", "responsibility": "observação independente, evidências", "authority_scope": "observar, registrar, apontar", "prohibited": ["modificar execução", "ser executor"]},
+    {"id": "HR-09", "name": "EXECUTION_OPERATOR", "responsibility": "execução controlada de ações autorizadas", "authority_scope": "executar somente unidades autorizadas", "prohibited": ["ampliar escopo", "improvisar SQL", "autoaprovar"]},
+    {"id": "HR-10", "name": "ROLLBACK_AUTHORITY", "responsibility": "decisão e comando de rollback", "authority_scope": "R0, R1, R2, R3", "prohibited": ["depender do executor em incidente crítico"]}
+  ]
+}

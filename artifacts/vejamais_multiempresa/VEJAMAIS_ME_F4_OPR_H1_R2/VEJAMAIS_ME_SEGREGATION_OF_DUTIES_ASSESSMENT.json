@@ -1,0 +1,28 @@
+{
+  "change_approver": "Antonio Roberto Rodrigues",
+  "execution_operator": "Emerson Vinicius Momo Rodrigues",
+  "audit_observer": "Angela Maria Momo Rodrigues",
+  "rollback_authority": "Angela Maria Momo Rodrigues",
+  "financial_validator": "Angela Maria Momo Rodrigues",
+  "change_approver_distinct_from_execution_operator": true,
+  "audit_observer_distinct_from_execution_operator": true,
+  "rollback_authority_distinct_from_execution_operator": true,
+  "financial_validator_distinct_from_execution_operator": true,
+  "audit_observer_same_person_as_rollback_authority": true,
+  "audit_observer_same_person_as_financial_validator": true,
+  "four_eyes_structure_proposed": true,
+  "four_eyes_operational": false,
+  "rules_evaluated": [
+    {"id": "SOD-01", "rule": "EXECUTION_OPERATOR != CHANGE_APPROVER", "status": "SATISFIED"},
+    {"id": "SOD-02", "rule": "EXECUTION_OPERATOR != AUDIT_OBSERVER", "status": "SATISFIED"},
+    {"id": "SOD-03", "rule": "EXECUTION_OPERATOR != FINANCIAL_VALIDATOR", "status": "SATISFIED"},
+    {"id": "SOD-04", "rule": "EXECUTION_OPERATOR != ROLLBACK_AUTHORITY", "status": "SATISFIED"},
+    {"id": "SOD-05", "rule": "mesma pessoa não executa e emite aprovação final", "status": "SATISFIED"},
+    {"id": "SOD-06", "rule": "mesma pessoa não produz única evidência e é única validadora", "status": "REQUIRES_COMPENSATING_CONTROL_HUMAN_C_ACCUMULATES_AUDIT_FINANCIAL_ROLLBACK"},
+    {"id": "SOD-07", "rule": "IA não aprova, executa, audita ou ordena rollback", "status": "SATISFIED"}
+  ],
+  "segregation_conflicts_found": 0,
+  "compensating_controls_required": true,
+  "segregation_proposal_documentally_valid": false,
+  "reason_not_fully_valid": "HUMAN-C acumula AUDIT_OBSERVER + FINANCIAL_VALIDATOR + ROLLBACK_AUTHORITY. Segregação plena não pode ser declarada sem controles compensatórios formalizados e aceites individuais confirmados."
+}

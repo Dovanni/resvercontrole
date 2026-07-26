@@ -1,0 +1,12 @@
+{
+  "op05_status": "BLOCKED_PENDING_HUMAN_ACCEPTANCE_AND_FUTURE_WINDOW_APPROVAL",
+  "op06_status": "PARTIALLY_SATISFIED_NOMINATIONS_REGISTERED_ACCEPTANCES_PENDING",
+  "op07_status": "BLOCKED_STRUCTURE_PROPOSED_ACCEPTANCES_AND_ACTIVATION_PENDING",
+  "op12_status": "BLOCKED_NOT_GRANTED",
+  "op13_status": "BLOCKED_NOT_GRANTED",
+  "op14_status": "BLOCKED_NOT_GRANTED",
+  "op15_status": "BLOCKED_NOT_GRANTED",
+  "other_preconditions_preserved": true,
+  "f4_human_governance_ready": false,
+  "f4_authorized": false
+}

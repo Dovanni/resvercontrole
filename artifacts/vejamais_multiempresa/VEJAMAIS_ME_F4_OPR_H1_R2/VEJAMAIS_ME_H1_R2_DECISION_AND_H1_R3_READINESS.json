@@ -1,0 +1,18 @@
+{
+  "official_decision": "VEJAMAIS_ME_F4_OPR_H1_R2_HUMAN_NOMINATIONS_REGISTERED_AND_INDIVIDUAL_ACCEPTANCES_PREPARED",
+  "classification": "VEJAMAIS_MULTIEMPRESA_HUMAN_GOVERNANCE_NOMINATIONS_COMPLETE_WITH_AUTHORITIES_INACTIVE_AND_ACCEPTANCES_PENDING",
+  "status": "VEJAMAIS_ME_F4_OPR_H1_R2_COMPLETED_READY_FOR_INDIVIDUAL_ACCEPTANCE_CONFIRMATION_GATE",
+  "nomination_input_complete": true,
+  "humans_nominated": 3,
+  "roles_nominated": 10,
+  "roles_pending_acceptance": 10,
+  "roles_accepted": 0,
+  "roles_active": 0,
+  "individual_acceptance_package_prepared": true,
+  "four_eyes_structure_proposed": true,
+  "four_eyes_operational": false,
+  "f4_human_governance_ready": false,
+  "next_step": "VEJAMAIS-ME-F4-OPR-H1-R3",
+  "next_step_name": "INDIVIDUAL HUMAN ROLE ACCEPTANCE CONFIRMATION",
+  "next_step_requires_explicit_human_authorization": true
+}

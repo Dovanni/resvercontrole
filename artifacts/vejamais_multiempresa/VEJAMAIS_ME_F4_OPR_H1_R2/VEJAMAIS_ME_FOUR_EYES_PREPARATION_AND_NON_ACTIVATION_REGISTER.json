@@ -1,0 +1,13 @@
+{
+  "four_eyes_required": true,
+  "four_eyes_structure_proposed": true,
+  "four_eyes_acceptances_complete": false,
+  "four_eyes_authorities_active": false,
+  "four_eyes_operational": false,
+  "four_eyes_activation_gate": "VEJAMAIS-ME-F4-OPR-H1-R3",
+  "proposed_pairs": [
+    {"executor": "Emerson Vinicius Momo Rodrigues (HR-09)", "approver": "Antonio Roberto Rodrigues (HR-07)"},
+    {"executor": "Emerson Vinicius Momo Rodrigues (HR-03)", "reviewer": "Angela Maria Momo Rodrigues (HR-04)"},
+    {"validator": "Angela Maria Momo Rodrigues (HR-06)", "observer": "Angela Maria Momo Rodrigues (HR-08)", "note": "Mesma pessoa: exige controle compensatório de segunda evidência"}
+  ]
+}

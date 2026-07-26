@@ -1,0 +1,20 @@
+{
+  "data_minimization_applied": true,
+  "personal_identifiers_received_outside_artifacts": "EXTERNALLY_VALIDATED_BUT_NOT_PERSISTED",
+  "cpf_persisted": false,
+  "rg_persisted": false,
+  "cnh_persisted": false,
+  "address_persisted": false,
+  "phone_persisted": false,
+  "birthdate_persisted": false,
+  "signature_persisted": false,
+  "biometrics_persisted": false,
+  "bank_data_persisted": false,
+  "health_data_persisted": false,
+  "credentials_persisted": false,
+  "passwords_persisted": false,
+  "tokens_persisted": false,
+  "national_documents_persisted": false,
+  "sensitive_personal_data_persisted": false,
+  "fields_persisted": ["full_name", "role_code", "role_name", "nomination_status", "acceptance_status"]
+}
