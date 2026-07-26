@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { AppShell } from "@/components/app-shell";
@@ -17,6 +17,7 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthedLayout() {
   const { session, loading, user } = useAuth();
+  const navigate = useNavigate();
 
   // Apply company theme on login
   useEffect(() => {
@@ -27,12 +28,25 @@ function AuthedLayout() {
     });
   }, [user?.id]);
 
-  if (loading || !session) {
+  // Fail-safe: once auth is resolved and there is no session (post-logout or
+  // expired token), navigate to /auth instead of leaving the user stuck on
+  // "Carregando…".
+  useEffect(() => {
+    if (!loading && !session) {
+      navigate({ to: "/auth", replace: true });
+    }
+  }, [loading, session, navigate]);
+
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted-foreground text-sm">
         Carregando…
       </div>
     );
+  }
+
+  if (!session) {
+    return null;
   }
 
   return (
@@ -43,4 +57,3 @@ function AuthedLayout() {
     </ConfirmProvider>
   );
 }
-
