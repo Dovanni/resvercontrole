@@ -119,9 +119,66 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
           <div className="md:ml-auto flex items-center gap-1">
             <NotificationsBell />
-            <Button variant="ghost" size="sm" onClick={handleSignOut} disabled={signingOut} className="md:hidden">
-              <LogOut className="size-4" />
-            </Button>
+            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="md:hidden"
+                  aria-label="Abrir menu"
+                >
+                  <Menu className="size-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-72 p-0 flex flex-col">
+                <SheetHeader className="px-4 py-4 border-b text-left">
+                  <SheetTitle className="flex items-center gap-2">
+                    <VejamaisMark size={28} className="rounded-lg" />
+                    <span className="font-display text-lg">Vejamais</span>
+                  </SheetTitle>
+                  {user?.email && (
+                    <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+                  )}
+                  {role && (
+                    <div className="text-[10px] text-primary font-medium uppercase tracking-wider">
+                      {ROLE_LABEL[role]}
+                    </div>
+                  )}
+                </SheetHeader>
+                <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+                  {nav.map((n) => {
+                    const active = pathname === n.to || pathname.startsWith(n.to + "/");
+                    return (
+                      <Link
+                        key={n.to}
+                        to={n.to}
+                        onClick={() => setMobileOpen(false)}
+                        className={[
+                          "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
+                          active
+                            ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                            : "text-sidebar-foreground hover:bg-sidebar-accent/60",
+                        ].join(" ")}
+                      >
+                        <n.icon className="size-4" />
+                        {n.label}
+                      </Link>
+                    );
+                  })}
+                </nav>
+                <div className="p-4 border-t">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSignOut}
+                    disabled={signingOut}
+                    className="w-full justify-start"
+                  >
+                    <LogOut className="size-4 mr-2" /> Sair
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </header>
         <main className="flex-1 overflow-auto">{children}</main>
