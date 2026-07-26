@@ -706,7 +706,6 @@ function Footer() {
           <div className="text-sm font-medium text-foreground">Plataforma</div>
           <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
             <li><Link to="/auth" className="hover:text-foreground">Entrar</Link></li>
-            <li><Link to="/auth" className="hover:text-foreground">Criar conta</Link></li>
             <li><a href="#recursos" className="hover:text-foreground">Recursos</a></li>
             <li><a href="#planos" className="hover:text-foreground">Planos</a></li>
             <li><a href="#seguranca" className="hover:text-foreground">Segurança</a></li>

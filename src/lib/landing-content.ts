@@ -9,7 +9,7 @@ export const HERO = {
   title: "Pare de administrar sua empresa no escuro.",
   subtitle:
     "Centralize vendas, produtos, clientes, fornecedores, contas, fluxo de caixa, custos e resultados em uma plataforma simples, segura e preparada para apoiar decisões mais conscientes.",
-  primaryCta: "Começar agora",
+  primaryCta: "Entrar",
   secondaryCta: "Conhecer o Vejamais",
 };
 
