@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/fluxo-caixa")({
-  head: () => ({ meta: [{ title: "Fluxo de caixa — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Fluxo de caixa — Vejamais" }] }),
   component: CashFlowPage,
   errorComponent: ({ error, reset }) => (
     <div className="p-6 md:p-8 max-w-3xl mx-auto">

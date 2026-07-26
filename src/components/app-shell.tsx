@@ -41,7 +41,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="size-9 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow">
             <Sparkles className="size-4 text-primary-foreground" />
           </div>
-          <span className="font-display text-2xl">Rosé</span>
+          <span className="font-display text-2xl">Vejamais</span>
         </div>
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
           {nav.map((n) => {
@@ -78,7 +78,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="size-8 rounded-lg bg-gradient-primary flex items-center justify-center">
               <Sparkles className="size-4 text-primary-foreground" />
             </div>
-            <span className="font-display text-xl">Rosé</span>
+            <span className="font-display text-xl">Vejamais</span>
           </div>
           <div className="md:ml-auto flex items-center gap-1">
             <NotificationsBell />

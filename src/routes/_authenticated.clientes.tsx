@@ -19,7 +19,7 @@ import { useConfirm } from "@/components/confirm-dialog";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 
 export const Route = createFileRoute("/_authenticated/clientes")({
-  head: () => ({ meta: [{ title: "Clientes — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Clientes — Vejamais" }] }),
   component: CustomersPage,
 });
 
@@ -171,7 +171,7 @@ function CustomersPage() {
           <div className="space-y-4 text-sm leading-relaxed">
             <section>
               <h3 className="font-semibold text-base mb-1">🎯 Objetivo desta etapa</h3>
-              <p>O módulo Clientes é responsável pelo cadastro, organização e gerenciamento de todos os clientes da empresa. Mantém uma base de dados completa e confiável, alimentando automaticamente os demais módulos do Rosé (vendas, recebimentos, análises e indicadores).</p>
+              <p>O módulo Clientes é responsável pelo cadastro, organização e gerenciamento de todos os clientes da empresa. Mantém uma base de dados completa e confiável, alimentando automaticamente os demais módulos do Vejamais (vendas, recebimentos, análises e indicadores).</p>
             </section>
             <section>
               <h3 className="font-semibold text-base mb-1">📌 O que pode ser feito</h3>
@@ -227,7 +227,7 @@ function CustomersPage() {
             </section>
             <section>
               <h3 className="font-semibold text-base mb-1">⚠️ Importante</h3>
-              <p>O cadastro de clientes é uma das principais bases de dados do Rosé. Diversos módulos dependem dessas informações para cálculos, indicadores e relatórios — mantenha-as sempre atualizadas.</p>
+              <p>O cadastro de clientes é uma das principais bases de dados do Vejamais. Diversos módulos dependem dessas informações para cálculos, indicadores e relatórios — mantenha-as sempre atualizadas.</p>
             </section>
           </div>
           <DialogFooter>

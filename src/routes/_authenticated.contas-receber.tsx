@@ -18,7 +18,7 @@ import { brl, dateBR } from "@/lib/format";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 
 export const Route = createFileRoute("/_authenticated/contas-receber")({
-  head: () => ({ meta: [{ title: "Contas a receber — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Contas a receber — Vejamais" }] }),
   component: ReceivablesPage,
 });
 

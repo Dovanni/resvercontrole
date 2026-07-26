@@ -19,7 +19,7 @@ import {
 } from "@/lib/despesas-anuais";
 
 export const Route = createFileRoute("/_authenticated/despesas-anuais")({
-  head: () => ({ meta: [{ title: "Despesas Anuais — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Despesas Anuais — Vejamais" }] }),
   component: AnnualExpensesPage,
 });
 
@@ -422,7 +422,7 @@ function AnnualExpensesPage() {
             <section>
               <h3 className="font-semibold mb-1">⚠️ Importante</h3>
               <p className="text-muted-foreground">
-                As informações refletem diretamente a saúde financeira da empresa. A correta classificação e atualização das despesas garante maior precisão nos indicadores, fluxo de caixa, relatórios gerenciais e BI do Rosé.
+                As informações refletem diretamente a saúde financeira da empresa. A correta classificação e atualização das despesas garante maior precisão nos indicadores, fluxo de caixa, relatórios gerenciais e BI do Vejamais.
               </p>
             </section>
           </div>

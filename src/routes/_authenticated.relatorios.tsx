@@ -15,7 +15,7 @@ import { FileSpreadsheet, FileText, ShoppingBag, Calculator, Package, Landmark, 
 import { brl, dateBR } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/relatorios")({
-  head: () => ({ meta: [{ title: "Relatórios — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Relatórios — Vejamais" }] }),
   component: ReportsPage,
 });
 
@@ -371,7 +371,7 @@ function ReportsPage() {
           <div className="space-y-4 text-sm leading-relaxed">
             <section>
               <h3 className="font-semibold mb-1">🎯 Objetivo desta etapa</h3>
-              <p>O módulo Relatórios reúne e organiza as principais informações geradas pelo Rosé, permitindo exportar documentos gerenciais em PDF ou Excel para análise, auditoria, controle financeiro e apoio à tomada de decisões. Consolida dados de Vendas, Compras, Estoque, Financeiro e Contas Bancárias.</p>
+              <p>O módulo Relatórios reúne e organiza as principais informações geradas pelo Vejamais, permitindo exportar documentos gerenciais em PDF ou Excel para análise, auditoria, controle financeiro e apoio à tomada de decisões. Consolida dados de Vendas, Compras, Estoque, Financeiro e Contas Bancárias.</p>
             </section>
             <section>
               <h3 className="font-semibold mb-1">📌 O que pode ser feito</h3>

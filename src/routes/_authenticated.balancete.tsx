@@ -20,7 +20,7 @@ import {
 } from "recharts";
 
 export const Route = createFileRoute("/_authenticated/balancete")({
-  head: () => ({ meta: [{ title: "Balancete — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Balancete — Vejamais" }] }),
   component: BalancetePage,
 });
 
@@ -276,7 +276,7 @@ function BalancetePage() {
     }
 
     doc.setFontSize(8);
-    doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")} pelo Rosé Sistema`, 14, 285);
+    doc.text(`Gerado em ${new Date().toLocaleString("pt-BR")} pelo Vejamais`, 14, 285);
     doc.save(`balancete_${from}_${to}.pdf`);
   };
 

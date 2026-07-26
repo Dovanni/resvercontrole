@@ -19,7 +19,7 @@ import { resetDemoData } from "@/lib/api/reset-demo.functions";
 
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
-  head: () => ({ meta: [{ title: "Configurações — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Configurações — Vejamais" }] }),
   component: SettingsPage,
 });
 
@@ -138,7 +138,7 @@ function SettingsPage() {
           <div className="space-y-4 text-sm leading-relaxed">
             <section>
               <h3 className="font-semibold mb-1">🎯 Objetivo desta etapa</h3>
-              <p>Permite personalizar o Rosé conforme a identidade da empresa e definir parâmetros que influenciam diretamente o funcionamento dos módulos financeiros e operacionais. Configuram-se informações institucionais, identidade visual e regras automáticas.</p>
+              <p>Permite personalizar o Vejamais conforme a identidade da empresa e definir parâmetros que influenciam diretamente o funcionamento dos módulos financeiros e operacionais. Configuram-se informações institucionais, identidade visual e regras automáticas.</p>
             </section>
             <section>
               <h3 className="font-semibold mb-1">📌 O que pode ser feito</h3>
@@ -163,7 +163,7 @@ function SettingsPage() {
             </section>
             <section>
               <h3 className="font-semibold mb-1">🎯 Objetivo do resultado</h3>
-              <p>Rosé configurado com identidade institucional correta, logotipo atualizado, tema definido e regras automáticas de recebimento integrando vendas e contas bancárias.</p>
+              <p>Vejamais configurado com identidade institucional correta, logotipo atualizado, tema definido e regras automáticas de recebimento integrando vendas e contas bancárias.</p>
             </section>
             <section>
               <h3 className="font-semibold mb-1">📈 Como interpretar</h3>

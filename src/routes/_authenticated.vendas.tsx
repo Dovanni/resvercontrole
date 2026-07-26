@@ -18,7 +18,7 @@ import { DataPagination, usePagination } from "@/components/data-pagination";
 import { ResumoFinanceiroVenda } from "@/components/resumo-financeiro-venda";
 
 export const Route = createFileRoute("/_authenticated/vendas")({
-  head: () => ({ meta: [{ title: "Vendas — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Vendas — Vejamais" }] }),
   validateSearch: (s: Record<string, unknown>) => ({ edit: typeof s.edit === "string" ? s.edit : undefined }),
   component: SalesPage,
 });
@@ -133,7 +133,7 @@ function SalesPage() {
       <Dialog open={showHelp} onOpenChange={setShowHelp}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-display">📖 Vendas no Rosé — Gestão de Vendas</DialogTitle>
+            <DialogTitle className="font-display">📖 Vendas no Vejamais — Gestão de Vendas</DialogTitle>
           </DialogHeader>
           <div className="space-y-5 text-sm">
             <section>
@@ -141,7 +141,7 @@ function SalesPage() {
               <p className="text-muted-foreground">
                 O módulo <b>Vendas</b> é responsável por registrar todas as vendas realizadas pela empresa,
                 garantindo o controle completo do processo comercial, atualização automática dos indicadores
-                financeiros e geração das informações utilizadas pelo BI do Rosé. Cada venda registrada
+                financeiros e geração das informações utilizadas pelo BI do Vejamais. Cada venda registrada
                 representa uma operação comercial efetivamente realizada entre a empresa e o cliente.
               </p>
             </section>
@@ -188,7 +188,7 @@ function SalesPage() {
             <section>
               <h3 className="font-semibold mb-1">🎯 Objetivo do resultado</h3>
               <p className="text-muted-foreground">
-                Ao final desta etapa o Rosé possuirá um registro completo da venda contendo: cliente,
+                Ao final desta etapa o Vejamais possuirá um registro completo da venda contendo: cliente,
                 produtos vendidos, quantidades, valores, canal de venda, forma de pagamento, status e total
                 da operação.
               </p>
@@ -218,7 +218,7 @@ function SalesPage() {
               <h3 className="font-semibold mb-1">⚠️ Importante</h3>
               <p className="text-muted-foreground">
                 As informações registradas nesta etapa impactam diretamente os indicadores financeiros e
-                gerenciais do Rosé. A qualidade dos dados inseridos influencia a precisão dos relatórios,
+                gerenciais do Vejamais. A qualidade dos dados inseridos influencia a precisão dos relatórios,
                 dashboards e análises utilizadas para apoiar as decisões da empresa.
               </p>
             </section>

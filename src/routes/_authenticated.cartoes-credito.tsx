@@ -22,7 +22,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis
 import { useConfirm } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_authenticated/cartoes-credito")({
-  head: () => ({ meta: [{ title: "Cartões de Crédito — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Cartões de Crédito — Vejamais" }] }),
   component: CartoesPage,
 });
 

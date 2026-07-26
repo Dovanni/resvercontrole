@@ -50,7 +50,7 @@ function computePresetRange(preset: PeriodPreset): { from: string; to: string } 
 const MONTH_NAMES = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 
 export const Route = createFileRoute("/_authenticated/contas-pagar")({
-  head: () => ({ meta: [{ title: "Contas a pagar — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Contas a pagar — Vejamais" }] }),
   component: PayablesPage,
 });
 

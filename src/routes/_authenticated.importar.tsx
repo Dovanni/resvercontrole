@@ -14,7 +14,7 @@ import { useAuth } from "@/lib/auth";
 import { isValidCPF, isValidCNPJ, onlyDigits } from "@/lib/validators";
 
 export const Route = createFileRoute("/_authenticated/importar")({
-  head: () => ({ meta: [{ title: "Importar dados — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Importar dados — Vejamais" }] }),
   component: ImportPage,
 });
 

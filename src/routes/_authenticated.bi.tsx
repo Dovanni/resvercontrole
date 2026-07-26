@@ -36,7 +36,7 @@ import { Download, TrendingDown, TrendingUp, AlertTriangle, HelpCircle } from "l
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/bi")({
-  head: () => ({ meta: [{ title: "BI — Rosé" }] }),
+  head: () => ({ meta: [{ title: "BI — Vejamais" }] }),
   component: BIPage,
 });
 
@@ -1269,7 +1269,7 @@ function BIPage() {
           <div className="space-y-4 text-sm leading-relaxed">
             <section>
               <h3 className="font-semibold text-base mb-1">🎯 Objetivo desta etapa</h3>
-              <p>O módulo BI transforma os dados operacionais do Rosé em informações estratégicas para apoiar a tomada de decisões. Permite acompanhar a evolução comercial, financeira e operacional através de indicadores, gráficos, comparativos e tendências. O BI não altera informações — apenas interpreta automaticamente os dados registrados nos demais módulos.</p>
+              <p>O módulo BI transforma os dados operacionais do Vejamais em informações estratégicas para apoiar a tomada de decisões. Permite acompanhar a evolução comercial, financeira e operacional através de indicadores, gráficos, comparativos e tendências. O BI não altera informações — apenas interpreta automaticamente os dados registrados nos demais módulos.</p>
             </section>
             <section>
               <h3 className="font-semibold text-base mb-1">📌 O que pode ser acompanhado</h3>

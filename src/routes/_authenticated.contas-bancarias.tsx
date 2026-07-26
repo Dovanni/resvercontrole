@@ -19,7 +19,7 @@ import { brl, dateBR } from "@/lib/format";
 import { useConfirm } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_authenticated/contas-bancarias")({
-  head: () => ({ meta: [{ title: "Contas bancárias — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Contas bancárias — Vejamais" }] }),
   component: BankAccountsPage,
 });
 
@@ -123,7 +123,7 @@ function BankAccountsPage() {
           <div className="space-y-4 text-sm">
             <section>
               <h3 className="font-semibold mb-1">🎯 Objetivo desta etapa</h3>
-              <p className="text-muted-foreground">O módulo Contas Bancárias é responsável pelo cadastro, organização e gerenciamento de todas as contas financeiras utilizadas pela empresa. Seu principal objetivo é centralizar o controle dos saldos bancários, permitindo acompanhar a movimentação financeira de cada instituição e fornecer dados confiáveis para os demais módulos do Rosé.</p>
+              <p className="text-muted-foreground">O módulo Contas Bancárias é responsável pelo cadastro, organização e gerenciamento de todas as contas financeiras utilizadas pela empresa. Seu principal objetivo é centralizar o controle dos saldos bancários, permitindo acompanhar a movimentação financeira de cada instituição e fornecer dados confiáveis para os demais módulos do Vejamais.</p>
             </section>
             <section>
               <h3 className="font-semibold mb-1">📌 O que pode ser feito</h3>

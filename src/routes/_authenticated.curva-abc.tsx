@@ -18,7 +18,7 @@ import { Download, HelpCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/curva-abc")({
-  head: () => ({ meta: [{ title: "Curva ABC — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Curva ABC — Vejamais" }] }),
   component: CurvaABCPage,
 });
 
@@ -276,7 +276,7 @@ function CurvaABCPage() {
               <ol className="list-decimal pl-5 space-y-1">
                 <li><strong>Selecionar o período</strong> — pré-definido ou data inicial/final.</li>
                 <li><strong>Escolher o canal</strong> — Todos, Atacado, Varejo ou outro disponível.</li>
-                <li><strong>Aplicar o filtro</strong> — o Rosé recalculará automaticamente a Curva ABC.</li>
+                <li><strong>Aplicar o filtro</strong> — o Vejamais recalculará automaticamente a Curva ABC.</li>
                 <li><strong>Escolher o tipo de análise</strong> — Clientes ou Produtos.</li>
                 <li><strong>Escolher o critério</strong> — Valor (R$) ou Quantidade.</li>
                 <li>
