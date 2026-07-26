@@ -43,64 +43,78 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
 
-  --shadow-soft: 0 1px 2px oklch(0.4 0.05 20 / 0.05), 0 8px 24px oklch(0.4 0.05 20 / 0.06);
-  --shadow-glow: 0 10px 40px oklch(0.7 0.12 20 / 0.18);
+  --shadow-soft: 0 1px 2px oklch(0.35 0.03 170 / 0.06), 0 8px 24px oklch(0.35 0.03 170 / 0.08);
+  --shadow-glow: 0 10px 40px oklch(0.72 0.17 150 / 0.22);
 
-  --gradient-primary: linear-gradient(135deg, oklch(0.72 0.13 18) 0%, oklch(0.62 0.16 12) 100%);
-  --gradient-rose: linear-gradient(135deg, oklch(0.97 0.02 20) 0%, oklch(0.93 0.04 30) 100%);
-  --gradient-gold: linear-gradient(135deg, oklch(0.82 0.10 80) 0%, oklch(0.72 0.13 65) 100%);
+  --gradient-primary: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+  --gradient-rose: linear-gradient(135deg, #F1FAF5 0%, #DCF3E5 100%);
+  --gradient-gold: linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%);
 }
 
 :root {
   --radius: 0.875rem;
 
-  --background: oklch(0.985 0.008 30);
-  --foreground: oklch(0.22 0.03 20);
+  /* Vejamais public palette tokens */
+  --vejamais-primary: #22C55E;
+  --vejamais-primary-hover: #16A34A;
+  --vejamais-secondary: #0F3D36;
+  --vejamais-background: #F1FAF5;
+  --vejamais-surface: #FFFFFF;
+  --vejamais-accent: #7C3AED;
+  --vejamais-success: #16A34A;
+  --vejamais-warning: #F59E0B;
+  --vejamais-error: #EF4444;
+  --vejamais-text-primary: #102A2E;
+  --vejamais-text-secondary: #52666A;
+  --vejamais-border: #DCEBE3;
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.03 20);
+  --background: #F1FAF5;
+  --foreground: #102A2E;
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.03 20);
+  --card: #FFFFFF;
+  --card-foreground: #102A2E;
 
-  /* Rose primary */
-  --primary: oklch(0.62 0.16 12);
-  --primary-foreground: oklch(0.99 0.005 30);
+  --popover: #FFFFFF;
+  --popover-foreground: #102A2E;
 
-  --secondary: oklch(0.95 0.02 30);
-  --secondary-foreground: oklch(0.35 0.05 15);
+  /* Vejamais primary (green) */
+  --primary: #22C55E;
+  --primary-foreground: #FFFFFF;
 
-  --muted: oklch(0.96 0.012 30);
-  --muted-foreground: oklch(0.52 0.04 20);
+  --secondary: #E7F5EC;
+  --secondary-foreground: #0F3D36;
 
-  --accent: oklch(0.93 0.04 25);
-  --accent-foreground: oklch(0.35 0.06 15);
+  --muted: #EEF6F1;
+  --muted-foreground: #52666A;
 
-  /* Gold accent */
-  --gold: oklch(0.76 0.12 75);
-  --gold-foreground: oklch(0.22 0.03 20);
+  --accent: #F1EBFE;
+  --accent-foreground: #4C1D95;
 
-  --destructive: oklch(0.58 0.22 25);
-  --destructive-foreground: oklch(0.99 0.005 30);
+  /* Accent complementar (roxo). Nome --gold preservado como token técnico legado. */
+  --gold: #7C3AED;
+  --gold-foreground: #FFFFFF;
 
-  --success: oklch(0.62 0.14 155);
-  --success-foreground: oklch(0.99 0 0);
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
 
-  --border: oklch(0.91 0.015 25);
-  --input: oklch(0.93 0.015 25);
-  --ring: oklch(0.72 0.13 18);
+  --success: #16A34A;
+  --success-foreground: #FFFFFF;
 
-  --sidebar: oklch(0.98 0.012 25);
-  --sidebar-foreground: oklch(0.28 0.04 20);
-  --sidebar-accent: oklch(0.94 0.03 25);
-  --sidebar-accent-foreground: oklch(0.35 0.08 15);
-  --sidebar-border: oklch(0.91 0.018 25);
+  --border: #DCEBE3;
+  --input: #DCEBE3;
+  --ring: #22C55E;
 
-  --chart-1: oklch(0.62 0.16 12);
-  --chart-2: oklch(0.76 0.12 75);
-  --chart-3: oklch(0.55 0.10 30);
-  --chart-4: oklch(0.78 0.08 25);
-  --chart-5: oklch(0.45 0.08 18);
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #102A2E;
+  --sidebar-accent: #E7F5EC;
+  --sidebar-accent-foreground: #0F3D36;
+  --sidebar-border: #DCEBE3;
+
+  --chart-1: #22C55E;
+  --chart-2: #0F3D36;
+  --chart-3: #7C3AED;
+  --chart-4: #F59E0B;
+  --chart-5: #14B8A6;
 }
 
 @layer base {
