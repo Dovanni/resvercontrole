@@ -38,10 +38,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen flex bg-background">
       <aside className="hidden md:flex w-64 flex-col bg-sidebar border-r border-sidebar-border">
         <div className="px-6 py-6 flex items-center gap-2.5">
-          <div className="size-9 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow">
-            <Sparkles className="size-4 text-primary-foreground" />
+          <VejamaisMark size={36} className="rounded-xl shadow-glow" />
+          <div className="flex flex-col leading-none">
+            <span className="font-display text-2xl">Vejamais</span>
+            <span className="mt-1 text-[9px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Gestão Comercial e Financeira</span>
           </div>
-          <span className="font-display text-2xl">Vejamais</span>
         </div>
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
           {nav.map((n) => {
