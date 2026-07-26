@@ -1,10 +1,12 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useRouter, useNavigate } from "@tanstack/react-router";
 import { LayoutDashboard, Package, ShoppingBag, Wallet, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, BarChartBig, FileText, Settings, CalendarDays, TrendingUp, Landmark, CreditCard, ShoppingCart, Scale } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth, type Permission } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { NotificationsBell } from "@/components/notifications";
 import { VejamaisMark } from "@/components/vejamais-logo";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { toast } from "sonner";
 
 const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, perm: "view:dashboard" },
