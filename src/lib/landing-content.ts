@@ -9,7 +9,7 @@ export const HERO = {
   title: "Pare de administrar sua empresa no escuro.",
   subtitle:
     "Centralize vendas, produtos, clientes, fornecedores, contas, fluxo de caixa, custos e resultados em uma plataforma simples, segura e preparada para apoiar decisões mais conscientes.",
-  primaryCta: "Começar agora",
+  primaryCta: "Entrar",
   secondaryCta: "Conhecer o Vejamais",
 };
 
@@ -120,7 +120,7 @@ export const PLANS: Plan[] = [
       "Fluxo de caixa básico",
     ],
     support: "Suporte por e-mail",
-    cta: "Criar minha conta",
+    cta: "Entrar",
     ctaTarget: "/auth",
     available: true,
   },
@@ -138,7 +138,7 @@ export const PLANS: Plan[] = [
       "Balancete e despesas anuais",
     ],
     support: "Suporte prioritário",
-    cta: "Criar minha conta",
+    cta: "Entrar",
     ctaTarget: "/auth",
     recommended: true,
     available: true,
