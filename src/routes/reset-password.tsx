@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sparkles } from "lucide-react";
+import { VejamaisMark } from "@/components/vejamais-logo";
 import { toast } from "sonner";
 import { translateAuthError } from "@/lib/auth-errors";
 
