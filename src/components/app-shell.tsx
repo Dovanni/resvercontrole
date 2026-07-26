@@ -36,6 +36,34 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { signOut, user, role, can } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const nav = ALL_NAV.filter((n) => can(n.perm));
+  const queryClient = useQueryClient();
+  const router = useRouter();
+  const navigate = useNavigate();
+  const [signingOut, setSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      try {
+        await signOut();
+      } catch (err) {
+        console.error("signOut error", err);
+        toast.error("Não foi possível encerrar a sessão. Tente novamente.");
+      }
+      try {
+        await router.invalidate();
+      } catch {
+        /* noop */
+      }
+      navigate({ to: "/auth", replace: true });
+    } finally {
+      setSigningOut(false);
+    }
+  };
+
 
   return (
     <div className="min-h-screen flex bg-background">
