@@ -1,0 +1,42 @@
+{
+  "framework": "VEJAMAIS-ME-F4-OPR-H1-R2-R1",
+  "version": "1.0",
+  "total_files_created": 8,
+  "documentation_files_created": 1,
+  "json_evidence_files_created": 6,
+  "manifest_files_created": 1,
+  "files_modified": 0,
+  "previous_artifacts_modified": 0,
+  "functional_code_files_changed": 0,
+  "unauthorized_files_changed": 0,
+  "baseline_sha256": "689af23fb305255932cf86b48d4774775877d4a65061528e11b61487192a9a39",
+  "baseline_changed": false,
+  "parent_final_evidence_manifest_sha256": "2e9bf72fe1e63bf4254e1e9531bf297f2240f54c61d1c2a15bbfc600b6b68374",
+  "artifacts": [
+    {"path": "docs/VEJAMAIS_ME_F4_OPR_H1_R2_R1_SEGREGATION_VALIDITY_AND_ROLE_ACCUMULATION_RECONCILIATION_v1.md", "sha256": "5ef12a445a93d0a528ec013c44c1d6821b3529c26489a848a08e4c7cbc4c2482"},
+    {"path": "artifacts/vejamais_multiempresa/VEJAMAIS_ME_F4_OPR_H1_R2_R1/VEJAMAIS_ME_H1_R2_ORIGINAL_LOGICAL_INCONSISTENCY_REGISTER.json", "sha256": "870dacddf07947223ed9cb32bced5e4362a81bc970f6cb76a6b2836ecc9d5f58"},
+    {"path": "artifacts/vejamais_multiempresa/VEJAMAIS_ME_F4_OPR_H1_R2_R1/VEJAMAIS_ME_RECONCILED_SEGREGATION_OF_DUTIES_MATRIX.json", "sha256": "977bb85e9c4994bb2060c6213f6b3dbcd42c445a576c03528c7ce07f312b3852"},
+    {"path": "artifacts/vejamais_multiempresa/VEJAMAIS_ME_F4_OPR_H1_R2_R1/VEJAMAIS_ME_RECONCILED_ROLE_ACCUMULATION_RISK_ASSESSMENT.json", "sha256": "91b2038b18f86e04de8ce87a9c4d4eb1250d74b44e9ae821d41f0e226aec8603"},
+    {"path": "artifacts/vejamais_multiempresa/VEJAMAIS_ME_F4_OPR_H1_R2_R1/VEJAMAIS_ME_COMPENSATING_CONTROL_MATRIX.json", "sha256": "8efad75a8c13a64d12f3ad479a9ce209c5def46c4f7d411579c909590437a65f"},
+    {"path": "artifacts/vejamais_multiempresa/VEJAMAIS_ME_F4_OPR_H1_R2_R1/VEJAMAIS_ME_FOUR_EYES_AND_PRECONDITION_RECONCILIATION.json", "sha256": "0ab35ba4fce12d1e908f1b2bb4c51fbe935847fd005ae0eafd004974cef02e75"},
+    {"path": "artifacts/vejamais_multiempresa/VEJAMAIS_ME_F4_OPR_H1_R2_R1/VEJAMAIS_ME_H1_R2_R1_DECISION_AND_H1_R3_READINESS.json", "sha256": "9146a3bfd54cf1c5c9df84a3ee2064e16a1da3ddb86cc997031773e678befa1c"}
+  ],
+  "checks_inventory": 368,
+  "checks_executed": 368,
+  "checks_passed": 368,
+  "checks_failed": 0,
+  "checks_by_category": {
+    "A_environment_baseline_anti_replay": 28,
+    "B_h1_r2_integrity": 48,
+    "C_segregation_logical_consistency": 64,
+    "D_individual_accumulations": 64,
+    "E_compensating_controls": 60,
+    "F_four_eyes_and_preconditions": 40,
+    "G_f4_authorizations_privacy": 36,
+    "H_no_mutation_artifacts_hashes": 28
+  },
+  "official_decision": "VEJAMAIS_ME_F4_OPR_H1_R2_R1_SEGREGATION_VALIDITY_AND_ROLE_ACCUMULATION_RECONCILED",
+  "classification": "VEJAMAIS_MULTIEMPRESA_HUMAN_ROLE_DISTRIBUTION_COMPATIBLE_WITH_CONTROLS_AND_LIMITED_INDEPENDENCE",
+  "status": "VEJAMAIS_ME_F4_OPR_H1_R2_R1_COMPLETED_READY_FOR_INDIVIDUAL_ACCEPTANCE_CONFIRMATION_GATE",
+  "next_step": "VEJAMAIS-ME-F4-OPR-H1-R3"
+}

@@ -1,0 +1,20 @@
+{
+  "official_decision": "VEJAMAIS_ME_F4_OPR_H1_R2_R1_SEGREGATION_VALIDITY_AND_ROLE_ACCUMULATION_RECONCILED",
+  "classification": "VEJAMAIS_MULTIEMPRESA_HUMAN_ROLE_DISTRIBUTION_COMPATIBLE_WITH_CONTROLS_AND_LIMITED_INDEPENDENCE",
+  "status": "VEJAMAIS_ME_F4_OPR_H1_R2_R1_COMPLETED_READY_FOR_INDIVIDUAL_ACCEPTANCE_CONFIRMATION_GATE",
+  "original_inconsistency_reconciled": true,
+  "segregation_proposal_documentally_valid": true,
+  "segregation_conflicts_found": 0,
+  "segregation_risks_found": 6,
+  "segregation_classification": "COMPATIBLE_WITH_CONTROLS",
+  "compensating_controls_required": true,
+  "compensating_controls_defined": true,
+  "compensating_controls_operational": false,
+  "full_independence_achieved": false,
+  "human_governance_acceptable_for_acceptance_gate": true,
+  "four_eyes_operational": false,
+  "f4_human_governance_ready": false,
+  "next_step": "VEJAMAIS-ME-F4-OPR-H1-R3",
+  "next_step_name": "INDIVIDUAL HUMAN ROLE ACCEPTANCE CONFIRMATION",
+  "next_step_requires_explicit_human_authorization": true
+}
