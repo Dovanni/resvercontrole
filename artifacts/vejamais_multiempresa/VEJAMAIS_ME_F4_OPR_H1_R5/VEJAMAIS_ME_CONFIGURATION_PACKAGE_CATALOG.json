@@ -1,0 +1,12 @@
+{
+  "configuration_packages_inventory": 7,
+  "packages": [
+    {"id":"CP-A","name":"CORE_CHANGE_CONTROL","controls":["SOCC-01","SOCC-02","SOCC-03","SOCC-13","SOCC-14"],"dependencies":[],"order":1,"risk":"HIGH","future_artifacts":["change_package_template","hash_validator"],"tests":["TEST-01","TEST-02","TEST-03","TEST-04","TEST-20"],"rollback":"desativar registry","completion_criterion":"todos SOCC PLANNED->CONFIGURED e testados"},
+    {"id":"CP-E","name":"EVIDENCE_AND_AUDIT","controls":["SOCC-11"],"dependencies":["CP-A"],"order":2,"risk":"HIGH","future_artifacts":["append_only_channel"],"tests":["TEST-14"],"rollback":"congelar canal","completion_criterion":"append-only verificado"},
+    {"id":"CP-B","name":"AUTOMATED_VERIFICATION","controls":["SOCC-04","SOCC-05","SOCC-12"],"dependencies":["CP-A","CP-E"],"order":3,"risk":"CRITICAL","future_artifacts":["ci_pipeline","schema_validator","financial_validator"],"tests":["TEST-05","TEST-06","TEST-07","TEST-08","TEST-15"],"rollback":"desativar pipeline","completion_criterion":"CI bloqueia falhas"},
+    {"id":"CP-C","name":"RECOVERY_AND_REVERSIBILITY","controls":["SOCC-06","SOCC-07","SOCC-10"],"dependencies":["CP-B"],"order":4,"risk":"CRITICAL","future_artifacts":["backup_registry","restore_registry","rollback_registry"],"tests":["TEST-09","TEST-10","TEST-13"],"rollback":"reter procedimento anterior","completion_criterion":"restore comprovado"},
+    {"id":"CP-D","name":"CONTROLLED_RELEASE","controls":["SOCC-08","SOCC-09","SOCC-17"],"dependencies":["CP-C"],"order":5,"risk":"CRITICAL","future_artifacts":["flag_registry","kill_switch_registry","prod_gate"],"tests":["TEST-11","TEST-12","TEST-18"],"rollback":"forçar OFF","completion_criterion":"flag/kill efetivos"},
+    {"id":"CP-F","name":"SPECIAL_AUTHORIZATIONS","controls":["SOCC-15","SOCC-16"],"dependencies":["CP-D"],"order":6,"risk":"CRITICAL","future_artifacts":["migration_gate","backfill_gate"],"tests":["TEST-16","TEST-17"],"rollback":"revogar autorização","completion_criterion":"gates específicos bloqueiam genéricos"},
+    {"id":"CP-G","name":"EXTREME_RISK_GOVERNANCE","controls":["SOCC-18"],"dependencies":["CP-F"],"order":7,"risk":"EXTREME","future_artifacts":["external_review_gate"],"tests":["TEST-19"],"rollback":"cancelar execução extrema","completion_criterion":"revisão externa exigida"}
+  ]
+}

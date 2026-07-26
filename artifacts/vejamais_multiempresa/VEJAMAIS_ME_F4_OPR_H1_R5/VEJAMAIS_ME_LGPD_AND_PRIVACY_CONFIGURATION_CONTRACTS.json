@@ -1,0 +1,10 @@
+{
+  "LGPD_contracts_complete": true,
+  "principles": ["finalidade_explicita","necessidade_comprovada","minimizacao","retencao","acesso_restrito","auditabilidade","anonimizacao_quando_aplicavel","suporte_temporario","exclusao_controlada","protecao_de_backups","resposta_a_incidente","direitos_dos_titulares","RIPD_quando_o_risco_exigir"],
+  "defaults": {
+    "personal_data_in_control_evidence_default":"PROHIBITED",
+    "sensitive_data_in_control_evidence_default":"PROHIBITED",
+    "full_financial_payload_in_logs_default":"PROHIBITED",
+    "metadata_only_logging_preferred": true
+  }
+}

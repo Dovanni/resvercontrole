@@ -1,0 +1,14 @@
+{
+  "created_now": false,
+  "proposal_only": true,
+  "must_respect_real_architecture_before_implementation": true,
+  "modules": {
+    "src/lib/change-control/": ["types.ts","states.ts","risk-classifier.ts","control-applicability.ts","package-manifest.ts","hash-validator.ts","temporal-separation.ts","authorization-validator.ts","fail-closed.ts"],
+    "src/lib/multitenancy-security/": ["tenant-context.ts","membership-validator.ts","role-validator.ts","tenant-isolation-validator.ts","cross-tenant-deny.ts"],
+    "src/lib/control-evidence/": ["evidence-types.ts","evidence-redaction.ts","evidence-hash.ts","evidence-registry.ts"],
+    "src/lib/financial-validation/": ["baseline.ts","reconciliation.ts","non-regression.ts"],
+    "src/lib/rollback/": ["rollback-contract.ts","rollback-validator.ts","rollback-evidence.ts"],
+    "src/routes/_authenticated/platform-control/": ["change-packages.tsx","authorizations.tsx","controls.tsx","evidence.tsx"],
+    "server-only": ["validar_contexto_de_tenant","validar_autorizacao","gerar_evidencia","negar_execucao_fora_do_escopo"]
+  }
+}
