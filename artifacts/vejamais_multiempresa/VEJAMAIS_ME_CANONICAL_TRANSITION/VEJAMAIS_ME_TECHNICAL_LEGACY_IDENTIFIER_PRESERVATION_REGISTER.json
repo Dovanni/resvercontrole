@@ -1,0 +1,23 @@
+{
+  "technical_legacy_identifiers_preserved": true,
+  "environment_code_preserved": true,
+  "identifiers": [
+    "ROSE-CURRENT-01",
+    "rose:brand",
+    "--gradient-rose",
+    "bg-gradient-rose",
+    "route names",
+    "table names",
+    "column names",
+    "schemas",
+    "functions",
+    "policies",
+    "integrations",
+    "supabase identifiers",
+    "artifact paths",
+    "previous hashes"
+  ],
+  "renames_executed": 0,
+  "renames_authorized": 0,
+  "note": "Preservação técnica não implica manutenção da marca pública ROSÉ."
+}

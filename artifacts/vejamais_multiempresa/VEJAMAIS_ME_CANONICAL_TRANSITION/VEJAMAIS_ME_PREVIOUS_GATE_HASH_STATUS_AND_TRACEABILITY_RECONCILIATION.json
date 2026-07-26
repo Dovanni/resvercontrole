@@ -1,0 +1,28 @@
+{
+  "previous_frameworks_verified": 10,
+  "previous_frameworks_preserved": true,
+  "previous_artifacts_modified": 0,
+  "legacy_traceability_preserved": true,
+  "gates": [
+    {"id": "ROSE-ME-F0", "status": "PRESERVED_HISTORICAL"},
+    {"id": "ROSE-ME-F0-V1", "status": "PRESERVED_HISTORICAL"},
+    {"id": "ROSE-ME-F1", "status": "PRESERVED_HISTORICAL"},
+    {"id": "ROSE-ME-F2", "status": "PRESERVED_HISTORICAL"},
+    {"id": "ROSE-ME-F3", "status": "PRESERVED_HISTORICAL"},
+    {"id": "ROSE-ME-F3-V1", "status": "PRESERVED_HISTORICAL"},
+    {"id": "ROSE-ME-F3-V1-CHECKS-R1", "status": "F3_FORMALLY_HOMOLOGATED"},
+    {"id": "ROSE-ME-F4-OPRA", "status": "F4_OPRA_FORMALLY_HOMOLOGATED"},
+    {"id": "ROSE-ME-F4-OPR-H1", "status": "COMPLETED_CONDITIONALLY_HUMAN_ASSIGNMENT_GAPS"},
+    {"id": "ROSE-ME-F4-OPR-H1-R1", "status": "COMPLETED_CONDITIONALLY_HUMAN_NOMINATION_GAPS"}
+  ],
+  "f3_formally_homologated": true,
+  "f4_opra_formally_homologated": true,
+  "h1_completed_conditionally": true,
+  "h1_r1_completed_conditionally": true,
+  "human_roles_confirmed_accepted": 0,
+  "human_roles_unassigned": 10,
+  "four_eyes_operational": false,
+  "f4_human_governance_ready": false,
+  "f4_authorized": false,
+  "f4_started": false
+}

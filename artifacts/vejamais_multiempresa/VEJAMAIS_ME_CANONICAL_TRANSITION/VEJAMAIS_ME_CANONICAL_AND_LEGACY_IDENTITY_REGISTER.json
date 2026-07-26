@@ -1,0 +1,19 @@
+{
+  "canonical_application_name": "VEJAMAIS - GESTÃO COMERCIAL E FINANCEIRA",
+  "canonical_application_short_name": "VEJAMAIS",
+  "canonical_application_identifier": "VEJAMAIS_GESTAO_COMERCIAL_E_FINANCEIRA",
+  "canonical_multitenancy_program": "VEJAMAIS_NATIVE_MULTITENANCY_TRANSFORMATION_PROGRAM",
+  "canonical_program_acronym": "VNMTP",
+  "canonical_framework_prefix": "VEJAMAIS-ME",
+  "legacy_application_name": "GESTOR_COMERCIAL_E_FINANCEIRO_ROSE",
+  "legacy_application_brand": "ROSÉ",
+  "legacy_multitenancy_program": "ROSE_NATIVE_MULTITENANCY_TRANSFORMATION_PROGRAM",
+  "legacy_program_acronym": "RNMTP",
+  "legacy_framework_prefix": "ROSE-ME",
+  "legacy_environment_code": "ROSE-CURRENT-01",
+  "current_environment_code": "ROSE-CURRENT-01",
+  "environment_code_rename_authorized": false,
+  "rose_classification": "LEGACY_HISTORICAL_AND_TECHNICAL_REFERENCE_ONLY",
+  "canonical_identity_established": true,
+  "legacy_identity_preserved": true
+}

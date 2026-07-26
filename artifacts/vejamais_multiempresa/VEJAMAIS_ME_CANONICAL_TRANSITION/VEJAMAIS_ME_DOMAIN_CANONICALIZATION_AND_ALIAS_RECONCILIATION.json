@@ -1,0 +1,14 @@
+{
+  "canonical_domain": "vejamais.com.br",
+  "canonical_domain_url": "https://vejamais.com.br",
+  "controlled_www_alias": "https://www.vejamais.com.br",
+  "legacy_platform_subdomain": "https://resvercontrole.lovable.app",
+  "legacy_subdomain_classification": "LEGACY_PLATFORM_SUBDOMAIN_PRESERVED_FOR_TECHNICAL_COMPATIBILITY",
+  "root_domain_active": true,
+  "www_domain_active": true,
+  "root_and_www_same_application": true,
+  "legacy_subdomain_active": true,
+  "domain_conflict_found": false,
+  "domain_transition_homologable": true,
+  "domain_configuration_changed": false
+}
