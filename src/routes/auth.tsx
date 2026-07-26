@@ -84,9 +84,9 @@ function AuthPage() {
             </div>
           )}
           <h1 className="font-display text-4xl text-foreground">
-            {brand.name || "Sistema de Gestão"}
+            {brand.name || "Vejamais"}
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">Controle de vendas para seu negócio de cosméticos</p>
+          <p className="mt-2 text-sm text-muted-foreground">Gestão comercial e financeira do seu negócio</p>
         </div>
 
         <div className="rounded-2xl bg-card shadow-soft border p-6">
