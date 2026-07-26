@@ -1,0 +1,20 @@
+{
+  "compensating_controls_required": true,
+  "compensating_controls_defined": true,
+  "compensating_controls_inventory": 12,
+  "compensating_controls_operational": false,
+  "controls": [
+    {"id":"CC-01","name":"Aprovação distinta do executor","responsible":"CHANGE_APPROVER","depends_on":"acceptance","activation_condition":"aceite individual H1-R3","status":"PENDING"},
+    {"id":"CC-02","name":"Pacote de execução previamente revisado e imutável","responsible":"TECHNICAL_OWNER","depends_on":"pacote formalizado","activation_condition":"revisão técnica registrada","status":"PENDING"},
+    {"id":"CC-03","name":"Observação independente durante ações críticas","responsible":"AUDIT_OBSERVER","depends_on":"execução","activation_condition":"janela aprovada","status":"PENDING"},
+    {"id":"CC-04","name":"Rollback controlado por pessoa distinta do executor","responsible":"ROLLBACK_AUTHORITY","depends_on":"aceite","activation_condition":"critério pré-aprovado","status":"PENDING"},
+    {"id":"CC-05","name":"Evidências antes, durante e depois da execução","responsible":"AUDIT_OBSERVER","depends_on":"execução","activation_condition":"janela aprovada","status":"PENDING"},
+    {"id":"CC-06","name":"Reconciliação financeira independente","responsible":"FINANCIAL_VALIDATOR","depends_on":"segunda evidência","activation_condition":"mudança financeira crítica","status":"PENDING"},
+    {"id":"CC-07","name":"Revisão de segurança e privacidade para dados pessoais","responsible":"SECURITY_OWNER + PRIVACY_OWNER","depends_on":"tratamento LGPD","activation_condition":"detecção de dado pessoal","status":"PENDING"},
+    {"id":"CC-08","name":"Proibição de auto-homologação","responsible":"ALL","depends_on":"governança","activation_condition":"sempre","status":"DEFINED"},
+    {"id":"CC-09","name":"Interrupção fail-closed diante de desvio","responsible":"EXECUTION_OPERATOR + ROLLBACK_AUTHORITY","depends_on":"desvio detectado","activation_condition":"qualquer desvio","status":"DEFINED"},
+    {"id":"CC-10","name":"Aceite individual antes de qualquer autoridade","responsible":"PRODUCT_OWNER","depends_on":"H1-R3","activation_condition":"aceite formal","status":"PENDING"},
+    {"id":"CC-11","name":"Janela operacional aprovada previamente","responsible":"CHANGE_APPROVER","depends_on":"janela","activation_condition":"aprovação formal","status":"PENDING"},
+    {"id":"CC-12","name":"Autorização específica para migration, backfill e produção","responsible":"CHANGE_APPROVER + PRODUCT_OWNER","depends_on":"F4","activation_condition":"autorização humana explícita","status":"PENDING"}
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "original_state": {
+    "segregation_proposal_documentally_valid": false,
+    "segregation_conflicts_found": 0,
+    "compensating_controls_required": true
+  },
+  "inconsistency_detected": true,
+  "inconsistency_type": "PROPOSAL_MARKED_INVALID_WITHOUT_CONFLICTS_AND_WITHOUT_INTERMEDIATE_CLASSIFICATION",
+  "root_cause": "Ausência de classificação intermediária COMPATIBLE_WITH_CONTROLS quando riscos existem mas não configuram conflito proibitivo.",
+  "resolution_scenario": "A",
+  "resolution_summary": "Reclassificar como documentalmente válido sob controles compensatórios, mantendo four-eyes não operacional e aceites pendentes.",
+  "resolution_preserves_nominations": true,
+  "resolution_preserves_hashes": true,
+  "resolution_preserves_baseline": true
+}

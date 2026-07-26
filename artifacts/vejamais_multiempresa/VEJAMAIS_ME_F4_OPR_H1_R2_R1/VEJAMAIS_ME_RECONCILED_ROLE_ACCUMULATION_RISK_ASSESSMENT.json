@@ -1,0 +1,41 @@
+{
+  "role_accumulation_assessed": true,
+  "accumulations": [
+    {
+      "person": "Antonio Roberto Rodrigues",
+      "code": "HUMAN-A",
+      "roles": ["PRODUCT_OWNER","PRIVACY_OWNER","CHANGE_APPROVER"],
+      "classification": "COMPATIBLE_WITH_CONTROLS",
+      "risks": [
+        {"pair":["PRODUCT_OWNER","CHANGE_APPROVER"],"risk":"priorização funcional e aprovação concentradas","controls":["CC-01","CC-02","CC-05","CC-12"]},
+        {"pair":["PRIVACY_OWNER","CHANGE_APPROVER"],"risk":"mesma pessoa avalia privacidade e aprova mudança","controls":["CC-07","CC-08","CC-09"]}
+      ]
+    },
+    {
+      "person": "Emerson Vinicius Momo Rodrigues",
+      "code": "HUMAN-B",
+      "roles": ["TECHNICAL_OWNER","DATABASE_OWNER","EXECUTION_OPERATOR"],
+      "classification": "CONDITIONALLY_COMPATIBLE",
+      "risks": [
+        {"pair":["TECHNICAL_OWNER","DATABASE_OWNER","EXECUTION_OPERATOR"],"risk":"planejar, controlar banco e executar concentrados","controls":["CC-01","CC-02","CC-03","CC-04","CC-05","CC-09","CC-11","CC-12"]}
+      ],
+      "maximum_without_controls": "INCOMPATIBLE"
+    },
+    {
+      "person": "Angela Maria Momo Rodrigues",
+      "code": "HUMAN-C",
+      "roles": ["SECURITY_OWNER","FINANCIAL_VALIDATOR","AUDIT_OBSERVER","ROLLBACK_AUTHORITY"],
+      "classification": "CONDITIONALLY_COMPATIBLE",
+      "risks": [
+        {"pair":["SECURITY_OWNER","AUDIT_OBSERVER"],"risk":"auto-observação de segurança","controls":["CC-03","CC-05","CC-08"]},
+        {"pair":["FINANCIAL_VALIDATOR","AUDIT_OBSERVER"],"risk":"auto-auditoria da validação financeira","controls":["CC-06","CC-08"]},
+        {"pair":["AUDIT_OBSERVER","ROLLBACK_AUTHORITY"],"risk":"observador comanda rollback","controls":["CC-01","CC-04","CC-05","CC-09"]},
+        {"pair":["SECURITY_OWNER","ROLLBACK_AUTHORITY"],"risk":"função protetiva concentrada","controls":["CC-01","CC-04"]}
+      ],
+      "full_independence": false,
+      "audit_independence_limited": true
+    }
+  ],
+  "full_independence_achieved": false,
+  "compensating_controls_required": true
+}

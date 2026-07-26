@@ -1,0 +1,31 @@
+{
+  "change_approver": "Antonio Roberto Rodrigues",
+  "execution_operator": "Emerson Vinicius Momo Rodrigues",
+  "audit_observer": "Angela Maria Momo Rodrigues",
+  "rollback_authority": "Angela Maria Momo Rodrigues",
+  "financial_validator": "Angela Maria Momo Rodrigues",
+  "change_approver_distinct_from_execution_operator": true,
+  "audit_observer_distinct_from_execution_operator": true,
+  "rollback_authority_distinct_from_execution_operator": true,
+  "financial_validator_distinct_from_execution_operator": true,
+  "executor_cannot_self_approve": true,
+  "executor_cannot_self_audit": true,
+  "executor_cannot_control_rollback_alone": true,
+  "critical_execution_requires_distinct_approver": true,
+  "production_requires_two_distinct_humans": true,
+  "rules_evaluated": [
+    {"id":"SOD-01","status":"SATISFIED"},
+    {"id":"SOD-02","status":"SATISFIED"},
+    {"id":"SOD-03","status":"SATISFIED"},
+    {"id":"SOD-04","status":"SATISFIED"},
+    {"id":"SOD-05","status":"SATISFIED"},
+    {"id":"SOD-06","status":"SATISFIED_WITH_COMPENSATING_CONTROLS"},
+    {"id":"SOD-07","status":"SATISFIED"}
+  ],
+  "segregation_conflicts_found": 0,
+  "segregation_risks_found": 6,
+  "segregation_classification": "COMPATIBLE_WITH_CONTROLS",
+  "segregation_proposal_documentally_valid": true,
+  "four_eyes_structure_proposed": true,
+  "four_eyes_operational": false
+}
