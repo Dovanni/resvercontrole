@@ -1,0 +1,23 @@
+{
+  "official_decision":"VEJAMAIS_ME_SINGLE_OPERATOR_COMPENSATING_CONTROLS_AND_DUAL_CONTROL_ACTIVATION_PLAN_ESTABLISHED",
+  "classification":"VEJAMAIS_MULTIEMPRESA_SINGLE_OPERATOR_CONTROL_MODEL_FULLY_PLANNED_WITH_AUTONOMY_PRESERVED_TENANT_ISOLATION_LGPD_AND_NO_TECHNICAL_EXECUTION",
+  "status":"VEJAMAIS_ME_F4_OPR_H1_R4_COMPLETED_READY_FOR_COMPENSATING_CONTROL_CONFIGURATION_PACKAGE_DESIGN",
+  "dual_control_activation_plan_defined": true,
+  "compensating_controls_inventory": 18,
+  "compensating_controls_planned": 18,
+  "compensating_controls_configured": 0,
+  "compensating_controls_tested": 0,
+  "compensating_controls_operational": 0,
+  "control_activation_plan_complete": true,
+  "test_plan_complete": true,
+  "evidence_contract_complete": true,
+  "isolated_environment_plan_complete": true,
+  "tenant_isolation_test_plan_complete": true,
+  "LGPD_test_plan_complete": true,
+  "human_governance_operationally_ready": false,
+  "F4_human_governance_ready": false,
+  "F4_authorized": false,
+  "next_step":"VEJAMAIS-ME-F4-OPR-H1-R5",
+  "next_step_name":"SINGLE_OPERATOR_COMPENSATING_CONTROL_CONFIGURATION_PACKAGE_DESIGN",
+  "next_step_requires_explicit_human_authorization": true
+}

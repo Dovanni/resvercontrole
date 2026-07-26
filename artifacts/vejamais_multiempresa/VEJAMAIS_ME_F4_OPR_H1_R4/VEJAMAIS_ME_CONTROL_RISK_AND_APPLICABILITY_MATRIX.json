@@ -1,0 +1,26 @@
+{
+  "risk_levels_inventory": 5,
+  "risk_levels": ["LOW","MEDIUM","HIGH","CRITICAL","EXTREME"],
+  "risk_definitions": {
+    "LOW":"mudança visual ou textual sem impacto em dados, segurança ou regras",
+    "MEDIUM":"mudança funcional reversível sem alteração estrutural de dados",
+    "HIGH":"alteração de permissões, isolamento, relatórios financeiros ou integrações",
+    "CRITICAL":"migration, RLS, Auth, Storage, backfill, tenant isolation ou cálculo financeiro",
+    "EXTREME":"operação destrutiva, irreversível, massiva, sem rollback comprovado ou risco jurídico relevante"
+  },
+  "temporal_separation": {
+    "LOW":"revisão na mesma jornada em etapa separada",
+    "MEDIUM":"nova revisão consciente antes da execução",
+    "HIGH":"separação temporal documentada e checklist completo",
+    "CRITICAL":"nova sessão de revisão, pacote imutável e todos controles aplicáveis",
+    "EXTREME":"revisão externa pontual poderá ser obrigatória"
+  },
+  "applicability_matrix": {
+    "LOW":["SOCC-01","SOCC-02","SOCC-03","SOCC-04","SOCC-13","SOCC-14","SOCC-17"],
+    "MEDIUM":["SOCC-01","SOCC-02","SOCC-03","SOCC-04","SOCC-13","SOCC-14","SOCC-17","SOCC-10","SOCC-11"],
+    "HIGH":["SOCC-01","SOCC-02","SOCC-03","SOCC-04","SOCC-13","SOCC-14","SOCC-17","SOCC-10","SOCC-11","SOCC-05","SOCC-06","SOCC-08","SOCC-09","SOCC-12"],
+    "CRITICAL":["SOCC-01","SOCC-02","SOCC-03","SOCC-04","SOCC-05","SOCC-06","SOCC-07","SOCC-08","SOCC-09","SOCC-10","SOCC-11","SOCC-12","SOCC-13","SOCC-14","SOCC-15","SOCC-16","SOCC-17"],
+    "EXTREME":["SOCC-01","SOCC-02","SOCC-03","SOCC-04","SOCC-05","SOCC-06","SOCC-07","SOCC-08","SOCC-09","SOCC-10","SOCC-11","SOCC-12","SOCC-13","SOCC-14","SOCC-15","SOCC-16","SOCC-17","SOCC-18"]
+  },
+  "final_applicability_depends_on_change_nature": true
+}

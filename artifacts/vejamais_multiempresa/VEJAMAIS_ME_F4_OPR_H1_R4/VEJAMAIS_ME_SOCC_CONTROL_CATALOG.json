@@ -1,0 +1,30 @@
+{
+  "compensating_controls_inventory": 18,
+  "compensating_controls_planned": 18,
+  "compensating_controls_configured": 0,
+  "compensating_controls_tested": 0,
+  "compensating_controls_operational": 0,
+  "state_current_all": "DEFINED",
+  "state_target_this_gate_all": "PLANNED",
+  "allowed_states": ["DEFINED","PLANNED","CONFIGURED","TESTED_PASS","TESTED_FAIL","OPERATIONAL","SUSPENDED","RETIRED"],
+  "controls": [
+    {"id":"SOCC-01","name":"FORMAL_SCOPE_AND_RISK_CLASSIFICATION","state":"PLANNED","objective":"impedir mudança sem escopo e risco definidos","configuration_future":"template obrigatório de change package","test_future":"tentar avançar sem classificação de risco","expected_result":"BLOCKED"},
+    {"id":"SOCC-02","name":"TEMPORAL_SEPARATION","state":"PLANNED","objective":"separar criação, revisão e autorização","configuration_future":"registro prepared_at, reviewed_at, authorized_at","test_future":"autorizar mudança crítica no mesmo momento lógico","expected_result":"BLOCKED_OR_EXPLICIT_EXCEPTION_DENIED"},
+    {"id":"SOCC-03","name":"IMMUTABLE_HASHED_PACKAGE","state":"PLANNED","objective":"impedir alteração após autorização","configuration_future":"manifesto de arquivos e SHA-256","test_future":"alterar arquivo após autorização","expected_result":"HASH_MISMATCH_AND_FAIL_CLOSED"},
+    {"id":"SOCC-04","name":"AUTOMATED_CODE_VERIFICATION","state":"PLANNED","objective":"validar qualidade técnica","configuration_future":"typecheck, build, lint, testes","test_future":"introduzir falha controlada","expected_result":"DEPLOY_BLOCKED"},
+    {"id":"SOCC-05","name":"SCHEMA_RLS_AND_TENANT_VALIDATION","state":"PLANNED","objective":"impedir regressão de schema, RLS e isolamento","configuration_future":"comparação declarativa de schema, policies e matriz tenant","test_future":"consulta cross-tenant sintética","expected_result":"DENIED"},
+    {"id":"SOCC-06","name":"BACKUP_EXECUTED","state":"PLANNED","objective":"garantir ponto de recuperação","configuration_future":"backup identificável, íntegro e datado","test_future":"validar existência, integridade e escopo","expected_result":"PASS"},
+    {"id":"SOCC-07","name":"RESTORE_PROVEN","state":"PLANNED","objective":"provar recuperabilidade","configuration_future":"restore em ambiente isolado","test_future":"restaurar cópia e validar integridade","expected_result":"RESTORE_PASS"},
+    {"id":"SOCC-08","name":"FEATURE_FLAG","state":"PLANNED","objective":"permitir ativação gradual","configuration_future":"flag deny-by-default controlada no servidor","test_future":"desativar flag e provar indisponibilidade","expected_result":"FEATURE_DISABLED"},
+    {"id":"SOCC-09","name":"KILL_SWITCH","state":"PLANNED","objective":"interromper rapidamente comportamento de risco","configuration_future":"controle separado, auditado, fail-safe","test_future":"acionar em dry-run e confirmar bloqueio","expected_result":"KILL_SWITCH_EFFECTIVE"},
+    {"id":"SOCC-10","name":"ROLLBACK_DEFINED_AND_TESTED","state":"PLANNED","objective":"reverter mudanças","configuration_future":"procedimento versionado compatível com pacote","test_future":"rollback simulado em ambiente isolado","expected_result":"PREVIOUS_STATE_RESTORED"},
+    {"id":"SOCC-11","name":"IMMUTABLE_AUDIT_EVIDENCE","state":"PLANNED","objective":"preservar rastreabilidade","configuration_future":"logs append-only ou proteção equivalente","test_future":"tentar editar ou excluir evidência","expected_result":"DENIED_AND_AUDITED"},
+    {"id":"SOCC-12","name":"FINANCIAL_NON_REGRESSION","state":"PLANNED","objective":"preservar saldos, cálculos e relatórios","configuration_future":"baseline financeiro sintético e reconciliação","test_future":"comparar valores pré e pós execução","expected_result":"ZERO_UNAUTHORIZED_VARIANCE"},
+    {"id":"SOCC-13","name":"PRE_POST_COMPARISON","state":"PLANNED","objective":"detectar mudanças não previstas","configuration_future":"snapshots técnicos, funcionais e de dados","test_future":"introduzir diferença fora do escopo","expected_result":"FAIL_CLOSED"},
+    {"id":"SOCC-14","name":"FAIL_CLOSED","state":"PLANNED","objective":"bloquear continuidade diante de divergência","configuration_future":"regra de interrupção obrigatória","test_future":"simular falha em controle crítico","expected_result":"EXECUTION_STOPPED"},
+    {"id":"SOCC-15","name":"SEPARATE_MIGRATION_AUTHORIZATION","state":"PLANNED","objective":"impedir migration por autorização genérica","configuration_future":"gate específico por migration e hash","test_future":"tentar executar migration sem autorização específica","expected_result":"BLOCKED"},
+    {"id":"SOCC-16","name":"SEPARATE_BACKFILL_AUTHORIZATION","state":"PLANNED","objective":"impedir backfill automático","configuration_future":"gate por escopo, volume, lote e rollback","test_future":"tentar backfill sem autorização","expected_result":"BLOCKED"},
+    {"id":"SOCC-17","name":"SEPARATE_PRODUCTION_AUTHORIZATION","state":"PLANNED","objective":"separar desenvolvimento de publicação","configuration_future":"autorização explícita para ambiente e versão","test_future":"tentar publicar snapshot não autorizado","expected_result":"BLOCKED"},
+    {"id":"SOCC-18","name":"EXTREME_RISK_EXTERNAL_REVIEW","state":"PLANNED","objective":"reduzir risco extremo sem dependência permanente","configuration_future":"critério objetivo de acionamento","test_future":"classificar cenário extremo e verificar exigência","expected_result":"EXTERNAL_REVIEW_REQUIRED_BEFORE_EXECUTION"}
+  ]
+}

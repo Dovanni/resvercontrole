@@ -1,0 +1,22 @@
+{
+  "isolated_environment_plan_complete": true,
+  "test_environment_required": true,
+  "test_environment_defined": false,
+  "synthetic_data_required": true,
+  "real_tenant_data_allowed_in_dry_run": false,
+  "production_secrets_allowed_in_dry_run": false,
+  "requirements": [
+    "identidade própria",
+    "dados sintéticos",
+    "ausência de dados reais de tenants",
+    "ausência de secrets de produção",
+    "ausência de integração financeira real",
+    "ausência de service_role no navegador",
+    "logs segregados",
+    "descartável",
+    "rollback seguro",
+    "baseline próprio"
+  ],
+  "creation_authorized_in_this_gate": false,
+  "creation_gate": "VEJAMAIS-ME-F4-OPR-H1-R6"
+}

@@ -1,0 +1,30 @@
+{
+  "test_plan_complete": true,
+  "test_levels_inventory": 3,
+  "test_levels": {
+    "LEVEL-1":{"name":"DOCUMENTARY_TEST","status":"PLANNED","description":"valida completude, coerência e dependências"},
+    "LEVEL-2":{"name":"SYNTHETIC_DRY_RUN","status":"NOT_AUTHORIZED","description":"executa com dados sintéticos em ambiente isolado"},
+    "LEVEL-3":{"name":"CONTROLLED_OPERATIONAL_VALIDATION","status":"NOT_AUTHORIZED","description":"valida mecanismo real sem produção ou com escopo especificamente autorizado"}
+  },
+  "no_real_test_executed_in_this_gate": true,
+  "per_control_tests": [
+    {"id":"SOCC-01","level":"LEVEL-1","expected":"BLOCKED"},
+    {"id":"SOCC-02","level":"LEVEL-1","expected":"BLOCKED_OR_EXPLICIT_EXCEPTION_DENIED"},
+    {"id":"SOCC-03","level":"LEVEL-1","expected":"HASH_MISMATCH_AND_FAIL_CLOSED"},
+    {"id":"SOCC-04","level":"LEVEL-1","expected":"DEPLOY_BLOCKED"},
+    {"id":"SOCC-05","level":"LEVEL-1","expected":"DENIED"},
+    {"id":"SOCC-06","level":"LEVEL-1","expected":"PASS"},
+    {"id":"SOCC-07","level":"LEVEL-1","expected":"RESTORE_PASS"},
+    {"id":"SOCC-08","level":"LEVEL-1","expected":"FEATURE_DISABLED"},
+    {"id":"SOCC-09","level":"LEVEL-1","expected":"KILL_SWITCH_EFFECTIVE"},
+    {"id":"SOCC-10","level":"LEVEL-1","expected":"PREVIOUS_STATE_RESTORED"},
+    {"id":"SOCC-11","level":"LEVEL-1","expected":"DENIED_AND_AUDITED"},
+    {"id":"SOCC-12","level":"LEVEL-1","expected":"ZERO_UNAUTHORIZED_VARIANCE"},
+    {"id":"SOCC-13","level":"LEVEL-1","expected":"FAIL_CLOSED"},
+    {"id":"SOCC-14","level":"LEVEL-1","expected":"EXECUTION_STOPPED"},
+    {"id":"SOCC-15","level":"LEVEL-1","expected":"BLOCKED"},
+    {"id":"SOCC-16","level":"LEVEL-1","expected":"BLOCKED"},
+    {"id":"SOCC-17","level":"LEVEL-1","expected":"BLOCKED"},
+    {"id":"SOCC-18","level":"LEVEL-1","expected":"EXTERNAL_REVIEW_REQUIRED_BEFORE_EXECUTION"}
+  ]
+}
