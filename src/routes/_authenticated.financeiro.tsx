@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { brl, dateBR } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/financeiro")({
-  head: () => ({ meta: [{ title: "Financeiro — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Financeiro — Vejamais" }] }),
   component: FinancePage,
 });
 

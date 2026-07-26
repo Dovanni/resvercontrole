@@ -629,7 +629,7 @@ function TraceCard({ item, saleDate }: { item: TraceItem; saleDate: string }) {
   // Conclusão
   let conclusao: string;
   if (diagnostico.level === "ok") {
-    conclusao = "O custo apresentado nesta venda é compatível com todas as regras financeiras do Rosé.";
+    conclusao = "O custo apresentado nesta venda é compatível com todas as regras financeiras do Vejamais.";
   } else if (posterior) {
     conclusao = "Foi encontrada divergência temporal — a compra considerada é posterior à venda.";
   } else if (semCompra) {

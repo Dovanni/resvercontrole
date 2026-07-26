@@ -17,7 +17,7 @@ import { useConfirm } from "@/components/confirm-dialog";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 
 export const Route = createFileRoute("/_authenticated/produtos")({
-  head: () => ({ meta: [{ title: "Produtos — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Produtos — Vejamais" }] }),
   component: ProductsPage,
 });
 
@@ -183,7 +183,7 @@ function ProductsPage() {
           <div className="space-y-4 text-sm leading-relaxed">
             <section>
               <h3 className="font-semibold mb-1">🎯 Objetivo desta etapa</h3>
-              <p>O módulo Produtos é responsável pelo cadastro, organização e gerenciamento de todos os produtos comercializados pela empresa. Mantém um catálogo completo e atualizado, permitindo controlar custos, preços, estoque, marcas e categorias, e disponibiliza essas informações para os demais módulos do Rosé.</p>
+              <p>O módulo Produtos é responsável pelo cadastro, organização e gerenciamento de todos os produtos comercializados pela empresa. Mantém um catálogo completo e atualizado, permitindo controlar custos, preços, estoque, marcas e categorias, e disponibiliza essas informações para os demais módulos do Vejamais.</p>
             </section>
             <section>
               <h3 className="font-semibold mb-1">📌 O que pode ser feito</h3>
@@ -232,7 +232,7 @@ function ProductsPage() {
             </section>
             <section>
               <h3 className="font-semibold mb-1">⚠️ Importante</h3>
-              <p>O cadastro de produtos é uma das principais bases do Rosé. Diversos módulos dependem dessas informações para gerar indicadores, controlar estoque, calcular margens e produzir relatórios confiáveis.</p>
+              <p>O cadastro de produtos é uma das principais bases do Vejamais. Diversos módulos dependem dessas informações para gerar indicadores, controlar estoque, calcular margens e produzir relatórios confiáveis.</p>
             </section>
           </div>
           <DialogFooter>

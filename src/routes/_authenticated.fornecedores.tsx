@@ -16,7 +16,7 @@ import { useConfirm } from "@/components/confirm-dialog";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 
 export const Route = createFileRoute("/_authenticated/fornecedores")({
-  head: () => ({ meta: [{ title: "Fornecedores — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Fornecedores — Vejamais" }] }),
   component: SuppliersPage,
 });
 
@@ -98,7 +98,7 @@ function SuppliersPage() {
           <div className="space-y-4 text-sm leading-relaxed">
             <section>
               <h3 className="font-semibold mb-1">🎯 Objetivo desta etapa</h3>
-              <p>O módulo Fornecedores é responsável pelo cadastro, organização e gerenciamento das empresas e prestadores de serviços que abastecem o negócio. Mantém uma base de dados completa e atualizada dos parceiros comerciais, permitindo controlar compras, prazos, condições comerciais e alimentar automaticamente os demais módulos do Rosé.</p>
+              <p>O módulo Fornecedores é responsável pelo cadastro, organização e gerenciamento das empresas e prestadores de serviços que abastecem o negócio. Mantém uma base de dados completa e atualizada dos parceiros comerciais, permitindo controlar compras, prazos, condições comerciais e alimentar automaticamente os demais módulos do Vejamais.</p>
             </section>
             <section>
               <h3 className="font-semibold mb-1">📌 O que pode ser feito</h3>
@@ -146,7 +146,7 @@ function SuppliersPage() {
             </section>
             <section>
               <h3 className="font-semibold mb-1">⚠️ Importante</h3>
-              <p>O cadastro de fornecedores é uma das bases operacionais do Rosé. Diversos módulos dependem dessas informações para controlar compras, pagamentos, indicadores financeiros e análises gerenciais.</p>
+              <p>O cadastro de fornecedores é uma das bases operacionais do Vejamais. Diversos módulos dependem dessas informações para controlar compras, pagamentos, indicadores financeiros e análises gerenciais.</p>
             </section>
           </div>
           <DialogFooter>

@@ -22,7 +22,7 @@ import { useConfirm } from "@/components/confirm-dialog";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/controle-vendas")({
-  head: () => ({ meta: [{ title: "Controle de Vendas — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Controle de Vendas — Vejamais" }] }),
   component: ControleVendasPage,
 });
 
@@ -509,7 +509,7 @@ function ControleVendasPage() {
       doc.setFontSize(8);
       doc.setTextColor(120);
       doc.text(
-        `Gerado em ${geradoEm} pelo Rosé Sistema`,
+        `Gerado em ${geradoEm} pelo Vejamais`,
         pageW / 2,
         Math.min(finalY + 10, doc.internal.pageSize.getHeight() - 8),
         { align: "center" },

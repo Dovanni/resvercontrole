@@ -11,7 +11,7 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGri
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — Vejamais" }] }),
   component: Dashboard,
 });
 
@@ -291,7 +291,7 @@ function Dashboard() {
           <div className="space-y-4 text-sm leading-relaxed">
             <section>
               <h3 className="font-semibold text-base mb-1">🎯 Objetivo desta etapa</h3>
-              <p>O Dashboard é o painel executivo do Rosé. Reúne, em uma única tela, os principais indicadores comerciais, financeiros e operacionais, permitindo acompanhar rapidamente a situação do negócio e identificar oportunidades ou pontos de atenção. Foi desenvolvido para facilitar decisões baseadas em informações atualizadas e consolidadas.</p>
+              <p>O Dashboard é o painel executivo do Vejamais. Reúne, em uma única tela, os principais indicadores comerciais, financeiros e operacionais, permitindo acompanhar rapidamente a situação do negócio e identificar oportunidades ou pontos de atenção. Foi desenvolvido para facilitar decisões baseadas em informações atualizadas e consolidadas.</p>
             </section>
             <section>
               <h3 className="font-semibold text-base mb-1">📌 O que pode ser acompanhado</h3>

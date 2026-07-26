@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { translateAuthError } from "@/lib/auth-errors";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Entrar — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Entrar — Vejamais" }] }),
   component: AuthPage,
 });
 

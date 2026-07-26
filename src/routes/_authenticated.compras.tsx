@@ -19,7 +19,7 @@ import { toast } from "sonner";
 import { Plus, Trash2, Eye, ShoppingCart, HelpCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/compras")({
-  head: () => ({ meta: [{ title: "Compras de Mercadorias — Rosé" }] }),
+  head: () => ({ meta: [{ title: "Compras de Mercadorias — Vejamais" }] }),
   component: ComprasPage,
 });
 
