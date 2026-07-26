@@ -1,0 +1,45 @@
+{
+  "current_state": {
+    "empresa_entity_present": false,
+    "closest_proxy": "company_settings (1 row per user_id, holds branding + fiscal fields)",
+    "row_ownership_model": "single user_id per row; no cross-user sharing possible today"
+  },
+  "alternatives": [
+    {
+      "id": "A",
+      "name": "company_settings promoted to tenant canonical",
+      "pros": ["reuses existing data","zero net new concept for owner"],
+      "cons": ["couples branding with authorization","hard to have tenants without settings"],
+      "reversibility": "MEDIUM",
+      "recommendation": false
+    },
+    {
+      "id": "B",
+      "name": "new tenants table + optional 1:1 link to company_settings",
+      "pros": ["clean separation of authorization vs profile","matches LAB directly","allows tenants with no settings yet"],
+      "cons": ["adds a table + FK migration"],
+      "reversibility": "HIGH",
+      "recommendation": true
+    },
+    {
+      "id": "C",
+      "name": "hybrid compatibility layer (view exposing tenant from user_id)",
+      "pros": ["no schema break short term"],
+      "cons": ["permanent tech debt","RLS complexity","no true multi-user-per-tenant"],
+      "reversibility": "LOW",
+      "recommendation": false
+    }
+  ],
+  "recommended_model": "B",
+  "recommended_membership_model": {
+    "table": "tenant_memberships",
+    "fields": ["tenant_id","user_id","role","status(INVITED|ACTIVE|SUSPENDED|REMOVED)","invited_by","invited_at","accepted_at"],
+    "unique_active": "(tenant_id,user_id) WHERE status='ACTIVE'",
+    "many_to_many": true
+  },
+  "active_tenant": {
+    "source": "user_tenant_preferences.tenant_id (server-validated on each request)",
+    "browser_role": "PREFERENCE_ONLY_NEVER_TRUSTED",
+    "url_param": "FORBIDDEN"
+  }
+}

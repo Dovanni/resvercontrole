@@ -1,0 +1,34 @@
+{
+  "domains": {
+    "schema":"NOT_READY",
+    "data":"READY_WITH_CONTROLS",
+    "auth":"READY_WITH_CONTROLS",
+    "memberships":"NOT_READY",
+    "roles":"NOT_READY",
+    "active_tenant":"NOT_READY",
+    "rls":"NOT_READY",
+    "frontend":"NOT_READY",
+    "cache":"NOT_READY",
+    "realtime":"READY_WITH_CONTROLS",
+    "storage":"NOT_READY",
+    "integrations":"READY_WITH_CONTROLS",
+    "audit":"READY_WITH_CONTROLS",
+    "lgpd":"READY_WITH_CONTROLS",
+    "rollback":"READY_WITH_CONTROLS",
+    "tests":"NOT_READY",
+    "operations":"READY_WITH_CONTROLS",
+    "support":"READY_WITH_CONTROLS"
+  },
+  "blockers": [
+    "production schema has no tenant/membership/preference/invitation tables",
+    "no empresa_id column in any of 22 TENANT_OWNED tables",
+    "current 25 RLS policies bind data to a single user_id, not to memberships",
+    "role enum (admin/vendedor) does not match target OWNER/ADMIN/MANAGER/OPERATOR/VIEWER",
+    "no automated test harness against production schema shape",
+    "storage buckets have no tenant prefix",
+    "React Query keys are not tenant-scoped"
+  ],
+  "final_decision": "READY_WITH_BLOCKERS_REQUIRING_REMEDIATION_PLAN",
+  "authorizes_production_change": false,
+  "next_gate_manual_only": "H1-R8 Production Schema Adoption Blueprint"
+}

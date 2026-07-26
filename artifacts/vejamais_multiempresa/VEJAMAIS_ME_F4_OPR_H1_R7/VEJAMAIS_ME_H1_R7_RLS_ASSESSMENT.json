@@ -1,0 +1,29 @@
+{
+  "current_policies": {
+    "total": 25,
+    "shape": "FOR ALL USING (auth.uid() = user_id) — profiles uses id",
+    "using_true_detected": false,
+    "with_check_true_detected": false,
+    "public_authenticated_broad_grants": false,
+    "duplicated_policies": false,
+    "rls_missing": []
+  },
+  "current_functions_flagged": [
+    {"function":"has_role","security_definer":true,"search_path":"public","status":"OK"},
+    {"function":"handle_new_user + assign_default_role","status":"OK but needs adaptation to also create tenant + membership when multi-tenancy adopted"}
+  ],
+  "cross_tenant_risk_today": "LOW (single-owner rows, no shared tenants exist)",
+  "future_rls_architecture": {
+    "principle": "deny-by-default",
+    "chain": "auth.uid() -> ACTIVE membership -> tenant_id match -> role permits operation -> WITH CHECK forbids tenant_id mutation",
+    "helpers_required": [
+      "current_user_has_active_membership(tenant_id)",
+      "current_user_has_tenant_permission(tenant_id, permission)",
+      "validate_active_tenant_context(tenant_id)"
+    ],
+    "search_path": "SET search_path = public (all SECURITY DEFINER functions)",
+    "grants": "SELECT/INSERT/UPDATE/DELETE only to authenticated; no anon grants on tenant tables",
+    "service_role": "reserved for admin/webhooks only",
+    "platform_operator": "NO automatic access to tenant private data"
+  }
+}

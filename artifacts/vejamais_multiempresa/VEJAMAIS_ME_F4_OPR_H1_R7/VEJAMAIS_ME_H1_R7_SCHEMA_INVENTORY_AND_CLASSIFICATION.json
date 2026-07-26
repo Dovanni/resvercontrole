@@ -1,0 +1,39 @@
+{
+  "classification_legend": ["GLOBAL_SYSTEM","TENANT_OWNED","TENANT_SHARED_BY_EXPLICIT_RULE","USER_PRIVATE","AUDIT","REFERENCE_STATIC","AUTH_ADJACENT","INTEGRATION","UNCERTAIN_REQUIRES_REVIEW"],
+  "tables": [
+    {"name":"aportes_financeiros","classification":"TENANT_OWNED","has_user_id":true,"has_empresa_id":false,"rls":true,"policy":"ALL auth.uid()=user_id","criticality":"HIGH","tenantization_risk":"MEDIUM"},
+    {"name":"audit_log","classification":"AUDIT","has_user_id":true,"has_empresa_id":false,"rls":true,"policy":"SELECT own","criticality":"HIGH","tenantization_risk":"MEDIUM"},
+    {"name":"bank_accounts","classification":"TENANT_OWNED","has_user_id":true,"has_empresa_id":false,"rls":true,"policy":"ALL own","criticality":"CRITICAL","tenantization_risk":"HIGH"},
+    {"name":"bank_movements","classification":"TENANT_OWNED","parent":"bank_accounts","has_user_id":true,"has_empresa_id":false,"rls":true,"policy":"ALL own","criticality":"CRITICAL","tenantization_risk":"HIGH"},
+    {"name":"cartoes_credito","classification":"TENANT_OWNED","has_user_id":true,"has_empresa_id":false,"rls":true,"policy":"ALL own","criticality":"HIGH","tenantization_risk":"MEDIUM"},
+    {"name":"cartoes_faturas","classification":"TENANT_OWNED","parent":"cartoes_credito","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"HIGH","tenantization_risk":"MEDIUM"},
+    {"name":"cartoes_lancamentos","classification":"TENANT_OWNED","parent":"cartoes_faturas","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"HIGH","tenantization_risk":"MEDIUM"},
+    {"name":"categorias_contas_pagar","classification":"TENANT_OWNED","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"MEDIUM","tenantization_risk":"LOW"},
+    {"name":"company_settings","classification":"TENANT_OWNED","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"HIGH","tenantization_risk":"MEDIUM","notes":"conceptually a tenant profile"},
+    {"name":"compras","classification":"TENANT_OWNED","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"HIGH","tenantization_risk":"MEDIUM"},
+    {"name":"compras_itens","classification":"TENANT_OWNED","parent":"compras","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"HIGH","tenantization_risk":"MEDIUM"},
+    {"name":"controle_vendas_diario","classification":"TENANT_OWNED","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"HIGH","tenantization_risk":"MEDIUM"},
+    {"name":"controle_vendas_fornecedor","classification":"TENANT_OWNED","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"HIGH","tenantization_risk":"MEDIUM"},
+    {"name":"controle_vendas_fornecedor_historico","classification":"TENANT_OWNED","parent":"controle_vendas_fornecedor","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"HIGH","tenantization_risk":"MEDIUM"},
+    {"name":"customers","classification":"TENANT_OWNED","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"HIGH","tenantization_risk":"MEDIUM"},
+    {"name":"finance_entries","classification":"TENANT_OWNED","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"CRITICAL","tenantization_risk":"HIGH"},
+    {"name":"payables","classification":"TENANT_OWNED","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"CRITICAL","tenantization_risk":"HIGH"},
+    {"name":"payment_routing_rules","classification":"TENANT_OWNED","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"MEDIUM","tenantization_risk":"MEDIUM"},
+    {"name":"products","classification":"TENANT_OWNED","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"HIGH","tenantization_risk":"MEDIUM"},
+    {"name":"profiles","classification":"USER_PRIVATE","has_user_id":"pk=id","rls":true,"policy":"ALL auth.uid()=id","criticality":"MEDIUM","tenantization_risk":"LOW"},
+    {"name":"receivables","classification":"TENANT_OWNED","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"CRITICAL","tenantization_risk":"HIGH"},
+    {"name":"sale_items","classification":"TENANT_OWNED","parent":"sales","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"HIGH","tenantization_risk":"MEDIUM"},
+    {"name":"sales","classification":"TENANT_OWNED","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"CRITICAL","tenantization_risk":"HIGH"},
+    {"name":"suppliers","classification":"TENANT_OWNED","has_user_id":true,"rls":true,"policy":"ALL own","criticality":"HIGH","tenantization_risk":"MEDIUM"},
+    {"name":"user_roles","classification":"AUTH_ADJACENT","has_user_id":true,"rls":true,"policy":"SELECT own","criticality":"CRITICAL","tenantization_risk":"HIGH","notes":"currently global role, must become (tenant,user,role)"}
+  ],
+  "summary": {
+    "total": 25,
+    "TENANT_OWNED": 22,
+    "AUDIT": 1,
+    "USER_PRIVATE": 1,
+    "AUTH_ADJACENT": 1,
+    "empresa_id_present_anywhere": false,
+    "single_owner_per_row_model": true
+  }
+}

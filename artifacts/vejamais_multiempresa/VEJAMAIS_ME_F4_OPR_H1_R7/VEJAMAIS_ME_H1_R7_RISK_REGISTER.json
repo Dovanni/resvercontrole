@@ -1,0 +1,18 @@
+{
+  "risks": [
+    {"id":"R01","topic":"cross_tenant_leak","cause":"RLS policy replacement gap","severity":"CRITICAL","mitigation":"Expand-Transition-Contract; keep legacy policy until membership policy validated","gate":"H1-R10/R11"},
+    {"id":"R02","topic":"incorrect_backfill","cause":"ambiguous parent-child chains","severity":"HIGH","mitigation":"deterministic ordering + quarantine + human sign-off","gate":"H1-R9"},
+    {"id":"R03","topic":"orphan_user","cause":"auth user without profile/data","severity":"MEDIUM","mitigation":"pre-flight audit + deferred provisioning","gate":"H1-R8"},
+    {"id":"R04","topic":"role_mismatch","cause":"admin/vendedor enum vs OWNER/... model","severity":"HIGH","mitigation":"additive enum + mapping table","gate":"H1-R8"},
+    {"id":"R05","topic":"cache_bleed_on_tenant_switch","cause":"React Query keys not tenant-scoped","severity":"HIGH","mitigation":"queryClient.removeQueries + tenant-keyed keys","gate":"H1-R8"},
+    {"id":"R06","topic":"stale_session_after_membership_revoke","cause":"client trusts prior tenant","severity":"HIGH","mitigation":"server validation each request","gate":"H1-R10"},
+    {"id":"R07","topic":"storage_cross_tenant","cause":"flat bucket paths","severity":"HIGH","mitigation":"path prefix + storage policies","gate":"H1-R10"},
+    {"id":"R08","topic":"realtime_cross_tenant","cause":"subscription without tenant filter","severity":"MEDIUM","mitigation":"filter + reconnect","gate":"H1-R10"},
+    {"id":"R09","topic":"export_leak","cause":"client-supplied tenant param","severity":"HIGH","mitigation":"server-resolved tenant","gate":"H1-R10"},
+    {"id":"R10","topic":"auth_flow_regression","cause":"handle_new_user trigger expansion","severity":"HIGH","mitigation":"idempotent trigger + lab pre-test","gate":"H1-R11"},
+    {"id":"R11","topic":"downtime","cause":"long-running backfill","severity":"MEDIUM","mitigation":"batched + online migration","gate":"H1-R11"},
+    {"id":"R12","topic":"incomplete_rollback","cause":"data written post-cutover","severity":"HIGH","mitigation":"dual-write window + snapshot","gate":"H1-R12"},
+    {"id":"R13","topic":"improper_support_access","cause":"platform operator bypassing tenant isolation","severity":"CRITICAL","mitigation":"impersonation forbidden by default; time-limited justified access, fully audited","gate":"H1-R8"}
+  ],
+  "counts_by_severity":{"CRITICAL":2,"HIGH":8,"MEDIUM":3,"LOW":0,"INFORMATIONAL":0}
+}

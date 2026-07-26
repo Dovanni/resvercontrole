@@ -1,0 +1,32 @@
+{
+  "executed": false,
+  "policy": "NO_EXECUTION_IN_THIS_GATE",
+  "table_strategy": [
+    {"table":"company_settings","source":"user_id (1:1)","determinism":"DETERMINISTIC","order":1},
+    {"table":"products","source":"user_id -> tenant of that user","determinism":"DETERMINISTIC","order":2},
+    {"table":"customers","source":"user_id","determinism":"DETERMINISTIC","order":2},
+    {"table":"suppliers","source":"user_id","determinism":"DETERMINISTIC","order":2},
+    {"table":"bank_accounts","source":"user_id","determinism":"DETERMINISTIC","order":2},
+    {"table":"cartoes_credito","source":"user_id","determinism":"DETERMINISTIC","order":2},
+    {"table":"categorias_contas_pagar","source":"user_id","determinism":"DETERMINISTIC","order":2},
+    {"table":"payment_routing_rules","source":"user_id","determinism":"DETERMINISTIC","order":2},
+    {"table":"sales","source":"user_id","determinism":"DETERMINISTIC","order":3},
+    {"table":"sale_items","source":"parent sales.tenant","determinism":"INFERABLE_WITH_RULE","order":4},
+    {"table":"compras","source":"user_id","determinism":"DETERMINISTIC","order":3},
+    {"table":"compras_itens","source":"parent compras.tenant","determinism":"INFERABLE_WITH_RULE","order":4},
+    {"table":"bank_movements","source":"bank_accounts.tenant","determinism":"INFERABLE_WITH_RULE","order":4},
+    {"table":"cartoes_faturas","source":"cartoes_credito.tenant","determinism":"INFERABLE_WITH_RULE","order":4},
+    {"table":"cartoes_lancamentos","source":"cartoes_faturas.tenant","determinism":"INFERABLE_WITH_RULE","order":5},
+    {"table":"receivables","source":"user_id","determinism":"DETERMINISTIC","order":3},
+    {"table":"payables","source":"user_id","determinism":"DETERMINISTIC","order":3},
+    {"table":"finance_entries","source":"user_id","determinism":"DETERMINISTIC","order":3},
+    {"table":"aportes_financeiros","source":"user_id","determinism":"DETERMINISTIC","order":3},
+    {"table":"controle_vendas_diario","source":"user_id","determinism":"DETERMINISTIC","order":3},
+    {"table":"controle_vendas_fornecedor","source":"user_id","determinism":"DETERMINISTIC","order":3},
+    {"table":"controle_vendas_fornecedor_historico","source":"parent.tenant","determinism":"INFERABLE_WITH_RULE","order":4},
+    {"table":"audit_log","source":"user_id","determinism":"DETERMINISTIC","order":6}
+  ],
+  "expected_ambiguous_orphan_count_estimate": 0,
+  "quarantine_required": false,
+  "human_approval_required_before_execution": true
+}

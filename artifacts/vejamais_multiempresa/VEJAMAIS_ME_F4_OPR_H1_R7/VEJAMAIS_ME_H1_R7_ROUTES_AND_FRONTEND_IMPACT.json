@@ -1,0 +1,32 @@
+{
+  "routes": [
+    {"path":"/","classification":"NO_CHANGE"},
+    {"path":"/auth","classification":"NO_CHANGE"},
+    {"path":"/reset-password","classification":"NO_CHANGE"},
+    {"path":"/_authenticated (layout)","classification":"TENANT_CONTEXT_REQUIRED","note":"must load active tenant + memberships in beforeLoad"},
+    {"path":"/dashboard","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/vendas","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/compras","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/produtos","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/clientes","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/fornecedores","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/financeiro","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/contas-pagar","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/contas-receber","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/fluxo-caixa","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/relatorios","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/bi","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/balancete","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/contas-bancarias","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/cartoes-credito","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/despesas-anuais","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/controle-vendas","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/curva-abc","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/categorias","classification":"TENANT_CONTEXT_REQUIRED"},
+    {"path":"/configuracoes*","classification":"ROLE_REQUIRED","min_role":"ADMIN"},
+    {"path":"/importar","classification":"ROLE_REQUIRED","min_role":"ADMIN"}
+  ],
+  "preserved_fixes": ["logout fail-safe","mobile menu Sheet"],
+  "cache_partitioning_required": true,
+  "query_key_pattern_required": "['tenant', activeTenantId, 'domain', ...]"
+}
