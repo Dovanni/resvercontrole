@@ -118,6 +118,16 @@ function AuthPage() {
                 >
                   Esqueci minha senha
                 </button>
+                <div className="pt-1 flex justify-center">
+                  <Link
+                    to="/"
+                    aria-label="Voltar para o Vejamais"
+                    className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+                    Voltar para o Vejamais
+                  </Link>
+                </div>
               </form>
 
             </TabsContent>
@@ -131,6 +141,7 @@ function AuthPage() {
                   <Label htmlFor="e2">Email</Label>
                   <Input id="e2" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
                 </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="p2">Senha</Label>
                   <Input id="p2" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
