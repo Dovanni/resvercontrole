@@ -149,7 +149,18 @@ function AuthPage() {
                 <Button type="submit" disabled={busy} className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95">
                   Criar conta
                 </Button>
+                <div className="pt-1 flex justify-center">
+                  <Link
+                    to="/"
+                    aria-label="Voltar para o Vejamais"
+                    className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
+                    Voltar para o Vejamais
+                  </Link>
+                </div>
               </form>
+
             </TabsContent>
           </Tabs>
         </div>
