@@ -1,0 +1,36 @@
+{
+  "goal": "Define the architecture of the future test harness to be built in H1-R9",
+  "categories": [
+    "unit","integration","SQL/RLS","cross-tenant isolation","migration simulator","backfill simulator",
+    "E2E web","E2E mobile","cache isolation","Storage isolation","Realtime isolation","Auth flows",
+    "invitation lifecycle","rollback drill","performance","concurrency","secret scanner","bundle scanner","integration contracts"
+  ],
+  "ported_from_lab": {
+    "count_target": 25,
+    "examples": [
+      "cross-tenant SELECT denial",
+      "membership revocation invalidates session context",
+      "OWNER cannot self-remove if last OWNER",
+      "invitation single-use",
+      "tenant_id mutation blocked by WITH CHECK",
+      "SUSPENDED tenant blocks all operations"
+    ]
+  },
+  "new_tests_for_production": {
+    "targets": "22 TENANT_OWNED tables",
+    "per_table_minimum": [
+      "SELECT respects membership",
+      "INSERT respects role",
+      "UPDATE cannot change tenant_id",
+      "DELETE respects role",
+      "cross-tenant read returns zero rows",
+      "cross-tenant write raises RLS error",
+      "shadow read parity",
+      "backfill idempotency",
+      "cache key includes tenant"
+    ]
+  },
+  "environment": "must run against isolated LAB clone (kvqcuezzsmvyedmolnau) or an ephemeral clone; NEVER against production",
+  "gates": {"H1-R9":"harness built","H1-R11":"executed against production clone"},
+  "no_creation_in_this_gate": true
+}

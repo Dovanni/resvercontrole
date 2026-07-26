@@ -1,0 +1,64 @@
+{
+  "H1-R9": {
+    "name": "Automated Test Harness and Migration Simulator",
+    "preconditions": ["H1-R8 approved","LAB accessible"],
+    "authorization": "human explicit",
+    "allowed": ["create test harness in LAB","author migration simulator","author backfill simulator"],
+    "forbidden": ["touch production","execute migrations against production","create tenants in production"],
+    "evidence": ["harness repo path","test run reports","coverage per table","simulator dry-run logs"],
+    "rollback": "delete harness workspace",
+    "expected_status": "TEST_HARNESS_AND_SIMULATOR_READY",
+    "stop_rule": "any RLS test fails → gate blocked"
+  },
+  "H1-R10": {
+    "name": "Production-Compatible Migration Package",
+    "preconditions": ["H1-R9 green"],
+    "authorization": "human explicit",
+    "allowed": ["author SQL migration files targeting production schema","peer review"],
+    "forbidden": ["apply to production","execute backfill"],
+    "evidence": ["signed migration bundle","hash manifest","reviewer signoff"],
+    "expected_status": "MIGRATION_PACKAGE_APPROVED"
+  },
+  "H1-R11": {
+    "name": "Isolated Production Clone Dry-Run",
+    "preconditions": ["H1-R10 approved","clone provisioned"],
+    "allowed": ["apply full sequence to clone","run harness","measure timing/locks"],
+    "forbidden": ["touch real production"],
+    "evidence": ["clone execution report","diff snapshot","perf metrics"],
+    "expected_status": "DRY_RUN_SUCCESSFUL"
+  },
+  "H1-R12": {
+    "name": "Human Review and Go/No-Go",
+    "preconditions": ["H1-R11 clean"],
+    "allowed": ["review evidence"],
+    "forbidden": ["any execution"],
+    "evidence": ["signed go/no-go decision"],
+    "expected_status": "GO_FOR_PILOT | NO_GO"
+  },
+  "H1-R13": {
+    "name": "Controlled Pilot Authorization",
+    "preconditions": ["GO_FOR_PILOT"],
+    "allowed": ["apply Expand + M07 flags to production","provision pilot tenant","enable Shadow Read for pilot"],
+    "forbidden": ["swap RLS","backfill non-pilot tables"],
+    "expected_status": "PILOT_AUTHORIZED_AND_INITIALIZED"
+  },
+  "H1-R14": {
+    "name": "Limited Tenant Pilot",
+    "preconditions": ["H1-R13 initialized"],
+    "allowed": ["Transition phase for pilot tenant only","enable membership RLS for pilot","dual validation report-only then block"],
+    "forbidden": ["expand to other tenants"],
+    "expected_status": "PILOT_RUNNING"
+  },
+  "H1-R15": {
+    "name": "Post-Pilot Audit",
+    "preconditions": ["7+ days of pilot"],
+    "allowed": ["read audit logs","compute divergence metrics"],
+    "expected_status": "PILOT_HOMOLOGATED | ROLLBACK_ORDERED"
+  },
+  "H1-R16": {
+    "name": "Broader Rollout Assessment",
+    "preconditions": ["PILOT_HOMOLOGATED"],
+    "allowed": ["plan tenant-by-tenant rollout"],
+    "expected_status": "ROLLOUT_PLAN_APPROVED"
+  }
+}

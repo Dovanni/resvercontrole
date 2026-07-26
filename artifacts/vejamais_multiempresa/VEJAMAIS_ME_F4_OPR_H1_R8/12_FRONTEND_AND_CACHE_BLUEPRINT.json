@@ -1,0 +1,49 @@
+{
+  "frontend": {
+    "preserved_untouched_in_this_gate": [
+      "src/routes/_authenticated.tsx logout fix",
+      "src/components/app-shell.tsx mobile menu",
+      "src/routes/index.tsx landing page",
+      "src/routes/auth.tsx public signup lock + return-to-landing",
+      "src/routes/reset-password.tsx"
+    ],
+    "future_states": [
+      "AUTH_LOADING",
+      "AUTHENTICATED_NO_TENANT",
+      "AUTHENTICATED_ONE_TENANT",
+      "AUTHENTICATED_MULTIPLE_TENANTS",
+      "TENANT_SUSPENDED",
+      "MEMBERSHIP_REVOKED",
+      "TENANT_CONTEXT_ERROR"
+    ],
+    "future_components": [
+      "TenantProvider (server-validated tenant context; PREFERENCE_ONLY_NEVER_TRUSTED)",
+      "TenantSelector (only if AUTHENTICATED_MULTIPLE_TENANTS)",
+      "OnboardingNoTenant screen",
+      "TenantSuspendedBanner",
+      "MembershipRevokedGate"
+    ],
+    "affected_routes_future": [
+      "/auth (no change)",
+      "/dashboard (add tenant context read)",
+      "/_authenticated (inject TenantProvider)",
+      "/configuracoes (tenant profile edit)",
+      "/importar","/vendas","/compras","/financeiro","/relatorios","/bi","/produtos","/clientes","/fornecedores","/contas-bancarias","/contas-pagar","/contas-receber","/cartoes-credito","/curva-abc","/controle-vendas","/despesas-anuais","/fluxo-caixa","/balancete"
+    ],
+    "url_tenant_param": "FORBIDDEN",
+    "localStorage_tenant": "PREFERENCE_ONLY_NEVER_TRUSTED"
+  },
+  "cache": {
+    "pattern": ["tenant", "activeTenantId", "domain", "filters"],
+    "rules": [
+      "queryKey MUST include activeTenantId when tenant-scoped",
+      "enabled: !!activeTenantId && tenantValidated",
+      "on tenant switch: queryClient.removeQueries({ queryKey: ['tenant', prevTenantId] })",
+      "on tenant switch: DO NOT call queryClient.clear()",
+      "on logout: full clear (existing homologated flow retained)",
+      "on membership revoked: remove all queries for that tenant + navigate to selector or /auth",
+      "staleTime: domain-specific (existing values preserved)",
+      "invalidation: server-triggered via Realtime channel (future) or manual on mutations"
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "column_added_future": "tenant_id uuid REFERENCES tenants(id)",
+  "phases": {
+    "Expand": "column added, nullable, indexed, no FK enforced on writes yet through legacy paths",
+    "Transition": "backfill executed; dual validation; shadow read; new writes populate both user_id and tenant_id",
+    "Contract": "tenant_id NOT NULL; RLS switched to membership-based; user_id may remain for authorship"
+  },
+  "tables": [
+    {"name":"company_settings","tenant_source":"user_id (1:1 today) -> tenant.company_settings_id","determinism":"DETERMINISTIC","order":1,"parent":null,"risk":"MEDIUM","future_policy":"membership ACTIVE in tenant","cache_key":["tenant","id","company_settings"],"realtime_impact":"low","storage_impact":"company-logos bucket","export_impact":"low"},
+    {"name":"products","tenant_source":"user_id -> tenant","determinism":"DETERMINISTIC","order":2,"parent":null,"risk":"MEDIUM","future_policy":"tenant match + role>=VIEWER read, >=OPERATOR write","cache_key":["tenant",":tid","products",":filters"],"realtime_impact":"filter by tenant","storage_impact":"product-photos","export_impact":"medium"},
+    {"name":"customers","tenant_source":"user_id","determinism":"DETERMINISTIC","order":2,"risk":"MEDIUM"},
+    {"name":"suppliers","tenant_source":"user_id","determinism":"DETERMINISTIC","order":2,"risk":"MEDIUM"},
+    {"name":"bank_accounts","tenant_source":"user_id","determinism":"DETERMINISTIC","order":2,"risk":"HIGH","future_policy":"tenant match + role in (OWNER,ADMIN,MANAGER,OPERATOR)"},
+    {"name":"cartoes_credito","tenant_source":"user_id","determinism":"DETERMINISTIC","order":2,"risk":"MEDIUM"},
+    {"name":"categorias_contas_pagar","tenant_source":"user_id","determinism":"DETERMINISTIC","order":2,"risk":"LOW"},
+    {"name":"payment_routing_rules","tenant_source":"user_id","determinism":"DETERMINISTIC","order":2,"risk":"MEDIUM"},
+    {"name":"sales","tenant_source":"user_id","determinism":"DETERMINISTIC","order":3,"risk":"HIGH"},
+    {"name":"sale_items","tenant_source":"parent sales.tenant_id","determinism":"INFERABLE_WITH_RULE","order":4,"parent":"sales","risk":"MEDIUM"},
+    {"name":"compras","tenant_source":"user_id","determinism":"DETERMINISTIC","order":3,"risk":"MEDIUM"},
+    {"name":"compras_itens","tenant_source":"parent compras.tenant_id","determinism":"INFERABLE_WITH_RULE","order":4,"parent":"compras","risk":"MEDIUM"},
+    {"name":"bank_movements","tenant_source":"bank_accounts.tenant_id","determinism":"INFERABLE_WITH_RULE","order":4,"parent":"bank_accounts","risk":"HIGH"},
+    {"name":"cartoes_faturas","tenant_source":"cartoes_credito.tenant_id","determinism":"INFERABLE_WITH_RULE","order":4,"parent":"cartoes_credito","risk":"MEDIUM"},
+    {"name":"cartoes_lancamentos","tenant_source":"cartoes_faturas.tenant_id","determinism":"INFERABLE_WITH_RULE","order":5,"parent":"cartoes_faturas","risk":"MEDIUM"},
+    {"name":"receivables","tenant_source":"user_id","determinism":"DETERMINISTIC","order":3,"risk":"HIGH"},
+    {"name":"payables","tenant_source":"user_id","determinism":"DETERMINISTIC","order":3,"risk":"HIGH"},
+    {"name":"finance_entries","tenant_source":"user_id","determinism":"DETERMINISTIC","order":3,"risk":"HIGH"},
+    {"name":"aportes_financeiros","tenant_source":"user_id","determinism":"DETERMINISTIC","order":3,"risk":"MEDIUM"},
+    {"name":"controle_vendas_diario","tenant_source":"user_id","determinism":"DETERMINISTIC","order":3,"risk":"MEDIUM"},
+    {"name":"controle_vendas_fornecedor","tenant_source":"user_id","determinism":"DETERMINISTIC","order":3,"risk":"MEDIUM"},
+    {"name":"controle_vendas_fornecedor_historico","tenant_source":"parent.tenant_id","determinism":"INFERABLE_WITH_RULE","order":4,"parent":"controle_vendas_fornecedor","risk":"MEDIUM"}
+  ],
+  "audit_table_treatment": {"name":"audit_log","strategy":"EXTEND_EXISTING with nullable tenant_id; new specialized tenant_audit_events for tenant lifecycle"},
+  "user_private": ["profiles"],
+  "no_tenant_column": ["profiles","user_roles"],
+  "total_tenant_owned": 22
+}

@@ -1,0 +1,39 @@
+{
+  "principle": "deny-by-default",
+  "chain": "auth.uid() -> ACTIVE membership in tenant_id -> role permits operation -> WITH CHECK forbids tenant_id mutation",
+  "helper_functions": [
+    {"name":"has_active_membership(_tenant uuid)","returns":"boolean","security":"DEFINER","search_path":"public","stable":true,"grants":["EXECUTE TO authenticated"],"revokes":["EXECUTE FROM PUBLIC","EXECUTE FROM anon"]},
+    {"name":"has_role_in_tenant(_tenant uuid, _min_role tenant_role_enum)","returns":"boolean","security":"DEFINER","search_path":"public","stable":true},
+    {"name":"current_active_tenant()","returns":"uuid","security":"DEFINER","search_path":"public","stable":true,"note":"resolves from user_tenant_preferences + validates membership; returns NULL if invalid"},
+    {"name":"can_access_tenant_record(_tenant uuid)","returns":"boolean","security":"DEFINER","search_path":"public","stable":true},
+    {"name":"can_manage_memberships(_tenant uuid, _target_role tenant_role_enum)","returns":"boolean","security":"DEFINER","search_path":"public","stable":true}
+  ],
+  "matrix_template": {
+    "SELECT": "has_active_membership(tenant_id)",
+    "INSERT": "has_role_in_tenant(tenant_id, 'OPERATOR') AND tenant_id = current_active_tenant()",
+    "UPDATE": {"USING":"has_role_in_tenant(tenant_id,'OPERATOR')","WITH CHECK":"tenant_id = OLD.tenant_id AND has_role_in_tenant(tenant_id,'OPERATOR')"},
+    "DELETE": "has_role_in_tenant(tenant_id, 'MANAGER')"
+  },
+  "per_table_overrides": {
+    "bank_accounts": {"DELETE":"has_role_in_tenant(tenant_id,'ADMIN')"},
+    "receivables": {"DELETE":"has_role_in_tenant(tenant_id,'ADMIN')"},
+    "payables": {"DELETE":"has_role_in_tenant(tenant_id,'ADMIN')"},
+    "finance_entries": {"UPDATE":"has_role_in_tenant(tenant_id,'MANAGER')","DELETE":"has_role_in_tenant(tenant_id,'ADMIN')"},
+    "company_settings": {"UPDATE":"has_role_in_tenant(tenant_id,'ADMIN')"}
+  },
+  "prohibitions": [
+    "USING (true)",
+    "WITH CHECK (true)",
+    "client-only trust",
+    "self-elevation",
+    "tenant_id mutation",
+    "platform operator auto-access",
+    "service_role in browser"
+  ],
+  "grants": {
+    "authenticated": ["SELECT","INSERT","UPDATE","DELETE conditioned by RLS"],
+    "anon": ["none on tenant tables"],
+    "service_role": ["ALL, admin/webhooks only"]
+  },
+  "shadow_period": "Both legacy user_id-based and new membership-based policies coexist. New policies gated by MULTITENANT_RLS_ENABLED flag per tenant; false = policy short-circuits to TRUE composition (no restriction added). Legacy policies remain authoritative."
+}

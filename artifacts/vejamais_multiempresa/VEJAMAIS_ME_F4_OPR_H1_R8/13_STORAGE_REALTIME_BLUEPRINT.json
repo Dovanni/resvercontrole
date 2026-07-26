@@ -1,0 +1,34 @@
+{
+  "storage": {
+    "current_path_pattern": "flat / user-scoped",
+    "target_path_pattern": "{tenant_id}/{resource_type}/{resource_id}/{filename}",
+    "buckets": [
+      {"name":"product-photos","resource_type":"products"},
+      {"name":"company-logos","resource_type":"company_settings"}
+    ],
+    "future_policies": {
+      "SELECT":"path starts with tenant_id where has_active_membership(tenant_id)",
+      "INSERT":"path starts with current_active_tenant() and has_role_in_tenant(tenant,'OPERATOR')",
+      "UPDATE":"same as INSERT",
+      "DELETE":"has_role_in_tenant(tenant,'MANAGER')"
+    },
+    "signed_urls":"generated server-side only; TTL <= 900s; audit issuance",
+    "existing_file_migration":"conceptual only; copy-then-swap with checksum; keep legacy path readable until Contract",
+    "orphans":"quarantine list; human review; never auto-delete",
+    "rollback":"disable MULTITENANT_STORAGE_ENABLED; policies revert to legacy user_id path",
+    "cross_tenant_block":"deny path traversal; deny paths not starting with a tenant_id the caller has membership in",
+    "limits":{"max_file_bytes":10485760,"mime_allowlist":["image/png","image/jpeg","image/webp","image/svg+xml"]},
+    "audit":"tenant_audit_events kind=STORAGE_UPLOAD|STORAGE_DOWNLOAD (metadata only)"
+  },
+  "realtime": {
+    "current_usage":"not systematically used today",
+    "future_rules": [
+      "every channel keyed by tenant_id",
+      "filter subscriptions server-side by tenant_id",
+      "on tenant switch: unsubscribe all previous channels; resubscribe with new tenant",
+      "on membership revoked: force-close channels",
+      "max concurrent subscriptions per user: 20",
+      "audit subscribe/unsubscribe (kind + tenant only)"
+    ]
+  }
+}
