@@ -1,0 +1,27 @@
+{
+  "shadow_read": {
+    "flow": "primary read via legacy user_id path returns response to user; candidate read via tenant/membership path executes async; results compared; only divergence logged",
+    "pilot_routes": ["/dashboard","/produtos","/clientes","/fornecedores"],
+    "pilot_tables": ["products","customers","suppliers","company_settings"],
+    "comparison": "row-id set diff + column-hash for sampled rows",
+    "sampling": "10% of requests initially; raise to 100% after 72h clean",
+    "tolerance": "0 divergences on identity set; column diffs tolerated only for computed audit fields",
+    "metrics": ["shadow_requests_total","shadow_divergences_total","shadow_latency_p95_ms"],
+    "logs": "divergence event contains: route, table, tenant_candidate, count_legacy, count_candidate, diff_ids (up to 25), no PII",
+    "performance_budget": "candidate read must add <=150ms p95; else auto-disable",
+    "disable_trigger": "any divergence in identity set OR >5% error rate OR latency budget exceeded",
+    "promotion_criteria": "7 consecutive days, 100% sampling, zero identity divergence, human sign-off"
+  },
+  "dual_validation": {
+    "definition": "evaluate legacy authorization AND candidate membership authorization for every mutation; block only per flag",
+    "modes": ["report_only","block_on_disagreement"],
+    "initial_mode": "report_only",
+    "divergence_log": "tenant_audit_events kind=DUAL_VALIDATION_DIVERGENCE",
+    "promotion": "block_on_disagreement enabled per-tenant after 7 days clean"
+  },
+  "dual_write": {
+    "authorized_now": false,
+    "future_requirements": ["idempotency key","single transaction","rollback on partial failure","reconciler job","feature flag","circuit breaker"],
+    "note": "NOT the first production activation; considered only after Shadow+DualValidation prove parity"
+  }
+}

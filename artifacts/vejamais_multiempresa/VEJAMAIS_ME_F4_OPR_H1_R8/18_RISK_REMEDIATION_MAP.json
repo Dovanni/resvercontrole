@@ -1,0 +1,19 @@
+{
+  "risks_treated": [
+    {"id":"R01","topic":"cross_tenant_leak","severity":"CRITICAL","treatment":"Expand-Transition-Contract keeps legacy authoritative until membership policies validated via Shadow+Dual","object":"RLS policies","deps":["M09","M10","M15"],"test":"cross-tenant SELECT/INSERT/UPDATE/DELETE","rollback":"flag off","gate":"H1-R11/H1-R14","resolution_criteria":"zero divergence for 7d + human signoff"},
+    {"id":"R02","topic":"incorrect_backfill","severity":"HIGH","treatment":"deterministic ordering + quarantine + shadow validation","object":"backfill procedures","deps":["M11"],"test":"backfill simulator","rollback":"UPDATE tenant_id=NULL for tagged batch","gate":"H1-R9/H1-R11","resolution_criteria":"100% deterministic assignment; 0 auto-assigned ambiguous"},
+    {"id":"R03","topic":"orphan_user","severity":"MEDIUM","treatment":"pre-flight audit; deferred provisioning","object":"handle_new_user trigger","gate":"H1-R10","resolution_criteria":"zero orphans post-transition"},
+    {"id":"R04","topic":"role_mismatch","severity":"HIGH","treatment":"additive enum tenant_role_enum + mapping matrix","object":"enums","gate":"H1-R10","resolution_criteria":"mapping applied, app_role preserved read-only"},
+    {"id":"R05","topic":"cache_bleed_on_tenant_switch","severity":"HIGH","treatment":"tenant-keyed queryKey + removeQueries by tenant prefix","object":"React Query","gate":"H1-R13","resolution_criteria":"no residual queries for previous tenant after switch"},
+    {"id":"R06","topic":"stale_session_after_membership_revoke","severity":"HIGH","treatment":"server validates membership each request; force-close realtime; navigate to /auth","gate":"H1-R14"},
+    {"id":"R07","topic":"storage_cross_tenant","severity":"HIGH","treatment":"tenant-prefixed paths + membership policies","gate":"H1-R14","resolution_criteria":"path traversal blocked; cross-tenant download denied"},
+    {"id":"R08","topic":"realtime_cross_tenant","severity":"MEDIUM","treatment":"tenant-filtered subscriptions + resubscribe on switch","gate":"H1-R14"},
+    {"id":"R09","topic":"export_leak","severity":"HIGH","treatment":"server-resolved tenant; ignore client params","gate":"H1-R13"},
+    {"id":"R10","topic":"auth_flow_regression","severity":"HIGH","treatment":"idempotent trigger extension + LAB pre-test","gate":"H1-R11"},
+    {"id":"R11","topic":"downtime","severity":"MEDIUM","treatment":"batched online backfill; ADD COLUMN nullable","gate":"H1-R11"},
+    {"id":"R12","topic":"incomplete_rollback","severity":"HIGH","treatment":"dual-write window + snapshot + preserve columns","gate":"H1-R12"},
+    {"id":"R13","topic":"improper_support_access","severity":"CRITICAL","treatment":"impersonation forbidden by default; time-limited justified access audited","gate":"H1-R10"}
+  ],
+  "counts_by_severity": {"CRITICAL":2,"HIGH":8,"MEDIUM":3,"LOW":0,"INFORMATIONAL":0},
+  "all_risks_addressed": true
+}

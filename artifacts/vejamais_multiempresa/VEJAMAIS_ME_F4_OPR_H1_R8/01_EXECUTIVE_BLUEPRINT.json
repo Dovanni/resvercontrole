@@ -1,0 +1,63 @@
+{
+  "gate": "VEJAMAIS-ME-F4-OPR-H1-R8",
+  "version": "1.0",
+  "nature": "DOCUMENTAL_ONLY",
+  "parent_gate": "VEJAMAIS-ME-F4-OPR-H1-R7",
+  "parent_status": "VEJAMAIS_ME_F4_OPR_H1_R7_HUMAN_HOMOLOGATED_WITH_BLOCKERS",
+  "environment": {
+    "production_project": "c1cf42e3-5ea4-4a1b-a6cc-454256b65835",
+    "production_supabase_ref": "bsrjtmssbnvttzrvnaab",
+    "domains": ["https://vejamais.com.br", "https://www.vejamais.com.br"],
+    "lab_project": "0497d836-3738-4091-b3fc-d5f6e13c42a0",
+    "lab_supabase_ref": "kvqcuezzsmvyedmolnau",
+    "lab_frozen_hash_h1_r6": "c3ec706571c70bd56e50ec627a4f5316c1504f95b66ddef2a4e559ee2c0bd615"
+  },
+  "authorization": {
+    "human_authorization_received": true,
+    "human_authorization_scope": "VEJAMAIS_ME_H1_R8_PRODUCTION_SCHEMA_ADOPTION_BLUEPRINT_DOCUMENTAL_ONLY"
+  },
+  "principles": [
+    "Expand-Transition-Contract",
+    "Feature Flag per tenant",
+    "Shadow Read",
+    "Dual Validation",
+    "deny-by-default",
+    "Zero Trust on client-provided tenant_id",
+    "least privilege",
+    "backward compatibility",
+    "no initial deletion",
+    "no destructive mutation",
+    "rollback without deleting real data",
+    "LGPD by design and by default",
+    "platform operator has no automatic tenant access",
+    "production preserved until explicit authorization",
+    "Zero Breaking Changes"
+  ],
+  "canonical_model": "ALTERNATIVE_B_new_tenants_table_with_optional_1_1_link_to_company_settings",
+  "future_gate_sequence": [
+    "H1-R9 Automated Test Harness and Migration Simulator",
+    "H1-R10 Production-Compatible Migration Package",
+    "H1-R11 Isolated Production Clone Dry-Run",
+    "H1-R12 Human Review and Go/No-Go",
+    "H1-R13 Controlled Pilot Authorization",
+    "H1-R14 Limited Tenant Pilot",
+    "H1-R15 Post-Pilot Audit",
+    "H1-R16 Broader Rollout Assessment"
+  ],
+  "confirmations": {
+    "production_code_changed": false,
+    "production_database_changed": false,
+    "production_auth_changed": false,
+    "production_rls_changed": false,
+    "production_storage_changed": false,
+    "production_data_changed": false,
+    "migration_file_created": false,
+    "migration_executed": false,
+    "backfill_executed": false,
+    "feature_flag_implemented": false,
+    "shadow_read_implemented": false,
+    "test_harness_created": false,
+    "publication_performed": false,
+    "next_gate_started": false
+  }
+}

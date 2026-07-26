@@ -1,0 +1,48 @@
+{
+  "principle": "no rollback deletes real data",
+  "component_classification": {
+    "FULLY_REVERSIBLE": [
+      "all feature flags",
+      "shadow read pipeline",
+      "dual validation report-only mode",
+      "TenantSelector UI",
+      "helper functions (DROP if unused)"
+    ],
+    "REVERSIBLE_WITH_CONTROLS": [
+      "additive RLS policies",
+      "tenant_id column ADD (nullable)",
+      "new tables tenants/memberships/preferences/invitations/audit"
+    ],
+    "DATA_PRESERVING_ROLLBACK_ONLY": [
+      "backfilled tenant_id values",
+      "NOT NULL constraint on tenant_id",
+      "Contract-phase RLS swap",
+      "Storage tenant-prefixed uploads"
+    ],
+    "IRREVERSIBLE_REQUIRES_NEW_GATE": [
+      "dropped legacy user_id policies (never scheduled before H1-R16)",
+      "sent invitation emails",
+      "any deleted row (never in rollback)"
+    ]
+  },
+  "kill_switch_actions": [
+    "flip MULTITENANT_RLS_ENABLED = false per tenant → policy short-circuits, legacy path becomes authoritative",
+    "flip MULTITENANT_STORAGE_ENABLED = false → storage policies revert to legacy",
+    "flip MULTITENANT_SHADOW_READ_ENABLED = false → candidate path skipped",
+    "flip MULTITENANT_TENANT_CONTEXT_ENABLED = false → frontend hides selector",
+    "disable_new_tenants → tenants table INSERT blocked at helper function",
+    "disable_invitations → invitations INSERT blocked"
+  ],
+  "recovery_from_data_incident": [
+    "point-in-time restore of Supabase project (evidence required)",
+    "replay of audit_log + tenant_audit_events for reconstruction",
+    "manual reconciliation with human sign-off"
+  ],
+  "invariants_during_rollback": [
+    "no DROP COLUMN of tenant_id",
+    "no DELETE from tenants",
+    "no DELETE from tenant_memberships",
+    "no truncation of audit tables",
+    "no revocation of user sessions unless membership revoked"
+  ]
+}

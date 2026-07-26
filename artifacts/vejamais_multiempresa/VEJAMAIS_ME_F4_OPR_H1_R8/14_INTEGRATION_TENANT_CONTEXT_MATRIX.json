@@ -1,0 +1,22 @@
+{
+  "integrations": [
+    {"name":"Supabase Auth","tenant_context":"none today","future":"handle_new_user trigger extended (idempotent) to provision tenant + OWNER membership; onboarding-by-invite path skips auto-tenant","risk":"HIGH","rollback":"trigger revert"},
+    {"name":"Mercado Pago fees on sales","tenant_context":"implicit via user_id","future":"resolve tenant server-side via sale.tenant_id","risk":"MEDIUM","rollback":"legacy user_id path"},
+    {"name":"Lovable AI Gateway","tenant_context":"n/a","future":"pass tenant_id in prompt metadata for audit; never in client-controlled param","risk":"LOW"},
+    {"name":"Transactional email","tenant_context":"per invite","future":"template variables include tenant_name; sender never leaks other tenants","risk":"LOW"},
+    {"name":"METRIXHR institutional link","tenant_context":"n/a","future":"NO session sharing, NO database sharing, NO cross-authentication; only static hyperlink","risk":"LOW"},
+    {"name":"Webhooks (future)","tenant_context":"server-resolved","future":"tenant derived from HMAC-verified payload; never from URL param","risk":"MEDIUM"},
+    {"name":"Import/Export","tenant_context":"active tenant","future":"tenant resolved server-side inside handler; client tenant param IGNORED","risk":"HIGH"},
+    {"name":"BI/Reports","tenant_context":"active tenant","future":"queries scoped by current_active_tenant()","risk":"MEDIUM"}
+  ],
+  "contract_rules": [
+    "tenant_id MUST be resolved server-side",
+    "payload minimum data principle (LGPD)",
+    "idempotency keys per integration",
+    "secrets NEVER in client bundle",
+    "audit event per outbound call (kind + tenant + integration; no payload PII)",
+    "callbacks verify signature before any privileged write",
+    "reconciliation job per integration weekly (conceptual)",
+    "rollback: disable feature flag for integration; fall back to legacy path"
+  ]
+}

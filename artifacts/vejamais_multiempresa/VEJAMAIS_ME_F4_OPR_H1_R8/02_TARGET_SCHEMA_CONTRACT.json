@@ -1,0 +1,44 @@
+{
+  "entity": "tenants",
+  "purpose": "Canonical tenant entity, decoupled from company_settings",
+  "fields": [
+    {"name": "id", "type": "uuid", "pk": true, "default": "gen_random_uuid()", "immutable": true},
+    {"name": "name", "type": "text", "nullable": false, "check": "length(name) between 1 and 200"},
+    {"name": "slug", "type": "text", "nullable": false, "unique": true, "check": "slug ~ '^[a-z0-9-]{3,60}$'"},
+    {"name": "status", "type": "tenant_status_enum", "nullable": false, "default": "ACTIVE", "domain": ["ACTIVE", "SUSPENDED", "CLOSING", "CLOSED"]},
+    {"name": "company_settings_id", "type": "uuid", "nullable": true, "unique": true, "fk": "company_settings(id)", "on_delete": "SET NULL", "transition_note": "nullable during Expand, remains nullable"},
+    {"name": "created_by", "type": "uuid", "nullable": false, "fk": "auth.users(id)", "immutable": true},
+    {"name": "created_at", "type": "timestamptz", "default": "now()", "immutable": true},
+    {"name": "updated_at", "type": "timestamptz", "default": "now()"},
+    {"name": "version", "type": "integer", "default": 1, "purpose": "optimistic concurrency"},
+    {"name": "suspended_at", "type": "timestamptz", "nullable": true},
+    {"name": "closed_at", "type": "timestamptz", "nullable": true},
+    {"name": "metadata", "type": "jsonb", "nullable": true, "note": "minimized; no PII"}
+  ],
+  "indexes": [
+    {"columns": ["slug"], "unique": true},
+    {"columns": ["status"]},
+    {"columns": ["company_settings_id"], "unique": true, "where": "company_settings_id IS NOT NULL"},
+    {"columns": ["created_by"]}
+  ],
+  "checks": [
+    "status in domain",
+    "closed_at IS NULL OR status IN ('CLOSED')",
+    "suspended_at IS NULL OR status IN ('SUSPENDED','CLOSING','CLOSED')"
+  ],
+  "immutability_rules": [
+    "id immutable",
+    "created_at immutable",
+    "created_by immutable",
+    "company_settings_id immutable once set (enforced via trigger in future gate)"
+  ],
+  "archival_policy": "Soft-close via status=CLOSED + closed_at; no physical delete.",
+  "deletion_policy": "Physical DELETE forbidden in production RLS; only via privileged migration.",
+  "audit": "All INSERT/UPDATE emit tenant_audit_events (see artifact 12).",
+  "company_settings_link": {
+    "cardinality": "0..1 : 1",
+    "required": false,
+    "immutable_after_set": true,
+    "reason": "Allow tenant existence before branding/fiscal profile is configured; prevent hijack."
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "executed": false,
+  "policy": "NO_EXECUTION_IN_THIS_GATE",
+  "batch_defaults": {"size": 5000, "sleep_ms_between_batches": 50, "checkpoint_table": "tenant_backfill_checkpoints (conceptual)"},
+  "categories": ["DETERMINISTIC","INFERABLE_WITH_RULE","AMBIGUOUS","ORPHAN","BLOCKED"],
+  "levels": [
+    {"level":1,"tables":["company_settings"],"source":"one-to-one via user_id -> tenant","category":"DETERMINISTIC"},
+    {"level":2,"tables":["products","customers","suppliers","bank_accounts","cartoes_credito","categorias_contas_pagar","payment_routing_rules"],"source":"user_id -> tenant","category":"DETERMINISTIC"},
+    {"level":3,"tables":["sales","compras","receivables","payables","finance_entries","aportes_financeiros","controle_vendas_diario","controle_vendas_fornecedor"],"source":"user_id -> tenant","category":"DETERMINISTIC"},
+    {"level":4,"tables":["sale_items","compras_itens","bank_movements","cartoes_faturas","controle_vendas_fornecedor_historico"],"source":"parent.tenant_id","category":"INFERABLE_WITH_RULE"},
+    {"level":5,"tables":["cartoes_lancamentos"],"source":"cartoes_faturas.tenant_id","category":"INFERABLE_WITH_RULE"},
+    {"level":6,"tables":["audit_log"],"source":"row.user_id -> tenant (best-effort; may remain NULL for system events)","category":"INFERABLE_WITH_RULE"}
+  ],
+  "per_table_contract": {
+    "conceptual_query": "UPDATE t SET tenant_id = derive(t) WHERE tenant_id IS NULL AND <batch predicate>",
+    "idempotency": "WHERE tenant_id IS NULL guarantees idempotency",
+    "shadow_validation": "count rows without tenant before vs after; compare per-user distributions",
+    "orphan_handling": "row remains tenant_id=NULL; enters quarantine_orphans (conceptual) for human review",
+    "ambiguous_handling": "NEVER auto-assign; write to quarantine_ambiguous (conceptual) with all candidate tenants",
+    "rollback": "UPDATE t SET tenant_id = NULL for rows tagged in backfill_batch table",
+    "evidence": ["pre-count","post-count","orphan-count","ambiguous-count","checksum","duration","batch log"]
+  },
+  "expected_orphans_estimate": 0,
+  "expected_ambiguous_estimate": 0,
+  "human_approval_required_before_execution": true
+}

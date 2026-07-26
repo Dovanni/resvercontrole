@@ -1,0 +1,48 @@
+{
+  "strategy": "Expand-Transition-Contract with per-tenant feature flag + shadow read + dual validation",
+  "phases": [
+    {
+      "phase": "EXPAND",
+      "goal": "Add new objects and nullable columns without changing behavior",
+      "actions": [
+        "create tenants, tenant_memberships, user_tenant_preferences, tenant_invitations, tenant_audit_events",
+        "add tenant_id nullable + index on 22 TENANT_OWNED tables",
+        "create authorization helper functions (unused by policies yet)",
+        "create feature flag + kill switch table (all flags OFF by default)"
+      ],
+      "policies_touched": "none (existing user_id policies remain authoritative)",
+      "reversibility": "FULLY_REVERSIBLE",
+      "kill_switch": "MULTITENANT_SCHEMA_ENABLED"
+    },
+    {
+      "phase": "TRANSITION",
+      "goal": "Populate tenant_id, validate parity, enable shadow reads",
+      "actions": [
+        "provision one tenant + OWNER membership per current user",
+        "backfill tenant_id per matrix (artifact 07)",
+        "enable Shadow Read on pilot routes (artifact 11)",
+        "enable Dual Validation (compare legacy vs candidate authorization)",
+        "collect divergence metrics"
+      ],
+      "policies_touched": "additive: new membership-based policies exist alongside legacy but are not yet the source of truth",
+      "reversibility": "REVERSIBLE_WITH_CONTROLS (flags off + preserve columns)",
+      "kill_switch": "MULTITENANT_SHADOW_READ_ENABLED, MULTITENANT_TENANT_CONTEXT_ENABLED"
+    },
+    {
+      "phase": "CONTRACT",
+      "goal": "Switch authoritative reads/writes to tenant-based",
+      "actions": [
+        "make tenant_id NOT NULL after 100% backfill proven",
+        "swap RLS: membership policies become authoritative; legacy user_id policies kept as compatibility for authorship",
+        "enable Storage tenant-scoped paths",
+        "enable invitations UI",
+        "keep user_id column for authorship (do not drop)"
+      ],
+      "policies_touched": "membership-based becomes primary",
+      "reversibility": "DATA_PRESERVING_ROLLBACK_ONLY",
+      "kill_switch": "MULTITENANT_RLS_ENABLED"
+    }
+  ],
+  "zero_breaking_changes": true,
+  "compatibility_layer": "During Expand/Transition, every read continues via legacy path; every write populates both columns when tenant is resolvable."
+}

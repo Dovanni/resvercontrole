@@ -1,0 +1,30 @@
+{
+  "storage": "server-side table multitenancy_feature_flags (conceptual); no client-writable path",
+  "flags": [
+    {"name":"MULTITENANT_SCHEMA_ENABLED","scope":"global","default":false,"purpose":"gate structural presence"},
+    {"name":"MULTITENANT_SHADOW_READ_ENABLED","scope":"global+per_tenant+per_user","default":false},
+    {"name":"MULTITENANT_DUAL_WRITE_ENABLED","scope":"global+per_tenant","default":false,"note":"not first activation"},
+    {"name":"MULTITENANT_TENANT_CONTEXT_ENABLED","scope":"per_tenant+per_user","default":false},
+    {"name":"MULTITENANT_RLS_ENABLED","scope":"per_tenant","default":false},
+    {"name":"MULTITENANT_STORAGE_ENABLED","scope":"per_tenant","default":false},
+    {"name":"MULTITENANT_INVITES_ENABLED","scope":"per_tenant","default":false},
+    {"name":"MULTITENANT_SELECTOR_ENABLED","scope":"per_user","default":false}
+  ],
+  "kill_switches": [
+    "disable_new_tenants",
+    "disable_invitations",
+    "freeze_backfill",
+    "force_legacy_read_path",
+    "force_legacy_write_path",
+    "revoke_all_tenant_context"
+  ],
+  "controls": {
+    "source_of_truth": "database table read server-side only",
+    "cache": "in-memory per request; TTL 30s max",
+    "audit": "every flag/kill change writes tenant_audit_events (or platform_audit for global)",
+    "authorization_to_change": "HUMAN-SO-01 + dual-control per SOCC contract",
+    "fallback_on_error": "flag treated as OFF (fail-closed)",
+    "propagation": "server-only; never inlined into client bundles",
+    "kill_switch_behavior": "immediate; forces legacy path within 1 request cycle"
+  }
+}

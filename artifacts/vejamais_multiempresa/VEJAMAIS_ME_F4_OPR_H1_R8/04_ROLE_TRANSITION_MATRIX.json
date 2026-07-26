@@ -1,0 +1,19 @@
+{
+  "current_enum": ["admin","vendedor"],
+  "target_enum": ["OWNER","ADMIN","MANAGER","OPERATOR","VIEWER"],
+  "mapping": [
+    {"from":"admin","to":"OWNER","scope_from":"global-per-user","scope_to":"per-tenant","condition":"user is the sole implicit owner of the tenant derived from their data","privilege_delta":"+tenant lifecycle, -global","risk":"MEDIUM","approval_required":true},
+    {"from":"admin","to":"ADMIN","scope_from":"global","scope_to":"per-tenant","condition":"secondary admins after an OWNER is designated","privilege_delta":"neutral within tenant","risk":"LOW","approval_required":true},
+    {"from":"vendedor","to":"OPERATOR","scope_from":"global","scope_to":"per-tenant","privilege_delta":"scope reduced to tenant","risk":"LOW","approval_required":false},
+    {"from":"<null>","to":"VIEWER_or_no_membership","condition":"user without role today","privilege_delta":"defer","risk":"MEDIUM","approval_required":true}
+  ],
+  "platform_role": {
+    "name": "HUMAN-SO-01 Platform Owner",
+    "location": "OUTSIDE tenant_memberships",
+    "rule": "never automatically granted access to any tenant private data"
+  },
+  "unknown_role_handling": "reject at read; treat as no-membership; audit event ROLE_UNKNOWN",
+  "user_without_role_handling": "no tenant access; onboarding required",
+  "enum_migration_strategy": "additive: create tenant_role_enum separate from app_role; keep app_role until Contract phase; never rename in-place",
+  "code_legacy_compat": "existing UI checks against app_role continue to work; new checks read from tenant_memberships behind feature flag"
+}

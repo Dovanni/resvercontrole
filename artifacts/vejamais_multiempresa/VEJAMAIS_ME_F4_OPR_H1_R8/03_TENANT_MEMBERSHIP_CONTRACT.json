@@ -1,0 +1,46 @@
+{
+  "entity": "tenant_memberships",
+  "fields": [
+    {"name": "id", "type": "uuid", "pk": true, "default": "gen_random_uuid()"},
+    {"name": "tenant_id", "type": "uuid", "nullable": false, "fk": "tenants(id)", "on_delete": "RESTRICT"},
+    {"name": "user_id", "type": "uuid", "nullable": false, "fk": "auth.users(id)", "on_delete": "RESTRICT"},
+    {"name": "role", "type": "tenant_role_enum", "nullable": false, "domain": ["OWNER","ADMIN","MANAGER","OPERATOR","VIEWER"]},
+    {"name": "status", "type": "membership_status_enum", "nullable": false, "default": "ACTIVE", "domain": ["INVITED","ACTIVE","SUSPENDED","REVOKED","EXPIRED"]},
+    {"name": "invited_by", "type": "uuid", "nullable": true, "fk": "auth.users(id)"},
+    {"name": "activated_at", "type": "timestamptz", "nullable": true},
+    {"name": "suspended_at", "type": "timestamptz", "nullable": true},
+    {"name": "revoked_at", "type": "timestamptz", "nullable": true},
+    {"name": "created_at", "type": "timestamptz", "default": "now()"},
+    {"name": "updated_at", "type": "timestamptz", "default": "now()"},
+    {"name": "version", "type": "integer", "default": 1}
+  ],
+  "constraints": [
+    {"type": "unique", "columns": ["tenant_id","user_id"], "where": "status IN ('INVITED','ACTIVE','SUSPENDED')", "purpose": "one active-ish membership per pair"},
+    {"type": "check", "expr": "role IN domain"},
+    {"type": "check", "expr": "status IN domain"}
+  ],
+  "indexes": [
+    ["tenant_id","status"],
+    ["user_id","status"],
+    ["tenant_id","role","status"]
+  ],
+  "invariants": [
+    "At least one OWNER ACTIVE per tenant while tenant status <> CLOSED",
+    "OWNER cannot self-demote if last OWNER",
+    "OWNER cannot self-revoke if last OWNER",
+    "role change requires ADMIN+ in same tenant",
+    "no self-elevation: caller's target role <= caller's own role",
+    "SUSPENDED user cannot perform any tenant-scoped operation",
+    "REVOKED is terminal; reactivation requires new membership row",
+    "membership grants no cross-tenant privileges"
+  ],
+  "role_definitions": {
+    "OWNER": "Full control; billing; tenant lifecycle; sole role able to promote other OWNER",
+    "ADMIN": "Manages memberships (except OWNER), settings, all data",
+    "MANAGER": "Business operations across all domains; no user administration",
+    "OPERATOR": "Day-to-day CRUD on operational data (sales, purchases, receivables)",
+    "VIEWER": "Read-only across authorized tenant data"
+  },
+  "support_access_rule": "Platform operator (HUMAN-SO-01) MUST NOT be in tenant_memberships by default. Any exceptional access requires justified, time-limited, audited grant.",
+  "legacy_compat": "user_roles table retained read-only during Expand; new authorization sourced exclusively from tenant_memberships once flag MULTITENANT_RLS_ENABLED is on per-tenant."
+}

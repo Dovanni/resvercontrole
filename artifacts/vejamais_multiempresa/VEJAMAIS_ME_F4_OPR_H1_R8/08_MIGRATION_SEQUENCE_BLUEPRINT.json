@@ -1,0 +1,20 @@
+{
+  "policy": "CONCEPTUAL_ONLY_NO_SQL_FILES",
+  "sequence": [
+    {"id":"M01","objective":"additive enums and types","objects":["tenant_status_enum","tenant_role_enum","membership_status_enum","invitation_status_enum"],"deps":[],"risk":"LOW","lock":"ACCESS EXCLUSIVE brief","reversible":"YES via DROP TYPE","rollback":"DROP TYPE if unreferenced","test":"enum values match target","gate":"H1-R10"},
+    {"id":"M02","objective":"tenants table","objects":["tenants"],"deps":["M01"],"risk":"LOW","lock":"none on existing tables","reversible":"YES","rollback":"DROP TABLE tenants","test":"schema contract","gate":"H1-R10"},
+    {"id":"M03","objective":"tenant_memberships","objects":["tenant_memberships","indexes"],"deps":["M02"],"risk":"LOW","reversible":"YES","gate":"H1-R10"},
+    {"id":"M04","objective":"user_tenant_preferences","objects":["user_tenant_preferences"],"deps":["M02"],"risk":"LOW","reversible":"YES","gate":"H1-R10"},
+    {"id":"M05","objective":"tenant_invitations","objects":["tenant_invitations"],"deps":["M02"],"risk":"LOW","reversible":"YES","gate":"H1-R10"},
+    {"id":"M06","objective":"tenant_audit_events + audit_log.tenant_id nullable","objects":["tenant_audit_events","audit_log ADD COLUMN"],"deps":["M02"],"risk":"MEDIUM","lock":"brief on audit_log","reversible":"YES","gate":"H1-R10"},
+    {"id":"M07","objective":"feature flags + kill switch table","objects":["multitenancy_feature_flags","multitenancy_kill_switches"],"deps":[],"risk":"LOW","reversible":"YES","gate":"H1-R10"},
+    {"id":"M08","objective":"tenant_id nullable on pilot domain (company_settings, products)","objects":["ALTER TABLE ADD COLUMN tenant_id","indexes"],"deps":["M02"],"risk":"MEDIUM","lock":"ADD COLUMN nullable = fast","reversible":"YES","gate":"H1-R10"},
+    {"id":"M09","objective":"authorization helper functions","objects":["has_active_membership","has_role_in_tenant","current_active_tenant","can_access_tenant_record","can_manage_memberships"],"deps":["M03","M04"],"risk":"LOW","reversible":"YES","gate":"H1-R10"},
+    {"id":"M10","objective":"shadow/dual validation policies (additive, not authoritative)","objects":["additive RLS policies gated by flags"],"deps":["M08","M09"],"risk":"MEDIUM","reversible":"YES","gate":"H1-R10"},
+    {"id":"M11","objective":"backfill simulator staging table + procedures","objects":["backfill_checkpoints","quarantine_orphans","quarantine_ambiguous"],"deps":["M08"],"risk":"MEDIUM","reversible":"YES","gate":"H1-R11"},
+    {"id":"M12","objective":"progressive constraints","objects":["NOT NULL tenant_id after 100% backfill","CHECK triggers preventing tenant mutation"],"deps":["M11"],"risk":"HIGH","reversible":"REVERSIBLE_WITH_CONTROLS","gate":"H1-R13"},
+    {"id":"M13","objective":"expand tenant_id to remaining tables","objects":["ALTER TABLE across the 22 tables"],"deps":["M12"],"risk":"HIGH","reversible":"YES structurally","gate":"H1-R13"},
+    {"id":"M14","objective":"Storage tenant-scoped policies","objects":["storage policies referencing tenant path prefix"],"deps":["M13"],"risk":"HIGH","reversible":"YES","gate":"H1-R14"},
+    {"id":"M15","objective":"Contract (authoritative RLS swap)","objects":["swap primary RLS to membership-based; keep legacy compatibility"],"deps":["M13","M14"],"risk":"CRITICAL","reversible":"DATA_PRESERVING_ROLLBACK_ONLY","gate":"H1-R14"}
+  ]
+}
