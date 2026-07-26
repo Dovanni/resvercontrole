@@ -1,0 +1,23 @@
+{
+  "visual_rebranding_published": true,
+  "visual_rebranding_post_production_validated": true,
+  "logo_published": true,
+  "favicon_published": true,
+  "logo_and_favicon_post_production_validated": true,
+  "public_brand_rose_visible": false,
+  "canonical_brand_vejamais_visible": true,
+  "palette": {
+    "primary": "#22C55E",
+    "primary_hover": "#16A34A",
+    "secondary": "#0F3D36",
+    "background": "#F1FAF5",
+    "surface": "#FFFFFF",
+    "accent": "#7C3AED",
+    "warning": "#F59E0B",
+    "error": "#EF4444"
+  },
+  "palette_changed_in_this_gate": false,
+  "style_files_changed": 0,
+  "component_files_changed": 0,
+  "manifest_files_changed": 0
+}

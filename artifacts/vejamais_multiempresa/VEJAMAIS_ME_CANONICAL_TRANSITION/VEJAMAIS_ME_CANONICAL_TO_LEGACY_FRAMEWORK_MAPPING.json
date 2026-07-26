@@ -1,0 +1,26 @@
+{
+  "canonical_prefix": "VEJAMAIS-ME",
+  "legacy_prefix": "ROSE-ME",
+  "rename_previous_frameworks": false,
+  "mapping": [
+    {"canonical": "VEJAMAIS-ME-F0", "legacy": "ROSE-ME-F0"},
+    {"canonical": "VEJAMAIS-ME-F0-V1", "legacy": "ROSE-ME-F0-V1"},
+    {"canonical": "VEJAMAIS-ME-F1", "legacy": "ROSE-ME-F1"},
+    {"canonical": "VEJAMAIS-ME-F2", "legacy": "ROSE-ME-F2"},
+    {"canonical": "VEJAMAIS-ME-F3", "legacy": "ROSE-ME-F3"},
+    {"canonical": "VEJAMAIS-ME-F3-V1", "legacy": "ROSE-ME-F3-V1"},
+    {"canonical": "VEJAMAIS-ME-F3-V1-CHECKS-R1", "legacy": "ROSE-ME-F3-V1-CHECKS-R1"},
+    {"canonical": "VEJAMAIS-ME-F4-OPRA", "legacy": "ROSE-ME-F4-OPRA"},
+    {"canonical": "VEJAMAIS-ME-F4-OPR-H1", "legacy": "ROSE-ME-F4-OPR-H1"},
+    {"canonical": "VEJAMAIS-ME-F4-OPR-H1-R1", "legacy": "ROSE-ME-F4-OPR-H1-R1"},
+    {"canonical": "VEJAMAIS-ME-F4-OPR-H1-R2", "legacy": "ROSE-ME-F4-OPR-H1-R2"}
+  ],
+  "mandatory_fields_in_future_gates": [
+    "canonical_framework_id",
+    "legacy_framework_reference",
+    "canonical_application_name",
+    "legacy_application_name",
+    "canonical_domain",
+    "current_environment_code"
+  ]
+}
