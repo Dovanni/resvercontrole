@@ -77,16 +77,16 @@ function AuthPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           {brand.logo ? (
-            <img src={brand.logo} alt={brand.name || "Logo"} className="mx-auto mb-4 max-h-20 w-auto object-contain rounded-2xl" />
+            <img src={brand.logo} alt={brand.name || "Vejamais"} className="mx-auto mb-4 max-h-20 w-auto object-contain rounded-2xl" />
           ) : (
-            <div className="inline-flex items-center justify-center size-14 rounded-2xl bg-gradient-primary shadow-glow mb-4">
-              <Sparkles className="size-6 text-primary-foreground" />
+            <div className="mx-auto mb-4 flex justify-center">
+              <VejamaisMark size={64} className="rounded-2xl shadow-glow" />
             </div>
           )}
           <h1 className="font-display text-4xl text-foreground">
             {brand.name || "Vejamais"}
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">Gestão comercial e financeira do seu negócio</p>
+          <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Gestão Comercial e Financeira</p>
         </div>
 
         <div className="rounded-2xl bg-card shadow-soft border p-6">
