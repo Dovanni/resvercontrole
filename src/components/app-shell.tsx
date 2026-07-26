@@ -77,9 +77,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex-1 flex flex-col min-w-0">
         <header className="border-b px-4 py-3 flex items-center justify-between bg-sidebar md:bg-background md:border-transparent">
           <div className="flex items-center gap-2 md:hidden">
-            <div className="size-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-              <Sparkles className="size-4 text-primary-foreground" />
-            </div>
+            <VejamaisMark size={32} className="rounded-lg" />
             <span className="font-display text-xl">Vejamais</span>
           </div>
           <div className="md:ml-auto flex items-center gap-1">
