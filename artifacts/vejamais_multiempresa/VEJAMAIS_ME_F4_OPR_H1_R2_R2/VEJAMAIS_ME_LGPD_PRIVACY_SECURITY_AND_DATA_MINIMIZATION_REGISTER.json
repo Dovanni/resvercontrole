@@ -1,0 +1,37 @@
+{
+  "LGPD_by_design": true,
+  "LGPD_by_default": true,
+  "principles": [
+    "finalidade","adequacao","necessidade","livre_acesso","qualidade","transparencia",
+    "seguranca","prevencao","nao_discriminacao","responsabilizacao","minimizacao",
+    "retencao_controlada","protecao_desde_concepcao","configuracoes_protetivas_por_padrao"
+  ],
+  "data_minimization_required": true,
+  "purpose_limitation_required": true,
+  "retention_policy_required": true,
+  "data_subject_rights_supported": true,
+  "privacy_notice_required": true,
+  "security_incident_process_required": true,
+  "RIPD_required_when_risk_demands": true,
+  "privacy_bypass_allowed": false,
+  "audit_required": true,
+  "audit_bypass_allowed": false,
+  "audit_deletion_by_operator_allowed": false,
+  "audit_tampering_allowed": false,
+  "sensitive_payload_logging_allowed": false,
+  "audit_minimum_fields": [
+    "actor","role","affected_tenant","action","resource","timestamp","result","origin",
+    "justification","support_session","authorization_id","rollback_reference"
+  ],
+  "prohibited_log_fields": [
+    "password","token","secret","credential","full_card_number",
+    "unnecessary_full_document","unnecessary_pii_body","unnecessary_full_financial_payload"
+  ],
+  "uncontrolled_irreversible_deletion_allowed": false,
+  "tenant_hard_delete_default": "DENIED",
+  "user_hard_delete_default": "DENIED",
+  "soft_delete_preferred": true,
+  "legal_retention_must_be_evaluated": true,
+  "backup_before_destructive_action_required": true,
+  "recovery_window_required_when_applicable": true
+}

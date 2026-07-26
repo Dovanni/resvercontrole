@@ -1,0 +1,32 @@
+{
+  "restricted_data_categories": [
+    "accounts_payable","accounts_receivable","cash_flow","bank_accounts","cards","balances",
+    "sales","margins","costs","profits","suppliers","customers","fiscal_documents","reports",
+    "files","personal_data","security_logs","credentials","tokens","integrations","auth_data",
+    "exports","backups"
+  ],
+  "restricted_data_requires_explicit_purpose": true,
+  "restricted_data_requires_authorized_role": true,
+  "restricted_data_requires_active_membership": true,
+  "restricted_data_requires_tenant_match": true,
+  "restricted_data_access_is_auditable": true,
+  "password_read_access_allowed": false,
+  "secret_read_access_allowed": false,
+  "full_card_data_storage_allowed": false,
+  "future_role_model": [
+    "PLATFORM_OWNER","TENANT_ADMIN","TENANT_MANAGER","TENANT_OPERATOR","TENANT_VIEWER",
+    "SUPPORT_SESSION","SYSTEM_AUTOMATION"
+  ],
+  "roles_implemented_in_this_gate": false,
+  "automatic_platform_owner_tenant_data_access": false,
+  "support_access_default": "DENIED",
+  "support_access_requires_justification": true,
+  "support_access_requires_tenant_scope": true,
+  "support_access_requires_expiration": true,
+  "support_access_requires_reauthentication": true,
+  "support_access_requires_audit": true,
+  "support_access_must_be_revoked_after_use": true,
+  "silent_permanent_support_backdoor_allowed": false,
+  "support_access_may_benefit_other_tenant": false,
+  "support_mechanism_created_in_this_gate": false
+}

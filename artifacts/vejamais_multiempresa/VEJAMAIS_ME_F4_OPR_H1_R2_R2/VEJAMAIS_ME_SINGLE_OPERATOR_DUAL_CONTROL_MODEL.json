@@ -1,0 +1,31 @@
+{
+  "model_name": "SINGLE_OPERATOR_DUAL_CONTROL",
+  "replaces": "HUMAN_FOUR_EYES",
+  "equivalent_to_human_independence": false,
+  "single_operator_dual_control_required": true,
+  "single_operator_dual_control_defined": true,
+  "single_operator_dual_control_operational": false,
+  "flow": [
+    "1_formal_scope_definition",
+    "2_risk_classification",
+    "3_backup",
+    "4_isolated_implementation",
+    "5_automated_tests",
+    "6_package_closure",
+    "7_hash_generation",
+    "8_temporal_review_pause",
+    "9_explicit_operator_reauthorization",
+    "10_controlled_execution",
+    "11_post_execution_validation",
+    "12_rollback_availability",
+    "13_evidence_recording"
+  ],
+  "same_moment_prepare_execute_publish_allowed": false,
+  "temporal_separation_required_for_critical_changes": true,
+  "immutable_execution_package_required": true,
+  "automated_verification_required": true,
+  "explicit_final_authorization_required": true,
+  "post_execution_validation_required": true,
+  "rollback_readiness_required": true,
+  "human_independence_claimed": false
+}

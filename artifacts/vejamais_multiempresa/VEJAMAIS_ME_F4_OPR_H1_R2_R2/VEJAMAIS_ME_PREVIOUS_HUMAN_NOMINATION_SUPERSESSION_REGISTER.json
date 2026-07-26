@@ -1,0 +1,18 @@
+{
+  "previous_gates_preserved": ["VEJAMAIS-ME-F4-OPR-H1-R2", "VEJAMAIS-ME-F4-OPR-H1-R2-R1"],
+  "previous_three_person_nominations_status": "DOCUMENTARY_PROPOSAL_NOT_OPERATIONALLY_APPLICABLE_TO_CURRENT_SINGLE_OPERATOR_REALITY",
+  "previous_nominees_deleted": false,
+  "previous_artifacts_modified": 0,
+  "previous_hashes_changed": 0,
+  "previous_roles_activated": 0,
+  "previous_acceptances_required_for_current_model": 0,
+  "previous_acceptances_received": 0,
+  "previous_authorities_active": 0,
+  "H1_R3_MULTI_PERSON_ACCEPTANCE_GATE_SUPERSEDED": true,
+  "superseding_gate": "VEJAMAIS-ME-F4-OPR-H1-R2-R2",
+  "previous_nominees_reference_only": [
+    {"code": "HUMAN-A", "name": "Antonio Roberto Rodrigues", "current_operational_role": "CANONICAL_SINGLE_OPERATOR"},
+    {"code": "HUMAN-B", "name": "Emerson Vinicius Momo Rodrigues", "current_operational_role": "NOT_APPLICABLE_UNDER_SINGLE_OPERATOR_MODEL"},
+    {"code": "HUMAN-C", "name": "Angela Maria Momo Rodrigues", "current_operational_role": "NOT_APPLICABLE_UNDER_SINGLE_OPERATOR_MODEL"}
+  ]
+}
