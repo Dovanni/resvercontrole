@@ -1,0 +1,18 @@
+{
+  "security_contracts_complete": true,
+  "tenant_isolation_contracts_complete": true,
+  "contracts": [
+    {"id":"SC-01","rule":"tenant_id enviado pelo navegador nunca é fonte de confiança"},
+    {"id":"SC-02","rule":"membership ativa verificada no banco"},
+    {"id":"SC-03","rule":"role validada no servidor ou banco"},
+    {"id":"SC-04","rule":"Platform Owner sem acesso automático a conteúdo privado"},
+    {"id":"SC-05","rule":"service_role nunca exposto ao cliente"},
+    {"id":"SC-06","rule":"cada ação administrativa deve ter tenant_scope explícito"},
+    {"id":"SC-07","rule":"cross-tenant negado por padrão"},
+    {"id":"SC-08","rule":"logs sem senhas, tokens ou payloads sensíveis"},
+    {"id":"SC-09","rule":"evidência com dado pessoal deve ser minimizada ou redigida"},
+    {"id":"SC-10","rule":"qualquer divergência crítica interrompe execução"},
+    {"id":"SC-11","rule":"nenhuma autorização genérica permite migration/backfill/produção"},
+    {"id":"SC-12","rule":"mudanças de pacote invalidam autorização anterior"}
+  ]
+}

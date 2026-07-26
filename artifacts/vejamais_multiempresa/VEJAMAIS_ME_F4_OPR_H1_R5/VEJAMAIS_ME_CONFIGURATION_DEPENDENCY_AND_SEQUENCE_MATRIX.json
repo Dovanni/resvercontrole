@@ -1,0 +1,13 @@
+{
+  "sequence": ["CP-A","CP-E","CP-B","CP-C","CP-D","CP-F","CP-G"],
+  "no_package_implemented_now": true,
+  "dependencies": {
+    "CP-A": [],
+    "CP-E": ["CP-A"],
+    "CP-B": ["CP-A","CP-E"],
+    "CP-C": ["CP-B"],
+    "CP-D": ["CP-C"],
+    "CP-F": ["CP-D"],
+    "CP-G": ["CP-F"]
+  }
+}

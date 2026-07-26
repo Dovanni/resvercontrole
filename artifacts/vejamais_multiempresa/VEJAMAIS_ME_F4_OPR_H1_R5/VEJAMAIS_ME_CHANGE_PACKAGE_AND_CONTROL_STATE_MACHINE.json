@@ -1,0 +1,32 @@
+{
+  "change_package_states_defined": 18,
+  "change_package_states": ["DRAFT","RISK_CLASSIFIED","PRECONDITIONS_PENDING","PRECONDITIONS_SATISFIED","IMPLEMENTATION_IN_PROGRESS","VERIFICATION_PENDING","VERIFICATION_FAILED","PACKAGE_FROZEN","TEMPORAL_REVIEW_PENDING","FINAL_AUTHORIZATION_PENDING","AUTHORIZED","EXECUTION_IN_PROGRESS","POST_VALIDATION_PENDING","ROLLBACK_REQUIRED","ROLLED_BACK","HOMOLOGATED","CANCELLED","EXPIRED"],
+  "change_package_rules": [
+    "DRAFT cannot execute",
+    "PACKAGE_FROZEN cannot be altered",
+    "any alteration after freeze creates new version and new hash",
+    "expired authorization cannot be reused",
+    "AUTHORIZED does not imply production authorization when environment is not production",
+    "VERIFICATION_FAILED blocks continuity",
+    "ROLLBACK_REQUIRED blocks homologation",
+    "HOMOLOGATED requires approved post-execution validation"
+  ],
+  "control_states_defined": 8,
+  "control_states": ["DEFINED","PLANNED","CONFIGURED","TESTED_PASS","TESTED_FAIL","OPERATIONAL","SUSPENDED","RETIRED"],
+  "control_transitions_allowed": [
+    "DEFINED->PLANNED",
+    "PLANNED->CONFIGURED",
+    "CONFIGURED->TESTED_PASS",
+    "CONFIGURED->TESTED_FAIL",
+    "TESTED_PASS->OPERATIONAL",
+    "OPERATIONAL->SUSPENDED",
+    "SUSPENDED->CONFIGURED",
+    "SUSPENDED->RETIRED"
+  ],
+  "control_transitions_forbidden": [
+    "PLANNED->OPERATIONAL",
+    "CONFIGURED->OPERATIONAL_WITHOUT_TEST",
+    "TESTED_FAIL->OPERATIONAL"
+  ],
+  "controls_state_current_all": "PLANNED"
+}

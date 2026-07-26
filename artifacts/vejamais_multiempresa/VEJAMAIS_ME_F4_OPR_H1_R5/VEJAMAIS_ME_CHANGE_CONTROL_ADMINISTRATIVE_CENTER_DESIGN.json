@@ -1,0 +1,19 @@
+{
+  "administrative_center_design_complete": true,
+  "implemented_now": false,
+  "name": "CENTRAL_DE_CONTROLE_DE_MUDANCAS",
+  "audience": "PLATFORM_OWNER_ONLY",
+  "sections": ["Pacotes","Risco","Controles","Evidencias","Autorizacoes","Execucoes","Rollbacks","Nao_regressao","Isolamento_de_tenants","Auditoria"],
+  "requirements": [
+    "acesso_restrito",
+    "reautenticacao_para_acoes_criticas",
+    "nenhuma_exibicao_de_secrets",
+    "nenhuma_exposicao_indevida_de_dados_privados",
+    "confirmacao_reforcada",
+    "status_claros",
+    "justificativa_obrigatoria",
+    "trilha_de_auditoria",
+    "acessibilidade",
+    "responsividade"
+  ]
+}

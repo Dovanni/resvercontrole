@@ -1,0 +1,29 @@
+{
+  "test_catalog_defined": true,
+  "tests_inventory": 20,
+  "tests_executed": 0,
+  "tests_passed": 0,
+  "tests_failed": 0,
+  "tests": [
+    {"id":"TEST-01","description":"pacote sem escopo deve ser bloqueado","expected":"BLOCKED"},
+    {"id":"TEST-02","description":"risco ausente deve bloquear","expected":"BLOCKED"},
+    {"id":"TEST-03","description":"hash divergente deve bloquear","expected":"BLOCKED"},
+    {"id":"TEST-04","description":"alteração pós-autorização invalida pacote","expected":"INVALIDATED"},
+    {"id":"TEST-05","description":"typecheck com falha deve bloquear","expected":"BLOCKED"},
+    {"id":"TEST-06","description":"build com falha deve bloquear","expected":"BLOCKED"},
+    {"id":"TEST-07","description":"acesso cross-tenant sintético negado","expected":"DENIED"},
+    {"id":"TEST-08","description":"membership inválida deve ser negada","expected":"DENIED"},
+    {"id":"TEST-09","description":"backup ausente bloqueia mudança aplicável","expected":"BLOCKED"},
+    {"id":"TEST-10","description":"restore não comprovado bloqueia risco crítico","expected":"BLOCKED"},
+    {"id":"TEST-11","description":"feature flag desativada oculta função","expected":"FEATURE_DISABLED"},
+    {"id":"TEST-12","description":"kill switch interrompe comportamento","expected":"STOPPED"},
+    {"id":"TEST-13","description":"rollback restaura estado anterior","expected":"RESTORED"},
+    {"id":"TEST-14","description":"tentativa de alterar evidência é negada","expected":"DENIED"},
+    {"id":"TEST-15","description":"variação financeira não autorizada bloqueia","expected":"BLOCKED"},
+    {"id":"TEST-16","description":"migration sem autorização específica bloqueia","expected":"BLOCKED"},
+    {"id":"TEST-17","description":"backfill sem autorização específica bloqueia","expected":"BLOCKED"},
+    {"id":"TEST-18","description":"produção sem autorização específica bloqueia","expected":"BLOCKED"},
+    {"id":"TEST-19","description":"risco extremo exige revisão externa","expected":"EXTERNAL_REVIEW_REQUIRED"},
+    {"id":"TEST-20","description":"service_role no navegador falha auditoria","expected":"AUDIT_FAIL"}
+  ]
+}

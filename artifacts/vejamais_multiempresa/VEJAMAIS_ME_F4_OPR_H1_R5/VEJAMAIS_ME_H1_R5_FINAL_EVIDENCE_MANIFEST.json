@@ -1,0 +1,25 @@
+{
+  "framework":"VEJAMAIS-ME-F4-OPR-H1-R5",
+  "version":"1.0",
+  "files":{
+    "technical_document":{"path":"docs/VEJAMAIS_ME_F4_OPR_H1_R5_SINGLE_OPERATOR_COMPENSATING_CONTROL_CONFIGURATION_PACKAGE_DESIGN_v1.md","sha256":"ed670cb586fb0bb23659d312d90f3dc2ac2f29e94ad73c16f77ec0397c3307e4"},
+    "canonical_object_catalog":{"sha256":"40a621c44ea13ab67b1c509298e130112858269d6842fa1ee4c1660353f3078b"},
+    "state_machine":{"sha256":"02569238724ffe4ff0fd24c60f9753b111fcc9d7d9a069042782a44ff0af0d7c"},
+    "technical_component_catalog":{"sha256":"97ad39099ec3506d79e2b67cebef227684c6afeb8a0e409798d8535915a98edd"},
+    "file_structure_design":{"sha256":"6757383547328688d11eb13dfd55900b627b04fbd8b5a04bc11fd9085ad4cdc7"},
+    "security_contracts":{"sha256":"f68e067f4fd3af408a7380e6935b6c48669fdc2766ff28911b365df81aed4ef5"},
+    "lgpd_contracts":{"sha256":"309b0da421d0bd32c3ee441e6c54cb0194e95cf36d32e6a84ac12f61495cd896"},
+    "control_configuration_matrix":{"sha256":"0ff112f14c1ca0803d4d6b3098b3b2b2d5581b7a240206f77d4ee70ffde5665a"},
+    "configuration_package_catalog":{"sha256":"bd62dff3e2d3dc87bc91ee1b522411b7ebea84c10e238fdbc979236bcdd74cd9"},
+    "dependency_sequence_matrix":{"sha256":"9af0b28875ea7de39c79516a4b962652b56bb388ce448be84f7fb1aa89c5d4c8"},
+    "test_catalog":{"sha256":"27fa3ca1af19d91bbad6a8e5e0ba6addf1a7234472641bfccae390f516cc2744"},
+    "administrative_center_design":{"sha256":"8e71eb0958dfce770d3252879a32ebbd89ee98ac821c6032695142b12041fe98"},
+    "decision_readiness":{"sha256":"155a3c302fa4e4b006ea88845dddfbe634d7055b86dc2762a16625968d36f458"}
+  },
+  "total_files_created":14,
+  "files_modified":0,
+  "functional_code_files_changed":0,
+  "baseline_sha256":"689af23fb305255932cf86b48d4774775877d4a65061528e11b61487192a9a39",
+  "baseline_changed":false,
+  "parent_final_evidence_manifest_sha256":"b8a072324ba8db9fe90c3a06ee4513560aa2a34a8f113f7f6d243c542556bdcb"
+}

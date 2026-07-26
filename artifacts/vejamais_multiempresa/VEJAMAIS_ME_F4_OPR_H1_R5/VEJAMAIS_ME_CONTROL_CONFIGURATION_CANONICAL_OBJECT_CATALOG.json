@@ -1,0 +1,14 @@
+{
+  "canonical_objects_defined": 8,
+  "objects": [
+    {"id":"CCP-01","name":"CHANGE_PACKAGE","fields":["change_package_id","framework_reference","title","description","scope","environment","tenant_scope","risk_level","affected_resources","affected_files","affected_tables","affected_policies","affected_routes","expected_behavior","forbidden_side_effects","prepared_by","prepared_at","status","version"]},
+    {"id":"CCP-02","name":"CONTROL_REQUIREMENT","fields":["control_id","control_version","applicable","applicability_reason","required_status","dependency_ids","blocking","validation_method","evidence_required"]},
+    {"id":"CCP-03","name":"PACKAGE_MANIFEST","fields":["file_path","file_sha256","size_bytes","operation_type","preexisting","authorized_change","generated_at"]},
+    {"id":"CCP-04","name":"AUTHORIZATION_RECORD","fields":["authorization_id","change_package_id","operator_code","authorization_scope","environment","package_sha256","authorized_at","expiration","revoked","revocation_reason"]},
+    {"id":"CCP-05","name":"CONTROL_EVIDENCE","fields":["evidence_id","control_id","change_package_id","evidence_type","evidence_reference","evidence_sha256","generated_at","contains_personal_data","contains_sensitive_data","redaction_applied"]},
+    {"id":"CCP-06","name":"EXECUTION_RECORD","fields":["execution_id","authorization_id","package_sha256","started_at","finished_at","status","result","rollback_required","rollback_reference"]},
+    {"id":"CCP-07","name":"POST_VALIDATION_RECORD","fields":["validation_id","execution_id","baseline_reference","comparison_reference","financial_variance","tenant_isolation_result","RLS_result","functional_result","final_decision"]},
+    {"id":"CCP-08","name":"ROLLBACK_RECORD","fields":["rollback_id","execution_id","trigger","authorization_reference","started_at","completed_at","restore_reference","result","post_rollback_validation"]}
+  ],
+  "implemented_now": false
+}
