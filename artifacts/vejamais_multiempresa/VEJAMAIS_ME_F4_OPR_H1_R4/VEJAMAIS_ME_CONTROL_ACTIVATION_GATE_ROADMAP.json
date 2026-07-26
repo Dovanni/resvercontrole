@@ -1,0 +1,19 @@
+{
+  "current_gate": "VEJAMAIS-ME-F4-OPR-H1-R4",
+  "gates": [
+    {"id":"VEJAMAIS-ME-F4-OPR-H1-R5","name":"SINGLE_OPERATOR_COMPENSATING_CONTROL_CONFIGURATION_PACKAGE_DESIGN","requires_explicit_human_authorization":true,"auto_start":false},
+    {"id":"VEJAMAIS-ME-F4-OPR-H1-R6","name":"SINGLE_OPERATOR_COMPENSATING_CONTROL_ISOLATED_IMPLEMENTATION_AUTHORIZATION","requires_explicit_human_authorization":true,"auto_start":false},
+    {"id":"VEJAMAIS-ME-F4-OPR-H1-R7","name":"SINGLE_OPERATOR_DUAL_CONTROL_SYNTHETIC_DRY_RUN_VALIDATION","requires_explicit_human_authorization":true,"auto_start":false},
+    {"id":"VEJAMAIS-ME-F4-OPR-H1-R8","name":"SINGLE_OPERATOR_HUMAN_GOVERNANCE_OPERATIONAL_READINESS_DECISION","requires_explicit_human_authorization":true,"auto_start":false}
+  ],
+  "no_gate_starts_automatically": true,
+  "preconditions_preserved": {
+    "OP-05":"BLOCKED_PENDING_FUTURE_SINGLE_OPERATOR_EXPLICIT_WINDOW_AUTHORIZATION",
+    "OP-06":"SATISFIED_BY_CANONICAL_SINGLE_OPERATOR_DESIGNATION_DOCUMENTALLY_ONLY",
+    "OP-07":"SUPERSEDED_BY_SINGLE_OPERATOR_DUAL_CONTROL_NOT_YET_OPERATIONAL",
+    "OP-12":"BLOCKED_NOT_GRANTED",
+    "OP-13":"BLOCKED_NOT_GRANTED",
+    "OP-14":"BLOCKED_NOT_GRANTED",
+    "OP-15":"BLOCKED_NOT_GRANTED"
+  }
+}

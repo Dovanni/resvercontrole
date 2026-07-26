@@ -1,0 +1,29 @@
+{
+  "tenant_isolation_test_plan_complete": true,
+  "LGPD_test_plan_complete": true,
+  "LGPD_test_plan_defined": true,
+  "RIPD_trigger_criteria_defined": true,
+  "privacy_controls_operational": false,
+  "tenant_isolation_assertions": [
+    "Empresa A não lê Empresa B",
+    "Empresa A não altera Empresa B",
+    "Empresa A não exporta Empresa B",
+    "Empresa A não recebe realtime da Empresa B",
+    "tenant_id do navegador não é confiável",
+    "membership validada no banco",
+    "role validada no banco",
+    "RLS permanece deny-by-default",
+    "platform owner sem acesso privado automático",
+    "suporte excepcional exige escopo e auditoria",
+    "logs não vazam dados privados",
+    "caches não misturam tenants",
+    "relatórios não agregam tenants sem autorização legítima"
+  ],
+  "lgpd_verifications": [
+    "minimização","finalidade","retenção","consentimento_quando_aplicavel",
+    "transparência","direitos_dos_titulares","exportação_restrita",
+    "exclusão_controlada","anonimização_quando_aplicavel",
+    "segurança_de_logs","proteção_de_backups","incident_response",
+    "suporte_temporário","prevenção_de_acesso_indevido"
+  ]
+}

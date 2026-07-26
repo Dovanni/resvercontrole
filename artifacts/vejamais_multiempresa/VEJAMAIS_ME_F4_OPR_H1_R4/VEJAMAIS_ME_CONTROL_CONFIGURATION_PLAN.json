@@ -1,0 +1,24 @@
+{
+  "control_activation_plan_complete": true,
+  "controls_configured_now": 0,
+  "configuration_targets": [
+    {"id":"SOCC-01","artifact":"change_package_template","owner":"HUMAN-SO-01","depends_on":[]},
+    {"id":"SOCC-02","artifact":"temporal_timestamps_registry","owner":"HUMAN-SO-01","depends_on":["SOCC-01"]},
+    {"id":"SOCC-03","artifact":"package_manifest_and_hash","owner":"HUMAN-SO-01","depends_on":["SOCC-01"]},
+    {"id":"SOCC-04","artifact":"ci_pipeline_definition","owner":"HUMAN-SO-01","depends_on":["SOCC-03"]},
+    {"id":"SOCC-05","artifact":"schema_rls_tenant_snapshot","owner":"HUMAN-SO-01","depends_on":["SOCC-04"]},
+    {"id":"SOCC-06","artifact":"backup_procedure","owner":"HUMAN-SO-01","depends_on":[]},
+    {"id":"SOCC-07","artifact":"restore_procedure_isolated","owner":"HUMAN-SO-01","depends_on":["SOCC-06"]},
+    {"id":"SOCC-08","artifact":"feature_flag_registry","owner":"HUMAN-SO-01","depends_on":[]},
+    {"id":"SOCC-09","artifact":"kill_switch_registry","owner":"HUMAN-SO-01","depends_on":["SOCC-08"]},
+    {"id":"SOCC-10","artifact":"rollback_playbook","owner":"HUMAN-SO-01","depends_on":["SOCC-03","SOCC-06"]},
+    {"id":"SOCC-11","artifact":"append_only_audit_channel","owner":"HUMAN-SO-01","depends_on":[]},
+    {"id":"SOCC-12","artifact":"financial_baseline_synthetic","owner":"HUMAN-SO-01","depends_on":["SOCC-05"]},
+    {"id":"SOCC-13","artifact":"pre_post_snapshot_procedure","owner":"HUMAN-SO-01","depends_on":["SOCC-05"]},
+    {"id":"SOCC-14","artifact":"fail_closed_rule_registry","owner":"HUMAN-SO-01","depends_on":["SOCC-04","SOCC-05"]},
+    {"id":"SOCC-15","artifact":"migration_gate_template","owner":"HUMAN-SO-01","depends_on":["SOCC-03","SOCC-06","SOCC-10"]},
+    {"id":"SOCC-16","artifact":"backfill_gate_template","owner":"HUMAN-SO-01","depends_on":["SOCC-15"]},
+    {"id":"SOCC-17","artifact":"production_publication_gate","owner":"HUMAN-SO-01","depends_on":["SOCC-03","SOCC-10"]},
+    {"id":"SOCC-18","artifact":"external_review_criteria","owner":"HUMAN-SO-01","depends_on":["SOCC-14"]}
+  ]
+}

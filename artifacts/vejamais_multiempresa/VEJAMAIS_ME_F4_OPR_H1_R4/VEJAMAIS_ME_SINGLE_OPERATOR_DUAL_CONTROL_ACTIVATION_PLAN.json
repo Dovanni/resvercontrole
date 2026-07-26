@@ -1,0 +1,29 @@
+{
+  "model_name": "SINGLE_OPERATOR_DUAL_CONTROL",
+  "dual_control_stages_inventory": 12,
+  "dual_control_activation_plan_defined": true,
+  "stages": [
+    {"id":"DC-01","name":"SCOPE_DECLARATION"},
+    {"id":"DC-02","name":"RISK_CLASSIFICATION"},
+    {"id":"DC-03","name":"PRECONDITION_VALIDATION"},
+    {"id":"DC-04","name":"ISOLATED_IMPLEMENTATION"},
+    {"id":"DC-05","name":"AUTOMATED_VERIFICATION"},
+    {"id":"DC-06","name":"PACKAGE_FREEZE"},
+    {"id":"DC-07","name":"TEMPORAL_REVIEW_PAUSE"},
+    {"id":"DC-08","name":"SECOND_MOMENT_HUMAN_REVIEW"},
+    {"id":"DC-09","name":"EXPLICIT_FINAL_AUTHORIZATION"},
+    {"id":"DC-10","name":"CONTROLLED_EXECUTION"},
+    {"id":"DC-11","name":"POST_EXECUTION_VALIDATION"},
+    {"id":"DC-12","name":"ROLLBACK_OR_HOMOLOGATION"}
+  ],
+  "same_session_preparation_and_critical_publication_allowed": false,
+  "package_change_after_authorization_allowed": false,
+  "revalidation_after_package_change_required": true,
+  "immutable_execution_package_required": true,
+  "temporal_separation_required": true,
+  "explicit_final_authorization_required": true,
+  "post_execution_validation_required": true,
+  "rollback_readiness_required": true,
+  "human_independence_claimed": false,
+  "single_operator_final_authority_preserved": true
+}

@@ -1,0 +1,15 @@
+{
+  "evidence_contract_complete": true,
+  "mandatory_fields_per_control": [
+    "control_id","version","status","change_package_id","environment",
+    "tenant_scope","risk_level","responsible_operator","configured_at",
+    "tested_at","test_result","evidence_reference","evidence_sha256",
+    "failure_reason","rollback_reference","expiration_or_review_date",
+    "independent_automation_result","final_human_authorization_id"
+  ],
+  "forbidden_fields": ["password","token","secret","full_card_number","unnecessary_sensitive_payload","private_tenant_data"],
+  "hash_algorithm": "SHA-256",
+  "append_only_required": true,
+  "audit_bypass_allowed": false,
+  "audit_deletion_by_operator_allowed": false
+}
