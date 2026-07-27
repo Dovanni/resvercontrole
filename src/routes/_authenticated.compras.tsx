@@ -40,6 +40,7 @@ type Compra = {
   total: number;
   observacoes: string | null;
   status: string;
+  updated_at?: string;
 };
 
 type Item = { produto_id: string; quantidade: number; preco_unitario: number; subtotal: number };
