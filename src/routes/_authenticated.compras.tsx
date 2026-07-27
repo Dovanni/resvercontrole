@@ -279,6 +279,27 @@ function ComprasPage() {
         {verCompra && <DetalheCompra compra={verCompra} fornName={fornName(verCompra.fornecedor_id)} payables={compraPayables(verCompra)} />}
       </Dialog>
 
+      <Dialog open={!!editCompra} onOpenChange={(o) => !o && setEditCompra(null)}>
+        {editCompra && (
+          <NovaCompraDialog
+            key={`edit-${editCompra.id}`}
+            mode="edit"
+            editCompra={editCompra}
+            userId={user?.id ?? ""}
+            fornecedores={fornecedores as any}
+            produtos={produtos as any}
+            contas={contas as any}
+            onDone={() => {
+              setEditCompra(null);
+              qc.invalidateQueries({ queryKey: ["compras"] });
+              qc.invalidateQueries({ queryKey: ["payables_compras_link"] });
+              qc.invalidateQueries({ queryKey: ["produtos_simple"] });
+              qc.invalidateQueries({ queryKey: ["compra_itens", editCompra.id] });
+            }}
+          />
+        )}
+      </Dialog>
+
       <Dialog open={showHelp} onOpenChange={setShowHelp}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
