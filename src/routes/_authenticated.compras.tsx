@@ -486,7 +486,10 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
         forma_pagamento: c.forma_pagamento ?? "pix",
         bank_account_id: c.bank_account_id ?? "",
         parcelas: c.parcelas > 1 ? c.parcelas : 2,
-        data_primeira_parcela: cond === "parcelado" ? (c.data_vencimento ?? "") : "",
+        // Em edição, começa vazio: será preenchido a partir das payables reais
+        // (ordenadas por due_date ASC + nº da parcela). Não usar c.data_vencimento
+        // como fallback silencioso — a fonte da verdade é a payable persistida.
+        data_primeira_parcela: "",
         data_vencimento: cond === "a_prazo" ? (c.data_vencimento ?? "") : "",
         desconto: String(c.desconto ?? 0),
         frete: String(c.frete ?? 0),
