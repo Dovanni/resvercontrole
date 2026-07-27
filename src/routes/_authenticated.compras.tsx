@@ -240,9 +240,32 @@ function ComprasPage() {
                     {st === "cancelado" && <Badge variant="outline">Cancelado</Badge>}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button size="icon" variant="ghost" onClick={() => setVerCompra(c)}><Eye className="size-4" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => setVerCompra(c)} title="Visualizar" aria-label="Visualizar compra"><Eye className="size-4" /></Button>
                     {st !== "cancelado" && (
-                      <Button size="icon" variant="ghost" onClick={() => onCancelar(c)}><Trash2 className="size-4 text-destructive" /></Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => {
+                          const ps = compraPayables(c);
+                          const bloqueio = ps.some((p: any) =>
+                            p.status === "pago" ||
+                            Number(p.paid_amount || 0) > 0 ||
+                            !!p.bank_account_id
+                          );
+                          if (bloqueio) {
+                            toast.error("Esta compra possui movimentação financeira e não pode ser editada. Cancele ou estorne a operação pelo fluxo financeiro autorizado.");
+                            return;
+                          }
+                          setEditCompra(c);
+                        }}
+                        title="Editar compra"
+                        aria-label="Editar compra"
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
+                    )}
+                    {st !== "cancelado" && (
+                      <Button size="icon" variant="ghost" onClick={() => onCancelar(c)} title="Cancelar compra" aria-label="Cancelar compra"><Trash2 className="size-4 text-destructive" /></Button>
                     )}
                   </TableCell>
                 </TableRow>
