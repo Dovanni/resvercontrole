@@ -641,7 +641,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
                 return (
                   <TableRow key={it._key}>
                     <TableCell>{p?.name ?? "—"}</TableCell>
-                    <TableCell><Input className="h-8 text-right" type="number" step="0.001" value={it.quantidade} onChange={(e) => updateItem(it._key, { quantidade: Number(e.target.value) })} /></TableCell>
+                    <TableCell><Input className="h-8 text-right" type="number" step={1} min={1} inputMode="numeric" value={it.quantidade} onChange={(e) => updateItem(it._key, { quantidade: Math.max(1, Math.trunc(Number(e.target.value) || 1)) })} /></TableCell>
                     <TableCell><Input className="h-8 text-right" type="number" step="0.01" value={it.preco_unitario} onChange={(e) => updateItem(it._key, { preco_unitario: Number(e.target.value) })} /></TableCell>
                     <TableCell className="text-right">{brl(it.subtotal)}</TableCell>
                     <TableCell><Button size="icon" variant="ghost" onClick={() => removeItem(it._key)}><Trash2 className="size-4 text-destructive" /></Button></TableCell>
