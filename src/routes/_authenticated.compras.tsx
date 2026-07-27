@@ -501,6 +501,19 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
 
   const [itens, setItens] = useState<(Item & { _key: string })[]>([]);
   const [busca, setBusca] = useState("");
+  const [itensLoaded, setItensLoaded] = useState(false);
+
+  // Preenche itens uma única vez quando dados do modo edit chegam
+  if (isEdit && existingItens && !itensLoaded) {
+    setItens(existingItens.map((it: any) => ({
+      _key: crypto.randomUUID(),
+      produto_id: it.produto_id,
+      quantidade: Math.max(1, Math.trunc(Number(it.quantidade) || 1)),
+      preco_unitario: Number(it.preco_unitario) || 0,
+      subtotal: Number(it.subtotal) || 0,
+    })));
+    setItensLoaded(true);
+  }
 
   const subtotal = itens.reduce((s, it) => s + it.subtotal, 0);
   const total = Math.max(0, subtotal - (Number(f.desconto) || 0) + (Number(f.frete) || 0));
