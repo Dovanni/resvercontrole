@@ -159,13 +159,15 @@ function ComprasPage() {
           </Button>
           <Dialog open={openNova} onOpenChange={setOpenNova}>
             <DialogTrigger asChild><Button><Plus className="size-4 mr-1" /> Nova compra</Button></DialogTrigger>
-            <NovaCompraDialog
-              userId={user?.id ?? ""}
-              fornecedores={fornecedores as any}
-              produtos={produtos as any}
-              contas={contas as any}
-              onDone={() => { setOpenNova(false); qc.invalidateQueries({ queryKey: ["compras"] }); qc.invalidateQueries({ queryKey: ["payables_compras_link"] }); qc.invalidateQueries({ queryKey: ["produtos_simple"] }); }}
-            />
+            {openNova && (
+              <NovaCompraDialog
+                userId={user?.id ?? ""}
+                fornecedores={fornecedores as any}
+                produtos={produtos as any}
+                contas={contas as any}
+                onDone={() => { setOpenNova(false); qc.invalidateQueries({ queryKey: ["compras"] }); qc.invalidateQueries({ queryKey: ["payables_compras_link"] }); qc.invalidateQueries({ queryKey: ["produtos_simple"] }); }}
+              />
+            )}
           </Dialog>
         </div>
       } />
