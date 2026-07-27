@@ -486,7 +486,10 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
         forma_pagamento: c.forma_pagamento ?? "pix",
         bank_account_id: c.bank_account_id ?? "",
         parcelas: c.parcelas > 1 ? c.parcelas : 2,
-        data_primeira_parcela: cond === "parcelado" ? (c.data_vencimento ?? "") : "",
+        // Em edição, começa vazio: será preenchido a partir das payables reais
+        // (ordenadas por due_date ASC + nº da parcela). Não usar c.data_vencimento
+        // como fallback silencioso — a fonte da verdade é a payable persistida.
+        data_primeira_parcela: "",
         data_vencimento: cond === "a_prazo" ? (c.data_vencimento ?? "") : "",
         desconto: String(c.desconto ?? 0),
         frete: String(c.frete ?? 0),
@@ -507,6 +510,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
   const [itens, setItens] = useState<(Item & { _key: string })[]>([]);
   const [busca, setBusca] = useState("");
   const [itensLoaded, setItensLoaded] = useState(false);
+  const [payablesLoaded, setPayablesLoaded] = useState(false);
 
   // Preenche itens uma única vez quando dados do modo edit chegam
   if (isEdit && existingItens && !itensLoaded) {
@@ -519,6 +523,45 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
     })));
     setItensLoaded(true);
   }
+
+  // Extrai índice da parcela (i em "(i/n)") para ordenação secundária determinística
+  const parcelaIndex = (desc: string | null | undefined): number => {
+    const m = /\((\d+)\/\d+\)\s*$/.exec(desc ?? "");
+    return m ? Number(m[1]) : Number.POSITIVE_INFINITY;
+  };
+
+  // Payables ordenadas: due_date ASC, depois nº da parcela ASC
+  const sortedPayables = useMemo(() => {
+    if (!existingPayables) return [];
+    return [...existingPayables].sort((a, b) => {
+      const da = String(a.due_date ?? "");
+      const db = String(b.due_date ?? "");
+      if (da !== db) return da < db ? -1 : 1;
+      return parcelaIndex(a.description) - parcelaIndex(b.description);
+    });
+  }, [existingPayables]);
+
+  // Preenche data da 1ª parcela uma única vez a partir da payable persistida.
+  // Trata a data como YYYY-MM-DD civil, sem conversão UTC — não usa new Date().
+  if (isEdit && existingPayables && !payablesLoaded) {
+    if (sortedPayables.length > 0) {
+      const first = sortedPayables[0];
+      const due = typeof first.due_date === "string"
+        ? first.due_date.slice(0, 10) // já é YYYY-MM-DD civil
+        : "";
+      if (due && f.condicao === "parcelado") {
+        setF((prev) => ({ ...prev, data_primeira_parcela: due }));
+      }
+    }
+    setPayablesLoaded(true);
+  }
+
+  // Validações de integridade (bloqueiam Salvar em modo edit)
+  const payablesMissing = isEdit && payablesLoaded && sortedPayables.length === 0;
+  const expectedParcelas = isEdit && editCompra ? Math.max(1, Number(editCompra.parcelas) || 1) : 0;
+  const payablesMismatch =
+    isEdit && payablesLoaded && sortedPayables.length > 0 &&
+    sortedPayables.length !== expectedParcelas;
 
   const subtotal = itens.reduce((s, it) => s + it.subtotal, 0);
   const total = Math.max(0, subtotal - (Number(f.desconto) || 0) + (Number(f.frete) || 0));
@@ -780,6 +823,17 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
           )}
         </div>
 
+        {isEdit && payablesMissing && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+            Não foi possível localizar as parcelas desta compra.
+          </div>
+        )}
+        {isEdit && payablesMismatch && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+            A quantidade de parcelas cadastradas não corresponde à compra.
+          </div>
+        )}
+
         {f.condicao === "parcelado" && parcelasPreview.length > 0 && (
           <div className="rounded-md border bg-muted/30 p-3">
             <div className="text-xs font-medium text-muted-foreground mb-2">Prévia das parcelas</div>
@@ -844,7 +898,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
 
       <DialogFooter>
         <Button variant="outline" onClick={() => onDone()} disabled={save.isPending}>Cancelar</Button>
-        <Button onClick={() => save.mutate()} disabled={save.isPending}>
+        <Button onClick={() => save.mutate()} disabled={save.isPending || payablesMissing || payablesMismatch}>
           {save.isPending ? (isEdit ? "Salvando alterações…" : "Salvando…") : (isEdit ? "Salvar alterações" : "Salvar compra")}
         </Button>
       </DialogFooter>
