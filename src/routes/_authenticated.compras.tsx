@@ -752,7 +752,14 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
 
   return (
     <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-      <DialogHeader><DialogTitle className="flex items-center gap-2"><ShoppingCart className="size-5" /> Nova compra</DialogTitle></DialogHeader>
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <ShoppingCart className="size-5" /> {isEdit ? "Editar compra" : "Nova compra"}
+          {isEdit && editCompra?.numero_nf && (
+            <span className="text-xs text-muted-foreground font-normal ml-2">NF/Pedido {editCompra.numero_nf}</span>
+          )}
+        </DialogTitle>
+      </DialogHeader>
 
       <div className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
