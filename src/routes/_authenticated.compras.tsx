@@ -823,6 +823,17 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
           )}
         </div>
 
+        {isEdit && payablesMissing && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+            Não foi possível localizar as parcelas desta compra.
+          </div>
+        )}
+        {isEdit && payablesMismatch && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+            A quantidade de parcelas cadastradas não corresponde à compra.
+          </div>
+        )}
+
         {f.condicao === "parcelado" && parcelasPreview.length > 0 && (
           <div className="rounded-md border bg-muted/30 p-3">
             <div className="text-xs font-medium text-muted-foreground mb-2">Prévia das parcelas</div>
