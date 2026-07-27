@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useConfirm } from "@/components/confirm-dialog";
 import { brl, dateBR } from "@/lib/format";
 import { toast } from "sonner";
-import { Plus, Trash2, Eye, ShoppingCart, HelpCircle } from "lucide-react";
+import { Plus, Trash2, Eye, ShoppingCart, HelpCircle, Pencil } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/compras")({
   head: () => ({ meta: [{ title: "Compras de Mercadorias — Vejamais" }] }),
