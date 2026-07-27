@@ -1,0 +1,13 @@
+{
+  "additional_tables": [
+    "profiles",
+    "user_roles",
+    "audit_log"
+  ],
+  "catalogs_read_only": true,
+  "row_reads": 0,
+  "tables_expected": 25,
+  "tables_found": 25,
+  "tenant_owned_expected": 22,
+  "tenant_owned_found": 22
+}
