@@ -424,7 +424,13 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
     setItens((prev) => prev.map((it) => {
       if (it._key !== key) return it;
       const merged = { ...it, ...patch };
-      merged.subtotal = Number(merged.quantidade) * Number(merged.preco_unitario);
+      if (patch.quantidade !== undefined) {
+        const q = Math.trunc(Number(patch.quantidade));
+        merged.quantidade = Number.isFinite(q) && q >= 1 ? q : 1;
+      }
+      // Cálculo monetário em centavos inteiros para evitar imprecisão binária.
+      const priceCents = Math.round(Number(merged.preco_unitario) * 100);
+      merged.subtotal = (Math.max(1, Math.trunc(Number(merged.quantidade))) * priceCents) / 100;
       return merged;
     }));
   };
@@ -460,6 +466,11 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
     mutationFn: async () => {
       if (!f.fornecedor_id) throw new Error("Selecione um fornecedor");
       if (itens.length === 0) throw new Error("Adicione ao menos um item");
+      for (const it of itens) {
+        if (!Number.isInteger(it.quantidade) || it.quantidade < 1) {
+          throw new Error("Quantidade deve ser um número inteiro maior ou igual a 1");
+        }
+      }
       if (f.condicao === "a_vista" && !f.bank_account_id) throw new Error("Selecione a conta bancária");
       if (f.condicao === "a_prazo" && !f.data_vencimento) throw new Error("Informe a data de vencimento");
       if (f.condicao === "parcelado" && !f.data_primeira_parcela) throw new Error("Informe a data da primeira parcela");
@@ -635,7 +646,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
                 return (
                   <TableRow key={it._key}>
                     <TableCell>{p?.name ?? "—"}</TableCell>
-                    <TableCell><Input className="h-8 text-right" type="number" step="0.001" value={it.quantidade} onChange={(e) => updateItem(it._key, { quantidade: Number(e.target.value) })} /></TableCell>
+                    <TableCell><Input className="h-8 text-right" type="number" step={1} min={1} inputMode="numeric" value={it.quantidade} onChange={(e) => updateItem(it._key, { quantidade: Math.max(1, Math.trunc(Number(e.target.value) || 1)) })} /></TableCell>
                     <TableCell><Input className="h-8 text-right" type="number" step="0.01" value={it.preco_unitario} onChange={(e) => updateItem(it._key, { preco_unitario: Number(e.target.value) })} /></TableCell>
                     <TableCell className="text-right">{brl(it.subtotal)}</TableCell>
                     <TableCell><Button size="icon" variant="ghost" onClick={() => removeItem(it._key)}><Trash2 className="size-4 text-destructive" /></Button></TableCell>
