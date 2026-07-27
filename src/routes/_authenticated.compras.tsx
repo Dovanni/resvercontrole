@@ -440,18 +440,64 @@ function DetalheCompra({ compra, fornName, payables }: { compra: Compra; fornNam
   );
 }
 
-function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
+function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode = "create", editCompra }: {
   userId: string; fornecedores: { id: string; name: string }[];
   produtos: { id: string; name: string; sku: string | null; cost_price: number; stock: number }[];
   contas: { id: string; name: string }[]; onDone: () => void;
+  mode?: "create" | "edit"; editCompra?: Compra;
 }) {
-  const [f, setF] = useState({
-    fornecedor_id: "", data_compra: new Date().toISOString().slice(0, 10), numero_nf: "",
-    condicao: "a_vista" as "a_vista" | "parcelado" | "a_prazo",
-    forma_pagamento: "pix", bank_account_id: "",
-    parcelas: 2, data_primeira_parcela: "", data_vencimento: "",
-    desconto: "0", frete: "0", observacoes: "",
+  const isEdit = mode === "edit" && !!editCompra;
+  const shortIdEdit = isEdit ? editCompra!.id.slice(0, 8) : "";
+
+  // Carrega itens existentes em modo edição
+  const { data: existingItens } = useQuery({
+    queryKey: ["compra_itens_edit", editCompra?.id],
+    enabled: isEdit,
+    queryFn: async () => {
+      const { data } = await (supabase.from("compras_itens" as any).select("*").eq("compra_id", editCompra!.id));
+      return (data ?? []) as any[];
+    },
   });
+
+  // Carrega parcelas vinculadas para revalidar elegibilidade e apagar/recriar
+  const { data: existingPayables } = useQuery({
+    queryKey: ["compra_payables_edit", editCompra?.id],
+    enabled: isEdit,
+    queryFn: async () => {
+      const { data } = await (supabase.from("payables").select("id,description,amount,paid_amount,status,due_date,bank_account_id").ilike("description", `%#${shortIdEdit}%`));
+      return (data ?? []) as any[];
+    },
+  });
+
+  const initialForm = useMemo(() => {
+    if (isEdit && editCompra) {
+      const c = editCompra;
+      const cond = (c.condicao_pagamento as "a_vista" | "parcelado" | "a_prazo") ?? "a_vista";
+      return {
+        fornecedor_id: c.fornecedor_id ?? "",
+        data_compra: c.data_compra,
+        numero_nf: c.numero_nf ?? "",
+        condicao: cond,
+        forma_pagamento: c.forma_pagamento ?? "pix",
+        bank_account_id: c.bank_account_id ?? "",
+        parcelas: c.parcelas > 1 ? c.parcelas : 2,
+        data_primeira_parcela: cond === "parcelado" ? (c.data_vencimento ?? "") : "",
+        data_vencimento: cond === "a_prazo" ? (c.data_vencimento ?? "") : "",
+        desconto: String(c.desconto ?? 0),
+        frete: String(c.frete ?? 0),
+        observacoes: c.observacoes ?? "",
+      };
+    }
+    return {
+      fornecedor_id: "", data_compra: new Date().toISOString().slice(0, 10), numero_nf: "",
+      condicao: "a_vista" as "a_vista" | "parcelado" | "a_prazo",
+      forma_pagamento: "pix", bank_account_id: "",
+      parcelas: 2, data_primeira_parcela: "", data_vencimento: "",
+      desconto: "0", frete: "0", observacoes: "",
+    };
+  }, [isEdit, editCompra]);
+
+  const [f, setF] = useState(initialForm);
 
   const [itens, setItens] = useState<(Item & { _key: string })[]>([]);
   const [busca, setBusca] = useState("");
