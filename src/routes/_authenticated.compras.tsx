@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useConfirm } from "@/components/confirm-dialog";
 import { brl, dateBR } from "@/lib/format";
 import { toast } from "sonner";
-import { Plus, Trash2, Eye, ShoppingCart, HelpCircle } from "lucide-react";
+import { Plus, Trash2, Eye, ShoppingCart, HelpCircle, Pencil } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/compras")({
   head: () => ({ meta: [{ title: "Compras de Mercadorias — Vejamais" }] }),
@@ -40,6 +40,7 @@ type Compra = {
   total: number;
   observacoes: string | null;
   status: string;
+  updated_at?: string;
 };
 
 type Item = { produto_id: string; quantidade: number; preco_unitario: number; subtotal: number };
@@ -49,6 +50,7 @@ function ComprasPage() {
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [openNova, setOpenNova] = useState(false);
+  const [editCompra, setEditCompra] = useState<Compra | null>(null);
   const [showHelp, setShowHelp] = useState(false);
   const [verCompra, setVerCompra] = useState<Compra | null>(null);
   const [fFornecedor, setFFornecedor] = useState("todos");
@@ -82,7 +84,7 @@ function ComprasPage() {
 
   const { data: payables = [] } = useQuery({
     queryKey: ["payables_compras_link"],
-    queryFn: async () => (await supabase.from("payables").select("id,description,amount,paid_amount,status,due_date").order("due_date")).data ?? [],
+    queryFn: async () => (await supabase.from("payables").select("id,description,amount,paid_amount,status,due_date,bank_account_id,supplier_id,payment_method").order("due_date")).data ?? [],
   });
 
   const fornName = (id: string | null) => fornecedores.find((f: any) => f.id === id)?.name ?? "—";
@@ -238,9 +240,32 @@ function ComprasPage() {
                     {st === "cancelado" && <Badge variant="outline">Cancelado</Badge>}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button size="icon" variant="ghost" onClick={() => setVerCompra(c)}><Eye className="size-4" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => setVerCompra(c)} title="Visualizar" aria-label="Visualizar compra"><Eye className="size-4" /></Button>
                     {st !== "cancelado" && (
-                      <Button size="icon" variant="ghost" onClick={() => onCancelar(c)}><Trash2 className="size-4 text-destructive" /></Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => {
+                          const ps = compraPayables(c);
+                          const bloqueio = ps.some((p: any) =>
+                            p.status === "pago" ||
+                            Number(p.paid_amount || 0) > 0 ||
+                            !!p.bank_account_id
+                          );
+                          if (bloqueio) {
+                            toast.error("Esta compra possui movimentação financeira e não pode ser editada. Cancele ou estorne a operação pelo fluxo financeiro autorizado.");
+                            return;
+                          }
+                          setEditCompra(c);
+                        }}
+                        title="Editar compra"
+                        aria-label="Editar compra"
+                      >
+                        <Pencil className="size-4" />
+                      </Button>
+                    )}
+                    {st !== "cancelado" && (
+                      <Button size="icon" variant="ghost" onClick={() => onCancelar(c)} title="Cancelar compra" aria-label="Cancelar compra"><Trash2 className="size-4 text-destructive" /></Button>
                     )}
                   </TableCell>
                 </TableRow>
@@ -252,6 +277,27 @@ function ComprasPage() {
 
       <Dialog open={!!verCompra} onOpenChange={(o) => !o && setVerCompra(null)}>
         {verCompra && <DetalheCompra compra={verCompra} fornName={fornName(verCompra.fornecedor_id)} payables={compraPayables(verCompra)} />}
+      </Dialog>
+
+      <Dialog open={!!editCompra} onOpenChange={(o) => !o && setEditCompra(null)}>
+        {editCompra && (
+          <NovaCompraDialog
+            key={`edit-${editCompra.id}`}
+            mode="edit"
+            editCompra={editCompra}
+            userId={user?.id ?? ""}
+            fornecedores={fornecedores as any}
+            produtos={produtos as any}
+            contas={contas as any}
+            onDone={() => {
+              setEditCompra(null);
+              qc.invalidateQueries({ queryKey: ["compras"] });
+              qc.invalidateQueries({ queryKey: ["payables_compras_link"] });
+              qc.invalidateQueries({ queryKey: ["produtos_simple"] });
+              qc.invalidateQueries({ queryKey: ["compra_itens", editCompra.id] });
+            }}
+          />
+        )}
       </Dialog>
 
       <Dialog open={showHelp} onOpenChange={setShowHelp}>
@@ -394,21 +440,80 @@ function DetalheCompra({ compra, fornName, payables }: { compra: Compra; fornNam
   );
 }
 
-function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
+function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode = "create", editCompra }: {
   userId: string; fornecedores: { id: string; name: string }[];
   produtos: { id: string; name: string; sku: string | null; cost_price: number; stock: number }[];
   contas: { id: string; name: string }[]; onDone: () => void;
+  mode?: "create" | "edit"; editCompra?: Compra;
 }) {
-  const [f, setF] = useState({
-    fornecedor_id: "", data_compra: new Date().toISOString().slice(0, 10), numero_nf: "",
-    condicao: "a_vista" as "a_vista" | "parcelado" | "a_prazo",
-    forma_pagamento: "pix", bank_account_id: "",
-    parcelas: 2, data_primeira_parcela: "", data_vencimento: "",
-    desconto: "0", frete: "0", observacoes: "",
+  const isEdit = mode === "edit" && !!editCompra;
+  const shortIdEdit = isEdit ? editCompra!.id.slice(0, 8) : "";
+
+  // Carrega itens existentes em modo edição
+  const { data: existingItens } = useQuery({
+    queryKey: ["compra_itens_edit", editCompra?.id],
+    enabled: isEdit,
+    queryFn: async () => {
+      const { data } = await (supabase.from("compras_itens" as any).select("*").eq("compra_id", editCompra!.id));
+      return (data ?? []) as any[];
+    },
   });
+
+  // Carrega parcelas vinculadas para revalidar elegibilidade e apagar/recriar
+  const { data: existingPayables } = useQuery({
+    queryKey: ["compra_payables_edit", editCompra?.id],
+    enabled: isEdit,
+    queryFn: async () => {
+      const { data } = await (supabase.from("payables").select("id,description,amount,paid_amount,status,due_date,bank_account_id").ilike("description", `%#${shortIdEdit}%`));
+      return (data ?? []) as any[];
+    },
+  });
+
+  const initialForm = useMemo(() => {
+    if (isEdit && editCompra) {
+      const c = editCompra;
+      const cond = (c.condicao_pagamento as "a_vista" | "parcelado" | "a_prazo") ?? "a_vista";
+      return {
+        fornecedor_id: c.fornecedor_id ?? "",
+        data_compra: c.data_compra,
+        numero_nf: c.numero_nf ?? "",
+        condicao: cond,
+        forma_pagamento: c.forma_pagamento ?? "pix",
+        bank_account_id: c.bank_account_id ?? "",
+        parcelas: c.parcelas > 1 ? c.parcelas : 2,
+        data_primeira_parcela: cond === "parcelado" ? (c.data_vencimento ?? "") : "",
+        data_vencimento: cond === "a_prazo" ? (c.data_vencimento ?? "") : "",
+        desconto: String(c.desconto ?? 0),
+        frete: String(c.frete ?? 0),
+        observacoes: c.observacoes ?? "",
+      };
+    }
+    return {
+      fornecedor_id: "", data_compra: new Date().toISOString().slice(0, 10), numero_nf: "",
+      condicao: "a_vista" as "a_vista" | "parcelado" | "a_prazo",
+      forma_pagamento: "pix", bank_account_id: "",
+      parcelas: 2, data_primeira_parcela: "", data_vencimento: "",
+      desconto: "0", frete: "0", observacoes: "",
+    };
+  }, [isEdit, editCompra]);
+
+  const [f, setF] = useState(initialForm);
 
   const [itens, setItens] = useState<(Item & { _key: string })[]>([]);
   const [busca, setBusca] = useState("");
+  const [itensLoaded, setItensLoaded] = useState(false);
+
+  // Preenche itens uma única vez quando dados do modo edit chegam
+  if (isEdit && existingItens && !itensLoaded) {
+    setItens(existingItens.map((it: any) => ({
+      _key: crypto.randomUUID(),
+      produto_id: it.produto_id,
+      quantidade: Math.max(1, Math.trunc(Number(it.quantidade) || 1)),
+      preco_unitario: Number(it.preco_unitario) || 0,
+      subtotal: Number(it.subtotal) || 0,
+    })));
+    setItensLoaded(true);
+  }
 
   const subtotal = itens.reduce((s, it) => s + it.subtotal, 0);
   const total = Math.max(0, subtotal - (Number(f.desconto) || 0) + (Number(f.frete) || 0));
@@ -478,6 +583,97 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
       const fornName = fornecedores.find((x) => x.id === f.fornecedor_id)?.name ?? "Fornecedor";
       const diaVenc = f.condicao === "parcelado" ? Number(f.data_primeira_parcela.split("-")[2]) : null;
 
+      // ============== MODO EDIT ==============
+      if (isEdit && editCompra) {
+        const compraId = editCompra.id;
+        const shortId = compraId.slice(0, 8);
+
+        // Revalidação de elegibilidade — refetch atômico
+        const { data: cAtual, error: eC } = await (supabase.from("compras" as any)
+          .select("id,user_id,status,updated_at").eq("id", compraId).single());
+        if (eC || !cAtual) throw eC ?? new Error("Compra não encontrada");
+        if ((cAtual as any).user_id !== userId) throw new Error("Compra pertence a outro usuário");
+        if ((cAtual as any).status === "cancelada") throw new Error("Compra cancelada não pode ser editada");
+        if (editCompra.updated_at && (cAtual as any).updated_at !== editCompra.updated_at) {
+          throw new Error("Esta compra foi alterada em outra operação. Atualize a página e tente novamente.");
+        }
+
+        const { data: paysAtual, error: ePq } = await supabase.from("payables")
+          .select("id,paid_amount,status,bank_account_id").ilike("description", `%#${shortId}%`);
+        if (ePq) throw ePq;
+        for (const p of (paysAtual ?? []) as any[]) {
+          if (p.status === "pago" || Number(p.paid_amount || 0) > 0 || p.bank_account_id) {
+            throw new Error("Esta compra possui movimentação financeira e não pode ser editada. Cancele ou estorne a operação pelo fluxo financeiro autorizado.");
+          }
+        }
+
+        // Update da compra (owner-scoped)
+        const { error: eU } = await (supabase.from("compras" as any).update({
+          fornecedor_id: f.fornecedor_id,
+          data_compra: f.data_compra,
+          numero_nf: f.numero_nf || null,
+          condicao_pagamento: f.condicao,
+          forma_pagamento: f.condicao === "a_vista" ? f.forma_pagamento : null,
+          bank_account_id: f.condicao === "a_vista" ? f.bank_account_id : null,
+          parcelas: f.condicao === "parcelado" ? f.parcelas : 1,
+          dia_vencimento: diaVenc,
+          data_vencimento: f.condicao === "a_prazo" ? f.data_vencimento : (f.condicao === "parcelado" ? f.data_primeira_parcela : null),
+          subtotal, desconto: Number(f.desconto) || 0, frete: Number(f.frete) || 0, total,
+          observacoes: f.observacoes || null,
+          updated_at: new Date().toISOString(),
+        }).eq("id", compraId).eq("user_id", userId));
+        if (eU) throw eU;
+
+        // Recria itens (sem tocar em estoque, conforme escopo do prompt)
+        const { error: eDi } = await (supabase.from("compras_itens" as any)
+          .delete().eq("compra_id", compraId).eq("user_id", userId));
+        if (eDi) throw eDi;
+        const itensRows = itens.map((it) => ({
+          user_id: userId, compra_id: compraId, produto_id: it.produto_id,
+          quantidade: it.quantidade, preco_unitario: it.preco_unitario, subtotal: it.subtotal,
+        }));
+        const { error: eIi } = await (supabase.from("compras_itens" as any).insert(itensRows));
+        if (eIi) throw eIi;
+
+        // Recria payables (todas as antigas devem estar pendentes e sem pagamento)
+        const { error: eDp } = await supabase.from("payables")
+          .delete().ilike("description", `%#${shortId}%`).eq("user_id", userId).eq("status", "pendente");
+        if (eDp) throw eDp;
+
+        const baseDesc = `Compra #${shortId} — ${fornName}${f.numero_nf ? ` NF ${f.numero_nf}` : ""}`;
+        let payablesCount = 0;
+        if (f.condicao === "a_vista") {
+          const { error } = await supabase.from("payables").insert({
+            user_id: userId, supplier_id: f.fornecedor_id, description: baseDesc,
+            category: "Fornecedor", amount: total, due_date: f.data_compra,
+            payment_method: f.forma_pagamento, status: "pago",
+            paid_amount: total, paid_at: new Date().toISOString(),
+            bank_account_id: f.bank_account_id,
+          });
+          if (error) throw error;
+          payablesCount = 1;
+        } else if (f.condicao === "parcelado") {
+          const rows = parcelasPreview.map((p) => ({
+            user_id: userId, supplier_id: f.fornecedor_id,
+            description: `${baseDesc} (${p.n}/${f.parcelas})`,
+            category: "Fornecedor", amount: p.amount,
+            due_date: p.date, status: "pendente",
+          }));
+          const { error } = await supabase.from("payables").insert(rows);
+          if (error) throw error;
+          payablesCount = f.parcelas;
+        } else {
+          const { error } = await supabase.from("payables").insert({
+            user_id: userId, supplier_id: f.fornecedor_id, description: baseDesc,
+            category: "Fornecedor", amount: total, due_date: f.data_vencimento, status: "pendente",
+          });
+          if (error) throw error;
+          payablesCount = 1;
+        }
+        return { count: payablesCount, edit: true };
+      }
+
+      // ============== MODO CREATE ==============
       // 1. Criar compra
       const { data: compraRow, error: e1 } = await (supabase.from("compras" as any).insert({
         user_id: userId,
@@ -543,16 +739,27 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
         });
         payablesCount = 1;
       }
-      return payablesCount;
+      return { count: payablesCount, edit: false };
     },
-    onSuccess: (n) => { toast.success(`Compra registrada! ${n} conta(s) a pagar gerada(s) e estoque atualizado.`); onDone(); },
+    onSuccess: (r) => {
+      if (r.edit) toast.success("Compra atualizada com sucesso.");
+      else toast.success(`Compra registrada! ${r.count} conta(s) a pagar gerada(s) e estoque atualizado.`);
+      onDone();
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
 
   return (
     <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-      <DialogHeader><DialogTitle className="flex items-center gap-2"><ShoppingCart className="size-5" /> Nova compra</DialogTitle></DialogHeader>
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <ShoppingCart className="size-5" /> {isEdit ? "Editar compra" : "Nova compra"}
+          {isEdit && editCompra?.numero_nf && (
+            <span className="text-xs text-muted-foreground font-normal ml-2">NF/Pedido {editCompra.numero_nf}</span>
+          )}
+        </DialogTitle>
+      </DialogHeader>
 
       <div className="space-y-4">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -669,7 +876,12 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
         <div><Label>Observações</Label><Textarea value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} /></div>
       </div>
 
-      <DialogFooter><Button onClick={() => save.mutate()} disabled={save.isPending}>{save.isPending ? "Salvando…" : "Salvar compra"}</Button></DialogFooter>
+      <DialogFooter>
+        <Button variant="outline" onClick={() => onDone()} disabled={save.isPending}>Cancelar</Button>
+        <Button onClick={() => save.mutate()} disabled={save.isPending}>
+          {save.isPending ? (isEdit ? "Salvando alterações…" : "Salvando…") : (isEdit ? "Salvar alterações" : "Salvar compra")}
+        </Button>
+      </DialogFooter>
     </DialogContent>
   );
 }
