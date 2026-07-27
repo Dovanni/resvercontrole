@@ -423,7 +423,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
   const updateItem = (key: string, patch: Partial<Item>) => {
     setItens((prev) => prev.map((it) => {
       if (it._key !== key) return it;
-      const merged = { ...it, ...patch } as Item;
+      const merged = { ...it, ...patch };
       if (patch.quantidade !== undefined) {
         const q = Math.trunc(Number(patch.quantidade));
         merged.quantidade = Number.isFinite(q) && q >= 1 ? q : 1;
