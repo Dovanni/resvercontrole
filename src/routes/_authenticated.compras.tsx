@@ -241,29 +241,34 @@ function ComprasPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <Button size="icon" variant="ghost" onClick={() => setVerCompra(c)} title="Visualizar" aria-label="Visualizar compra"><Eye className="size-4" /></Button>
-                    {st !== "cancelado" && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => {
-                          const ps = compraPayables(c);
-                          const bloqueio = ps.some((p: any) =>
-                            p.status === "pago" ||
-                            Number(p.paid_amount || 0) > 0 ||
-                            !!p.bank_account_id
-                          );
-                          if (bloqueio) {
-                            toast.error("Esta compra possui movimentação financeira e não pode ser editada. Cancele ou estorne a operação pelo fluxo financeiro autorizado.");
-                            return;
-                          }
-                          setEditCompra(c);
-                        }}
-                        title="Editar compra"
-                        aria-label="Editar compra"
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
-                    )}
+                    {st !== "cancelado" && (() => {
+                      const ps = compraPayables(c);
+                      const elegivel =
+                        c.status === "confirmada" &&
+                        ps.length > 0 &&
+                        ps.length === (c.parcelas || 1) &&
+                        ps.every((p: any) =>
+                          p.status === "pendente" &&
+                          Number(p.paid_amount || 0) === 0 &&
+                          !p.bank_account_id
+                        );
+                      const tip = elegivel
+                        ? "Editar compra"
+                        : "Esta compra não pode ser editada porque possui pagamento, movimentação financeira ou status incompatível.";
+                      return (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          disabled={!elegivel}
+                          onClick={() => elegivel && setEditCompra(c)}
+                          title={tip}
+                          aria-label="Editar compra"
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                      );
+                    })()}
+
                     {st !== "cancelado" && (
                       <Button size="icon" variant="ghost" onClick={() => onCancelar(c)} title="Cancelar compra" aria-label="Cancelar compra"><Trash2 className="size-4 text-destructive" /></Button>
                     )}
@@ -583,95 +588,56 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
       const fornName = fornecedores.find((x) => x.id === f.fornecedor_id)?.name ?? "Fornecedor";
       const diaVenc = f.condicao === "parcelado" ? Number(f.data_primeira_parcela.split("-")[2]) : null;
 
-      // ============== MODO EDIT ==============
+      // ============== MODO EDIT — RPC atômica ==============
       if (isEdit && editCompra) {
-        const compraId = editCompra.id;
-        const shortId = compraId.slice(0, 8);
-
-        // Revalidação de elegibilidade — refetch atômico
-        const { data: cAtual, error: eC } = await (supabase.from("compras" as any)
-          .select("id,user_id,status,updated_at").eq("id", compraId).single());
-        if (eC || !cAtual) throw eC ?? new Error("Compra não encontrada");
-        if ((cAtual as any).user_id !== userId) throw new Error("Compra pertence a outro usuário");
-        if ((cAtual as any).status === "cancelada") throw new Error("Compra cancelada não pode ser editada");
-        if (editCompra.updated_at && (cAtual as any).updated_at !== editCompra.updated_at) {
-          throw new Error("Esta compra foi alterada em outra operação. Atualize a página e tente novamente.");
-        }
-
-        const { data: paysAtual, error: ePq } = await supabase.from("payables")
-          .select("id,paid_amount,status,bank_account_id").ilike("description", `%#${shortId}%`);
-        if (ePq) throw ePq;
-        for (const p of (paysAtual ?? []) as any[]) {
-          if (p.status === "pago" || Number(p.paid_amount || 0) > 0 || p.bank_account_id) {
-            throw new Error("Esta compra possui movimentação financeira e não pode ser editada. Cancele ou estorne a operação pelo fluxo financeiro autorizado.");
-          }
-        }
-
-        // Update da compra (owner-scoped)
-        const { error: eU } = await (supabase.from("compras" as any).update({
-          fornecedor_id: f.fornecedor_id,
-          data_compra: f.data_compra,
-          numero_nf: f.numero_nf || null,
-          condicao_pagamento: f.condicao,
-          forma_pagamento: f.condicao === "a_vista" ? f.forma_pagamento : null,
-          bank_account_id: f.condicao === "a_vista" ? f.bank_account_id : null,
-          parcelas: f.condicao === "parcelado" ? f.parcelas : 1,
-          dia_vencimento: diaVenc,
-          data_vencimento: f.condicao === "a_prazo" ? f.data_vencimento : (f.condicao === "parcelado" ? f.data_primeira_parcela : null),
-          subtotal, desconto: Number(f.desconto) || 0, frete: Number(f.frete) || 0, total,
-          observacoes: f.observacoes || null,
-          updated_at: new Date().toISOString(),
-        }).eq("id", compraId).eq("user_id", userId));
-        if (eU) throw eU;
-
-        // Recria itens (sem tocar em estoque, conforme escopo do prompt)
-        const { error: eDi } = await (supabase.from("compras_itens" as any)
-          .delete().eq("compra_id", compraId).eq("user_id", userId));
-        if (eDi) throw eDi;
-        const itensRows = itens.map((it) => ({
-          user_id: userId, compra_id: compraId, produto_id: it.produto_id,
-          quantidade: it.quantidade, preco_unitario: it.preco_unitario, subtotal: it.subtotal,
-        }));
-        const { error: eIi } = await (supabase.from("compras_itens" as any).insert(itensRows));
-        if (eIi) throw eIi;
-
-        // Recria payables (todas as antigas devem estar pendentes e sem pagamento)
-        const { error: eDp } = await supabase.from("payables")
-          .delete().ilike("description", `%#${shortId}%`).eq("user_id", userId).eq("status", "pendente");
-        if (eDp) throw eDp;
-
-        const baseDesc = `Compra #${shortId} — ${fornName}${f.numero_nf ? ` NF ${f.numero_nf}` : ""}`;
-        let payablesCount = 0;
         if (f.condicao === "a_vista") {
-          const { error } = await supabase.from("payables").insert({
-            user_id: userId, supplier_id: f.fornecedor_id, description: baseDesc,
-            category: "Fornecedor", amount: total, due_date: f.data_compra,
-            payment_method: f.forma_pagamento, status: "pago",
-            paid_amount: total, paid_at: new Date().toISOString(),
-            bank_account_id: f.bank_account_id,
-          });
-          if (error) throw error;
-          payablesCount = 1;
-        } else if (f.condicao === "parcelado") {
-          const rows = parcelasPreview.map((p) => ({
-            user_id: userId, supplier_id: f.fornecedor_id,
-            description: `${baseDesc} (${p.n}/${f.parcelas})`,
-            category: "Fornecedor", amount: p.amount,
-            due_date: p.date, status: "pendente",
-          }));
-          const { error } = await supabase.from("payables").insert(rows);
-          if (error) throw error;
-          payablesCount = f.parcelas;
-        } else {
-          const { error } = await supabase.from("payables").insert({
-            user_id: userId, supplier_id: f.fornecedor_id, description: baseDesc,
-            category: "Fornecedor", amount: total, due_date: f.data_vencimento, status: "pendente",
-          });
-          if (error) throw error;
-          payablesCount = 1;
+          throw new Error("Não é permitido converter uma compra pendente em compra à vista nesta edição.");
         }
-        return { count: payablesCount, edit: true };
+        const itensPayload = itens.map((it) => ({
+          produto_id: it.produto_id,
+          quantidade: it.quantidade,
+          preco_unitario: it.preco_unitario,
+        }));
+        const dataPrimeira = f.condicao === "parcelado" ? f.data_primeira_parcela : f.data_vencimento;
+        const { data: rpcData, error: rpcErr } = await (supabase.rpc as any)("rpc_editar_compra_pendente", {
+          _compra_id: editCompra.id,
+          _expected_updated_at: editCompra.updated_at ?? null,
+          _fornecedor_id: f.fornecedor_id,
+          _data_compra: f.data_compra,
+          _numero_nf: f.numero_nf || null,
+          _condicao: f.condicao,
+          _parcelas: f.condicao === "parcelado" ? Number(f.parcelas) || 1 : 1,
+          _data_primeira: dataPrimeira,
+          _desconto: Number(f.desconto) || 0,
+          _frete: Number(f.frete) || 0,
+          _observacoes: f.observacoes || null,
+          _itens: itensPayload,
+        });
+        if (rpcErr) {
+          const map: Record<string, string> = {
+            nao_autenticado: "Sessão expirada. Faça login novamente.",
+            compra_nao_encontrada: "Compra não encontrada.",
+            status_incompativel: "Esta compra não pode ser editada porque possui pagamento, movimentação financeira ou status incompatível.",
+            conflito_atualizacao: "Esta compra foi alterada em outra operação. Atualize a página e tente novamente.",
+            fornecedor_invalido: "Fornecedor inválido.",
+            produto_invalido: "Produto inválido.",
+            sem_itens: "Adicione ao menos um item.",
+            quantidade_invalida: "Quantidade deve ser um número inteiro maior ou igual a 1.",
+            preco_invalido: "Preço inválido.",
+            valores_invalidos: "Desconto e frete não podem ser negativos.",
+            total_negativo: "O total não pode ser negativo.",
+            payables_incompativeis: "Esta compra possui pagamento ou está vinculada a uma conta bancária.",
+            movimento_bancario_existente: "Esta compra possui movimentação financeira e não pode ser editada.",
+            parcelas_nao_encontradas: "Não foi possível localizar as parcelas desta compra.",
+            correspondencia_ambigua_ou_incompleta: "Correspondência ambígua das parcelas — edição bloqueada por segurança.",
+            condicao_invalida: "Condição de pagamento inválida para edição.",
+          };
+          const key = (rpcErr.message || "").trim();
+          throw new Error(map[key] ?? `Falha ao editar: ${rpcErr.message}`);
+        }
+        return { count: (rpcData as any)?.parcelas_recriadas ?? 0, edit: true };
       }
+
 
       // ============== MODO CREATE ==============
       // 1. Criar compra

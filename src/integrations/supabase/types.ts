@@ -1274,6 +1274,23 @@ export type Database = {
         }
         Returns: boolean
       }
+      rpc_editar_compra_pendente: {
+        Args: {
+          _compra_id: string
+          _condicao: string
+          _data_compra: string
+          _data_primeira: string
+          _desconto: number
+          _expected_updated_at: string
+          _fornecedor_id: string
+          _frete: number
+          _itens: Json
+          _numero_nf: string
+          _observacoes: string
+          _parcelas: number
+        }
+        Returns: Json
+      }
       seed_default_categorias_contas_pagar: {
         Args: { _user_id: string }
         Returns: undefined
