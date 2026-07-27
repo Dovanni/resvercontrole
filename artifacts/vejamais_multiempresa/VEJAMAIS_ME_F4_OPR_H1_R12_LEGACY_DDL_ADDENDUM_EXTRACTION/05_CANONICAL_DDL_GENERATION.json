@@ -1,0 +1,8 @@
+{
+  "contains_data": false,
+  "contains_secret": false,
+  "ddl_bytes": 57617,
+  "ddl_file": "01_LEGACY_DDL_ADDENDUM.sql",
+  "ddl_sha256": "6185bfb0af59bbbf30f54ff8d074b67d3833f05a33077e59373d0f5f00e7b3bb",
+  "placed_in_migrations_folder": false
+}

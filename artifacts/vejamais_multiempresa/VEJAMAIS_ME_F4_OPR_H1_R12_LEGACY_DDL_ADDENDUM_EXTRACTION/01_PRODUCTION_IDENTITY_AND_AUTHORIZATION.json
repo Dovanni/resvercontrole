@@ -1,0 +1,11 @@
+{
+  "destination_accessed": false,
+  "destination_lovable_project_id": "611c91d0-e006-4d84-8bb1-a099f30ad6e2",
+  "destination_supabase_ref": "owdjpgdstokiuqtmcttk",
+  "gate": "VEJAMAIS-ME-F4-OPR-H1-R12-LEGACY-DDL-ADDENDUM-EXTRACTION",
+  "human_authorization_received": true,
+  "mode": "PRODUCTION_READ_ONLY",
+  "production_lovable_project_id": "c1cf42e3-5ea4-4a1b-a6cc-454256b65835",
+  "production_supabase_ref": "bsrjtmssbnvttzrvnaab",
+  "version": "1.0"
+}
