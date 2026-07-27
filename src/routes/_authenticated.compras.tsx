@@ -84,7 +84,7 @@ function ComprasPage() {
 
   const { data: payables = [] } = useQuery({
     queryKey: ["payables_compras_link"],
-    queryFn: async () => (await supabase.from("payables").select("id,description,amount,paid_amount,status,due_date").order("due_date")).data ?? [],
+    queryFn: async () => (await supabase.from("payables").select("id,description,amount,paid_amount,status,due_date,bank_account_id,supplier_id,payment_method").order("due_date")).data ?? [],
   });
 
   const fornName = (id: string | null) => fornecedores.find((f: any) => f.id === id)?.name ?? "—";
