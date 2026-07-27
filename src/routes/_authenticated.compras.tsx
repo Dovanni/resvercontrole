@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { PageHeader } from "@/components/app-shell";
@@ -465,7 +465,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
   });
 
   // Carrega parcelas vinculadas para revalidar elegibilidade e apagar/recriar
-  const { data: existingPayables } = useQuery({
+  const payablesQuery = useQuery({
     queryKey: ["compra_payables_edit", editCompra?.id],
     enabled: isEdit,
     queryFn: async () => {
@@ -473,6 +473,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
       return (data ?? []) as any[];
     },
   });
+  const existingPayables = payablesQuery.data;
 
   const initialForm = useMemo(() => {
     if (isEdit && editCompra) {
@@ -541,20 +542,37 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
     });
   }, [existingPayables]);
 
-  // Preenche data da 1ª parcela uma única vez a partir da payable persistida.
-  // Trata a data como YYYY-MM-DD civil, sem conversão UTC — não usa new Date().
-  if (isEdit && existingPayables && !payablesLoaded) {
-    if (sortedPayables.length > 0) {
-      const first = sortedPayables[0];
-      const due = typeof first.due_date === "string"
-        ? first.due_date.slice(0, 10) // já é YYYY-MM-DD civil
-        : "";
-      if (due && f.condicao === "parcelado") {
-        setF((prev) => ({ ...prev, data_primeira_parcela: due }));
-      }
-    }
+  // Preenche data da 1ª parcela reativamente, apenas após conclusão bem-sucedida
+  // da query das payables. Trata YYYY-MM-DD como data civil, sem new Date()/UTC.
+  useEffect(() => {
+    if (mode !== "edit") return;
+    if (!editCompra?.id) return;
+    if (!payablesQuery.isSuccess) return;
+    if (sortedPayables.length === 0) return;
+
+    const expected = Math.max(1, Number(editCompra.parcelas) || 1);
+    if (sortedPayables.length !== expected) return;
+
+    const firstDueDate = String(sortedPayables[0].due_date ?? "").slice(0, 10);
+    if (!firstDueDate) return;
+
+    setF((current) => {
+      if (current.data_primeira_parcela === firstDueDate) return current;
+      return {
+        ...current,
+        data_primeira_parcela: firstDueDate,
+      };
+    });
     setPayablesLoaded(true);
-  }
+  }, [mode, editCompra?.id, editCompra?.parcelas, payablesQuery.isSuccess, sortedPayables]);
+
+  useEffect(() => {
+    if (mode !== "edit") return;
+    if (!editCompra?.id) return;
+    if (payablesQuery.isSuccess || payablesQuery.isError) {
+      setPayablesLoaded(true);
+    }
+  }, [mode, editCompra?.id, payablesQuery.isSuccess, payablesQuery.isError]);
 
   // Validações de integridade (bloqueiam Salvar em modo edit)
   const payablesMissing = isEdit && payablesLoaded && sortedPayables.length === 0;
