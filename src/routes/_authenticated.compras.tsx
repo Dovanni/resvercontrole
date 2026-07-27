@@ -438,13 +438,20 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
   const parcelasPreview = useMemo(() => {
     if (f.condicao !== "parcelado" || !f.data_primeira_parcela || !f.parcelas) return [];
     const [y, m, d] = f.data_primeira_parcela.split("-").map(Number);
-    const valorParcela = Number((total / f.parcelas).toFixed(2));
+    const n = Math.max(1, Number(f.parcelas) || 1);
+    // Rateio determinístico em centavos: resíduo distribuído nas primeiras parcelas.
+    const totalCents = Math.round(total * 100);
+    const base = Math.floor(totalCents / n);
+    const resto = totalCents - base * n;
     const arr: { n: number; date: string; amount: number }[] = [];
-    for (let i = 0; i < f.parcelas; i++) {
+    const pad = (v: number) => String(v).padStart(2, "0");
+    for (let i = 0; i < n; i++) {
       const dv = new Date(y, m - 1 + i, 1);
       const lastDay = new Date(dv.getFullYear(), dv.getMonth() + 1, 0).getDate();
       dv.setDate(Math.min(d, lastDay));
-      arr.push({ n: i + 1, date: dv.toISOString().slice(0, 10), amount: valorParcela });
+      const dateStr = `${dv.getFullYear()}-${pad(dv.getMonth() + 1)}-${pad(dv.getDate())}`;
+      const cents = base + (i < resto ? 1 : 0);
+      arr.push({ n: i + 1, date: dateStr, amount: cents / 100 });
     }
     return arr;
   }, [f.condicao, f.data_primeira_parcela, f.parcelas, total]);
