@@ -159,13 +159,15 @@ function ComprasPage() {
           </Button>
           <Dialog open={openNova} onOpenChange={setOpenNova}>
             <DialogTrigger asChild><Button><Plus className="size-4 mr-1" /> Nova compra</Button></DialogTrigger>
-            <NovaCompraDialog
-              userId={user?.id ?? ""}
-              fornecedores={fornecedores as any}
-              produtos={produtos as any}
-              contas={contas as any}
-              onDone={() => { setOpenNova(false); qc.invalidateQueries({ queryKey: ["compras"] }); qc.invalidateQueries({ queryKey: ["payables_compras_link"] }); qc.invalidateQueries({ queryKey: ["produtos_simple"] }); }}
-            />
+            {openNova && (
+              <NovaCompraDialog
+                userId={user?.id ?? ""}
+                fornecedores={fornecedores as any}
+                produtos={produtos as any}
+                contas={contas as any}
+                onDone={() => { setOpenNova(false); qc.invalidateQueries({ queryKey: ["compras"] }); qc.invalidateQueries({ queryKey: ["payables_compras_link"] }); qc.invalidateQueries({ queryKey: ["produtos_simple"] }); }}
+              />
+            )}
           </Dialog>
         </div>
       } />
@@ -436,13 +438,20 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
   const parcelasPreview = useMemo(() => {
     if (f.condicao !== "parcelado" || !f.data_primeira_parcela || !f.parcelas) return [];
     const [y, m, d] = f.data_primeira_parcela.split("-").map(Number);
-    const valorParcela = Number((total / f.parcelas).toFixed(2));
+    const n = Math.max(1, Number(f.parcelas) || 1);
+    // Rateio determinístico em centavos: resíduo distribuído nas primeiras parcelas.
+    const totalCents = Math.round(total * 100);
+    const base = Math.floor(totalCents / n);
+    const resto = totalCents - base * n;
     const arr: { n: number; date: string; amount: number }[] = [];
-    for (let i = 0; i < f.parcelas; i++) {
+    const pad = (v: number) => String(v).padStart(2, "0");
+    for (let i = 0; i < n; i++) {
       const dv = new Date(y, m - 1 + i, 1);
       const lastDay = new Date(dv.getFullYear(), dv.getMonth() + 1, 0).getDate();
       dv.setDate(Math.min(d, lastDay));
-      arr.push({ n: i + 1, date: dv.toISOString().slice(0, 10), amount: valorParcela });
+      const dateStr = `${dv.getFullYear()}-${pad(dv.getMonth() + 1)}-${pad(dv.getDate())}`;
+      const cents = base + (i < resto ? 1 : 0);
+      arr.push({ n: i + 1, date: dateStr, amount: cents / 100 });
     }
     return arr;
   }, [f.condicao, f.data_primeira_parcela, f.parcelas, total]);
@@ -649,7 +658,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
         <div><Label>Observações</Label><Textarea value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} /></div>
       </div>
 
-      <DialogFooter><Button onClick={() => save.mutate()} disabled={save.isPending}>Salvar compra</Button></DialogFooter>
+      <DialogFooter><Button onClick={() => save.mutate()} disabled={save.isPending}>{save.isPending ? "Salvando…" : "Salvar compra"}</Button></DialogFooter>
     </DialogContent>
   );
 }
