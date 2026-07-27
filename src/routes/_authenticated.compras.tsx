@@ -241,29 +241,34 @@ function ComprasPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <Button size="icon" variant="ghost" onClick={() => setVerCompra(c)} title="Visualizar" aria-label="Visualizar compra"><Eye className="size-4" /></Button>
-                    {st !== "cancelado" && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => {
-                          const ps = compraPayables(c);
-                          const bloqueio = ps.some((p: any) =>
-                            p.status === "pago" ||
-                            Number(p.paid_amount || 0) > 0 ||
-                            !!p.bank_account_id
-                          );
-                          if (bloqueio) {
-                            toast.error("Esta compra possui movimentação financeira e não pode ser editada. Cancele ou estorne a operação pelo fluxo financeiro autorizado.");
-                            return;
-                          }
-                          setEditCompra(c);
-                        }}
-                        title="Editar compra"
-                        aria-label="Editar compra"
-                      >
-                        <Pencil className="size-4" />
-                      </Button>
-                    )}
+                    {st !== "cancelado" && (() => {
+                      const ps = compraPayables(c);
+                      const elegivel =
+                        c.status === "confirmada" &&
+                        ps.length > 0 &&
+                        ps.length === (c.parcelas || 1) &&
+                        ps.every((p: any) =>
+                          p.status === "pendente" &&
+                          Number(p.paid_amount || 0) === 0 &&
+                          !p.bank_account_id
+                        );
+                      const tip = elegivel
+                        ? "Editar compra"
+                        : "Esta compra não pode ser editada porque possui pagamento, movimentação financeira ou status incompatível.";
+                      return (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          disabled={!elegivel}
+                          onClick={() => elegivel && setEditCompra(c)}
+                          title={tip}
+                          aria-label="Editar compra"
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                      );
+                    })()}
+
                     {st !== "cancelado" && (
                       <Button size="icon" variant="ghost" onClick={() => onCancelar(c)} title="Cancelar compra" aria-label="Cancelar compra"><Trash2 className="size-4 text-destructive" /></Button>
                     )}
