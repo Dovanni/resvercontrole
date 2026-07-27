@@ -472,7 +472,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
       // Consulta ancorada (read-only): descrição inicia por "Compra #<shortId8> —".
       // Escopo por user_id da própria compra (defesa em profundidade além do RLS).
       // Ordenação: due_date ASC; desempate pelo número da parcela via sufixo "(k/n)".
-      const ownerId = (editCompra as any)?.user_id ?? user?.id;
+      const ownerId = (editCompra as any)?.user_id ?? userId;
       let q = supabase
         .from("payables")
         .select("id,description,amount,paid_amount,status,due_date,bank_account_id,user_id")
