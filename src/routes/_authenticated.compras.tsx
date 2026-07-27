@@ -510,6 +510,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
   const [itens, setItens] = useState<(Item & { _key: string })[]>([]);
   const [busca, setBusca] = useState("");
   const [itensLoaded, setItensLoaded] = useState(false);
+  const [payablesLoaded, setPayablesLoaded] = useState(false);
 
   // Preenche itens uma única vez quando dados do modo edit chegam
   if (isEdit && existingItens && !itensLoaded) {
@@ -522,6 +523,45 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
     })));
     setItensLoaded(true);
   }
+
+  // Extrai índice da parcela (i em "(i/n)") para ordenação secundária determinística
+  const parcelaIndex = (desc: string | null | undefined): number => {
+    const m = /\((\d+)\/\d+\)\s*$/.exec(desc ?? "");
+    return m ? Number(m[1]) : Number.POSITIVE_INFINITY;
+  };
+
+  // Payables ordenadas: due_date ASC, depois nº da parcela ASC
+  const sortedPayables = useMemo(() => {
+    if (!existingPayables) return [];
+    return [...existingPayables].sort((a, b) => {
+      const da = String(a.due_date ?? "");
+      const db = String(b.due_date ?? "");
+      if (da !== db) return da < db ? -1 : 1;
+      return parcelaIndex(a.description) - parcelaIndex(b.description);
+    });
+  }, [existingPayables]);
+
+  // Preenche data da 1ª parcela uma única vez a partir da payable persistida.
+  // Trata a data como YYYY-MM-DD civil, sem conversão UTC — não usa new Date().
+  if (isEdit && existingPayables && !payablesLoaded) {
+    if (sortedPayables.length > 0) {
+      const first = sortedPayables[0];
+      const due = typeof first.due_date === "string"
+        ? first.due_date.slice(0, 10) // já é YYYY-MM-DD civil
+        : "";
+      if (due && f.condicao === "parcelado") {
+        setF((prev) => ({ ...prev, data_primeira_parcela: due }));
+      }
+    }
+    setPayablesLoaded(true);
+  }
+
+  // Validações de integridade (bloqueiam Salvar em modo edit)
+  const payablesMissing = isEdit && payablesLoaded && sortedPayables.length === 0;
+  const expectedParcelas = isEdit && editCompra ? Math.max(1, Number(editCompra.parcelas) || 1) : 0;
+  const payablesMismatch =
+    isEdit && payablesLoaded && sortedPayables.length > 0 &&
+    sortedPayables.length !== expectedParcelas;
 
   const subtotal = itens.reduce((s, it) => s + it.subtotal, 0);
   const total = Math.max(0, subtotal - (Number(f.desconto) || 0) + (Number(f.frete) || 0));
