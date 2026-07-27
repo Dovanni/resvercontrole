@@ -583,6 +583,97 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
       const fornName = fornecedores.find((x) => x.id === f.fornecedor_id)?.name ?? "Fornecedor";
       const diaVenc = f.condicao === "parcelado" ? Number(f.data_primeira_parcela.split("-")[2]) : null;
 
+      // ============== MODO EDIT ==============
+      if (isEdit && editCompra) {
+        const compraId = editCompra.id;
+        const shortId = compraId.slice(0, 8);
+
+        // Revalidação de elegibilidade — refetch atômico
+        const { data: cAtual, error: eC } = await (supabase.from("compras" as any)
+          .select("id,user_id,status,updated_at").eq("id", compraId).single());
+        if (eC || !cAtual) throw eC ?? new Error("Compra não encontrada");
+        if ((cAtual as any).user_id !== userId) throw new Error("Compra pertence a outro usuário");
+        if ((cAtual as any).status === "cancelada") throw new Error("Compra cancelada não pode ser editada");
+        if (editCompra.updated_at && (cAtual as any).updated_at !== editCompra.updated_at) {
+          throw new Error("Esta compra foi alterada em outra operação. Atualize a página e tente novamente.");
+        }
+
+        const { data: paysAtual, error: ePq } = await supabase.from("payables")
+          .select("id,paid_amount,status,bank_account_id").ilike("description", `%#${shortId}%`);
+        if (ePq) throw ePq;
+        for (const p of (paysAtual ?? []) as any[]) {
+          if (p.status === "pago" || Number(p.paid_amount || 0) > 0 || p.bank_account_id) {
+            throw new Error("Esta compra possui movimentação financeira e não pode ser editada. Cancele ou estorne a operação pelo fluxo financeiro autorizado.");
+          }
+        }
+
+        // Update da compra (owner-scoped)
+        const { error: eU } = await (supabase.from("compras" as any).update({
+          fornecedor_id: f.fornecedor_id,
+          data_compra: f.data_compra,
+          numero_nf: f.numero_nf || null,
+          condicao_pagamento: f.condicao,
+          forma_pagamento: f.condicao === "a_vista" ? f.forma_pagamento : null,
+          bank_account_id: f.condicao === "a_vista" ? f.bank_account_id : null,
+          parcelas: f.condicao === "parcelado" ? f.parcelas : 1,
+          dia_vencimento: diaVenc,
+          data_vencimento: f.condicao === "a_prazo" ? f.data_vencimento : (f.condicao === "parcelado" ? f.data_primeira_parcela : null),
+          subtotal, desconto: Number(f.desconto) || 0, frete: Number(f.frete) || 0, total,
+          observacoes: f.observacoes || null,
+          updated_at: new Date().toISOString(),
+        }).eq("id", compraId).eq("user_id", userId));
+        if (eU) throw eU;
+
+        // Recria itens (sem tocar em estoque, conforme escopo do prompt)
+        const { error: eDi } = await (supabase.from("compras_itens" as any)
+          .delete().eq("compra_id", compraId).eq("user_id", userId));
+        if (eDi) throw eDi;
+        const itensRows = itens.map((it) => ({
+          user_id: userId, compra_id: compraId, produto_id: it.produto_id,
+          quantidade: it.quantidade, preco_unitario: it.preco_unitario, subtotal: it.subtotal,
+        }));
+        const { error: eIi } = await (supabase.from("compras_itens" as any).insert(itensRows));
+        if (eIi) throw eIi;
+
+        // Recria payables (todas as antigas devem estar pendentes e sem pagamento)
+        const { error: eDp } = await supabase.from("payables")
+          .delete().ilike("description", `%#${shortId}%`).eq("user_id", userId).eq("status", "pendente");
+        if (eDp) throw eDp;
+
+        const baseDesc = `Compra #${shortId} — ${fornName}${f.numero_nf ? ` NF ${f.numero_nf}` : ""}`;
+        let payablesCount = 0;
+        if (f.condicao === "a_vista") {
+          const { error } = await supabase.from("payables").insert({
+            user_id: userId, supplier_id: f.fornecedor_id, description: baseDesc,
+            category: "Fornecedor", amount: total, due_date: f.data_compra,
+            payment_method: f.forma_pagamento, status: "pago",
+            paid_amount: total, paid_at: new Date().toISOString(),
+            bank_account_id: f.bank_account_id,
+          });
+          if (error) throw error;
+          payablesCount = 1;
+        } else if (f.condicao === "parcelado") {
+          const rows = parcelasPreview.map((p) => ({
+            user_id: userId, supplier_id: f.fornecedor_id,
+            description: `${baseDesc} (${p.n}/${f.parcelas})`,
+            category: "Fornecedor", amount: p.amount,
+            due_date: p.date, status: "pendente",
+          }));
+          const { error } = await supabase.from("payables").insert(rows);
+          if (error) throw error;
+          payablesCount = f.parcelas;
+        } else {
+          const { error } = await supabase.from("payables").insert({
+            user_id: userId, supplier_id: f.fornecedor_id, description: baseDesc,
+            category: "Fornecedor", amount: total, due_date: f.data_vencimento, status: "pendente",
+          });
+          if (error) throw error;
+          payablesCount = 1;
+        }
+        return { count: payablesCount, edit: true };
+      }
+
+      // ============== MODO CREATE ==============
       // 1. Criar compra
       const { data: compraRow, error: e1 } = await (supabase.from("compras" as any).insert({
         user_id: userId,
@@ -648,9 +739,13 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
         });
         payablesCount = 1;
       }
-      return payablesCount;
+      return { count: payablesCount, edit: false };
     },
-    onSuccess: (n) => { toast.success(`Compra registrada! ${n} conta(s) a pagar gerada(s) e estoque atualizado.`); onDone(); },
+    onSuccess: (r) => {
+      if (r.edit) toast.success("Compra atualizada com sucesso.");
+      else toast.success(`Compra registrada! ${r.count} conta(s) a pagar gerada(s) e estoque atualizado.`);
+      onDone();
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
