@@ -469,7 +469,17 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
     queryKey: ["compra_payables_edit", editCompra?.id],
     enabled: isEdit,
     queryFn: async () => {
-      const { data } = await (supabase.from("payables").select("id,description,amount,paid_amount,status,due_date,bank_account_id").ilike("description", `%#${shortIdEdit}%`));
+      // Consulta ancorada (read-only): descrição inicia por "Compra #<shortId8> —".
+      // Escopo por user_id da própria compra (defesa em profundidade além do RLS).
+      // Ordenação: due_date ASC; desempate pelo número da parcela via sufixo "(k/n)".
+      const ownerId = (editCompra as any)?.user_id ?? userId;
+      let q = supabase
+        .from("payables")
+        .select("id,description,amount,paid_amount,status,due_date,bank_account_id,user_id")
+        .like("description", `Compra #${shortIdEdit} —%`)
+        .order("due_date", { ascending: true });
+      if (ownerId) q = q.eq("user_id", ownerId);
+      const { data } = await q;
       return (data ?? []) as any[];
     },
   });
