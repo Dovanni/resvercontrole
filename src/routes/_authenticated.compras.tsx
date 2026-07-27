@@ -876,7 +876,12 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
         <div><Label>Observações</Label><Textarea value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} /></div>
       </div>
 
-      <DialogFooter><Button onClick={() => save.mutate()} disabled={save.isPending}>{save.isPending ? "Salvando…" : "Salvar compra"}</Button></DialogFooter>
+      <DialogFooter>
+        <Button variant="outline" onClick={() => onDone()} disabled={save.isPending}>Cancelar</Button>
+        <Button onClick={() => save.mutate()} disabled={save.isPending}>
+          {save.isPending ? (isEdit ? "Salvando alterações…" : "Salvando…") : (isEdit ? "Salvar alterações" : "Salvar compra")}
+        </Button>
+      </DialogFooter>
     </DialogContent>
   );
 }
