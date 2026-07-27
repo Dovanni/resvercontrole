@@ -466,6 +466,11 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone }: {
     mutationFn: async () => {
       if (!f.fornecedor_id) throw new Error("Selecione um fornecedor");
       if (itens.length === 0) throw new Error("Adicione ao menos um item");
+      for (const it of itens) {
+        if (!Number.isInteger(it.quantidade) || it.quantidade < 1) {
+          throw new Error("Quantidade deve ser um número inteiro maior ou igual a 1");
+        }
+      }
       if (f.condicao === "a_vista" && !f.bank_account_id) throw new Error("Selecione a conta bancária");
       if (f.condicao === "a_prazo" && !f.data_vencimento) throw new Error("Informe a data de vencimento");
       if (f.condicao === "parcelado" && !f.data_primeira_parcela) throw new Error("Informe a data da primeira parcela");
