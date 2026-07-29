@@ -332,6 +332,7 @@ export function computeDre(input: DreEngineInput): DreResult {
 
   const noteGroups: DreGroup[] = [
     "FORA_PESSOAL_SOCIOS",
+    "FORA_ESTORNO_PESSOAL",
     "FORA_ESTOQUE_ATIVO",
     "FORA_LIQUIDACAO",
     "FORA_APORTE",

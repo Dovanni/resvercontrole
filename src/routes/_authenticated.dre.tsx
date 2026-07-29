@@ -37,7 +37,13 @@ import { useAuth } from "@/lib/auth";
 
 import { getDreReport } from "@/lib/dre/dre.functions";
 import { exportDrePdf, exportDreXlsx } from "@/lib/dre/export";
-import { PERIOD_PRESET_LABEL, type ComparisonMode, type DreLine, type PeriodPreset } from "@/lib/dre/types";
+import {
+  PERIOD_PRESET_LABEL,
+  SIMPLIFIED_LINE_KEYS,
+  type ComparisonMode,
+  type DreLine,
+  type PeriodPreset,
+} from "@/lib/dre/types";
 import { resolvePreset, todayInTz, formatCivil } from "@/lib/dre/periods";
 
 export const Route = createFileRoute("/_authenticated/dre")({
@@ -87,7 +93,7 @@ function DrePage() {
     return { from: p.from, to: todayInTz() };
   });
   const [comparison, setComparison] = useState<ComparisonMode>("none");
-  const [view, setView] = useState<"consolidado" | "mensal">("consolidado");
+  const [view, setView] = useState<"consolidado" | "simplificado" | "mensal">("consolidado");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [showHelp, setShowHelp] = useState(false);
 
@@ -129,8 +135,13 @@ function DrePage() {
 
   const visibleLines = useMemo(() => {
     if (!data) return [];
-    return data.current.lines.filter((l) => l.kind !== "item" || l.amountCents !== 0);
-  }, [data]);
+    const lines = data.current.lines.filter((l) => l.kind !== "item" || l.amountCents !== 0);
+    if (view === "simplificado") {
+      // Mesmo motor, mesmas linhas: apenas o recorte estruturante.
+      return lines.filter((l) => SIMPLIFIED_LINE_KEYS.includes(l.key));
+    }
+    return lines;
+  }, [data, view]);
 
   const toggle = (key: string) =>
     setExpanded((e) => ({ ...e, [key]: !e[key] }));
@@ -265,7 +276,8 @@ function DrePage() {
                 </div>
                 <Tabs value={view} onValueChange={(v) => setView(v as typeof view)}>
                   <TabsList>
-                    <TabsTrigger value="consolidado">Consolidado</TabsTrigger>
+                    <TabsTrigger value="consolidado">Tradicional</TabsTrigger>
+                    <TabsTrigger value="simplificado">Simplificado</TabsTrigger>
                     <TabsTrigger
                       value="mensal"
                       disabled={data.current.monthly.length < 2}
@@ -284,7 +296,7 @@ function DrePage() {
               )}
 
               <div className="overflow-x-auto">
-                {view === "consolidado" ? (
+                {view !== "mensal" ? (
                   <table className="w-full min-w-[720px] text-sm">
                     <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
                       <tr>
@@ -363,7 +375,10 @@ function DrePage() {
                 <p className="font-semibold">Notas gerenciais</p>
                 <p className="text-sm text-muted-foreground">
                   Movimentos legítimos do negócio que, pelo princípio da entidade e pelo regime de
-                  competência, <strong>não compõem o resultado empresarial</strong>.
+                  competência, <strong>não compõem o resultado empresarial</strong>. Estornos e
+                  reembolsos de despesas pessoais aparecem em linha própria e{" "}
+                  <strong>não são compensados automaticamente</strong> contra as retiradas do
+                  período, porque a despesa original pode pertencer a outro período.
                 </p>
               </div>
               <table className="w-full text-sm">

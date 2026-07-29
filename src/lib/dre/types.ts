@@ -31,6 +31,7 @@ export type DreGroup =
   | "DESP_FINANCEIRA"
   | "IRPJ_CSLL"
   | "FORA_PESSOAL_SOCIOS"
+  | "FORA_ESTORNO_PESSOAL"
   | "FORA_ESTOQUE_ATIVO"
   | "FORA_LIQUIDACAO"
   | "FORA_APORTE"
@@ -59,6 +60,7 @@ export const DRE_GROUP_LABEL: Record<DreGroup, string> = {
   DESP_FINANCEIRA: "Despesas financeiras",
   IRPJ_CSLL: "IRPJ e CSLL",
   FORA_PESSOAL_SOCIOS: "Retiradas e despesas pessoais dos sócios",
+  FORA_ESTORNO_PESSOAL: "Estorno/reembolso de despesa pessoal dos sócios",
   FORA_ESTOQUE_ATIVO: "Compras de estoque / ativo",
   FORA_LIQUIDACAO: "Pagamentos de faturas e liquidações financeiras",
   FORA_APORTE: "Aportes e recursos dos sócios",
@@ -133,6 +135,22 @@ export interface DrePayload {
 }
 
 export type ComparisonMode = "none" | "previous" | "last_year";
+
+/**
+ * Visão resumida (DRE Simplificado) — mesmo motor, mesmas linhas, apenas um
+ * recorte das linhas estruturantes. Nada é recalculado.
+ */
+export const SIMPLIFIED_LINE_KEYS: string[] = [
+  "T_RECEITA_BRUTA",
+  "T_DEDUCOES",
+  "T_RECEITA_LIQUIDA",
+  "CMV",
+  "T_LUCRO_BRUTO",
+  "T_DESPESAS",
+  "T_EBITDA",
+  "T_FINANCEIRO",
+  "T_RESULTADO_LIQUIDO",
+];
 
 export type PeriodPreset =
   | "mes_atual"
