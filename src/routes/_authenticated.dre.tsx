@@ -375,7 +375,10 @@ function DrePage() {
                 <p className="font-semibold">Notas gerenciais</p>
                 <p className="text-sm text-muted-foreground">
                   Movimentos legítimos do negócio que, pelo princípio da entidade e pelo regime de
-                  competência, <strong>não compõem o resultado empresarial</strong>.
+                  competência, <strong>não compõem o resultado empresarial</strong>. Estornos e
+                  reembolsos de despesas pessoais aparecem em linha própria e{" "}
+                  <strong>não são compensados automaticamente</strong> contra as retiradas do
+                  período, porque a despesa original pode pertencer a outro período.
                 </p>
               </div>
               <table className="w-full text-sm">
