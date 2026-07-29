@@ -296,7 +296,7 @@ function DrePage() {
               )}
 
               <div className="overflow-x-auto">
-                {view === "consolidado" ? (
+                {view !== "mensal" ? (
                   <table className="w-full min-w-[720px] text-sm">
                     <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
                       <tr>
