@@ -136,6 +136,22 @@ export interface DrePayload {
 
 export type ComparisonMode = "none" | "previous" | "last_year";
 
+/**
+ * Visão resumida (DRE Simplificado) — mesmo motor, mesmas linhas, apenas um
+ * recorte das linhas estruturantes. Nada é recalculado.
+ */
+export const SIMPLIFIED_LINE_KEYS: string[] = [
+  "T_RECEITA_BRUTA",
+  "T_DEDUCOES",
+  "T_RECEITA_LIQUIDA",
+  "CMV",
+  "T_LUCRO_BRUTO",
+  "T_DESPESAS",
+  "T_EBITDA",
+  "T_FINANCEIRO",
+  "T_RESULTADO_LIQUIDO",
+];
+
 export type PeriodPreset =
   | "mes_atual"
   | "mes_anterior"
