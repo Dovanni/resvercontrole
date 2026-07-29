@@ -111,18 +111,35 @@ function DrePage() {
     },
   });
 
+  /**
+   * AUTORIDADE TEMPORAL ÚNICA.
+   * Estas datas resolvidas alimentam simultaneamente os campos De/Até, a
+   * consulta ao servidor, o motor, o cabeçalho, o comparativo, o drill-down,
+   * as três visões, o PDF e o Excel. Nenhuma superfície resolve datas sozinha.
+   */
+  const resolved = useMemo(() => resolvePreset(preset, DEFAULT_TIMEZONE, custom), [preset, custom]);
+  const resolvedStartDate = resolved.from;
+  const resolvedEndDate = resolved.to;
+  const comparisonPeriod = useMemo(() => {
+    if (comparison === "previous") return previousPeriod(resolved);
+    if (comparison === "last_year") return lastYearPeriod(resolved);
+    return null;
+  }, [comparison, resolved]);
+
   const { data, isFetching, error } = useQuery({
-    queryKey: ["dre", preset, custom.from, custom.to, comparison],
+    queryKey: ["dre", resolvedStartDate, resolvedEndDate, comparison],
     queryFn: () =>
       fetchDre({
         data: {
-          preset,
-          from: custom.from,
-          to: custom.to,
+          // O servidor recebe as MESMAS datas civis já resolvidas.
+          preset: "personalizado" as PeriodPreset,
+          from: resolvedStartDate,
+          to: resolvedEndDate,
           comparison,
         },
       }),
   });
+
 
   const meta = useMemo(
     () => ({
