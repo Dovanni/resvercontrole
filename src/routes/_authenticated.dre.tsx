@@ -135,8 +135,13 @@ function DrePage() {
 
   const visibleLines = useMemo(() => {
     if (!data) return [];
-    return data.current.lines.filter((l) => l.kind !== "item" || l.amountCents !== 0);
-  }, [data]);
+    const lines = data.current.lines.filter((l) => l.kind !== "item" || l.amountCents !== 0);
+    if (view === "simplificado") {
+      // Mesmo motor, mesmas linhas: apenas o recorte estruturante.
+      return lines.filter((l) => SIMPLIFIED_LINE_KEYS.includes(l.key));
+    }
+    return lines;
+  }, [data, view]);
 
   const toggle = (key: string) =>
     setExpanded((e) => ({ ...e, [key]: !e[key] }));
