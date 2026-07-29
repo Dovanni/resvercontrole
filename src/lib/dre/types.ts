@@ -154,6 +154,7 @@ export const SIMPLIFIED_LINE_KEYS: string[] = [
 
 export type PeriodPreset =
   | "mes_atual"
+  | "mes_completo"
   | "mes_anterior"
   | "trimestre_atual"
   | "trimestre_anterior"
@@ -166,7 +167,8 @@ export type PeriodPreset =
   | "personalizado";
 
 export const PERIOD_PRESET_LABEL: Record<PeriodPreset, string> = {
-  mes_atual: "Mês atual",
+  mes_atual: "Mês atual (até hoje)",
+  mes_completo: "Mês completo",
   mes_anterior: "Mês anterior",
   trimestre_atual: "Trimestre atual",
   trimestre_anterior: "Trimestre anterior",

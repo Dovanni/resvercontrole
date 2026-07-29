@@ -110,7 +110,10 @@ export function resolvePreset(
   });
 
   switch (preset) {
+    // MTD — Month to Date: nunca projeta dias futuros do mês corrente.
     case "mes_atual":
+      return build(startOfMonth(today), today);
+    case "mes_completo":
       return build(startOfMonth(today), endOfMonth(today));
     case "mes_anterior": {
       const prev = addMonthsCivil(startOfMonth(today), -1);

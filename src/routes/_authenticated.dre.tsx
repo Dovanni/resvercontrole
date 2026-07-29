@@ -40,11 +40,18 @@ import { exportDrePdf, exportDreXlsx } from "@/lib/dre/export";
 import {
   PERIOD_PRESET_LABEL,
   SIMPLIFIED_LINE_KEYS,
+  DEFAULT_TIMEZONE,
   type ComparisonMode,
   type DreLine,
   type PeriodPreset,
 } from "@/lib/dre/types";
-import { resolvePreset, todayInTz, formatCivil } from "@/lib/dre/periods";
+import {
+  resolvePreset,
+  todayInTz,
+  formatCivil,
+  previousPeriod,
+  lastYearPeriod,
+} from "@/lib/dre/periods";
 
 export const Route = createFileRoute("/_authenticated/dre")({
   head: () => ({
@@ -73,6 +80,7 @@ const brlCents = (c: number) =>
 
 const PRESETS: PeriodPreset[] = [
   "mes_atual",
+  "mes_completo",
   "mes_anterior",
   "trimestre_atual",
   "trimestre_anterior",
@@ -110,18 +118,35 @@ function DrePage() {
     },
   });
 
+  /**
+   * AUTORIDADE TEMPORAL ÚNICA.
+   * Estas datas resolvidas alimentam simultaneamente os campos De/Até, a
+   * consulta ao servidor, o motor, o cabeçalho, o comparativo, o drill-down,
+   * as três visões, o PDF e o Excel. Nenhuma superfície resolve datas sozinha.
+   */
+  const resolved = useMemo(() => resolvePreset(preset, DEFAULT_TIMEZONE, custom), [preset, custom]);
+  const resolvedStartDate = resolved.from;
+  const resolvedEndDate = resolved.to;
+  const comparisonPeriod = useMemo(() => {
+    if (comparison === "previous") return previousPeriod(resolved);
+    if (comparison === "last_year") return lastYearPeriod(resolved);
+    return null;
+  }, [comparison, resolved]);
+
   const { data, isFetching, error } = useQuery({
-    queryKey: ["dre", preset, custom.from, custom.to, comparison],
+    queryKey: ["dre", resolvedStartDate, resolvedEndDate, comparison],
     queryFn: () =>
       fetchDre({
         data: {
-          preset,
-          from: custom.from,
-          to: custom.to,
+          // O servidor recebe as MESMAS datas civis já resolvidas.
+          preset: "personalizado" as PeriodPreset,
+          from: resolvedStartDate,
+          to: resolvedEndDate,
           comparison,
         },
       }),
   });
+
 
   const meta = useMemo(
     () => ({
@@ -183,7 +208,14 @@ function DrePage() {
         <CardContent className="grid gap-4 p-4 md:grid-cols-4">
           <div className="space-y-1.5">
             <Label>Período</Label>
-            <Select value={preset} onValueChange={(v) => setPreset(v as PeriodPreset)}>
+            <Select value={preset} onValueChange={(v) => {
+                const next = v as PeriodPreset;
+                if (next !== "personalizado") {
+                  const r = resolvePreset(next, DEFAULT_TIMEZONE);
+                  setCustom({ from: r.from, to: r.to });
+                }
+                setPreset(next);
+              }}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -201,7 +233,7 @@ function DrePage() {
             <Label>De</Label>
             <Input
               type="date"
-              value={custom.from}
+              value={resolvedStartDate}
               disabled={preset !== "personalizado"}
               onChange={(e) => setCustom((c) => ({ ...c, from: e.target.value }))}
             />
@@ -211,7 +243,7 @@ function DrePage() {
             <Label>Até</Label>
             <Input
               type="date"
-              value={custom.to}
+              value={resolvedEndDate}
               disabled={preset !== "personalizado"}
               onChange={(e) => setCustom((c) => ({ ...c, to: e.target.value }))}
             />
@@ -270,8 +302,9 @@ function DrePage() {
                 <div>
                   <p className="font-semibold">{meta.empresa}</p>
                   <p className="text-sm text-muted-foreground">
-                    {data.current.period.label} · Regime de competência ·{" "}
-                    {data.current.timezone}
+                    {formatCivil(resolvedStartDate)} a {formatCivil(resolvedEndDate)} · Regime de
+                    competência · {data.current.timezone}
+                    {comparisonPeriod ? ` · vs ${comparisonPeriod.label}` : ""}
                   </p>
                 </div>
                 <Tabs value={view} onValueChange={(v) => setView(v as typeof view)}>
