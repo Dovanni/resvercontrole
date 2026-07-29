@@ -86,57 +86,81 @@ function ReportsPage() {
     },
   });
 
+  // Precisa de TODOS os movimentos até a data "Até" para apurar o saldo de
+  // abertura do período (não apenas os movimentos do período).
   const { data: bankMovements } = useQuery({
-    queryKey: ["rep-bank-movements", from, to],
+    queryKey: ["rep-bank-movements", to],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bank_movements" as any)
         .select("account_id,destination_account_id,type,category,description,amount,movement_date")
-        .gte("movement_date", from)
         .lte("movement_date", to)
         .order("movement_date");
       if (error) throw error;
-      return (data ?? []) as unknown as { account_id: string; destination_account_id: string | null; type: string; category: string; description: string; amount: number; movement_date: string }[];
+      return (data ?? []) as unknown as BankMovementLike[];
     },
   });
 
-  const bankBalances = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const a of bankAccounts ?? []) map[a.id] = 0; // saldo inicial vem como movimento 'saldo_inicial'
-    // Need all movements to compute current balance; here we use only-period movements for simplicity of total
-    for (const m of bankMovements ?? []) {
-      const amt = Number(m.amount);
-      if (m.type === "entrada") map[m.account_id] = (map[m.account_id] ?? 0) + amt;
-      else if (m.type === "saida") map[m.account_id] = (map[m.account_id] ?? 0) - amt;
-      else if (m.type === "transferencia") {
-        map[m.account_id] = (map[m.account_id] ?? 0) - amt;
-        if (m.destination_account_id) map[m.destination_account_id] = (map[m.destination_account_id] ?? 0) + amt;
-      }
-    }
-    return map;
-  }, [bankAccounts, bankMovements]);
-
-  const totalBankBalance = useMemo(
-    () => (bankAccounts ?? []).filter(a => a.status === "ativa").reduce((s, a) => s + (bankBalances[a.id] ?? 0), 0),
-    [bankAccounts, bankBalances]
+  const includeInactive = false;
+  const bankReport = useMemo(
+    () =>
+      buildBankReport(
+        (bankAccounts ?? []).filter((a) => includeInactive || a.status === "ativa"),
+        bankMovements ?? [],
+        from,
+        to,
+      ),
+    [bankAccounts, bankMovements, from, to]
   );
+
+  const isToday = to === todayStr;
+  const closingLabel = isToday ? "Saldo atual" : `Saldo final em ${dateBR(to)}`;
+  const totalBankBalance = fromCents(bankReport.totals.closingCents);
+
+  const drillMovements = useMemo(() => {
+    if (!drillAccountId) return [];
+    return (bankMovements ?? []).filter(
+      (m) =>
+        m.movement_date >= from &&
+        m.movement_date <= to &&
+        (m.account_id === drillAccountId || m.destination_account_id === drillAccountId)
+    );
+  }, [bankMovements, drillAccountId, from, to]);
+
+  const drillAccount = bankReport.accounts.find((a) => a.id === drillAccountId);
+
+  const bankRows = () =>
+    bankReport.accounts.map((a) => ({
+      Conta: a.name,
+      Banco: a.bank,
+      Status: a.status,
+      "Saldo inicial do período": fromCents(a.openingCents),
+      Entradas: fromCents(a.inflowCents),
+      Saídas: fromCents(a.outflowCents),
+      "Movimentação líquida": fromCents(a.netCents),
+      [closingLabel]: fromCents(a.closingCents),
+    }));
 
   const exportBankXlsx = () => {
     const wb = XLSX.utils.book_new();
     // Sheet 1: posição das contas
-    const positions = (bankAccounts ?? []).map((a) => ({
-      Conta: a.name,
-      Banco: a.bank,
-      Status: a.status,
-      "Saldo inicial": Number(a.initial_balance),
-      "Saldo atual": bankBalances[a.id] ?? 0,
-    }));
-    positions.push({ Conta: "TOTAL CONSOLIDADO", Banco: "", Status: "", "Saldo inicial": 0, "Saldo atual": totalBankBalance });
+    const positions: any[] = bankRows();
+    positions.push({
+      Conta: "TOTAL CONSOLIDADO",
+      Banco: "",
+      Status: "",
+      "Saldo inicial do período": fromCents(bankReport.totals.openingCents),
+      Entradas: fromCents(bankReport.totals.inflowCents),
+      Saídas: fromCents(bankReport.totals.outflowCents),
+      "Movimentação líquida": fromCents(bankReport.totals.netCents),
+      [closingLabel]: totalBankBalance,
+    });
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(positions), "Posição");
 
-    // Sheet 2: movimentações por categoria
+    // Sheet 2: movimentações por categoria (apenas o período)
+    const periodMovements = (bankMovements ?? []).filter((m) => m.movement_date >= from && m.movement_date <= to);
     const byCategory: Record<string, { entrada: number; saida: number }> = {};
-    for (const m of bankMovements ?? []) {
+    for (const m of periodMovements) {
       byCategory[m.category] ??= { entrada: 0, saida: 0 };
       if (m.type === "entrada") byCategory[m.category].entrada += Number(m.amount);
       else if (m.type === "saida") byCategory[m.category].saida += Number(m.amount);
@@ -148,7 +172,7 @@ function ReportsPage() {
 
     // Sheet 3: movimentações detalhadas
     const accNames = Object.fromEntries((bankAccounts ?? []).map((a) => [a.id, a.name]));
-    const detail = (bankMovements ?? []).map((m) => ({
+    const detail = periodMovements.map((m) => ({
       Data: dateBR(m.movement_date),
       Conta: accNames[m.account_id] ?? "",
       Tipo: m.type,
@@ -163,22 +187,40 @@ function ReportsPage() {
   };
 
   const exportBankPdf = () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: "landscape" });
     doc.setFontSize(16);
     doc.text("Relatório bancário", 14, 18);
     doc.setFontSize(10);
-    doc.text(`Período: ${dateBR(from)} a ${dateBR(to)}  •  Total consolidado: ${brl(totalBankBalance)}`, 14, 26);
+    doc.text(`Período: ${dateBR(from)} a ${dateBR(to)}  •  ${closingLabel} consolidado: ${brl(totalBankBalance)}`, 14, 26);
     autoTable(doc, {
       startY: 32,
-      head: [["Conta", "Banco", "Status", "Saldo atual"]],
-      body: (bankAccounts ?? []).map((a) => [a.name, a.bank, a.status, brl(bankBalances[a.id] ?? 0)]),
-      foot: [["", "", "TOTAL", brl(totalBankBalance)]],
+      head: [["Conta", "Banco", "Status", "Saldo inicial", "Entradas", "Saídas", "Líquido", closingLabel]],
+      body: bankReport.accounts.map((a) => [
+        a.name,
+        a.bank,
+        a.status,
+        brl(fromCents(a.openingCents)),
+        brl(fromCents(a.inflowCents)),
+        brl(fromCents(a.outflowCents)),
+        brl(fromCents(a.netCents)),
+        brl(fromCents(a.closingCents)),
+      ]),
+      foot: [[
+        "TOTAL", "", "",
+        brl(fromCents(bankReport.totals.openingCents)),
+        brl(fromCents(bankReport.totals.inflowCents)),
+        brl(fromCents(bankReport.totals.outflowCents)),
+        brl(fromCents(bankReport.totals.netCents)),
+        brl(totalBankBalance),
+      ]],
       headStyles: { fillColor: [219, 39, 119] },
       footStyles: { fillColor: [243, 244, 246], textColor: 20, fontStyle: "bold" },
       styles: { fontSize: 9 },
+      columnStyles: { 3: { halign: "right" }, 4: { halign: "right" }, 5: { halign: "right" }, 6: { halign: "right" }, 7: { halign: "right" } },
     });
     doc.save(`bancario_${from}_${to}.pdf`);
   };
+
 
   const dre = useMemo(() => {
     const byMonth: Record<string, { income: Record<string, number>; expense: Record<string, number> }> = {};
