@@ -44,7 +44,13 @@ import {
   type DreLine,
   type PeriodPreset,
 } from "@/lib/dre/types";
-import { resolvePreset, todayInTz, formatCivil } from "@/lib/dre/periods";
+import {
+  resolvePreset,
+  todayInTz,
+  formatCivil,
+  previousPeriod,
+  lastYearPeriod,
+} from "@/lib/dre/periods";
 
 export const Route = createFileRoute("/_authenticated/dre")({
   head: () => ({
@@ -201,7 +207,14 @@ function DrePage() {
         <CardContent className="grid gap-4 p-4 md:grid-cols-4">
           <div className="space-y-1.5">
             <Label>Período</Label>
-            <Select value={preset} onValueChange={(v) => setPreset(v as PeriodPreset)}>
+            <Select value={preset} onValueChange={(v) => {
+                const next = v as PeriodPreset;
+                if (next !== "personalizado") {
+                  const r = resolvePreset(next, DEFAULT_TIMEZONE);
+                  setCustom({ from: r.from, to: r.to });
+                }
+                setPreset(next);
+              }}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -219,7 +232,7 @@ function DrePage() {
             <Label>De</Label>
             <Input
               type="date"
-              value={custom.from}
+              value={resolvedStartDate}
               disabled={preset !== "personalizado"}
               onChange={(e) => setCustom((c) => ({ ...c, from: e.target.value }))}
             />
@@ -229,7 +242,7 @@ function DrePage() {
             <Label>Até</Label>
             <Input
               type="date"
-              value={custom.to}
+              value={resolvedEndDate}
               disabled={preset !== "personalizado"}
               onChange={(e) => setCustom((c) => ({ ...c, to: e.target.value }))}
             />
