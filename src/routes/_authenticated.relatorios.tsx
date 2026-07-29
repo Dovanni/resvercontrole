@@ -26,12 +26,16 @@ function monthLabel(d: Date) {
 }
 
 function ReportsPage() {
+  // Data civil local (America/Sao_Paulo) — nunca toISOString(), que desloca por UTC.
+  const civil = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   const today = new Date();
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10);
-  const todayStr = today.toISOString().slice(0, 10);
+  const monthStart = civil(new Date(today.getFullYear(), today.getMonth(), 1));
+  const todayStr = civil(today);
   const [from, setFrom] = useState(monthStart);
   const [to, setTo] = useState(todayStr);
   const [showHelp, setShowHelp] = useState(false);
+  const [drillAccountId, setDrillAccountId] = useState<string | null>(null);
 
   const { data: sales } = useQuery({
     queryKey: ["rep-sales", from, to],
