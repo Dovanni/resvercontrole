@@ -525,12 +525,107 @@ function ReportsPage() {
         <ReportCard
           icon={<Landmark className="size-5" />}
           title="Bancário"
-          desc={`${(bankAccounts ?? []).filter(a => a.status === "ativa").length} contas • ${brl(totalBankBalance)}`}
+          desc={`${bankReport.accounts.length} contas • ${closingLabel}: ${brl(totalBankBalance)}`}
           onPdf={exportBankPdf}
           onXlsx={exportBankXlsx}
         />
       </div>
+
+      {/* Demonstrativo bancário — mesma fonte canônica usada em PDF e Excel */}
+      <Card className="shadow-soft mt-6">
+        <CardContent className="p-5 overflow-x-auto">
+          <div className="font-display text-lg mb-1">Demonstrativo bancário</div>
+          <div className="text-xs text-muted-foreground mb-4">
+            {dateBR(from)} a {dateBR(to)} • Saldo final = Saldo inicial + Entradas − Saídas
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Conta</TableHead>
+                <TableHead>Banco</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Saldo inicial</TableHead>
+                <TableHead className="text-right">Entradas</TableHead>
+                <TableHead className="text-right">Saídas</TableHead>
+                <TableHead className="text-right">Líquido</TableHead>
+                <TableHead className="text-right">{closingLabel}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {bankReport.accounts.map((a) => (
+                <TableRow
+                  key={a.id}
+                  className="cursor-pointer"
+                  onClick={() => setDrillAccountId(a.id)}
+                >
+                  <TableCell className="font-medium">{a.name}</TableCell>
+                  <TableCell>{a.bank}</TableCell>
+                  <TableCell>{a.status}</TableCell>
+                  <TableCell className="text-right tabular-nums">{brl(fromCents(a.openingCents))}</TableCell>
+                  <TableCell className="text-right tabular-nums text-emerald-600">{brl(fromCents(a.inflowCents))}</TableCell>
+                  <TableCell className="text-right tabular-nums text-destructive">{brl(fromCents(a.outflowCents))}</TableCell>
+                  <TableCell className={`text-right tabular-nums ${a.netCents < 0 ? "text-destructive" : ""}`}>{brl(fromCents(a.netCents))}</TableCell>
+                  <TableCell className={`text-right tabular-nums font-semibold ${a.closingCents < 0 ? "text-destructive" : ""}`}>{brl(fromCents(a.closingCents))}</TableCell>
+                </TableRow>
+              ))}
+              <TableRow className="bg-muted/50 font-semibold">
+                <TableCell colSpan={3}>TOTAL CONSOLIDADO</TableCell>
+                <TableCell className="text-right tabular-nums">{brl(fromCents(bankReport.totals.openingCents))}</TableCell>
+                <TableCell className="text-right tabular-nums">{brl(fromCents(bankReport.totals.inflowCents))}</TableCell>
+                <TableCell className="text-right tabular-nums">{brl(fromCents(bankReport.totals.outflowCents))}</TableCell>
+                <TableCell className="text-right tabular-nums">{brl(fromCents(bankReport.totals.netCents))}</TableCell>
+                <TableCell className="text-right tabular-nums">{brl(totalBankBalance)}</TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Dialog open={!!drillAccountId} onOpenChange={(o) => !o && setDrillAccountId(null)}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display">
+              {drillAccount?.name} — {dateBR(from)} a {dateBR(to)}
+            </DialogTitle>
+          </DialogHeader>
+          {drillAccount && (
+            <div className="text-xs text-muted-foreground mb-2">
+              Saldo inicial {brl(fromCents(drillAccount.openingCents))} + Entradas {brl(fromCents(drillAccount.inflowCents))} − Saídas{" "}
+              {brl(fromCents(drillAccount.outflowCents))} = <strong>{brl(fromCents(drillAccount.closingCents))}</strong>
+            </div>
+          )}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Data</TableHead>
+                <TableHead>Categoria</TableHead>
+                <TableHead>Descrição</TableHead>
+                <TableHead className="text-right">Valor</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {drillMovements.length === 0 && (
+                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground text-sm">Sem movimentos no período.</TableCell></TableRow>
+              )}
+              {drillMovements.map((m, i) => {
+                const isCredit = m.type === "entrada" || (m.type === "transferencia" && m.destination_account_id === drillAccountId);
+                return (
+                  <TableRow key={i}>
+                    <TableCell>{dateBR(m.movement_date)}</TableCell>
+                    <TableCell>{m.category}</TableCell>
+                    <TableCell>{m.description}</TableCell>
+                    <TableCell className={`text-right tabular-nums ${isCredit ? "text-emerald-600" : "text-destructive"}`}>
+                      {isCredit ? "+" : "−"} {brl(Number(m.amount))}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }
 
