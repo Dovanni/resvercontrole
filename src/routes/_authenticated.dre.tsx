@@ -37,7 +37,13 @@ import { useAuth } from "@/lib/auth";
 
 import { getDreReport } from "@/lib/dre/dre.functions";
 import { exportDrePdf, exportDreXlsx } from "@/lib/dre/export";
-import { PERIOD_PRESET_LABEL, type ComparisonMode, type DreLine, type PeriodPreset } from "@/lib/dre/types";
+import {
+  PERIOD_PRESET_LABEL,
+  SIMPLIFIED_LINE_KEYS,
+  type ComparisonMode,
+  type DreLine,
+  type PeriodPreset,
+} from "@/lib/dre/types";
 import { resolvePreset, todayInTz, formatCivil } from "@/lib/dre/periods";
 
 export const Route = createFileRoute("/_authenticated/dre")({
