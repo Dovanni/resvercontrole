@@ -60,6 +60,7 @@ export const DRE_GROUP_LABEL: Record<DreGroup, string> = {
   DESP_FINANCEIRA: "Despesas financeiras",
   IRPJ_CSLL: "IRPJ e CSLL",
   FORA_PESSOAL_SOCIOS: "Retiradas e despesas pessoais dos sócios",
+  FORA_ESTORNO_PESSOAL: "Estorno/reembolso de despesa pessoal dos sócios",
   FORA_ESTOQUE_ATIVO: "Compras de estoque / ativo",
   FORA_LIQUIDACAO: "Pagamentos de faturas e liquidações financeiras",
   FORA_APORTE: "Aportes e recursos dos sócios",
