@@ -140,30 +140,33 @@ function DrePage() {
       <PageHeader
         title="DRE Tradicional"
         subtitle="Demonstração do Resultado do Exercício — regime de competência"
-      >
-        <Button variant="outline" size="sm" onClick={() => setShowHelp(true)}>
-          <HelpCircle className="mr-2 h-4 w-4" />
-          Como é calculado
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={!data}
-          onClick={() => data && exportDrePdf(data, meta)}
-        >
-          <FileText className="mr-2 h-4 w-4" />
-          PDF
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={!data}
-          onClick={() => data && exportDreXlsx(data, meta)}
-        >
-          <FileSpreadsheet className="mr-2 h-4 w-4" />
-          Excel
-        </Button>
-      </PageHeader>
+        action={
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowHelp(true)}>
+              <HelpCircle className="mr-2 h-4 w-4" />
+              Como é calculado
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!data}
+              onClick={() => data && exportDrePdf(data, meta)}
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              PDF
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!data}
+              onClick={() => data && exportDreXlsx(data, meta)}
+            >
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              Excel
+            </Button>
+          </div>
+        }
+      />
 
       <Card>
         <CardContent className="grid gap-4 p-4 md:grid-cols-4">
