@@ -16,6 +16,7 @@ import { Plus, Landmark, Pencil, Trash2, Download, AlertTriangle, ArrowLeftRight
 import { DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { brl, dateBR } from "@/lib/format";
+import { currentBalancesCents, fromCents } from "@/lib/bank/balances";
 import { useConfirm } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_authenticated/contas-bancarias")({
