@@ -13,6 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { FileSpreadsheet, FileText, ShoppingBag, Calculator, Package, Landmark, HelpCircle } from "lucide-react";
 import { brl, dateBR } from "@/lib/format";
+import { buildBankReport, fromCents, type BankMovementLike } from "@/lib/bank/balances";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export const Route = createFileRoute("/_authenticated/relatorios")({
   head: () => ({ meta: [{ title: "Relatórios — Vejamais" }] }),
