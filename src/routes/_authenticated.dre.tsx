@@ -73,6 +73,7 @@ const brlCents = (c: number) =>
 
 const PRESETS: PeriodPreset[] = [
   "mes_atual",
+  "mes_completo",
   "mes_anterior",
   "trimestre_atual",
   "trimestre_anterior",
