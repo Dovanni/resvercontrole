@@ -93,7 +93,7 @@ function DrePage() {
     return { from: p.from, to: todayInTz() };
   });
   const [comparison, setComparison] = useState<ComparisonMode>("none");
-  const [view, setView] = useState<"consolidado" | "mensal">("consolidado");
+  const [view, setView] = useState<"consolidado" | "simplificado" | "mensal">("consolidado");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [showHelp, setShowHelp] = useState(false);
 
