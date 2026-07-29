@@ -276,7 +276,8 @@ function DrePage() {
                 </div>
                 <Tabs value={view} onValueChange={(v) => setView(v as typeof view)}>
                   <TabsList>
-                    <TabsTrigger value="consolidado">Consolidado</TabsTrigger>
+                    <TabsTrigger value="consolidado">Tradicional</TabsTrigger>
+                    <TabsTrigger value="simplificado">Simplificado</TabsTrigger>
                     <TabsTrigger
                       value="mensal"
                       disabled={data.current.monthly.length < 2}
