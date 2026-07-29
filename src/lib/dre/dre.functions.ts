@@ -94,10 +94,15 @@ function classifyPayable(
     "NAO_CLASSIFICADO") as DreGroup;
 }
 
+/** Cliente Supabase autenticado (RLS como o usuário). Tipagem estrutural mínima. */
+type SupabaseLike = {
+  from: (table: string) => {
+    select: (columns: string) => any;
+  };
+};
+
 async function loadPeriod(
-  supabase: Awaited<ReturnType<typeof requireSupabaseAuth.server>> extends never
-    ? never
-    : any,
+  supabase: SupabaseLike,
   tenantId: string,
   timezone: string,
   period: DrePeriod,
