@@ -27,6 +27,7 @@ const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
   { to: "/balancete", label: "Balancete", icon: Scale, perm: "view:finance" },
   { to: "/contas-bancarias", label: "Contas bancárias", icon: Landmark, perm: "view:finance" },
   { to: "/cartoes-credito", label: "Cartões de crédito", icon: CreditCard, perm: "view:finance" },
+  { to: "/dre", label: "DRE", icon: Scale, perm: "view:reports" },
   { to: "/relatorios", label: "Relatórios", icon: FileText, perm: "view:reports" },
   { to: "/configuracoes", label: "Configurações", icon: Settings, perm: "view:settings" },
 ];

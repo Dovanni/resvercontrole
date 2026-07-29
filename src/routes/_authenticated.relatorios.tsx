@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import * as XLSX from "xlsx";
@@ -446,13 +446,27 @@ function ReportsPage() {
           onPdf={exportSalesPdf}
           onXlsx={exportSalesXlsx}
         />
-        <ReportCard
-          icon={<Calculator className="size-5" />}
-          title="DRE simplificado"
-          desc={`Resultado: ${brl(monthlyResult)}`}
-          onPdf={exportDrePdf}
-          onXlsx={exportDreXlsx}
-        />
+        {/*
+          O DRE deixou de ser calculado aqui. A demonstração oficial passou a ser
+          o DRE Tradicional por competência, com fonte única de cálculo em
+          `src/lib/dre/engine.ts`. Manter um segundo cálculo nesta tela geraria
+          divergência de resultado entre relatórios.
+        */}
+        <Link to="/dre" className="block">
+          <div className="h-full rounded-xl border bg-card p-5 transition-colors hover:border-primary/50">
+            <div className="flex items-center gap-2 text-primary">
+              <Calculator className="size-5" />
+              <span className="font-semibold text-foreground">DRE Tradicional</span>
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Demonstração do Resultado por regime de competência, com comparativos, margens e
+              exportação em PDF e Excel.
+            </p>
+            <span className="mt-3 inline-block text-sm font-medium text-primary">
+              Abrir DRE →
+            </span>
+          </div>
+        </Link>
         <ReportCard
           icon={<Package className="size-5" />}
           title="Posição de estoque"

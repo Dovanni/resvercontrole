@@ -20,6 +20,7 @@ import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedFornecedoresRouteImport } from './routes/_authenticated.fornecedores'
 import { Route as AuthenticatedFluxoCaixaRouteImport } from './routes/_authenticated.fluxo-caixa'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated.financeiro'
+import { Route as AuthenticatedDreRouteImport } from './routes/_authenticated.dre'
 import { Route as AuthenticatedDespesasAnuaisRouteImport } from './routes/_authenticated.despesas-anuais'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
 import { Route as AuthenticatedCurvaAbcRouteImport } from './routes/_authenticated.curva-abc'
@@ -89,6 +90,11 @@ const AuthenticatedFluxoCaixaRoute = AuthenticatedFluxoCaixaRouteImport.update({
 const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDreRoute = AuthenticatedDreRouteImport.update({
+  id: '/dre',
+  path: '/dre',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedDespesasAnuaisRoute =
@@ -193,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/curva-abc': typeof AuthenticatedCurvaAbcRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/despesas-anuais': typeof AuthenticatedDespesasAnuaisRoute
+  '/dre': typeof AuthenticatedDreRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/fluxo-caixa': typeof AuthenticatedFluxoCaixaRoute
   '/fornecedores': typeof AuthenticatedFornecedoresRoute
@@ -220,6 +227,7 @@ export interface FileRoutesByTo {
   '/curva-abc': typeof AuthenticatedCurvaAbcRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/despesas-anuais': typeof AuthenticatedDespesasAnuaisRoute
+  '/dre': typeof AuthenticatedDreRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/fluxo-caixa': typeof AuthenticatedFluxoCaixaRoute
   '/fornecedores': typeof AuthenticatedFornecedoresRoute
@@ -249,6 +257,7 @@ export interface FileRoutesById {
   '/_authenticated/curva-abc': typeof AuthenticatedCurvaAbcRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/despesas-anuais': typeof AuthenticatedDespesasAnuaisRoute
+  '/_authenticated/dre': typeof AuthenticatedDreRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/fluxo-caixa': typeof AuthenticatedFluxoCaixaRoute
   '/_authenticated/fornecedores': typeof AuthenticatedFornecedoresRoute
@@ -278,6 +287,7 @@ export interface FileRouteTypes {
     | '/curva-abc'
     | '/dashboard'
     | '/despesas-anuais'
+    | '/dre'
     | '/financeiro'
     | '/fluxo-caixa'
     | '/fornecedores'
@@ -305,6 +315,7 @@ export interface FileRouteTypes {
     | '/curva-abc'
     | '/dashboard'
     | '/despesas-anuais'
+    | '/dre'
     | '/financeiro'
     | '/fluxo-caixa'
     | '/fornecedores'
@@ -333,6 +344,7 @@ export interface FileRouteTypes {
     | '/_authenticated/curva-abc'
     | '/_authenticated/dashboard'
     | '/_authenticated/despesas-anuais'
+    | '/_authenticated/dre'
     | '/_authenticated/financeiro'
     | '/_authenticated/fluxo-caixa'
     | '/_authenticated/fornecedores'
@@ -427,6 +439,13 @@ declare module '@tanstack/react-router' {
       path: '/financeiro'
       fullPath: '/financeiro'
       preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dre': {
+      id: '/_authenticated/dre'
+      path: '/dre'
+      fullPath: '/dre'
+      preLoaderRoute: typeof AuthenticatedDreRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/despesas-anuais': {
@@ -567,6 +586,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedCurvaAbcRoute: typeof AuthenticatedCurvaAbcRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDespesasAnuaisRoute: typeof AuthenticatedDespesasAnuaisRoute
+  AuthenticatedDreRoute: typeof AuthenticatedDreRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedFluxoCaixaRoute: typeof AuthenticatedFluxoCaixaRoute
   AuthenticatedFornecedoresRoute: typeof AuthenticatedFornecedoresRoute
@@ -591,6 +611,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCurvaAbcRoute: AuthenticatedCurvaAbcRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDespesasAnuaisRoute: AuthenticatedDespesasAnuaisRoute,
+  AuthenticatedDreRoute: AuthenticatedDreRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedFluxoCaixaRoute: AuthenticatedFluxoCaixaRoute,
   AuthenticatedFornecedoresRoute: AuthenticatedFornecedoresRoute,
@@ -613,13 +634,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

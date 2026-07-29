@@ -767,6 +767,87 @@ export type Database = {
         }
         Relationships: []
       }
+      dre_classificacoes: {
+        Row: {
+          created_at: string
+          dre_group: string
+          id: string
+          justification: string | null
+          source_id: string
+          source_table: string
+          tenant_id: string
+          treatment: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dre_group: string
+          id?: string
+          justification?: string | null
+          source_id: string
+          source_table: string
+          tenant_id: string
+          treatment?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          dre_group?: string
+          id?: string
+          justification?: string | null
+          source_id?: string
+          source_table?: string
+          tenant_id?: string
+          treatment?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      dre_regras: {
+        Row: {
+          created_at: string
+          dre_group: string
+          id: string
+          justification: string | null
+          match_category: string | null
+          match_supplier_id: string | null
+          source_table: string
+          tenant_id: string
+          treatment: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dre_group: string
+          id?: string
+          justification?: string | null
+          match_category?: string | null
+          match_supplier_id?: string | null
+          source_table: string
+          tenant_id: string
+          treatment?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          dre_group?: string
+          id?: string
+          justification?: string | null
+          match_category?: string | null
+          match_supplier_id?: string | null
+          source_table?: string
+          tenant_id?: string
+          treatment?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       finance_entries: {
         Row: {
           amount: number
