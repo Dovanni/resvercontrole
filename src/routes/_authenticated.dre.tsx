@@ -302,8 +302,9 @@ function DrePage() {
                 <div>
                   <p className="font-semibold">{meta.empresa}</p>
                   <p className="text-sm text-muted-foreground">
-                    {data.current.period.label} · Regime de competência ·{" "}
-                    {data.current.timezone}
+                    {formatCivil(resolvedStartDate)} a {formatCivil(resolvedEndDate)} · Regime de
+                    competência · {data.current.timezone}
+                    {comparisonPeriod ? ` · vs ${comparisonPeriod.label}` : ""}
                   </p>
                 </div>
                 <Tabs value={view} onValueChange={(v) => setView(v as typeof view)}>
