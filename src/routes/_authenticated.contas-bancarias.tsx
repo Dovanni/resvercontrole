@@ -16,6 +16,7 @@ import { Plus, Landmark, Pencil, Trash2, Download, AlertTriangle, ArrowLeftRight
 import { DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { brl, dateBR } from "@/lib/format";
+import { currentBalancesCents, fromCents } from "@/lib/bank/balances";
 import { useConfirm } from "@/components/confirm-dialog";
 
 export const Route = createFileRoute("/_authenticated/contas-bancarias")({
@@ -71,19 +72,10 @@ function BankAccountsPage() {
     },
   });
 
+  // Fonte canônica única de saldo, compartilhada com o Relatório bancário.
   const balanceByAccount = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const a of accounts ?? []) map[a.id] = 0; // saldo inicial vem como movimento 'saldo_inicial'
-    for (const m of allMovements ?? []) {
-      const amt = Number(m.amount);
-      if (m.type === "entrada") map[m.account_id] = (map[m.account_id] ?? 0) + amt;
-      else if (m.type === "saida") map[m.account_id] = (map[m.account_id] ?? 0) - amt;
-      else if (m.type === "transferencia") {
-        map[m.account_id] = (map[m.account_id] ?? 0) - amt;
-        if (m.destination_account_id) map[m.destination_account_id] = (map[m.destination_account_id] ?? 0) + amt;
-      }
-    }
-    return map;
+    const cents = currentBalancesCents(accounts ?? [], allMovements ?? []);
+    return Object.fromEntries(Object.entries(cents).map(([k, v]) => [k, fromCents(v)]));
   }, [accounts, allMovements]);
 
   const removeAccount = useMutation({
