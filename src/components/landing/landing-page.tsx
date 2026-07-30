@@ -268,8 +268,8 @@ function Section({
 }: {
   id?: string;
   eyebrow?: string;
-  title: string;
-  subtitle?: string;
+  title: React.ReactNode;
+  subtitle?: string | React.ReactNode;
   children: React.ReactNode;
   className?: string;
 }) {
