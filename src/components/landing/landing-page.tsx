@@ -132,10 +132,12 @@ function Header() {
             ))}
             <div className="mt-2 grid gap-2">
               <Link to="/auth" onClick={() => setOpen(false)}>
-                <Button variant="outline" className="w-full">Entrar</Button>
+                <Button variant="outline" className="w-full">{HERO.existingClientCta}</Button>
               </Link>
               <Link to="/auth" onClick={() => setOpen(false)}>
-                <Button className="w-full">Entrar</Button>
+                <Button className="w-full gap-1">
+                  {HERO.primaryCta} <ArrowRight className="size-4" />
+                </Button>
               </Link>
             </div>
           </nav>
