@@ -395,15 +395,8 @@ function HowItWorks() {
 function Features() {
   return (
     <Section
-      eyebrow={FEATURES_HEADING.eyebrow}
-      title={
-        <>
-          Funcionalidades para <span className="text-primary">vender melhor</span>,{" "}
-          <span className="text-primary">controlar gastos</span> e acompanhar{" "}
-          <span className="text-primary">resultados</span> — em uma plataforma preparada para crescer com seu negócio.
-        </>
-      }
-      subtitle={FEATURES_HEADING.subtitle}
+      eyebrow="Recursos em destaque"
+      title="Ferramentas para o seu dia a dia."
       className="bg-secondary/40"
     >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
