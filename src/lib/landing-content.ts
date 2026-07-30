@@ -5,14 +5,16 @@ export const METRIXHR_URL = "https://metrixhr.com.br";
 export const VEJAMAIS_DOMAIN = "https://vejamais.com.br";
 
 export const HERO = {
-  eyebrow: "Gestão comercial e financeira em um só lugar",
-  title: "A VEJAMAIS reinventou a gestão comercial e financeira para seu negócio crescer com mais controle e rentabilidade.",
+  eyebrow: "Gestão comercial e financeira para e-commerce e comércio",
+  title:
+    "A VEJAMAIS reinventou a gestão comercial e financeira para fazer seu e-commerce — e todo o seu negócio — crescer com mais controle e rentabilidade.",
   subtitle:
-    "Revise transações, monitore gastos e acompanhe vendas, margens e lucros em um só lugar — com clareza para decidir e segurança para crescer.",
+    "Centralize pedidos, vendas, produtos, estoque, taxas, fretes, contas, margens e lucros em um só lugar — com clareza para decidir e segurança para crescer.",
   primaryCta: "Começar agora",
   secondaryCta: "Conhecer o VEJAMAIS",
   existingClientCta: "Já sou cliente — Entrar",
 };
+
 
 export const PAIN_POINTS = [
   "Vendas registradas em lugares diferentes",
