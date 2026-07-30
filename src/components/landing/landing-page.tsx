@@ -166,7 +166,7 @@ function Hero() {
             <Sparkles className="size-3.5" /> {HERO.eyebrow}
           </span>
           <h1
-            className="mt-5 max-w-[15ch] text-pretty font-sans text-[2.5rem] font-extrabold text-petrol sm:text-[3rem] md:text-[3.2rem] lg:text-[3.9rem] xl:text-[4.4rem]"
+            className="mt-5 max-w-[13ch] text-pretty font-sans text-[2.5rem] font-extrabold text-petrol sm:max-w-[16ch] sm:text-[3rem] md:max-w-[18ch] md:text-[3.2rem] lg:max-w-[21ch] lg:text-[3.9rem] xl:max-w-[22ch] xl:text-[4.3rem]"
             style={{ lineHeight: 1.0, letterSpacing: "-0.035em", fontWeight: 800 }}
           >
             A <span className="text-primary-deep">VEJAMAIS</span> reinventou a gestão comercial e
