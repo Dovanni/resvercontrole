@@ -159,15 +159,22 @@ function Hero() {
             "radial-gradient(1000px 500px at 15% -10%, rgba(34,197,94,0.14), transparent), radial-gradient(800px 400px at 90% 10%, rgba(124,58,237,0.10), transparent)",
         }}
       />
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-2 md:gap-12 md:px-6 md:py-20 lg:py-24">
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 md:grid-cols-[minmax(0,54fr)_minmax(0,46fr)] md:gap-10 md:px-6 md:py-20 lg:py-24">
         <div className="flex flex-col justify-center">
           <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
             <Sparkles className="size-3.5" /> {HERO.eyebrow}
           </span>
-          <h1 className="mt-4 max-w-3xl text-balance font-display text-4xl leading-[1.15] tracking-tight text-foreground sm:text-5xl md:text-6xl">
-            A VEJAMAIS reinventou a gestão comercial e financeira para seu negócio crescer com mais{" "}
-            <span className="text-primary">controle</span> e{" "}
-            <span className="text-primary">rentabilidade</span>.
+          <h1
+            className="mt-5 max-w-[15ch] font-sans text-[2.2rem] font-extrabold text-petrol sm:max-w-[16ch] sm:text-[2.9rem] md:text-[3.4rem] lg:max-w-none lg:text-[4rem] xl:text-[4.35rem]"
+            style={{ lineHeight: 1.02, letterSpacing: "-0.035em", fontWeight: 800 }}
+          >
+            <span className="lg:block">A VEJAMAIS reinventou </span>
+            <span className="lg:block">a gestão comercial e financeira </span>
+            <span className="lg:block">para seu negócio crescer com </span>
+            <span className="lg:block">
+              mais <span className="text-primary-deep">controle</span> e{" "}
+              <span className="text-primary-deep">rentabilidade</span>.
+            </span>
           </h1>
           <p className="mt-5 max-w-xl text-balance text-base leading-relaxed text-muted-foreground sm:text-lg">{HERO.subtitle}</p>
           <div className="mt-7 flex flex-wrap gap-3">
@@ -181,79 +188,57 @@ function Hero() {
             </a>
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-4 text-primary" /> LGPD by design</span>
-            <span className="inline-flex items-center gap-1.5"><Lock className="size-4 text-primary" /> Isolamento por empresa</span>
-            <span className="inline-flex items-center gap-1.5"><Check className="size-4 text-primary" /> Sem cartão para começar</span>
+            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="size-4 text-primary-deep" /> LGPD by design</span>
+            <span className="inline-flex items-center gap-1.5"><Lock className="size-4 text-primary-deep" /> Isolamento por empresa</span>
+            <span className="inline-flex items-center gap-1.5"><Check className="size-4 text-primary-deep" /> Sem cartão para começar</span>
           </div>
         </div>
-        <HeroMockup />
+        <HeroComposition />
       </div>
     </section>
   );
 }
 
-function HeroMockup() {
+function HeroComposition() {
   return (
-    <div className="relative">
-      <div className="absolute -inset-6 -z-10 rounded-[2rem] bg-gradient-to-br from-primary/20 via-transparent to-accent/20 blur-2xl" aria-hidden />
-      <div className="rounded-2xl border border-border bg-card p-4 shadow-soft sm:p-5">
-        <div className="mb-4 flex items-center gap-2">
-          <span className="size-2.5 rounded-full bg-destructive/70" />
-          <span className="size-2.5 rounded-full bg-warning-ish" style={{ background: "#F59E0B" }} />
-          <span className="size-2.5 rounded-full bg-success" />
-          <div className="ml-3 h-6 flex-1 rounded-md bg-muted" />
-        </div>
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { label: "Vendas do mês", value: "R$ ••••••", icon: LineChart },
-            { label: "Contas a pagar", value: "•• pendentes", icon: Wallet },
-            { label: "Clientes ativos", value: "••••", icon: Users },
-          ].map((c) => (
-            <div key={c.label} className="rounded-xl border border-border bg-background/60 p-3">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <c.icon className="size-3.5 text-primary" /> {c.label}
-              </div>
-              <div className="mt-1.5 font-display text-lg text-foreground">{c.value}</div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-4 rounded-xl border border-border bg-background/60 p-4">
-          <div className="mb-3 flex items-center justify-between">
-            <span className="text-xs font-medium text-foreground">Fluxo de caixa</span>
-            <span className="text-[10px] text-muted-foreground">últimos 30 dias</span>
-          </div>
-          <svg viewBox="0 0 300 90" className="h-24 w-full" aria-hidden>
-            <defs>
-              <linearGradient id="lp-grad" x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor="#22C55E" stopOpacity="0.35" />
-                <stop offset="100%" stopColor="#22C55E" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path d="M0,70 C30,55 55,60 80,45 C110,28 140,50 170,38 C200,26 230,44 260,30 L300,25 L300,90 L0,90 Z" fill="url(#lp-grad)" />
-            <path d="M0,70 C30,55 55,60 80,45 C110,28 140,50 170,38 C200,26 230,44 260,30 L300,25" fill="none" stroke="#22C55E" strokeWidth="2" />
-          </svg>
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <div className="rounded-xl border border-border bg-background/60 p-3">
-            <div className="text-xs text-muted-foreground">Auditoria de lucro</div>
-            <div className="mt-1 flex items-center gap-2">
-              <BarChart3 className="size-4 text-primary" />
-              <span className="text-sm text-foreground">Resultado por operação</span>
-            </div>
-          </div>
-          <div className="rounded-xl border border-border bg-background/60 p-3">
-            <div className="text-xs text-muted-foreground">Curva ABC</div>
-            <div className="mt-2 flex gap-1.5">
-              {[70, 45, 30, 22, 18, 14, 10].map((h, i) => (
-                <span key={i} className="w-3 rounded-sm" style={{ height: h, background: i < 2 ? "#22C55E" : i < 4 ? "#7C3AED" : "#DCEBE3" }} />
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="relative mx-auto w-full max-w-md md:max-w-none">
+      <div
+        aria-hidden
+        className="absolute left-1/2 top-[8%] -z-10 aspect-square w-[86%] -translate-x-1/2 rounded-full"
+        style={{ background: "radial-gradient(circle at 50% 45%, #C9F0DA 0%, #DCF3E5 55%, rgba(220,243,229,0) 72%)" }}
+      />
+      <img
+        src={heroGestora}
+        width={1024}
+        height={1024}
+        alt="Gestora brasileira apresentando o Vejamais no smartphone, com indicadores de vendas do mês, saldo atual e lucro em valores fictícios."
+        className="relative mx-auto w-full max-w-[420px] select-none md:max-w-none"
+        draggable={false}
+      />
     </div>
   );
 }
+
+function SecondCall() {
+  return (
+    <section className="bg-mint py-20 md:py-28">
+      <div className="mx-auto max-w-[1000px] px-4 text-center md:px-6">
+        <h2
+          className="text-balance font-sans text-2xl font-extrabold text-petrol sm:text-3xl md:text-[2.6rem]"
+          style={{ lineHeight: 1.08, letterSpacing: "-0.03em", fontWeight: 800 }}
+        >
+          Funcionalidades para vender melhor, controlar gastos e acompanhar resultados — em uma
+          plataforma preparada para crescer com seu negócio.
+        </h2>
+        <p className="mx-auto mt-6 max-w-3xl text-balance text-base text-muted-foreground sm:text-lg">
+          Centralize vendas, clientes, produtos, estoque, contas, fluxo de caixa, custos e
+          indicadores para administrar sua empresa com mais organização e confiança.
+        </p>
+      </div>
+    </section>
+  );
+}
+
 
 /* ---------- Sections ---------- */
 
