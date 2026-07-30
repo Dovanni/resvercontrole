@@ -4,26 +4,26 @@ import { LandingPage } from "@/components/landing/landing-page";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Vejamais | Gestão Comercial e Financeira" },
+      { title: "VEJAMAIS | Gestão Comercial e Financeira para E-commerce" },
       {
         name: "description",
         content:
-          "Centralize vendas, produtos, clientes, fornecedores, contas, fluxo de caixa e resultados com o Vejamais.",
+          "Controle pedidos, vendas, produtos, estoque, fretes, taxas, contas, margens e lucros do seu e-commerce em uma plataforma de gestão comercial e financeira.",
       },
-      { property: "og:title", content: "Vejamais | Gestão Comercial e Financeira" },
+      { property: "og:title", content: "VEJAMAIS | Gestão Comercial e Financeira para E-commerce" },
       {
         property: "og:description",
         content:
-          "Plataforma de gestão comercial e financeira para acompanhar vendas, compras, contas, fluxo de caixa e indicadores do seu negócio.",
+          "Plataforma de gestão comercial e financeira para e-commerce e comércio: pedidos, vendas, produtos, estoque, fretes, taxas, contas, margens e lucros.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://vejamais.com.br/" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Vejamais | Gestão Comercial e Financeira" },
+      { name: "twitter:title", content: "VEJAMAIS | Gestão Comercial e Financeira para E-commerce" },
       {
         name: "twitter:description",
         content:
-          "Vendas, compras, contas, fluxo de caixa e indicadores em uma única plataforma.",
+          "Pedidos, vendas, produtos, estoque, fretes, taxas, contas e lucros em uma única plataforma.",
       },
     ],
     links: [{ rel: "canonical", href: "https://vejamais.com.br/" }],
@@ -38,7 +38,7 @@ export const Route = createFileRoute("/")({
           operatingSystem: "Web",
           url: "https://vejamais.com.br/",
           description:
-            "Plataforma de gestão comercial e financeira para pequenos e médios negócios.",
+            "Plataforma de gestão comercial e financeira para e-commerce, lojas, distribuidores e comércio em geral.",
         }),
       },
     ],

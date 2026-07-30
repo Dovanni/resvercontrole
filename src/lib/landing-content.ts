@@ -5,14 +5,16 @@ export const METRIXHR_URL = "https://metrixhr.com.br";
 export const VEJAMAIS_DOMAIN = "https://vejamais.com.br";
 
 export const HERO = {
-  eyebrow: "Gestão comercial e financeira em um só lugar",
-  title: "A VEJAMAIS reinventou a gestão comercial e financeira para seu negócio crescer com mais controle e rentabilidade.",
+  eyebrow: "Gestão comercial e financeira para e-commerce e comércio",
+  title:
+    "A VEJAMAIS reinventou a gestão comercial e financeira para fazer seu e-commerce — e todo o seu negócio — crescer com mais controle e rentabilidade.",
   subtitle:
-    "Revise transações, monitore gastos e acompanhe vendas, margens e lucros em um só lugar — com clareza para decidir e segurança para crescer.",
+    "Centralize pedidos, vendas, produtos, estoque, taxas, fretes, contas, margens e lucros em um só lugar — com clareza para decidir e segurança para crescer.",
   primaryCta: "Começar agora",
   secondaryCta: "Conhecer o VEJAMAIS",
   existingClientCta: "Já sou cliente — Entrar",
 };
+
 
 export const PAIN_POINTS = [
   "Vendas registradas em lugares diferentes",
@@ -75,17 +77,14 @@ export const HOW_IT_WORKS = [
 ];
 
 export const FEATURED_RESOURCES = [
-  { name: "Vendas", desc: "Registre e acompanhe cada venda com clareza." },
-  { name: "Produtos", desc: "Catálogo organizado com atributos essenciais." },
-  { name: "Financeiro", desc: "Visão consolidada da saúde do negócio." },
-  { name: "Fluxo de caixa", desc: "Entradas e saídas em uma linha do tempo." },
-  { name: "Contas", desc: "A pagar e a receber, sob controle." },
-  { name: "Relatórios", desc: "Análises e exportações práticas." },
-  { name: "BI", desc: "Indicadores para decisão consciente." },
-  { name: "Lucro", desc: "Auditoria de resultado por operação." },
-  { name: "Clientes", desc: "Histórico e relacionamento em um lugar." },
-  { name: "Fornecedores", desc: "Cadastro e vínculos organizados." },
+  { name: "Pedidos e vendas", desc: "Registre e acompanhe cada pedido e venda com clareza." },
+  { name: "Produtos e estoque", desc: "Catálogo organizado e visão das quantidades." },
+  { name: "Clientes e fornecedores", desc: "Relacionamento, histórico e compras no mesmo lugar." },
+  { name: "Contas e fluxo de caixa", desc: "A pagar, a receber e entradas e saídas no tempo." },
+  { name: "Custos, margens e lucros", desc: "Taxas, fretes e custos refletidos no resultado." },
+  { name: "Relatórios e DRE", desc: "Análises comerciais e financeiras com DRE por competência." },
 ];
+
 
 export type Plan = {
   id: string;

@@ -166,13 +166,14 @@ function Hero() {
             <Sparkles className="size-3.5" /> {HERO.eyebrow}
           </span>
           <h1
-            className="mt-5 max-w-[15ch] text-pretty font-sans text-[2.2rem] font-extrabold text-petrol sm:max-w-[16ch] sm:text-[2.9rem] md:text-[2.6rem] lg:max-w-none lg:text-[3rem] xl:text-[3.3rem]"
-            style={{ lineHeight: 1.02, letterSpacing: "-0.035em", fontWeight: 800 }}
+            className="mt-5 max-w-[17ch] text-pretty font-sans text-[2rem] font-extrabold text-petrol sm:max-w-[18ch] sm:text-[2.5rem] md:text-[2.3rem] lg:max-w-none lg:text-[2.6rem] xl:text-[2.9rem]"
+            style={{ lineHeight: 1.04, letterSpacing: "-0.035em", fontWeight: 800 }}
           >
-            A VEJAMAIS reinventou a gestão comercial e financeira para seu negócio crescer com
-            mais <span className="text-primary-deep">controle</span> e{" "}
-            <span className="text-primary-deep">rentabilidade</span>.
+            A VEJAMAIS reinventou a gestão comercial e financeira para fazer seu{" "}
+            <span className="text-primary-deep">e-commerce</span> — e todo o seu negócio — crescer
+            com mais <span className="text-primary-deep">controle e rentabilidade</span>.
           </h1>
+
           <p className="mt-5 max-w-xl text-balance text-base leading-relaxed text-muted-foreground sm:text-lg">{HERO.subtitle}</p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link to="/auth">
@@ -241,7 +242,7 @@ function HeroComposition() {
           aria-hidden="true"
           className="pointer-events-none absolute left-3 top-[18%] hidden items-center gap-2 whitespace-nowrap rounded-xl border border-primary/15 bg-white/85 px-3 py-2 text-[11px] font-medium text-petrol shadow-sm backdrop-blur-sm lg:inline-flex"
         >
-          <span className="size-2 rounded-full bg-primary" /> Vendas acompanhadas
+          <span className="size-2 rounded-full bg-primary" /> Pedidos e vendas
         </div>
         <div
           aria-hidden="true"
@@ -288,12 +289,12 @@ function SecondCall() {
           style={{ lineHeight: 1.12, letterSpacing: "-0.03em", fontWeight: 800 }}
 
         >
-          Funcionalidades para vender melhor, controlar gastos e acompanhar resultados — em uma
-          plataforma preparada para crescer com seu negócio.
+          Funcionalidades para vender online, controlar a operação e acompanhar resultados — em
+          uma plataforma preparada para crescer com seu negócio.
         </h2>
         <p className="mx-auto mt-6 max-w-3xl text-balance text-base text-muted-foreground sm:text-lg">
-          Centralize vendas, clientes, produtos, estoque, contas, fluxo de caixa, custos e
-          indicadores para administrar sua empresa com mais organização e confiança.
+          Do pedido ao lucro, acompanhe clientes, produtos, estoque, fornecedores, fretes, taxas,
+          contas e fluxo de caixa no e-commerce e no comércio em geral.
         </p>
       </div>
     </section>
@@ -435,14 +436,14 @@ function Features() {
   return (
     <Section
       eyebrow="Recursos em destaque"
-      title="Ferramentas para o seu dia a dia."
+      title="Do pedido ao lucro, no e-commerce e no comércio."
       className="bg-secondary/40"
     >
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {FEATURED_RESOURCES.map((r) => (
           <div key={r.name} className="rounded-xl border border-border bg-card p-4">
             <div className="font-medium text-foreground">{r.name}</div>
-            <p className="mt-1 text-xs text-muted-foreground">{r.desc}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{r.desc}</p>
           </div>
         ))}
       </div>
