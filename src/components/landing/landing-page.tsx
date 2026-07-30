@@ -165,10 +165,12 @@ function Hero() {
           <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
             <Sparkles className="size-3.5" /> {HERO.eyebrow}
           </span>
-          <h1 className="mt-4 font-display text-4xl leading-tight tracking-tight text-foreground sm:text-5xl md:text-6xl">
-            {HERO.title}
+          <h1 className="mt-4 max-w-3xl font-display text-4xl leading-[1.15] tracking-tight text-foreground sm:text-5xl md:text-6xl">
+            A VEJAMAIS reinventou a gestão comercial e financeira para seu negócio crescer com mais{" "}
+            <span className="text-primary">controle</span> e{" "}
+            <span className="text-primary">rentabilidade</span>.
           </h1>
-          <p className="mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">{HERO.subtitle}</p>
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">{HERO.subtitle}</p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link to="/auth">
               <Button size="lg" className="gap-1.5">
