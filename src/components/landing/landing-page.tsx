@@ -158,20 +158,21 @@ function Hero() {
             "radial-gradient(1000px 500px at 15% -10%, rgba(34,197,94,0.14), transparent), radial-gradient(800px 400px at 90% 10%, rgba(124,58,237,0.10), transparent)",
         }}
       />
-      <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 md:grid-cols-[minmax(0,54fr)_minmax(0,46fr)] md:gap-10 md:px-6 md:py-20 lg:py-24">
+      <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 md:grid-cols-[minmax(0,54fr)_minmax(0,46fr)] md:gap-8 md:px-6 md:py-20 lg:max-w-7xl lg:gap-12 lg:py-24">
         <div className="flex flex-col justify-center">
           <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
             <Sparkles className="size-3.5" /> {HERO.eyebrow}
           </span>
           <h1
-            className="mt-5 max-w-[15ch] font-sans text-[2.2rem] font-extrabold text-petrol sm:max-w-[16ch] sm:text-[2.9rem] md:text-[3.4rem] lg:max-w-none lg:text-[4rem] xl:text-[4.35rem]"
+            className="mt-5 max-w-[15ch] font-sans text-[2.2rem] font-extrabold text-petrol sm:max-w-[16ch] sm:text-[2.9rem] md:text-[2.9rem] lg:max-w-none lg:text-[3.6rem] xl:text-[4rem]"
             style={{ lineHeight: 1.02, letterSpacing: "-0.035em", fontWeight: 800 }}
           >
-            <span className="lg:block">A VEJAMAIS reinventou </span>
-            <span className="lg:block">a gestão comercial e financeira </span>
-            <span className="lg:block">para seu negócio crescer com </span>
-            <span className="lg:block">
-              mais <span className="text-primary-deep">controle</span> e{" "}
+            <span className="lg:block lg:whitespace-nowrap">A VEJAMAIS reinventou </span>
+            <span className="lg:block lg:whitespace-nowrap">a gestão comercial </span>
+            <span className="lg:block lg:whitespace-nowrap">e financeira para seu </span>
+            <span className="lg:block lg:whitespace-nowrap">negócio crescer com mais </span>
+            <span className="lg:block lg:whitespace-nowrap">
+              <span className="text-primary-deep">controle</span> e{" "}
               <span className="text-primary-deep">rentabilidade</span>.
             </span>
           </h1>
