@@ -198,21 +198,77 @@ function HeroComposition() {
   return (
     <div className="relative mx-auto w-full max-w-md md:max-w-none">
       <div
-        aria-hidden
-        className="absolute left-1/2 top-[8%] -z-10 aspect-square w-[86%] -translate-x-1/2 rounded-full"
-        style={{ background: "radial-gradient(circle at 50% 45%, #C9F0DA 0%, #DCF3E5 55%, rgba(220,243,229,0) 72%)" }}
-      />
-      <img
-        src={heroGestora}
-        width={1024}
-        height={1024}
-        alt="Gestora brasileira apresentando o Vejamais no smartphone, com indicadores de vendas do mês, saldo atual e lucro em valores fictícios."
-        className="relative mx-auto w-full max-w-[420px] select-none md:max-w-none"
-        draggable={false}
-      />
+        className="relative overflow-hidden rounded-[24px] border border-primary/20 bg-white/70 px-4 pb-0 pt-6 backdrop-blur-sm sm:rounded-[30px] md:rounded-[34px] md:px-6 md:pt-8"
+        style={{
+          boxShadow:
+            "0 24px 70px -28px rgba(11,47,58,0.28), 0 6px 18px -12px rgba(11,47,58,0.16)",
+        }}
+      >
+        {/* 2. brilho radial suave */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 50% 30%, rgba(201,240,218,0.85) 0%, rgba(235,249,241,0.65) 45%, rgba(255,255,255,0) 75%)",
+          }}
+        />
+        {/* 3. símbolo decorativo — monograma V oficial */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-[10%] aspect-square w-[78%] -translate-x-1/2 rounded-full sm:w-[74%]"
+          style={{ background: "radial-gradient(circle at 50% 45%, #C9F0DA 0%, #DCF3E5 62%, rgba(220,243,229,0) 74%)" }}
+        >
+          <svg
+            viewBox="0 0 64 64"
+            className="absolute left-1/2 top-1/2 h-[62%] w-[62%] -translate-x-1/2 -translate-y-1/2"
+            focusable="false"
+          >
+            <path
+              d="M16 18 L32 46 L48 18 L41.5 18 L32 34.5 L22.5 18 Z"
+              fill="#15803D"
+              fillOpacity="0.11"
+            />
+            <circle cx="47" cy="20" r="3.2" fill="#15803D" fillOpacity="0.11" />
+          </svg>
+        </div>
+
+        {/* 4. elementos flutuantes discretos (dados fictícios) */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-3 top-[18%] hidden items-center gap-2 whitespace-nowrap rounded-xl border border-primary/15 bg-white/85 px-3 py-2 text-[11px] font-medium text-petrol shadow-sm backdrop-blur-sm lg:inline-flex"
+        >
+          <span className="size-2 rounded-full bg-primary" /> Vendas em alta · +18%
+        </div>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute right-3 top-[58%] hidden max-w-[45%] items-center gap-2 whitespace-nowrap rounded-xl border border-primary/15 bg-white/85 px-3 py-2 text-[11px] font-medium text-petrol shadow-sm backdrop-blur-sm lg:inline-flex"
+        >
+          <span className="size-2 rounded-full bg-gold" /> Fluxo de caixa
+        </div>
+
+        {/* 5. ilustração */}
+        <img
+          src={heroGestora}
+          width={1024}
+          height={1024}
+          alt="Gestora brasileira apresentando o Vejamais no smartphone, com indicadores de vendas do mês, saldo atual e lucro em valores fictícios."
+          className="relative mx-auto w-full max-w-[380px] select-none md:max-w-none"
+          style={{ filter: "drop-shadow(0 18px 26px rgba(11,47,58,0.18))" }}
+          draggable={false}
+        />
+
+        {/* 6. sombra de contato */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-2 left-1/2 h-4 w-[52%] -translate-x-1/2 rounded-[50%]"
+          style={{ background: "radial-gradient(ellipse at center, rgba(11,47,58,0.20) 0%, rgba(11,47,58,0) 70%)" }}
+        />
+      </div>
     </div>
   );
 }
+
 
 function SecondCall() {
   return (
