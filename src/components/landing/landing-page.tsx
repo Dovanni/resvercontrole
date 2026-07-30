@@ -166,18 +166,27 @@ function Hero() {
             <Sparkles className="size-3.5" /> {HERO.eyebrow}
           </span>
           <h1
-            className="mt-5 max-w-[17ch] text-pretty font-sans text-[2rem] font-extrabold text-petrol sm:max-w-[18ch] sm:text-[2.5rem] md:text-[2.3rem] lg:max-w-none lg:text-[2.6rem] xl:text-[2.9rem]"
-            style={{ lineHeight: 1.04, letterSpacing: "-0.035em", fontWeight: 800 }}
+            className="mt-5 max-w-[15ch] text-pretty font-sans text-[2.5rem] font-extrabold text-petrol sm:text-[3rem] md:text-[3.2rem] lg:text-[3.9rem] xl:text-[4.4rem]"
+            style={{ lineHeight: 1.0, letterSpacing: "-0.035em", fontWeight: 800 }}
           >
             A <span className="text-primary-deep">VEJAMAIS</span> reinventou a gestão comercial e
-            financeira para fazer seu comércio, seus negócios e seu{" "}
+            financeira.
+          </h1>
+
+          <p
+            className="mt-6 max-w-[24ch] text-pretty font-sans text-[1.25rem] text-petrol sm:text-[1.45rem] md:text-[1.5rem] lg:text-[1.7rem]"
+            style={{ lineHeight: 1.22, letterSpacing: "-0.02em", fontWeight: 700 }}
+          >
+            Para fazer seu comércio, seus negócios e seu{" "}
             <span className="text-primary-deep">e-commerce</span> crescerem com mais{" "}
             <span className="text-primary-deep">controle</span> e{" "}
             <span className="text-primary-deep">rentabilidade</span>.
+          </p>
 
-          </h1>
+          <p className="mt-5 max-w-[620px] text-pretty font-sans text-base font-normal leading-relaxed text-muted-foreground lg:text-[1.15rem]">
+            {HERO.subtitle}
+          </p>
 
-          <p className="mt-5 max-w-xl text-balance text-base leading-relaxed text-muted-foreground sm:text-lg">{HERO.subtitle}</p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link to="/auth">
               <Button size="lg" className="gap-1.5">
