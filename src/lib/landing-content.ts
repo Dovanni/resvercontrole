@@ -5,12 +5,21 @@ export const METRIXHR_URL = "https://metrixhr.com.br";
 export const VEJAMAIS_DOMAIN = "https://vejamais.com.br";
 
 export const HERO = {
-  eyebrow: "Gestão Comercial e Financeira",
-  title: "Pare de administrar sua empresa no escuro.",
+  eyebrow: "Gestão comercial e financeira em um só lugar",
+  title: "A VEJAMAIS reinventou a gestão comercial e financeira para seu negócio crescer com mais controle e rentabilidade.",
   subtitle:
-    "Centralize vendas, produtos, clientes, fornecedores, contas, fluxo de caixa, custos e resultados em uma plataforma simples, segura e preparada para apoiar decisões mais conscientes.",
-  primaryCta: "Entrar",
-  secondaryCta: "Conhecer o Vejamais",
+    "Revise transações, monitore gastos e acompanhe vendas, margens e lucros em um só lugar — com clareza para decidir e segurança para crescer.",
+  primaryCta: "Começar agora",
+  secondaryCta: "Conhecer o VEJAMAIS",
+  existingClientCta: "Já sou cliente — Entrar",
+};
+
+export const FEATURES_HEADING = {
+  eyebrow: "Recursos em destaque",
+  title:
+    "Funcionalidades para vender melhor, controlar gastos e acompanhar resultados — em uma plataforma preparada para crescer com seu negócio.",
+  subtitle:
+    "Centralize vendas, clientes, produtos, estoque, contas, fluxo de caixa, custos e indicadores para administrar sua empresa com mais organização e confiança.",
 };
 
 export const PAIN_POINTS = [
