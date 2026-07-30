@@ -31,6 +31,7 @@
   --color-gold: var(--gold);
   --color-gold-foreground: var(--gold-foreground);
   --color-petrol: var(--petrol);
+  --color-primary-deep: var(--primary-deep);
   --color-mint: var(--mint);
 
   --color-destructive: var(--destructive);
@@ -73,6 +74,7 @@
 
   /* Azul-petróleo profundo (títulos de alto impacto) + menta clara */
   --petrol: #0B2F3A;
+  --primary-deep: #15803D;
   --mint: #EBF9F1;
 
 
