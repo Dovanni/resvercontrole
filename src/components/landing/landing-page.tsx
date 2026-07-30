@@ -282,8 +282,8 @@ function Section({
               {eyebrow}
             </span>
           )}
-          <h2 className="mt-3 font-display text-3xl tracking-tight text-foreground sm:text-4xl">{title}</h2>
-          {subtitle && <p className="mt-3 text-base text-muted-foreground sm:text-lg">{subtitle}</p>}
+          <h2 className="mt-3 text-balance font-display text-3xl tracking-tight text-foreground sm:text-4xl">{title}</h2>
+          {subtitle && <p className="mt-3 text-balance text-base text-muted-foreground sm:text-lg">{subtitle}</p>}
         </div>
         <div className="mt-10 md:mt-14">{children}</div>
       </div>
