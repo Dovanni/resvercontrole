@@ -236,7 +236,7 @@ function HeroComposition() {
         {/* 4. elementos flutuantes discretos (dados fictícios) */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute left-3 top-[22%] hidden items-center gap-2 rounded-xl border border-primary/15 bg-white/85 px-3 py-2 text-[11px] font-medium text-petrol shadow-sm backdrop-blur-sm md:inline-flex"
+          className="pointer-events-none absolute left-3 top-[18%] hidden items-center gap-2 whitespace-nowrap rounded-xl border border-primary/15 bg-white/85 px-3 py-2 text-[11px] font-medium text-petrol shadow-sm backdrop-blur-sm lg:inline-flex"
         >
           <span className="size-2 rounded-full bg-primary" /> Vendas em alta · +18%
         </div>
