@@ -165,7 +165,7 @@ function Hero() {
           <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
             <Sparkles className="size-3.5" /> {HERO.eyebrow}
           </span>
-          <h1 className="mt-4 max-w-3xl font-display text-4xl leading-[1.15] tracking-tight text-foreground sm:text-5xl md:text-6xl">
+          <h1 className="mt-4 max-w-3xl text-balance font-display text-4xl leading-[1.15] tracking-tight text-foreground sm:text-5xl md:text-6xl">
             A VEJAMAIS reinventou a gestão comercial e financeira para seu negócio crescer com mais{" "}
             <span className="text-primary">controle</span> e{" "}
             <span className="text-primary">rentabilidade</span>.
