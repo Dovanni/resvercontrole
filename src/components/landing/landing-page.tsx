@@ -86,7 +86,7 @@ function Header() {
             </span>
           </div>
         </a>
-        <nav className="hidden md:flex items-center gap-1 ml-6" aria-label="Navegação principal">
+        <nav className="hidden lg:flex items-center gap-1 ml-6" aria-label="Navegação principal">
           {NAV.map((n) => (
             <a
               key={n.href}
@@ -97,7 +97,7 @@ function Header() {
             </a>
           ))}
         </nav>
-        <div className="ml-auto hidden md:flex items-center gap-3">
+        <div className="ml-auto hidden lg:flex items-center gap-3">
           <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             {HERO.existingClientCta}
           </Link>
@@ -107,7 +107,7 @@ function Header() {
         </div>
         <button
           type="button"
-          className="ml-auto md:hidden inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-secondary"
+          className="ml-auto lg:hidden inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-secondary"
           aria-label={open ? "Fechar menu" : "Abrir menu"}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
@@ -116,7 +116,7 @@ function Header() {
         </button>
       </div>
       {open && (
-        <div className="md:hidden border-t border-border bg-background">
+        <div className="lg:hidden border-t border-border bg-background">
           <nav className="mx-auto flex max-w-6xl flex-col px-4 py-3" aria-label="Navegação mobile">
             {NAV.map((n) => (
               <a
@@ -164,15 +164,15 @@ function Hero() {
             <Sparkles className="size-3.5" /> {HERO.eyebrow}
           </span>
           <h1
-            className="mt-5 max-w-[15ch] font-sans text-[2.2rem] font-extrabold text-petrol sm:max-w-[16ch] sm:text-[2.9rem] md:text-[2.9rem] lg:max-w-none lg:text-[3.6rem] xl:text-[4rem]"
+            className="mt-5 max-w-[15ch] font-sans text-[2.2rem] font-extrabold text-petrol sm:max-w-[16ch] sm:text-[2.9rem] md:text-[2.9rem] lg:max-w-none lg:text-[3.4rem] xl:text-[3.85rem]"
             style={{ lineHeight: 1.02, letterSpacing: "-0.035em", fontWeight: 800 }}
           >
             <span className="lg:block lg:whitespace-nowrap">A VEJAMAIS reinventou </span>
             <span className="lg:block lg:whitespace-nowrap">a gestão comercial </span>
             <span className="lg:block lg:whitespace-nowrap">e financeira para seu </span>
-            <span className="lg:block lg:whitespace-nowrap">negócio crescer com mais </span>
+            <span className="lg:block lg:whitespace-nowrap">negócio crescer com </span>
             <span className="lg:block lg:whitespace-nowrap">
-              <span className="text-primary-deep">controle</span> e{" "}
+              mais <span className="text-primary-deep">controle</span> e{" "}
               <span className="text-primary-deep">rentabilidade</span>.
             </span>
           </h1>
@@ -224,7 +224,7 @@ function SecondCall() {
     <section className="bg-mint py-20 md:py-28">
       <div className="mx-auto max-w-[1000px] px-4 text-center md:px-6">
         <h2
-          className="text-balance font-sans text-2xl font-extrabold text-petrol sm:text-3xl md:text-[2.6rem]"
+          className="text-balance font-sans text-2xl font-extrabold text-petrol sm:text-3xl md:text-[2.3rem] lg:text-[2.6rem]"
           style={{ lineHeight: 1.08, letterSpacing: "-0.03em", fontWeight: 800 }}
         >
           Funcionalidades para vender melhor, controlar gastos e acompanhar resultados — em uma
