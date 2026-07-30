@@ -242,9 +242,9 @@ function HeroComposition() {
         </div>
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute right-3 top-[52%] hidden items-center gap-2 rounded-xl border border-primary/15 bg-white/85 px-3 py-2 text-[11px] font-medium text-petrol shadow-sm backdrop-blur-sm lg:inline-flex"
+          className="pointer-events-none absolute right-3 top-[58%] hidden max-w-[45%] items-center gap-2 whitespace-nowrap rounded-xl border border-primary/15 bg-white/85 px-3 py-2 text-[11px] font-medium text-petrol shadow-sm backdrop-blur-sm lg:inline-flex"
         >
-          <span className="size-2 rounded-full bg-gold" /> Fluxo de caixa · R$ 12.480
+          <span className="size-2 rounded-full bg-gold" /> Fluxo de caixa
         </div>
 
         {/* 5. ilustração */}
