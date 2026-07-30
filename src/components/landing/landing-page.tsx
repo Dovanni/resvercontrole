@@ -282,10 +282,11 @@ function HeroComposition() {
 function SecondCall() {
   return (
     <section className="bg-mint py-20 md:py-28">
-      <div className="mx-auto max-w-[1000px] px-4 text-center md:px-6">
+      <div className="mx-auto max-w-[1180px] px-4 text-center md:px-6">
         <h2
-          className="text-balance font-sans text-2xl font-extrabold text-petrol sm:text-3xl md:text-[2.3rem] lg:text-[2.6rem]"
-          style={{ lineHeight: 1.08, letterSpacing: "-0.03em", fontWeight: 800 }}
+          className="text-balance font-sans text-2xl font-extrabold text-petrol sm:text-3xl md:text-[2.1rem] lg:text-[2.4rem]"
+          style={{ lineHeight: 1.12, letterSpacing: "-0.03em", fontWeight: 800 }}
+
         >
           Funcionalidades para vender melhor, controlar gastos e acompanhar resultados — em uma
           plataforma preparada para crescer com seu negócio.
