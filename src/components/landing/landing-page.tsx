@@ -170,7 +170,7 @@ function Hero() {
             <span className="text-primary">controle</span> e{" "}
             <span className="text-primary">rentabilidade</span>.
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">{HERO.subtitle}</p>
+          <p className="mt-5 max-w-xl text-balance text-base leading-relaxed text-muted-foreground sm:text-lg">{HERO.subtitle}</p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link to="/auth">
               <Button size="lg" className="gap-1.5">
