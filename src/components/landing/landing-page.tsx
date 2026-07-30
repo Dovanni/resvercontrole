@@ -166,13 +166,14 @@ function Hero() {
             <Sparkles className="size-3.5" /> {HERO.eyebrow}
           </span>
           <h1
-            className="mt-5 max-w-[15ch] text-pretty font-sans text-[2.2rem] font-extrabold text-petrol sm:max-w-[16ch] sm:text-[2.9rem] md:text-[2.6rem] lg:max-w-none lg:text-[3rem] xl:text-[3.3rem]"
-            style={{ lineHeight: 1.02, letterSpacing: "-0.035em", fontWeight: 800 }}
+            className="mt-5 max-w-[17ch] text-pretty font-sans text-[2rem] font-extrabold text-petrol sm:max-w-[18ch] sm:text-[2.5rem] md:text-[2.3rem] lg:max-w-none lg:text-[2.6rem] xl:text-[2.9rem]"
+            style={{ lineHeight: 1.04, letterSpacing: "-0.035em", fontWeight: 800 }}
           >
-            A VEJAMAIS reinventou a gestão comercial e financeira para seu negócio crescer com
-            mais <span className="text-primary-deep">controle</span> e{" "}
-            <span className="text-primary-deep">rentabilidade</span>.
+            A VEJAMAIS reinventou a gestão comercial e financeira para fazer seu{" "}
+            <span className="text-primary-deep">e-commerce</span> — e todo o seu negócio — crescer
+            com mais <span className="text-primary-deep">controle e rentabilidade</span>.
           </h1>
+
           <p className="mt-5 max-w-xl text-balance text-base leading-relaxed text-muted-foreground sm:text-lg">{HERO.subtitle}</p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link to="/auth">
