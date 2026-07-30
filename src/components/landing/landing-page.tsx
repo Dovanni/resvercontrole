@@ -14,6 +14,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
+import heroGestora from "@/assets/hero-vejamais-gestora.png";
 import { VejamaisMark } from "@/components/vejamais-logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,6 +48,7 @@ export function LandingPage() {
       <Header />
       <main id="conteudo">
         <Hero />
+        <SecondCall />
         <Pain />
         <Solution />
         <Benefits />
@@ -303,14 +305,8 @@ function Solution() {
     <Section
       id="recursos"
       eyebrow="A solução"
-      title={
-        <>
-          Funcionalidades para <span className="text-primary">vender melhor</span>,{" "}
-          <span className="text-primary">controlar gastos</span> e acompanhar{" "}
-          <span className="text-primary">resultados</span> — em uma plataforma preparada para crescer com seu negócio.
-        </>
-      }
-      subtitle="Centralize vendas, clientes, produtos, estoque, contas, fluxo de caixa, custos e indicadores para administrar sua empresa com mais organização e confiança."
+      title="Módulos que cobrem toda a operação comercial e financeira."
+      subtitle="Do primeiro cadastro ao indicador final: tudo integrado em um só lugar."
     >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {MODULES.map((m) => (
