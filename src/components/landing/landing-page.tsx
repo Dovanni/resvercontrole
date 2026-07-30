@@ -164,7 +164,7 @@ function Hero() {
             <Sparkles className="size-3.5" /> {HERO.eyebrow}
           </span>
           <h1
-            className="mt-5 max-w-[15ch] text-pretty font-sans text-[2.2rem] font-extrabold text-petrol sm:max-w-[16ch] sm:text-[2.9rem] md:text-[2.9rem] lg:max-w-[17ch] lg:text-[3.2rem] xl:max-w-[16ch] xl:text-[3.6rem]"
+            className="mt-5 max-w-[15ch] text-pretty font-sans text-[2.2rem] font-extrabold text-petrol sm:max-w-[16ch] sm:text-[2.9rem] md:text-[2.6rem] lg:max-w-none lg:text-[3rem] xl:text-[3.3rem]"
             style={{ lineHeight: 1.02, letterSpacing: "-0.035em", fontWeight: 800 }}
           >
             A VEJAMAIS reinventou a gestão comercial e financeira para seu negócio crescer com
