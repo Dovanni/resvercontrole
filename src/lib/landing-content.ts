@@ -6,8 +6,9 @@ export const VEJAMAIS_DOMAIN = "https://vejamais.com.br";
 
 export const HERO = {
   eyebrow: "Gestão comercial e financeira para e-commerce e comércio",
-  title:
-    "A VEJAMAIS reinventou a gestão comercial e financeira para fazer seu comércio, seus negócios e seu e-commerce crescerem com mais controle e rentabilidade.",
+  title: "A VEJAMAIS reinventou a gestão comercial e financeira.",
+  subheadline:
+    "Para fazer seu comércio, seus negócios e seu e-commerce crescerem com mais controle e rentabilidade.",
   subtitle:
     "Centralize pedidos, vendas, produtos, estoque, taxas, fretes, contas, margens e lucros em um só lugar — com clareza para decidir e segurança para crescer.",
   primaryCta: "Começar agora",
