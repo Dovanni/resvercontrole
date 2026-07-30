@@ -30,6 +30,10 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-gold: var(--gold);
   --color-gold-foreground: var(--gold-foreground);
+  --color-petrol: var(--petrol);
+  --color-primary-deep: var(--primary-deep);
+  --color-mint: var(--mint);
+
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
@@ -67,6 +71,12 @@
   --vejamais-text-primary: #102A2E;
   --vejamais-text-secondary: #52666A;
   --vejamais-border: #DCEBE3;
+
+  /* Azul-petróleo profundo (títulos de alto impacto) + menta clara */
+  --petrol: #0B2F3A;
+  --primary-deep: #15803D;
+  --mint: #EBF9F1;
+
 
   --background: #F1FAF5;
   --foreground: #102A2E;
