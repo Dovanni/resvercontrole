@@ -221,24 +221,25 @@ function HeroComposition() {
         >
           <svg
             viewBox="0 0 64 64"
-            className="absolute left-1/2 top-1/2 h-[62%] w-[62%] -translate-x-1/2 -translate-y-1/2"
+            className="absolute left-1/2 top-1/2 h-[72%] w-[72%] -translate-x-1/2 -translate-y-1/2"
             focusable="false"
+            aria-hidden="true"
           >
             <path
               d="M16 18 L32 46 L48 18 L41.5 18 L32 34.5 L22.5 18 Z"
               fill="#15803D"
-              fillOpacity="0.11"
+              fillOpacity="0.09"
             />
-            <circle cx="47" cy="20" r="3.2" fill="#15803D" fillOpacity="0.11" />
+            <circle cx="47" cy="20" r="3.2" fill="#15803D" fillOpacity="0.09" />
           </svg>
         </div>
 
-        {/* 4. elementos flutuantes discretos (dados fictícios) */}
+        {/* 4. elementos flutuantes discretos (decorativos, sem métricas) */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute left-3 top-[18%] hidden items-center gap-2 whitespace-nowrap rounded-xl border border-primary/15 bg-white/85 px-3 py-2 text-[11px] font-medium text-petrol shadow-sm backdrop-blur-sm lg:inline-flex"
         >
-          <span className="size-2 rounded-full bg-primary" /> Vendas em alta · +18%
+          <span className="size-2 rounded-full bg-primary" /> Vendas acompanhadas
         </div>
         <div
           aria-hidden="true"
@@ -247,16 +248,22 @@ function HeroComposition() {
           <span className="size-2 rounded-full bg-gold" /> Fluxo de caixa
         </div>
 
-        {/* 5. ilustração */}
+        {/* 5. ilustração (LCP) */}
         <img
-          src={heroGestora}
+          src={heroGestora1024}
+          srcSet={`${heroGestora480} 480w, ${heroGestora768} 768w, ${heroGestora1024} 1024w`}
+          sizes="(max-width: 767px) 380px, (max-width: 1279px) 46vw, 620px"
           width={1024}
           height={1024}
-          alt="Gestora brasileira apresentando o Vejamais no smartphone, com indicadores de vendas do mês, saldo atual e lucro em valores fictícios."
-          className="relative mx-auto w-full max-w-[380px] select-none md:max-w-none"
+          alt="Empreendedora apresenta no celular indicadores de vendas, saldo e lucro do VEJAMAIS."
+          className="relative mx-auto aspect-square w-full max-w-[380px] select-none md:max-w-none"
           style={{ filter: "drop-shadow(0 18px 26px rgba(11,47,58,0.18))" }}
+          fetchPriority="high"
+          loading="eager"
+          decoding="async"
           draggable={false}
         />
+
 
         {/* 6. sombra de contato */}
         <div
