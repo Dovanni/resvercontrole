@@ -14,14 +14,6 @@ export const HERO = {
   existingClientCta: "Já sou cliente — Entrar",
 };
 
-export const FEATURES_HEADING = {
-  eyebrow: "Recursos em destaque",
-  title:
-    "Funcionalidades para vender melhor, controlar gastos e acompanhar resultados — em uma plataforma preparada para crescer com seu negócio.",
-  subtitle:
-    "Centralize vendas, clientes, produtos, estoque, contas, fluxo de caixa, custos e indicadores para administrar sua empresa com mais organização e confiança.",
-};
-
 export const PAIN_POINTS = [
   "Vendas registradas em lugares diferentes",
   "Planilhas desatualizadas e frágeis",
