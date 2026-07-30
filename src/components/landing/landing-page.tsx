@@ -98,14 +98,12 @@ function Header() {
             </a>
           ))}
         </nav>
-        <div className="ml-auto hidden md:flex items-center gap-2">
-          <Link to="/auth">
-            <Button variant="ghost" size="sm">Entrar</Button>
+        <div className="ml-auto hidden md:flex items-center gap-3">
+          <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            {HERO.existingClientCta}
           </Link>
           <Link to="/auth">
-            <Button size="sm" className="gap-1">
-              Entrar <ArrowRight className="size-4" />
-            </Button>
+            <Button size="sm">{HERO.primaryCta}</Button>
           </Link>
         </div>
         <button
@@ -133,10 +131,12 @@ function Header() {
             ))}
             <div className="mt-2 grid gap-2">
               <Link to="/auth" onClick={() => setOpen(false)}>
-                <Button variant="outline" className="w-full">Entrar</Button>
+                <Button variant="outline" className="w-full">{HERO.existingClientCta}</Button>
               </Link>
               <Link to="/auth" onClick={() => setOpen(false)}>
-                <Button className="w-full">Entrar</Button>
+                <Button className="w-full gap-1">
+                  {HERO.primaryCta} <ArrowRight className="size-4" />
+                </Button>
               </Link>
             </div>
           </nav>
@@ -164,10 +164,12 @@ function Hero() {
           <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
             <Sparkles className="size-3.5" /> {HERO.eyebrow}
           </span>
-          <h1 className="mt-4 font-display text-4xl leading-tight tracking-tight text-foreground sm:text-5xl md:text-6xl">
-            {HERO.title}
+          <h1 className="mt-4 max-w-3xl text-balance font-display text-4xl leading-[1.15] tracking-tight text-foreground sm:text-5xl md:text-6xl">
+            A VEJAMAIS reinventou a gestão comercial e financeira para seu negócio crescer com mais{" "}
+            <span className="text-primary">controle</span> e{" "}
+            <span className="text-primary">rentabilidade</span>.
           </h1>
-          <p className="mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">{HERO.subtitle}</p>
+          <p className="mt-5 max-w-xl text-balance text-base leading-relaxed text-muted-foreground sm:text-lg">{HERO.subtitle}</p>
           <div className="mt-7 flex flex-wrap gap-3">
             <Link to="/auth">
               <Button size="lg" className="gap-1.5">
@@ -265,8 +267,8 @@ function Section({
 }: {
   id?: string;
   eyebrow?: string;
-  title: string;
-  subtitle?: string;
+  title: React.ReactNode;
+  subtitle?: string | React.ReactNode;
   children: React.ReactNode;
   className?: string;
 }) {
@@ -279,8 +281,8 @@ function Section({
               {eyebrow}
             </span>
           )}
-          <h2 className="mt-3 font-display text-3xl tracking-tight text-foreground sm:text-4xl">{title}</h2>
-          {subtitle && <p className="mt-3 text-base text-muted-foreground sm:text-lg">{subtitle}</p>}
+          <h2 className="mt-3 text-balance font-display text-3xl tracking-tight text-foreground sm:text-4xl">{title}</h2>
+          {subtitle && <p className="mt-3 text-balance text-base text-muted-foreground sm:text-lg">{subtitle}</p>}
         </div>
         <div className="mt-10 md:mt-14">{children}</div>
       </div>
@@ -316,8 +318,14 @@ function Solution() {
     <Section
       id="recursos"
       eyebrow="A solução"
-      title="Toda a sua gestão comercial e financeira em um único lugar."
-      subtitle="Módulos integrados para organizar rotina, controlar contas e apoiar decisões."
+      title={
+        <>
+          Funcionalidades para <span className="text-primary">vender melhor</span>,{" "}
+          <span className="text-primary">controlar gastos</span> e acompanhar{" "}
+          <span className="text-primary">resultados</span> — em uma plataforma preparada para crescer com seu negócio.
+        </>
+      }
+      subtitle="Centralize vendas, clientes, produtos, estoque, contas, fluxo de caixa, custos e indicadores para administrar sua empresa com mais organização e confiança."
     >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {MODULES.map((m) => (
