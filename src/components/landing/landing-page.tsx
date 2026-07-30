@@ -169,9 +169,12 @@ function Hero() {
             className="mt-5 max-w-[17ch] text-pretty font-sans text-[2rem] font-extrabold text-petrol sm:max-w-[18ch] sm:text-[2.5rem] md:text-[2.3rem] lg:max-w-none lg:text-[2.6rem] xl:text-[2.9rem]"
             style={{ lineHeight: 1.04, letterSpacing: "-0.035em", fontWeight: 800 }}
           >
-            A VEJAMAIS reinventou a gestão comercial e financeira para fazer seu{" "}
-            <span className="text-primary-deep">e-commerce</span> — e todo o seu negócio — crescer
-            com mais <span className="text-primary-deep">controle e rentabilidade</span>.
+            A <span className="text-primary-deep">VEJAMAIS</span> reinventou a gestão comercial e
+            financeira para fazer seu comércio, seus negócios e seu{" "}
+            <span className="text-primary-deep">e-commerce</span> crescerem com mais{" "}
+            <span className="text-primary-deep">controle</span> e{" "}
+            <span className="text-primary-deep">rentabilidade</span>.
+
           </h1>
 
           <p className="mt-5 max-w-xl text-balance text-base leading-relaxed text-muted-foreground sm:text-lg">{HERO.subtitle}</p>
