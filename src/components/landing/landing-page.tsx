@@ -319,8 +319,14 @@ function Solution() {
     <Section
       id="recursos"
       eyebrow="A solução"
-      title="Toda a sua gestão comercial e financeira em um único lugar."
-      subtitle="Módulos integrados para organizar rotina, controlar contas e apoiar decisões."
+      title={
+        <>
+          Funcionalidades para <span className="text-primary">vender melhor</span>,{" "}
+          <span className="text-primary">controlar gastos</span> e acompanhar{" "}
+          <span className="text-primary">resultados</span> — em uma plataforma preparada para crescer com seu negócio.
+        </>
+      }
+      subtitle="Centralize vendas, clientes, produtos, estoque, contas, fluxo de caixa, custos e indicadores para administrar sua empresa com mais organização e confiança."
     >
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {MODULES.map((m) => (
