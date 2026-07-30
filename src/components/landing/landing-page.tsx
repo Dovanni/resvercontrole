@@ -99,14 +99,12 @@ function Header() {
             </a>
           ))}
         </nav>
-        <div className="ml-auto hidden md:flex items-center gap-2">
-          <Link to="/auth">
-            <Button variant="ghost" size="sm">Entrar</Button>
+        <div className="ml-auto hidden md:flex items-center gap-3">
+          <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            {HERO.existingClientCta}
           </Link>
           <Link to="/auth">
-            <Button size="sm" className="gap-1">
-              Entrar <ArrowRight className="size-4" />
-            </Button>
+            <Button size="sm">{HERO.primaryCta}</Button>
           </Link>
         </div>
         <button
