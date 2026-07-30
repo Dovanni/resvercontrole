@@ -167,14 +167,9 @@ function Hero() {
             className="mt-5 max-w-[15ch] text-pretty font-sans text-[2.2rem] font-extrabold text-petrol sm:max-w-[16ch] sm:text-[2.9rem] md:text-[2.9rem] lg:max-w-[17ch] lg:text-[3.2rem] xl:max-w-[16ch] xl:text-[3.6rem]"
             style={{ lineHeight: 1.02, letterSpacing: "-0.035em", fontWeight: 800 }}
           >
-            <span className="lg:block lg:whitespace-nowrap">A VEJAMAIS reinventou </span>
-            <span className="lg:block lg:whitespace-nowrap">a gestão comercial </span>
-            <span className="lg:block lg:whitespace-nowrap">e financeira para seu </span>
-            <span className="lg:block lg:whitespace-nowrap">negócio crescer com </span>
-            <span className="lg:block lg:whitespace-nowrap">
-              mais <span className="text-primary-deep">controle</span> e{" "}
-              <span className="text-primary-deep">rentabilidade</span>.
-            </span>
+            A VEJAMAIS reinventou a gestão comercial e financeira para seu negócio crescer com
+            mais <span className="text-primary-deep">controle</span> e{" "}
+            <span className="text-primary-deep">rentabilidade</span>.
           </h1>
           <p className="mt-5 max-w-xl text-balance text-base leading-relaxed text-muted-foreground sm:text-lg">{HERO.subtitle}</p>
           <div className="mt-7 flex flex-wrap gap-3">
