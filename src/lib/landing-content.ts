@@ -77,17 +77,14 @@ export const HOW_IT_WORKS = [
 ];
 
 export const FEATURED_RESOURCES = [
-  { name: "Vendas", desc: "Registre e acompanhe cada venda com clareza." },
-  { name: "Produtos", desc: "Catálogo organizado com atributos essenciais." },
-  { name: "Financeiro", desc: "Visão consolidada da saúde do negócio." },
-  { name: "Fluxo de caixa", desc: "Entradas e saídas em uma linha do tempo." },
-  { name: "Contas", desc: "A pagar e a receber, sob controle." },
-  { name: "Relatórios", desc: "Análises e exportações práticas." },
-  { name: "BI", desc: "Indicadores para decisão consciente." },
-  { name: "Lucro", desc: "Auditoria de resultado por operação." },
-  { name: "Clientes", desc: "Histórico e relacionamento em um lugar." },
-  { name: "Fornecedores", desc: "Cadastro e vínculos organizados." },
+  { name: "Pedidos e vendas", desc: "Registre e acompanhe cada pedido e venda com clareza." },
+  { name: "Produtos e estoque", desc: "Catálogo organizado e visão das quantidades." },
+  { name: "Clientes e fornecedores", desc: "Relacionamento, histórico e compras no mesmo lugar." },
+  { name: "Contas e fluxo de caixa", desc: "A pagar, a receber e entradas e saídas no tempo." },
+  { name: "Custos, margens e lucros", desc: "Taxas, fretes e custos refletidos no resultado." },
+  { name: "Relatórios e DRE", desc: "Análises comerciais e financeiras com DRE por competência." },
 ];
+
 
 export type Plan = {
   id: string;
