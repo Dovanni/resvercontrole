@@ -2,16 +2,13 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
-  BarChart3,
   Check,
   ChevronDown,
-  LineChart,
   Lock,
   Menu,
   ShieldCheck,
   Sparkles,
   Users,
-  Wallet,
   X,
 } from "lucide-react";
 import heroGestora from "@/assets/hero-vejamais-gestora.png";
