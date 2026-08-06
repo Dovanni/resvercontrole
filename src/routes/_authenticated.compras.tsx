@@ -1,3 +1,4 @@
+import { useMultiempresa } from '@/hooks/use-multiempresa';
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
@@ -47,6 +48,7 @@ type Item = { produto_id: string; quantidade: number; preco_unitario: number; su
 
 function ComprasPage() {
   const { user } = useAuth();
+  const { empresaId } = useMultiempresa();
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [openNova, setOpenNova] = useState(false);
@@ -451,6 +453,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
   contas: { id: string; name: string }[]; onDone: () => void;
   mode?: "create" | "edit"; editCompra?: Compra;
 }) {
+  const { empresaId } = useMultiempresa();
   const isEdit = mode === "edit" && !!editCompra;
   const shortIdEdit = isEdit ? editCompra!.id.slice(0, 8) : "";
 
@@ -734,6 +737,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
       const itensRows = itens.map((it) => ({
         user_id: userId, compra_id: compraId, produto_id: it.produto_id,
         quantidade: it.quantidade, preco_unitario: it.preco_unitario, subtotal: it.subtotal,
+        empresa_id: empresaId!,
       }));
       const { error: e2 } = await (supabase.from("compras_itens" as any).insert(itensRows));
       if (e2) throw e2;
@@ -757,7 +761,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
           payment_method: f.forma_pagamento, status: "pago",
           paid_amount: total, paid_at: new Date().toISOString(),
           bank_account_id: f.bank_account_id,
-        });
+          empresa_id: empresaId! });
         payablesCount = 1;
       } else if (f.condicao === "parcelado") {
         const rows = parcelasPreview.map((p) => ({
@@ -765,7 +769,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
           description: `${baseDesc} (${p.n}/${f.parcelas})`,
           category: "Fornecedor", amount: p.amount,
           due_date: p.date, status: "pendente",
-        }));
+          empresa_id: empresaId! }));
         const { error } = await supabase.from("payables").insert(rows);
         if (error) throw error;
         payablesCount = f.parcelas;
@@ -773,7 +777,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
         await supabase.from("payables").insert({
           user_id: userId, supplier_id: f.fornecedor_id, description: baseDesc,
           category: "Fornecedor", amount: total, due_date: f.data_vencimento, status: "pendente",
-        });
+          empresa_id: empresaId! });
         payablesCount = 1;
       }
       return { count: payablesCount, edit: false };

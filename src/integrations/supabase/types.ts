@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      empresas: {
+        Row: {
+          created_at: string
+          documento: string | null
+          id: string
+          nome: string
+          owner_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          documento?: string | null
+          id?: string
+          nome: string
+          owner_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          documento?: string | null
+          id?: string
+          nome?: string
+          owner_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_company_access: {
+        Row: {
+          created_at: string
+          empresa_id: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          empresa_id: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          empresa_id?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_company_access_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+
       aportes_financeiros: {
         Row: {
           amount: number
@@ -29,6 +95,7 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string
+          empresa_id: string
         }
         Insert: {
           amount: number
@@ -44,6 +111,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id: string
+          empresa_id: string
         }
         Update: {
           amount?: number
@@ -59,6 +127,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+          empresa_id?: string
         }
         Relationships: [
           {
@@ -131,6 +200,7 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string
+          empresa_id: string
         }
         Insert: {
           account_number?: string | null
@@ -145,6 +215,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id: string
+          empresa_id: string
         }
         Update: {
           account_number?: string | null
@@ -159,6 +230,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+          empresa_id?: string
         }
         Relationships: []
       }
@@ -178,6 +250,7 @@ export type Database = {
           type: string
           updated_at: string
           user_id: string
+          empresa_id: string
         }
         Insert: {
           account_id: string
@@ -194,6 +267,7 @@ export type Database = {
           type: string
           updated_at?: string
           user_id: string
+          empresa_id: string
         }
         Update: {
           account_id?: string
@@ -210,6 +284,7 @@ export type Database = {
           type?: string
           updated_at?: string
           user_id?: string
+          empresa_id?: string
         }
         Relationships: [
           {
@@ -242,6 +317,7 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string
+          empresa_id: string
         }
         Insert: {
           bandeira: string
@@ -256,6 +332,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id: string
+          empresa_id: string
         }
         Update: {
           bandeira?: string
@@ -270,6 +347,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+          empresa_id?: string
         }
         Relationships: [
           {
@@ -293,6 +371,7 @@ export type Database = {
           updated_at: string
           user_id: string
           valor_total: number
+          empresa_id: string
         }
         Insert: {
           ano: number
@@ -305,6 +384,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           valor_total?: number
+          empresa_id: string
         }
         Update: {
           ano?: number
@@ -317,6 +397,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           valor_total?: number
+          empresa_id?: string
         }
         Relationships: [
           {
@@ -347,6 +428,7 @@ export type Database = {
           updated_at: string
           user_id: string
           valor: number
+          empresa_id: string
         }
         Insert: {
           ano_fatura: number
@@ -366,6 +448,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           valor: number
+          empresa_id: string
         }
         Update: {
           ano_fatura?: number
@@ -385,6 +468,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           valor?: number
+          empresa_id?: string
         }
         Relationships: [
           {
@@ -403,6 +487,7 @@ export type Database = {
           nome: string
           padrao: boolean
           user_id: string
+          empresa_id: string
         }
         Insert: {
           created_at?: string
@@ -410,6 +495,7 @@ export type Database = {
           nome: string
           padrao?: boolean
           user_id: string
+          empresa_id: string
         }
         Update: {
           created_at?: string
@@ -417,6 +503,7 @@ export type Database = {
           nome?: string
           padrao?: boolean
           user_id?: string
+          empresa_id?: string
         }
         Relationships: []
       }
@@ -468,6 +555,7 @@ export type Database = {
           total: number
           updated_at: string
           user_id: string
+          empresa_id: string
         }
         Insert: {
           bank_account_id?: string | null
@@ -489,6 +577,7 @@ export type Database = {
           total?: number
           updated_at?: string
           user_id: string
+          empresa_id: string
         }
         Update: {
           bank_account_id?: string | null
@@ -510,6 +599,7 @@ export type Database = {
           total?: number
           updated_at?: string
           user_id?: string
+          empresa_id?: string
         }
         Relationships: [
           {
@@ -538,6 +628,7 @@ export type Database = {
           quantidade: number
           subtotal: number
           user_id: string
+          empresa_id: string
         }
         Insert: {
           compra_id: string
@@ -548,6 +639,7 @@ export type Database = {
           quantidade: number
           subtotal: number
           user_id: string
+          empresa_id: string
         }
         Update: {
           compra_id?: string
@@ -558,6 +650,7 @@ export type Database = {
           quantidade?: number
           subtotal?: number
           user_id?: string
+          empresa_id?: string
         }
         Relationships: [
           {
@@ -726,6 +819,7 @@ export type Database = {
           updated_at: string
           user_id: string
           zip: string | null
+          empresa_id: string
         }
         Insert: {
           address?: string | null
@@ -745,6 +839,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           zip?: string | null
+          empresa_id: string
         }
         Update: {
           address?: string | null
@@ -764,6 +859,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           zip?: string | null
+          empresa_id?: string
         }
         Relationships: []
       }
@@ -909,6 +1005,7 @@ export type Database = {
           supplier_id: string | null
           updated_at: string
           user_id: string
+          empresa_id: string
         }
         Insert: {
           amount: number
@@ -926,6 +1023,7 @@ export type Database = {
           supplier_id?: string | null
           updated_at?: string
           user_id: string
+          empresa_id: string
         }
         Update: {
           amount?: number
@@ -943,6 +1041,7 @@ export type Database = {
           supplier_id?: string | null
           updated_at?: string
           user_id?: string
+          empresa_id?: string
         }
         Relationships: [
           {
@@ -1017,6 +1116,7 @@ export type Database = {
           updated_at: string
           user_id: string
           wholesale_price: number
+          empresa_id: string
         }
         Insert: {
           brand?: string | null
@@ -1035,6 +1135,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           wholesale_price?: number
+          empresa_id: string
         }
         Update: {
           brand?: string | null
@@ -1053,6 +1154,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           wholesale_price?: number
+          empresa_id?: string
         }
         Relationships: []
       }
@@ -1094,6 +1196,7 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string
+          empresa_id: string
         }
         Insert: {
           amount: number
@@ -1111,6 +1214,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id: string
+          empresa_id: string
         }
         Update: {
           amount?: number
@@ -1128,6 +1232,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+          empresa_id?: string
         }
         Relationships: [
           {
@@ -1163,6 +1268,7 @@ export type Database = {
           unit_cost: number
           unit_price: number
           user_id: string
+          empresa_id: string
         }
         Insert: {
           created_at?: string
@@ -1173,6 +1279,7 @@ export type Database = {
           unit_cost?: number
           unit_price: number
           user_id: string
+          empresa_id: string
         }
         Update: {
           created_at?: string
@@ -1183,6 +1290,7 @@ export type Database = {
           unit_cost?: number
           unit_price?: number
           user_id?: string
+          empresa_id?: string
         }
         Relationships: [
           {
@@ -1220,6 +1328,7 @@ export type Database = {
           status: string
           total: number
           user_id: string
+          empresa_id: string
         }
         Insert: {
           aporte_type?: string | null
@@ -1239,6 +1348,7 @@ export type Database = {
           status?: string
           total?: number
           user_id: string
+          empresa_id: string
         }
         Update: {
           aporte_type?: string | null
@@ -1258,6 +1368,7 @@ export type Database = {
           status?: string
           total?: number
           user_id?: string
+          empresa_id?: string
         }
         Relationships: [
           {
@@ -1290,6 +1401,7 @@ export type Database = {
           phone: string | null
           updated_at: string
           user_id: string
+          empresa_id: string
         }
         Insert: {
           contact_name?: string | null
@@ -1304,6 +1416,7 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id: string
+          empresa_id: string
         }
         Update: {
           contact_name?: string | null
@@ -1318,6 +1431,7 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id?: string
+          empresa_id?: string
         }
         Relationships: []
       }
