@@ -17,17 +17,23 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const [showHelp, setShowHelp] = useState(false);
+  const { empresaId, isEnabled } = useMultiempresa();
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["dashboard"],
+    queryKey: ["dashboard", empresaId],
     queryFn: async () => {
       const now = new Date();
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
+      const query = (table: string) => {
+        const q = supabase.from(table).select("*");
+        return isEnabled && empresaId ? q.eq("empresa_id", empresaId) : q;
+      };
+
       const [sales, finance, products, items] = await Promise.all([
-        supabase.from("sales").select("id,total,sold_at,customer_name,channel").gte("sold_at", monthStart).order("sold_at", { ascending: false }),
-        supabase.from("finance_entries").select("type,amount,entry_date").gte("entry_date", monthStart),
-        supabase.from("products").select("id,name,stock,min_stock"),
-        supabase.from("sale_items").select("quantity,unit_price,unit_cost,product_id,products(name)").gte("created_at", monthStart),
+        query("sales").select("id,total,sold_at,customer_name,channel").gte("sold_at", monthStart).order("sold_at", { ascending: false }),
+        query("finance_entries").select("type,amount,entry_date").gte("entry_date", monthStart),
+        query("products").select("id,name,stock,min_stock"),
+        query("sale_items").select("quantity,unit_price,unit_cost,product_id,products(name)").gte("created_at", monthStart),
       ]);
 
       const queryError = sales.error ?? finance.error ?? products.error ?? items.error;

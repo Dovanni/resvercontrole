@@ -10,8 +10,6 @@ export const getActiveEmpresa = createServerFn({ method: "GET" })
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Não autenticado");
 
-    // Busca a empresa onde o usuário tem vínculo ativo
-    // Prioriza a empresa marcada como principal ou a primeira encontrada
     const { data: access, error } = await supabase
       .from("user_company_access")
       .select(`
@@ -23,7 +21,6 @@ export const getActiveEmpresa = createServerFn({ method: "GET" })
           id,
           nome,
           razao_social,
-          cnpj,
           logo_url,
           tipo,
           parent_id,
@@ -40,8 +37,9 @@ export const getActiveEmpresa = createServerFn({ method: "GET" })
       throw new Error("Nenhuma empresa ativa encontrada para este usuário.");
     }
 
+    const companyData = access.empresas as any;
     return {
-      ...(access.empresas as any),
+      ...companyData,
       user_role: access.role,
       membership_status: access.status,
       is_primary: access.is_primary
@@ -66,19 +64,17 @@ export const listMyCompanies = createServerFn({ method: "GET" })
           id,
           nome,
           razao_social,
-          cnpj,
           logo_url,
           tipo,
           parent_id
         )
       `)
       .eq("user_id", user.id)
-      .eq("status", "active")
-      .order("empresas(nome)", { ascending: true });
+      .eq("status", "active");
 
     if (error) throw error;
-    return data.map(item => ({
-      ...(item.empresas as any),
+    return (data as any[]).map(item => ({
+      ...item.empresas,
       user_role: item.role,
       membership_status: item.status,
       is_primary: item.is_primary
