@@ -580,7 +580,11 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
           const { error: updErr } = await supabase.from("sales").update(payload as any).eq("id", saleId!);
           if (updErr) throw updErr;
         } else {
-          const { error } = await supabase.from("sales").insert({ user_id: user.id, ...payload } as any);
+          const { error } = await supabase.from("sales").insert({ 
+            user_id: user.id, 
+            empresa_id: isEnabled ? empresaId : undefined,
+            ...payload 
+          } as any);
           if (error) throw error;
         }
         return;
@@ -611,12 +615,21 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
       } else {
         const { data: sale, error } = await supabase
           .from("sales")
-          .insert({ user_id: user.id, ...payload } as any)
+          .insert({ 
+            user_id: user.id, 
+            empresa_id: isEnabled ? empresaId : undefined,
+            ...payload 
+          } as any)
           .select().single();
         if (error) throw error;
         const rows = items.map(i => ({
-          sale_id: sale.id, user_id: user.id, product_id: i.product_id,
-          quantity: i.quantity, unit_price: i.unit_price, unit_cost: i.unit_cost,
+          sale_id: sale.id, 
+          user_id: user.id, 
+          empresa_id: isEnabled ? empresaId : undefined,
+          product_id: i.product_id,
+          quantity: i.quantity, 
+          unit_price: i.unit_price, 
+          unit_cost: i.unit_cost,
         }));
         const { error: e2 } = await supabase.from("sale_items").insert(rows as any);
         if (e2) throw e2;
