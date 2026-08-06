@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,15 +34,18 @@ type SortDir = "asc" | "desc";
 
 function ProductsPage() {
   const qc = useQueryClient();
+  const { empresaId, isEnabled } = useMultiempresa();
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [showHelp, setShowHelp] = useState(false);
 
   const { data: products } = useQuery({
-    queryKey: ["products"],
+    queryKey: ["products", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("products").select("*").order("name");
+      let query = supabase.from("products").select("*");
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+      const { data, error } = await query.order("name");
       if (error) throw error;
       return data as Product[];
     },
@@ -125,12 +129,16 @@ function ProductsPage() {
         const { error } = await supabase.from("products").update(p).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("products").insert({ ...p, user_id: user.id } as any);
+        const { error } = await supabase.from("products").insert({ 
+          ...p, 
+          user_id: user.id,
+          empresa_id: isEnabled ? empresaId : undefined 
+        } as any);
         if (error) throw error;
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["products", empresaId] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       setOpen(false); setEditing(null);
       toast.success("Produto salvo");
@@ -144,7 +152,7 @@ function ProductsPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["products"] });
+      qc.invalidateQueries({ queryKey: ["products", empresaId] });
       toast.success("Produto removido");
     },
     onError: (e: any) => toast.error(e.message),
