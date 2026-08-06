@@ -458,7 +458,7 @@ export function AuditoriaLucroDialog({ saleId, onClose }: Props) {
                           </tr>
                         </thead>
                         <tbody>
-                          {it.purchases.map((p, i) => (
+                          {it.purchases.map((p: any, i: number) => (
                             <tr key={i} className="border-b last:border-0">
                               <td className="p-2">{p.date ? new Date(p.date).toLocaleDateString("pt-BR") : "—"}</td>
                               <td className="p-2">{p.nf ?? "—"}</td>
