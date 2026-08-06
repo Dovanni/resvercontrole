@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -57,75 +58,99 @@ function CashFlowPage() {
   const today = new Date();
   const startPast = new Date(today); startPast.setDate(today.getDate() - 30);
   const endFuture = new Date(today); endFuture.setDate(today.getDate() + 15);
+  const { empresaId, isEnabled } = useMultiempresa();
   const [accountFilter, setAccountFilter] = useState<string>("todas");
   const [onlyMovementDays, setOnlyMovementDays] = useState(true);
   const [showHelp, setShowHelp] = useState(false);
 
   const { data: bankAccounts } = useQuery({
-    queryKey: ["bank-accounts-active"],
+    queryKey: ["bank-accounts-active", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bank_accounts" as any)
+      let query = supabase
+        .from("bank_accounts")
         .select("id,name,bank,color,initial_balance,status,created_at")
-        .eq("status", "ativa")
-        .order("name");
+        .eq("status", "ativa");
+      
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+
+      const { data, error } = await query.order("name");
       if (error) throw error;
-      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string; initial_balance: number; status: string; created_at: string }[];
+      return (data ?? []) as any[];
     },
   });
 
   const { data: bankMovements } = useQuery({
-    queryKey: ["cashflow", "bank-movements-all"],
+    queryKey: ["cashflow", "bank-movements-all", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bank_movements" as any)
+      let query = supabase
+        .from("bank_movements")
         .select("account_id,destination_account_id,type,amount,movement_date,description,category,origin,reference_id");
+      
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []) as unknown as CashMovement[];
     },
   });
 
   const { data: paidPayables } = useQuery({
-    queryKey: ["cashflow", "paid-payables"],
+    queryKey: ["cashflow", "paid-payables", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("payables")
         .select("id,description,category,amount,paid_amount,due_date,paid_at,status,bank_account_id")
         .eq("status", "pago");
+      
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []) as unknown as PayableCashSource[];
     },
   });
 
   const { data: receivableSources } = useQuery({
-    queryKey: ["cashflow", "receivable-sources"],
+    queryKey: ["cashflow", "receivable-sources", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("receivables" as any)
+      let query = supabase
+        .from("receivables")
         .select("id,sale_id,description,amount,received_amount,due_date,received_at,status,bank_account_id");
+      
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []) as unknown as ReceivableCashSource[];
     },
   });
 
   const { data: deliveredSales } = useQuery({
-    queryKey: ["cashflow", "delivered-sales"],
+    queryKey: ["cashflow", "delivered-sales", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("sales")
         .select("id,customer_name,payment_method,total,sold_at,status,bank_account_id")
         .eq("status", "entregue");
+      
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []) as unknown as SaleCashSource[];
     },
   });
 
   const { data: purchases } = useQuery({
-    queryKey: ["cashflow", "purchase-sources"],
+    queryKey: ["cashflow", "purchase-sources", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("compras" as any)
+      let query = supabase
+        .from("compras")
         .select("id,total,data_compra,status,condicao_pagamento,forma_pagamento,bank_account_id");
+      
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []) as unknown as PurchaseCashSource[];
     },
@@ -280,7 +305,7 @@ function CashFlowPage() {
 
   // Recebíveis/pagáveis futuros — projeção apenas se filtro = todas (ou filtrados por bank_account_id)
   const { data: futurePayables } = useQuery({
-    queryKey: ["cashflow", "payables", accountFilter],
+    queryKey: ["cashflow", "payables", accountFilter, empresaId],
     queryFn: async () => {
       let q = supabase
         .from("payables")
@@ -288,7 +313,10 @@ function CashFlowPage() {
         .not("status", "in", "(pago,cancelado)")
         .gte("due_date", isoDay(today))
         .lte("due_date", isoDay(endFuture));
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
       if (accountFilter !== "todas") q = q.eq("bank_account_id", accountFilter);
+      
       const { data, error } = await q;
       if (error) throw error;
       return data as any[];
@@ -296,15 +324,18 @@ function CashFlowPage() {
   });
 
   const { data: futureReceivables } = useQuery({
-    queryKey: ["cashflow", "receivables", accountFilter],
+    queryKey: ["cashflow", "receivables", accountFilter, empresaId],
     queryFn: async () => {
       let q = supabase
-        .from("receivables" as any)
+        .from("receivables")
         .select("amount,received_amount,due_date,description,status,bank_account_id")
         .not("status", "in", "(recebido,cancelado)")
         .gte("due_date", isoDay(today))
         .lte("due_date", isoDay(endFuture));
-      if (accountFilter !== "todas") q = (q as any).eq("bank_account_id", accountFilter);
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      if (accountFilter !== "todas") q = q.eq("bank_account_id", accountFilter);
+      
       const { data, error } = await q;
       if (error) throw error;
       return data as any[];
