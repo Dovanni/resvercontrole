@@ -1,5 +1,5 @@
 -- VMEAP WAVE A: ATUALIZAÇÃO ESTRUTURAL CONTROLADA
--- Strategy: EXPAND -> BACKFILL -> VALIDATE -> HARDEN
+-- Corrected: Removed inventory_movements (not in current schema)
 
 -- 1. EXPAND: Criar estrutura de empresas e vínculos
 CREATE TABLE IF NOT EXISTS public.empresas (
@@ -12,11 +12,9 @@ CREATE TABLE IF NOT EXISTS public.empresas (
     owner_id UUID REFERENCES auth.users(id) NOT NULL
 );
 
--- Permissões para empresas
 GRANT SELECT, INSERT, UPDATE ON public.empresas TO authenticated;
 GRANT ALL ON public.empresas TO service_role;
 
--- Vínculos entre usuários e empresas (Membership)
 CREATE TABLE IF NOT EXISTS public.user_company_access (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
@@ -31,14 +29,13 @@ GRANT SELECT, INSERT, UPDATE ON public.user_company_access TO authenticated;
 GRANT ALL ON public.user_company_access TO service_role;
 
 -- 2. EXPAND: Adicionar empresa_id às tabelas de negócio (Safe Expand)
--- Lista de tabelas identificadas no types.ts que possuem user_id
 DO $$
 DECLARE
     t_name TEXT;
     tables_to_migrate TEXT[] := ARRAY[
         'aportes_financeiros', 'bank_accounts', 'bank_movements', 'cartoes_credito',
         'cartoes_faturas', 'cartoes_lancamentos', 'categorias_contas_pagar',
-        'compras', 'compras_itens', 'customers', 'inventory_movements',
+        'compras', 'compras_itens', 'customers',
         'payables', 'products', 'receivables', 'sale_items', 'sales', 'suppliers'
     ];
 BEGIN
@@ -61,13 +58,11 @@ DECLARE
     tables_to_migrate TEXT[] := ARRAY[
         'aportes_financeiros', 'bank_accounts', 'bank_movements', 'cartoes_credito',
         'cartoes_faturas', 'cartoes_lancamentos', 'categorias_contas_pagar',
-        'compras', 'compras_itens', 'customers', 'inventory_movements',
+        'compras', 'compras_itens', 'customers',
         'payables', 'products', 'receivables', 'sale_items', 'sales', 'suppliers'
     ];
 BEGIN
-    -- Para cada usuário que possui dados, garantir que ele tenha uma empresa
     FOR u_id IN SELECT DISTINCT user_id FROM public.bank_accounts LOOP
-        -- Criar empresa se não existir vínculo (Idempotente)
         IF NOT EXISTS (SELECT 1 FROM public.empresas WHERE owner_id = u_id) THEN
             INSERT INTO public.empresas (nome, owner_id)
             VALUES ('Empresa Principal', u_id)
@@ -79,7 +74,6 @@ BEGIN
             SELECT id INTO new_emp_id FROM public.empresas WHERE owner_id = u_id LIMIT 1;
         END IF;
 
-        -- Backfill nas tabelas de negócio para esse usuário
         FOREACH t_name IN ARRAY tables_to_migrate LOOP
             EXECUTE format('UPDATE public.%I SET empresa_id = %L WHERE user_id = %L AND empresa_id IS NULL', t_name, new_emp_id, u_id);
         END LOOP;
@@ -93,19 +87,17 @@ DECLARE
     tables_to_migrate TEXT[] := ARRAY[
         'aportes_financeiros', 'bank_accounts', 'bank_movements', 'cartoes_credito',
         'cartoes_faturas', 'cartoes_lancamentos', 'categorias_contas_pagar',
-        'compras', 'compras_itens', 'customers', 'inventory_movements',
+        'compras', 'compras_itens', 'customers',
         'payables', 'products', 'receivables', 'sale_items', 'sales', 'suppliers'
     ];
 BEGIN
     FOREACH t_name IN ARRAY tables_to_migrate LOOP
-        -- Só adiciona NOT NULL se o backfill funcionou (não deve ter NULLs)
         EXECUTE format('ALTER TABLE public.%I ALTER COLUMN empresa_id SET NOT NULL', t_name);
         EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON public.%I (empresa_id)', 'idx_' || t_name || '_empresa_id', t_name);
     END LOOP;
 END $$;
 
 -- 5. HARDEN: RLS Policies (Hybrid Transition)
--- Função has_role_in_company (Security Definer)
 CREATE OR REPLACE FUNCTION public.has_role_in_company(_user_id UUID, _empresa_id UUID, _role public.app_role)
 RETURNS BOOLEAN
 LANGUAGE sql
@@ -118,16 +110,14 @@ AS $$
     FROM public.user_company_access
     WHERE user_id = _user_id
       AND empresa_id = _empresa_id
-      AND (role = _role OR role = 'admin') -- admin tem acesso a tudo
+      AND (role = _role OR role = 'admin')
       AND status = 'active'
   )
 $$;
 
--- Ativar RLS nas novas tabelas
 ALTER TABLE public.empresas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_company_access ENABLE ROW LEVEL SECURITY;
 
--- Políticas para empresas
 CREATE POLICY "Users can view companies they belong to"
 ON public.empresas FOR SELECT
 USING (
@@ -138,16 +128,13 @@ USING (
     )
 );
 
--- Aplicar RLS Hardening nas tabelas de negócio (Exemplo para bank_accounts)
--- Nota: Para brevidade nesta fase A, as políticas originais de user_id continuam valendo, 
--- mas as novas de empresa_id são adicionadas.
 DO $$
 DECLARE
     t_name TEXT;
     tables_to_migrate TEXT[] := ARRAY[
         'aportes_financeiros', 'bank_accounts', 'bank_movements', 'cartoes_credito',
         'cartoes_faturas', 'cartoes_lancamentos', 'categorias_contas_pagar',
-        'compras', 'compras_itens', 'customers', 'inventory_movements',
+        'compras', 'compras_itens', 'customers',
         'payables', 'products', 'receivables', 'sale_items', 'sales', 'suppliers'
     ];
 BEGIN
