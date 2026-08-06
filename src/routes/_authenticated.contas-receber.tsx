@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,6 +56,7 @@ const STATUS_STYLE: Record<string, string> = {
 
 function ReceivablesPage() {
   const qc = useQueryClient();
+  const { empresaId, isEnabled } = useMultiempresa();
   const confirm = useConfirm();
   const [statusFilter, setStatusFilter] = useState<string>("todos");
   const [customerFilter, setCustomerFilter] = useState<string>("todos");
@@ -66,23 +68,34 @@ function ReceivablesPage() {
   const [editTarget, setEditTarget] = useState<Receivable | null>(null);
 
   const { data: customers } = useQuery({
-    queryKey: ["customers-min"],
+    queryKey: ["customers-min", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("customers").select("id,name").order("name");
+      let query = supabase.from("customers").select("id,name");
+      
+      if (isEnabled && empresaId) {
+        query = query.eq("empresa_id", empresaId);
+      }
+
+      const { data, error } = await query.order("name");
       if (error) throw error;
       return data;
     },
   });
 
   const { data: rows } = useQuery({
-    queryKey: ["receivables"],
+    queryKey: ["receivables", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("receivables" as any)
-        .select("*, customers(name)")
-        .order("due_date", { ascending: true });
+      let query = supabase
+        .from("receivables")
+        .select("*, customers(name)");
+      
+      if (isEnabled && empresaId) {
+        query = query.eq("empresa_id", empresaId);
+      }
+
+      const { data, error } = await query.order("due_date", { ascending: true });
       if (error) throw error;
-      return data as unknown as Receivable[];
+      return data as Receivable[];
     },
   });
 
@@ -228,7 +241,7 @@ function ReceivablesPage() {
                   const { error } = await supabase.from("receivables" as any).update(patch as any).eq("id", r.id);
                   if (error) { toast.error(error.message); return; }
                   toast.success("Atualizado!");
-                  qc.invalidateQueries({ queryKey: ["receivables"] });
+                  qc.invalidateQueries({ queryKey: ["receivables", empresaId] });
                 };
 
                 const handleDelete = async () => {
@@ -247,7 +260,7 @@ function ReceivablesPage() {
                   const { error } = await supabase.from("receivables" as any).delete().eq("id", r.id);
                   if (error) { toast.error(error.message); return; }
                   toast.success("Excluído!");
-                  qc.invalidateQueries({ queryKey: ["receivables"] });
+                   qc.invalidateQueries({ queryKey: ["receivables", empresaId] });
                   qc.invalidateQueries({ queryKey: ["finance"] });
                   qc.invalidateQueries({ queryKey: ["cashflow"] });
                 };
@@ -307,7 +320,7 @@ function ReceivablesPage() {
           <DialogHeader><DialogTitle className="font-display">Nova conta a receber</DialogTitle></DialogHeader>
           <NewReceivableForm customers={customers ?? []} onDone={() => {
             setOpenNew(false);
-            qc.invalidateQueries({ queryKey: ["receivables"] });
+            qc.invalidateQueries({ queryKey: ["receivables", empresaId] });
           }} />
         </DialogContent>
       </Dialog>
@@ -320,7 +333,7 @@ function ReceivablesPage() {
               receivable={payTarget}
               onDone={() => {
                 setPayTarget(null);
-                qc.invalidateQueries({ queryKey: ["receivables"] });
+                qc.invalidateQueries({ queryKey: ["receivables", empresaId] });
                 qc.invalidateQueries({ queryKey: ["finance"] });
                 qc.invalidateQueries({ queryKey: ["cashflow"] });
                 qc.invalidateQueries({ queryKey: ["dashboard"] });
@@ -339,7 +352,7 @@ function ReceivablesPage() {
               customers={customers ?? []}
               onDone={() => {
                 setEditTarget(null);
-                qc.invalidateQueries({ queryKey: ["receivables"] });
+                qc.invalidateQueries({ queryKey: ["receivables", empresaId] });
               }}
             />
           )}
