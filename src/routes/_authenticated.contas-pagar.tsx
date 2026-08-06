@@ -733,6 +733,7 @@ function InlineDate({ value, onSave }: { value: string; onSave: (v: string) => P
 // ===== Edit Form =====
 
 function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { payable: Payable; all: Payable[]; suppliers: { id: string; name: string }[]; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
+  const { empresaId, isEnabled } = useMultiempresa();
   const series = useMemo(() => findSeriesItems(all, payable), [all, payable]);
   const [scope, setScope] = useState<"one" | "forward" | "all">("one");
   const navCats = useNavigate();
@@ -919,6 +920,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
 }
 
 function PayPayableForm({ payable, bankAccounts, onDone }: { payable: Payable; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
+  const { empresaId, isEnabled } = useMultiempresa();
   const [paid_at, setPaidAt] = useState(new Date().toISOString().slice(0, 10));
   const [bank_account_id, setBankAccountId] = useState<string>(payable.bank_account_id ?? "");
   const [amount, setAmount] = useState(Number(payable.amount));
@@ -997,6 +999,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: string; name: string }[]; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
+  const { empresaId, isEnabled } = useMultiempresa();
   const confirm = useConfirm();
   const [f, setF] = useState({
     supplier_id: "", description: "", category: "fornecedor",
@@ -1033,6 +1036,7 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
           bank_account_id: f.bank_account_id || null,
           recurrence: f.recurrence,
           user_id: user.id,
+          empresa_id: isEnabled ? empresaId : undefined,
         };
       });
       const { error } = await supabase.from("payables").insert(rows as any);
