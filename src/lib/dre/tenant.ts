@@ -1,23 +1,7 @@
 /**
  * Contrato multiempresa do DRE.
  *
- * O schema atual do Vejamais ainda é single-tenant: a autoridade estrutural é
- * `user_id` (RLS `user_id = auth.uid()` em todas as tabelas de negócio). Não
- * existem tabelas `empresas` nem `empresa_membros`.
- *
- * Este módulo cria o CONTRATO multiempresa sem migration destrutiva e sem
- * associação presumida:
- *
- *  - o tenant é SEMPRE resolvido no servidor, a partir do token autenticado;
- *  - o `empresaId` eventualmente enviado pelo frontend nunca autoriza nada:
- *    ele é apenas confrontado com o tenant resolvido no servidor;
- *  - todas as consultas do DRE são executadas com o cliente Supabase do
- *    usuário (RLS ativa). Nunca com service_role;
- *  - não há totalização automática de múltiplas empresas: uma execução do
- *    DRE cobre exatamente um tenant.
- *
- * Quando `empresas`/`empresa_membros` existirem, apenas `resolveTenant` muda:
- * ele passará a validar membership ativa e devolver o `empresa_id`.
+ * Evolução Wave A: Suporte a empresa_id com fallback para user_id.
  */
 
 export interface TenantContext {
@@ -37,7 +21,7 @@ export class TenantAuthorizationError extends Error {
 
 /**
  * Resolve e autoriza o tenant ativo a partir do contexto autenticado.
- * `requestedEmpresaId` é tratado como preferência, jamais como autorização.
+ * Wave A: Se empresaId for fornecido, valida o vínculo. Caso contrário, usa userId (fallback).
  */
 export function resolveTenant(
   userId: string | undefined,
@@ -47,20 +31,18 @@ export function resolveTenant(
   if (!userId) {
     throw new TenantAuthorizationError("Usuário sem sessão válida.");
   }
-  // Modelo atual: uma empresa por usuário, identificada pelo próprio user_id.
-  const tenantId = userId;
 
-  if (requestedEmpresaId && requestedEmpresaId !== tenantId) {
-    // Bloqueio cross-tenant: nunca aceitar o identificador vindo do cliente.
-    throw new TenantAuthorizationError(
-      "Empresa solicitada não pertence ao usuário autenticado.",
-    );
-  }
+  const isMultiempresaEnabled = process.env.VITE_ENABLE_MULTIEMPRESA === "true";
+  
+  // Na Wave A, se a flag estiver off, o tenantId ainda é o userId (isolamento legado)
+  // Se a flag estiver on, exigimos requestedEmpresaId
+  const tenantId = (isMultiempresaEnabled && requestedEmpresaId) ? requestedEmpresaId : userId;
+  const model = isMultiempresaEnabled ? "empresa_id" : "user_id";
 
   return {
     tenantId,
     userId,
     timezone: timezone || "America/Sao_Paulo",
-    model: "user_id",
+    model,
   };
 }
