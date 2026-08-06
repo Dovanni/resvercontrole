@@ -1188,6 +1188,7 @@ export type Database = {
         Row: {
           bank_account_id: string | null
           created_at: string
+          empresa_id: string
           fixo: boolean
           id: string
           payment_method: string
@@ -1197,6 +1198,7 @@ export type Database = {
         Insert: {
           bank_account_id?: string | null
           created_at?: string
+          empresa_id: string
           fixo?: boolean
           id?: string
           payment_method: string
@@ -1206,6 +1208,7 @@ export type Database = {
         Update: {
           bank_account_id?: string | null
           created_at?: string
+          empresa_id?: string
           fixo?: boolean
           id?: string
           payment_method?: string
@@ -1218,6 +1221,13 @@ export type Database = {
             columns: ["bank_account_id"]
             isOneToOne: false
             referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_routing_rules_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
             referencedColumns: ["id"]
           },
         ]
