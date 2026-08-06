@@ -1,22 +1,93 @@
-import { useQuery } from "@tanstack/react-query";
-import { getActiveEmpresa } from "@/lib/multiempresa.functions";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getActiveEmpresa, listMyCompanies, validateCompanyAccess } from "@/lib/multiempresa.functions";
 import { useServerFn } from "@tanstack/react-start";
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+
+const STORAGE_KEY = "vejamais:active_empresa_id";
 
 export function useMultiempresa() {
+  const queryClient = useQueryClient();
   const fetchActiveEmpresa = useServerFn(getActiveEmpresa);
+  const fetchMyCompanies = useServerFn(listMyCompanies);
+  const validateAccess = useServerFn(validateCompanyAccess);
   
-  const { data: empresa, isLoading } = useQuery({
-    queryKey: ["active-empresa"],
-    queryFn: () => fetchActiveEmpresa(),
-    staleTime: 1000 * 60 * 5, // 5 minutos
+  const [activeId, setActiveId] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem(STORAGE_KEY);
+    }
+    return null;
   });
+
+  const { data: empresa, isLoading: isEmpresaLoading } = useQuery({
+    queryKey: ["active-empresa", activeId],
+    queryFn: async () => {
+      // Se tivermos um ID no state/localStorage, validamos ele
+      if (activeId) {
+        try {
+          await validateAccess({ data: activeId });
+          // Se validou, buscamos os dados completos da empresa
+          const companies = await fetchMyCompanies();
+          const found = companies.find(c => c.id === activeId);
+          if (found) return found;
+        } catch (err) {
+          console.warn("Empresa no storage inválida ou sem acesso, resetando para padrão.");
+          localStorage.removeItem(STORAGE_KEY);
+          setActiveId(null);
+        }
+      }
+      
+      // Fallback para a empresa padrão definida no servidor
+      return fetchActiveEmpresa();
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const { data: companies = [], isLoading: isListLoading } = useQuery({
+    queryKey: ["my-companies"],
+    queryFn: () => fetchMyCompanies(),
+    enabled: !!empresa,
+  });
+
+  // Sincroniza o ID ativo quando a empresa é carregada (especialmente no primeiro carregamento)
+  useEffect(() => {
+    if (empresa?.id && empresa.id !== activeId) {
+      setActiveId(empresa.id);
+      localStorage.setItem(STORAGE_KEY, empresa.id);
+    }
+  }, [empresa?.id, activeId]);
+
+  const changeEmpresa = useCallback(async (newId: string) => {
+    if (newId === activeId) return;
+
+    try {
+      // Validação server-side antes de trocar
+      await validateAccess({ data: newId });
+      
+      // Atualiza estado local e storage
+      setActiveId(newId);
+      localStorage.setItem(STORAGE_KEY, newId);
+      
+      // Invalida todas as queries para garantir isolamento de dados
+      // Isso força o recarregamento de todos os dados da nova empresa
+      await queryClient.cancelQueries();
+      queryClient.clear();
+      
+      toast.success("Empresa alterada com sucesso");
+    } catch (err) {
+      toast.error("Erro ao trocar de empresa. Acesso não autorizado.");
+    }
+  }, [activeId, queryClient, validateAccess]);
 
   const isEnabled = import.meta.env.VITE_ENABLE_MULTIEMPRESA === "true";
 
   return {
     empresa,
     empresaId: empresa?.id,
-    isLoading,
-    isEnabled
+    companies,
+    activeEmpresaId: activeId,
+    isLoading: isEmpresaLoading || isListLoading,
+    isEnabled,
+    changeEmpresa
   };
 }

@@ -8,6 +8,8 @@ import { VejamaisMark } from "@/components/vejamais-logo";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import { CompanySelector } from "./company-selector";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 
 const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, perm: "view:dashboard" },
@@ -36,6 +38,7 @@ const ROLE_LABEL: Record<string, string> = { admin: "Admin", vendedor: "Vendedor
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { signOut, user, role, can } = useAuth();
+  const { isEnabled, empresa } = useMultiempresa();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const nav = ALL_NAV.filter((n) => can(n.perm));
   const queryClient = useQueryClient();
@@ -83,6 +86,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="mt-1 text-[9px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Gestão Comercial e Financeira</span>
           </div>
         </div>
+        
+        {isEnabled && (
+          <div className="px-3 mb-4">
+            <CompanySelector className="w-full" />
+          </div>
+        )}
+
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
           {nav.map((n) => {
             const active = pathname.startsWith(n.to);
@@ -118,7 +128,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             <VejamaisMark size={32} className="rounded-lg" />
             <span className="font-display text-xl">Vejamais</span>
           </div>
-          <div className="md:ml-auto flex items-center gap-1">
+          <div className="md:ml-auto flex items-center gap-2">
+            <div className="hidden md:block">
+              <CompanySelector />
+            </div>
             <NotificationsBell />
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
@@ -146,6 +159,14 @@ export function AppShell({ children }: { children: ReactNode }) {
                     </div>
                   )}
                 </SheetHeader>
+                
+                {isEnabled && (
+                  <div className="p-4 border-b">
+                    <div className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mb-2">Empresa Ativa</div>
+                    <CompanySelector className="w-full" />
+                  </div>
+                )}
+
                 <nav className="flex-1 overflow-y-auto p-3 space-y-1">
                   {nav.map((n) => {
                     const active = pathname === n.to || pathname.startsWith(n.to + "/");
