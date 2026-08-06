@@ -428,24 +428,35 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
   );
 
   const { data: bankAccounts } = useQuery({
-    queryKey: ["bank-accounts-active"],
+    queryKey: ["bank-accounts-active", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bank_accounts" as any)
+      let query = supabase
+        .from("bank_accounts")
         .select("id,name,bank,color")
-        .eq("status", "ativa")
-        .order("name");
+        .eq("status", "ativa");
+      
+      if (isEnabled && empresaId) {
+        query = query.eq("empresa_id", empresaId);
+      }
+
+      const { data, error } = await query.order("name");
       if (error) throw error;
-      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string }[];
+      return (data ?? []) as any[];
     },
   });
 
   const { data: rules } = useQuery({
-    queryKey: ["routing-rules"],
+    queryKey: ["routing-rules", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("payment_routing_rules" as any).select("payment_method,bank_account_id,fixo");
+      let query = supabase.from("payment_routing_rules").select("payment_method,bank_account_id,fixo");
+      
+      if (isEnabled && empresaId) {
+        query = query.eq("empresa_id", empresaId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []) as unknown as { payment_method: string; bank_account_id: string | null; fixo: boolean }[];
+      return (data ?? []) as any[];
     },
   });
 
