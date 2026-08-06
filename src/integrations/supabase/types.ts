@@ -1057,6 +1057,7 @@ export type Database = {
           category: string
           created_at: string
           description: string | null
+          empresa_id: string
           entry_date: string
           id: string
           sale_id: string | null
@@ -1068,6 +1069,7 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          empresa_id: string
           entry_date?: string
           id?: string
           sale_id?: string | null
@@ -1079,6 +1081,7 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          empresa_id?: string
           entry_date?: string
           id?: string
           sale_id?: string | null
@@ -1086,6 +1089,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "finance_entries_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "finance_entries_sale_id_fkey"
             columns: ["sale_id"]
