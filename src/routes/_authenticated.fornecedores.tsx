@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,15 +29,18 @@ type Supplier = {
 
 function SuppliersPage() {
   const qc = useQueryClient();
+  const { empresaId, isEnabled } = useMultiempresa();
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
   const [showHelp, setShowHelp] = useState(false);
 
   const { data } = useQuery({
-    queryKey: ["suppliers"],
+    queryKey: ["suppliers", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("suppliers").select("*").order("name");
+      let query = supabase.from("suppliers").select("*");
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+      const { data, error } = await query.order("name");
       if (error) throw error;
       return data as Supplier[];
     },
@@ -53,17 +57,21 @@ function SuppliersPage() {
         const { error } = await supabase.from("suppliers").update(v).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("suppliers").insert({ ...v, user_id: user.id } as any);
+        const { error } = await supabase.from("suppliers").insert({ 
+          ...v, 
+          user_id: user.id,
+          empresa_id: isEnabled ? empresaId : undefined
+        } as any);
         if (error) throw error;
       }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["suppliers"] }); setOpen(false); setEditing(null); toast.success("Salvo"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["suppliers", empresaId] }); setOpen(false); setEditing(null); toast.success("Salvo"); },
     onError: (e: any) => toast.error(e.message),
   });
 
   const remove = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("suppliers").delete().eq("id", id); if (error) throw error; },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["suppliers"] }); toast.success("Removido"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["suppliers", empresaId] }); toast.success("Removido"); },
     onError: (e: any) => toast.error(e.message),
   });
 

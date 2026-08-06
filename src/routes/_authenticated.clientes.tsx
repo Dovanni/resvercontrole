@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -46,15 +47,18 @@ const APORTE_TYPES = [
 
 function CustomersPage() {
   const qc = useQueryClient();
+  const { empresaId, isEnabled } = useMultiempresa();
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
   const [showHelp, setShowHelp] = useState(false);
 
   const { data } = useQuery({
-    queryKey: ["customers"],
+    queryKey: ["customers", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("customers").select("*").order("name");
+      let query = supabase.from("customers").select("*");
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+      const { data, error } = await query.order("name");
       if (error) throw error;
       return data as Customer[];
     },
@@ -70,12 +74,16 @@ function CustomersPage() {
         const { error } = await supabase.from("customers").update(v).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("customers").insert({ ...v, user_id: user.id } as any);
+        const { error } = await supabase.from("customers").insert({ 
+          ...v, 
+          user_id: user.id,
+          empresa_id: isEnabled ? empresaId : undefined 
+        } as any);
         if (error) throw error;
       }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["customers"] });
+      qc.invalidateQueries({ queryKey: ["customers", empresaId] });
       setOpen(false); setEditing(null);
       toast.success("Cliente salvo");
     },
@@ -87,7 +95,7 @@ function CustomersPage() {
       const { error } = await supabase.from("customers").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["customers"] }); toast.success("Removido"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["customers", empresaId] }); toast.success("Removido"); },
     onError: (e: any) => toast.error(e.message),
   });
 

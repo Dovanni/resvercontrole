@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,6 +49,7 @@ type Movement = {
 
 function BankAccountsPage() {
   const qc = useQueryClient();
+  const { empresaId, isEnabled } = useMultiempresa();
   const confirm = useConfirm();
   const [editing, setEditing] = useState<BankAccount | null>(null);
   const [openForm, setOpenForm] = useState(false);
@@ -55,18 +57,22 @@ function BankAccountsPage() {
   const [extractFor, setExtractFor] = useState<BankAccount | null>(null);
 
   const { data: accounts } = useQuery({
-    queryKey: ["bank-accounts"],
+    queryKey: ["bank-accounts", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("bank_accounts" as any).select("*").order("created_at");
+      let query = supabase.from("bank_accounts").select("*");
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+      const { data, error } = await query.order("created_at");
       if (error) throw error;
       return (data ?? []) as unknown as BankAccount[];
     },
   });
 
   const { data: allMovements } = useQuery({
-    queryKey: ["bank-movements", "all"],
+    queryKey: ["bank-movements", "all", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("bank_movements" as any).select("*");
+      let query = supabase.from("bank_movements").select("*");
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []) as unknown as Movement[];
     },
@@ -83,7 +89,7 @@ function BankAccountsPage() {
       const { error } = await supabase.from("bank_accounts" as any).delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["bank-accounts"] }); toast.success("Conta removida"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["bank-accounts", empresaId] }); toast.success("Conta removida"); },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -226,7 +232,7 @@ function BankAccountsPage() {
           <DialogHeader><DialogTitle className="font-display">{editing ? "Editar conta" : "Nova conta bancária"}</DialogTitle></DialogHeader>
           <AccountForm
             initial={editing}
-            onDone={() => { setOpenForm(false); qc.invalidateQueries({ queryKey: ["bank-accounts"] }); }}
+            onDone={() => { setOpenForm(false); qc.invalidateQueries({ queryKey: ["bank-accounts", empresaId] }); }}
           />
         </DialogContent>
       </Dialog>
@@ -248,6 +254,7 @@ function BankAccountsPage() {
 }
 
 function AccountForm({ initial, onDone }: { initial: BankAccount | null; onDone: () => void }) {
+  const { empresaId, isEnabled } = useMultiempresa();
   const [f, setF] = useState({
     name: initial?.name ?? "",
     bank: initial?.bank ?? "Nubank",
@@ -267,7 +274,11 @@ function AccountForm({ initial, onDone }: { initial: BankAccount | null; onDone:
         const { error } = await supabase.from("bank_accounts" as any).update(f as any).eq("id", initial.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("bank_accounts" as any).insert({ ...f, user_id: user.id } as any);
+        const { error } = await supabase.from("bank_accounts" as any).insert({ 
+          ...f, 
+          user_id: user.id,
+          empresa_id: isEnabled ? empresaId : undefined
+        } as any);
         if (error) throw error;
       }
     },
@@ -344,13 +355,16 @@ function ExtractView({ account, accounts, balance, onClose }: { account: BankAcc
   const confirm = useConfirm();
 
   const { data: movements } = useQuery({
-    queryKey: ["bank-movements", account.id],
+    queryKey: ["bank-movements", account.id, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bank_movements" as any)
+      let query = supabase
+        .from("bank_movements")
         .select("*")
-        .or(`account_id.eq.${account.id},destination_account_id.eq.${account.id}`)
-        .order("movement_date", { ascending: true });
+        .or(`account_id.eq.${account.id},destination_account_id.eq.${account.id}`);
+      
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+
+      const { data, error } = await query.order("movement_date", { ascending: true });
       if (error) throw error;
       return (data ?? []) as unknown as Movement[];
     },
