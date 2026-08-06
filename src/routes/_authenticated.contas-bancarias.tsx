@@ -624,6 +624,7 @@ function ExtractView({ account, accounts, balance, onClose }: { account: BankAcc
 }
 
 function MovementForm({ accountId, accounts, initial, onDone }: { accountId: string; accounts: BankAccount[]; initial?: Movement; onDone: () => void }) {
+  const { empresaId, isEnabled } = useMultiempresa();
   const [f, setF] = useState({
     movement_date: initial?.movement_date ?? new Date().toISOString().slice(0, 10),
     type: (initial?.type ?? "saida") as "entrada" | "saida" | "transferencia",
@@ -657,6 +658,7 @@ function MovementForm({ accountId, accounts, initial, onDone }: { accountId: str
         const { error } = await supabase.from("bank_movements" as any).insert({
           ...payload,
           user_id: user.id,
+          empresa_id: isEnabled ? empresaId : undefined,
           account_id: accountId,
           origin: f.type === "transferencia" ? "transfer" : "manual",
         } as any);
