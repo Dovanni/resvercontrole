@@ -492,6 +492,53 @@ export type Database = {
           },
         ]
       }
+      company_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          empresa_id: string
+          expires_at: string
+          id: string
+          invited_by: string
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+          token_hash: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          empresa_id: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          token_hash: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          empresa_id?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_invitations_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_settings: {
         Row: {
           cnpj: string | null
@@ -953,33 +1000,56 @@ export type Database = {
       }
       empresas: {
         Row: {
+          configuracoes: Json | null
           created_at: string
           documento: string | null
           id: string
+          logo_url: string | null
           nome: string
           owner_id: string
+          parent_id: string | null
+          razao_social: string | null
           status: string
+          tipo: string | null
           updated_at: string
         }
         Insert: {
+          configuracoes?: Json | null
           created_at?: string
           documento?: string | null
           id?: string
+          logo_url?: string | null
           nome: string
           owner_id: string
+          parent_id?: string | null
+          razao_social?: string | null
           status?: string
+          tipo?: string | null
           updated_at?: string
         }
         Update: {
+          configuracoes?: Json | null
           created_at?: string
           documento?: string | null
           id?: string
+          logo_url?: string | null
           nome?: string
           owner_id?: string
+          parent_id?: string | null
+          razao_social?: string | null
           status?: string
+          tipo?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "empresas_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       finance_entries: {
         Row: {
@@ -1521,6 +1591,7 @@ export type Database = {
           created_at: string
           empresa_id: string
           id: string
+          is_primary: boolean | null
           role: Database["public"]["Enums"]["app_role"]
           status: string
           user_id: string
@@ -1529,6 +1600,7 @@ export type Database = {
           created_at?: string
           empresa_id: string
           id?: string
+          is_primary?: boolean | null
           role?: Database["public"]["Enums"]["app_role"]
           status?: string
           user_id: string
@@ -1537,6 +1609,7 @@ export type Database = {
           created_at?: string
           empresa_id?: string
           id?: string
+          is_primary?: boolean | null
           role?: Database["public"]["Enums"]["app_role"]
           status?: string
           user_id?: string
@@ -1577,6 +1650,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_company_invitation: {
+        Args: { _token_hash: string }
+        Returns: boolean
+      }
       ensure_default_routing: { Args: { _user_id: string }; Returns: undefined }
       has_role: {
         Args: {
