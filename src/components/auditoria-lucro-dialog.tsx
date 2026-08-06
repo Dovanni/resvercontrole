@@ -136,25 +136,25 @@ export function AuditoriaLucroDialog({ saleId, onClose }: Props) {
   const summary = useMemo(() => {
     if (!data) return null;
     const { sale, cvd, items } = data;
-    const subtotal = items.reduce((a, it) => a + it.total_price, 0);
+    const subtotal = items.reduce((a: number, it: any) => a + it.total_price, 0);
     const desconto = Number(sale.discount ?? 0);
     const juros = Number(sale.mercado_pago_fees ?? 0);
     const freteEmp = Number(sale.frete_empresa ?? 0);
     const receber = Number(sale.total ?? 0);
     const freteCli = Math.max(receber - (subtotal - desconto) + juros, 0);
-    const custo = items.reduce((a, it) => a + it.total_cost, 0);
+    const custo = items.reduce((a: number, it: any) => a + it.total_cost, 0);
     const lucroBruto = receber - custo - juros - freteEmp;
     const margem = receber > 0 ? (lucroBruto * 100) / receber : 0;
     const markup = custo > 0 ? ((receber - custo) / custo) * 100 : 0;
     const roi = custo > 0 ? (lucroBruto / custo) * 100 : 0;
 
-    const suppliers = Array.from(new Set(items.map((i) => i.supplier).filter(Boolean))) as string[];
+    const suppliers = Array.from(new Set(items.map((i: any) => i.supplier).filter(Boolean))) as string[];
 
     const alerts: string[] = [];
-    items.forEach((it) => {
+    items.forEach((it: any) => {
       if (!it.supplier) alerts.push(`⚠ ${it.name}: sem fornecedor vinculado (nenhuma compra encontrada)`);
       if (it.gross_cost <= 0) alerts.push(`⚠ ${it.name}: sem custo cadastrado`);
-      if (it.purchases.length > 0 && it.purchases.every((p) => p.desconto === 0)) {
+      if (it.purchases.length > 0 && it.purchases.every((p: any) => p.desconto === 0)) {
         alerts.push(`⚠ ${it.name}: nenhuma compra tem desconto registrado`);
       }
       if (it.last_purchase_date && new Date(it.last_purchase_date) > new Date(sale.sold_at)) {
@@ -200,7 +200,7 @@ export function AuditoriaLucroDialog({ saleId, onClose }: Props) {
     const itemsSheet: any[][] = [
       ["Produto", "SKU", "Qtd", "Preço Unit.", "Total Venda", "Fornecedor", "Última Compra", "Custo Bruto", "Desc. %", "Valor Desc.", "Custo Líquido", "Custo Total"],
     ];
-    items.forEach((it) => {
+    items.forEach((it: any) => {
       itemsSheet.push([
         it.name, it.sku, it.quantity, it.unit_price, it.total_price,
         it.supplier ?? "—",
@@ -230,7 +230,7 @@ export function AuditoriaLucroDialog({ saleId, onClose }: Props) {
     autoTable(doc, {
       startY: 34,
       head: [["Produto", "Qtd", "Preço", "Custo Bruto", "Desc%", "Custo Líq.", "Total Custo"]],
-      body: items.map((it) => [
+      body: items.map((it: any) => [
         it.name, it.quantity, brl(it.unit_price), brl(it.gross_cost),
         `${it.discount_pct.toFixed(1)}%`, brl(it.net_cost), brl(it.total_cost),
       ]),
@@ -290,7 +290,7 @@ export function AuditoriaLucroDialog({ saleId, onClose }: Props) {
                   <AlertTriangle className="size-4" /> Alertas Automáticos
                 </div>
                 <ul className="text-xs text-amber-900 space-y-0.5">
-                  {summary.alerts.map((a, i) => <li key={i}>{a}</li>)}
+                  {summary.alerts.map((a: string, i: number) => <li key={i}>{a}</li>)}
                 </ul>
               </div>
             )}
@@ -333,7 +333,7 @@ export function AuditoriaLucroDialog({ saleId, onClose }: Props) {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.items.map((it) => (
+                    {data.items.map((it: any) => (
                       <tr key={it.id} className="border-b last:border-0">
                         <td className="p-2 font-medium">{it.name}</td>
                         <td className="p-2 text-muted-foreground">{it.sku}</td>
@@ -370,7 +370,7 @@ export function AuditoriaLucroDialog({ saleId, onClose }: Props) {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.items.map((it) => (
+                    {data.items.map((it: any) => (
                       <tr key={it.id} className="border-b last:border-0">
                         <td className="p-2">{it.name}</td>
                         <td className="p-2 text-right">{brl(it.gross_cost)}</td>
@@ -439,7 +439,7 @@ export function AuditoriaLucroDialog({ saleId, onClose }: Props) {
             <section>
               <h3 className="font-display text-base mb-2">📅 Histórico de Compras Consideradas</h3>
               <div className="space-y-3">
-                {data.items.map((it) => (
+                {data.items.map((it: any) => (
                   <div key={it.id} className="rounded-md border">
                     <div className="px-3 py-2 bg-muted/40 text-xs font-medium border-b">{it.name}</div>
                     {it.purchases.length === 0 ? (
