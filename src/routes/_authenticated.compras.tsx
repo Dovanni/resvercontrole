@@ -453,6 +453,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
   contas: { id: string; name: string }[]; onDone: () => void;
   mode?: "create" | "edit"; editCompra?: Compra;
 }) {
+  const { empresaId } = useMultiempresa();
   const isEdit = mode === "edit" && !!editCompra;
   const shortIdEdit = isEdit ? editCompra!.id.slice(0, 8) : "";
 
