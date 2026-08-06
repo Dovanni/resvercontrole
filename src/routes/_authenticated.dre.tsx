@@ -112,8 +112,13 @@ function DrePage() {
   const { data: company } = useQuery({
     queryKey: ["dre-company", empresaId],
     queryFn: async () => {
-      let query = supabase.from("company_settings").select("company_name, cnpj");
-      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+      let query = supabase.from("empresas").select("razao_social, documento");
+      if (isEnabled && empresaId) {
+        query = query.eq("id", empresaId);
+      } else {
+        // Fallback para o owner_id se não estiver no modo multiempresa explicito
+        query = query.eq("owner_id", user?.id || "");
+      }
       const { data } = await query.maybeSingle();
       return data;
     },
@@ -152,8 +157,8 @@ function DrePage() {
 
   const meta = useMemo(
     () => ({
-      empresa: company?.company_name || "Vejamais — Gestão Comercial e Financeira",
-      documento: company?.cnpj ? `CNPJ ${company.cnpj}` : null,
+      empresa: company?.razao_social || "Vejamais — Gestão Comercial e Financeira",
+      documento: company?.documento ? `CNPJ/Doc ${company.documento}` : null,
       emitidoEm: formatCivil(todayInTz()),
       regime: "Competência (accrual) — princípio da entidade",
     }),
