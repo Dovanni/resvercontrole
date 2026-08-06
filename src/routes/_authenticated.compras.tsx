@@ -48,7 +48,7 @@ type Item = { produto_id: string; quantidade: number; preco_unitario: number; su
 
 function ComprasPage() {
   const { user } = useAuth();
-  const { empresaId } = useMultiempresa();
+  const { empresaId, isEnabled } = useMultiempresa();
   const qc = useQueryClient();
   const confirm = useConfirm();
   const [openNova, setOpenNova] = useState(false);
@@ -61,32 +61,50 @@ function ComprasPage() {
   const [fAte, setFAte] = useState("");
 
   const { data: compras = [] } = useQuery({
-    queryKey: ["compras"],
+    queryKey: ["compras", empresaId],
     queryFn: async () => {
-      const { data, error } = await (supabase.from("compras" as any).select("*").order("data_compra", { ascending: false }));
+      let q = supabase.from("compras").select("*");
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      const { data, error } = await q.order("data_compra", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as Compra[];
     },
   });
 
   const { data: fornecedores = [] } = useQuery({
-    queryKey: ["fornecedores_simple"],
-    queryFn: async () => (await supabase.from("suppliers").select("id,name").order("name")).data ?? [],
+    queryKey: ["fornecedores_simple", empresaId],
+    queryFn: async () => {
+      let q = supabase.from("suppliers").select("id,name");
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      return (await q.order("name")).data ?? [];
+    },
   });
 
   const { data: produtos = [] } = useQuery({
-    queryKey: ["produtos_simple"],
-    queryFn: async () => (await supabase.from("products").select("id,name,sku,cost_price,stock").order("name")).data ?? [],
+    queryKey: ["produtos_simple", empresaId],
+    queryFn: async () => {
+      let q = supabase.from("products").select("id,name,sku,cost_price,stock");
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      return (await q.order("name")).data ?? [];
+    },
   });
 
   const { data: contas = [] } = useQuery({
-    queryKey: ["bank_accounts_simple_compras"],
-    queryFn: async () => (await supabase.from("bank_accounts").select("id,name").eq("status", "ativa")).data ?? [],
+    queryKey: ["bank_accounts_simple_compras", empresaId],
+    queryFn: async () => {
+      let q = supabase.from("bank_accounts").select("id,name").eq("status", "ativa");
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      return (await q).data ?? [];
+    },
   });
 
   const { data: payables = [] } = useQuery({
-    queryKey: ["payables_compras_link"],
-    queryFn: async () => (await supabase.from("payables").select("id,description,amount,paid_amount,status,due_date,bank_account_id,supplier_id,payment_method").order("due_date")).data ?? [],
+    queryKey: ["payables_compras_link", empresaId],
+    queryFn: async () => {
+      let q = supabase.from("payables").select("id,description,amount,paid_amount,status,due_date,bank_account_id,supplier_id,payment_method");
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      return (await q.order("due_date")).data ?? [];
+    },
   });
 
   const fornName = (id: string | null) => fornecedores.find((f: any) => f.id === id)?.name ?? "—";
@@ -166,6 +184,7 @@ function ComprasPage() {
             {openNova && (
               <NovaCompraDialog
                 userId={user?.id ?? ""}
+                empresaId={isEnabled ? empresaId : undefined}
                 fornecedores={fornecedores as any}
                 produtos={produtos as any}
                 contas={contas as any}
@@ -293,6 +312,7 @@ function ComprasPage() {
             mode="edit"
             editCompra={editCompra}
             userId={user?.id ?? ""}
+            empresaId={isEnabled ? empresaId : undefined}
             fornecedores={fornecedores as any}
             produtos={produtos as any}
             contas={contas as any}
