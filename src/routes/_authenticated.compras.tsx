@@ -758,7 +758,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
           category: "Fornecedor", amount: total, due_date: f.data_compra,
           payment_method: f.forma_pagamento, status: "pago",
           paid_amount: total, paid_at: new Date().toISOString(),
-          bank_account_id: f.bank_account_id,,
+          bank_account_id: f.bank_account_id,
           empresa_id: empresaId! });
         payablesCount = 1;
       } else if (f.condicao === "parcelado") {
@@ -766,7 +766,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
           user_id: userId, supplier_id: f.fornecedor_id,
           description: `${baseDesc} (${p.n}/${f.parcelas})`,
           category: "Fornecedor", amount: p.amount,
-          due_date: p.date, status: "pendente",,
+          due_date: p.date, status: "pendente",
           empresa_id: empresaId! }));
         const { error } = await supabase.from("payables").insert(rows);
         if (error) throw error;
@@ -774,7 +774,7 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
       } else {
         await supabase.from("payables").insert({
           user_id: userId, supplier_id: f.fornecedor_id, description: baseDesc,
-          category: "Fornecedor", amount: total, due_date: f.data_vencimento, status: "pendente",,
+          category: "Fornecedor", amount: total, due_date: f.data_vencimento, status: "pendente",
           empresa_id: empresaId! });
         payablesCount = 1;
       }
