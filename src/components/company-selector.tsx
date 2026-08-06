@@ -32,7 +32,7 @@ export function CompanySelector({ className }: { className?: string }) {
       <div className={cn("flex items-center gap-2 px-3 py-1.5 h-10 border rounded-md bg-muted/30 max-w-[200px] md:max-w-[280px]", className)}>
         <Building2 className="h-4 w-4 shrink-0 text-primary" />
         <span className="text-sm font-medium truncate">
-          {empresa?.razao_social || empresa?.nome_fantasia || "Minha Empresa"}
+          {empresa?.nome || "Minha Empresa"}
         </span>
       </div>
     );
@@ -52,13 +52,8 @@ export function CompanySelector({ className }: { className?: string }) {
           <div className="flex items-center gap-2 overflow-hidden mr-2">
             <Building2 className="h-4 w-4 shrink-0 text-primary" />
             <span className="text-sm font-medium truncate">
-              {empresa?.razao_social || empresa?.nome_fantasia || "Selecionar Empresa"}
+              {empresa?.nome || "Selecionar Empresa"}
             </span>
-            {empresa?.tipo === "matriz" && (
-              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-bold uppercase tracking-wider shrink-0">
-                Matriz
-              </span>
-            )}
           </div>
           <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
         </Button>
@@ -83,16 +78,11 @@ export function CompanySelector({ className }: { className?: string }) {
                   "text-sm font-medium truncate",
                   item.id === empresa?.id ? "text-primary" : "text-foreground"
                 )}>
-                  {item.razao_social || item.nome_fantasia}
+                  {item.nome}
                 </span>
-                {item.tipo === "matriz" && (
-                  <span className="text-[9px] bg-primary/10 text-primary px-1 rounded uppercase font-bold shrink-0">
-                    M
-                  </span>
-                )}
               </div>
               <span className="text-[11px] text-muted-foreground truncate">
-                {item.cnpj ? item.cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, "$1.$2.$3/$4-$5") : "Sem CNPJ"}
+                {item.documento || "Sem documento"}
               </span>
             </div>
             {item.id === empresa?.id && (
