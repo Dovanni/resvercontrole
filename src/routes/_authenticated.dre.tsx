@@ -464,7 +464,7 @@ function DrePage() {
             </p>
             <p>
               <strong className="text-foreground">Datas.</strong> Todo o recorte usa datas civis no
-              fuso da empresa ({data?.current.timezone ?? "America/Sao_Paulo"}), o que impede que um
+              fuso da empresa ({dreData?.current.timezone ?? "America/Sao_Paulo"}), o que impede que um
               lançamento do dia 1º apareça no mês anterior.
             </p>
             <p>

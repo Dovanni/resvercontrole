@@ -6,6 +6,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,7 @@ function rangeFor(p: Period): { from: string; to: string } {
 
 function BalancetePage() {
   const [period, setPeriod] = useState<Period>("este_mes");
+  const { empresaId, isEnabled } = useMultiempresa();
   const [showHelp, setShowHelp] = useState(false);
   const init = rangeFor("este_mes");
   const [from, setFrom] = useState(init.from);
@@ -55,27 +57,33 @@ function BalancetePage() {
   };
 
   const { data: bankAccounts } = useQuery({
-    queryKey: ["balancete-accounts"],
+    queryKey: ["balancete-accounts", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bank_accounts" as any)
+      let query = supabase
+        .from("bank_accounts")
         .select("id, name, bank, color, status")
-        .eq("status", "ativa")
-        .order("name");
+        .eq("status", "ativa");
+      
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+
+      const { data, error } = await query.order("name");
       if (error) throw error;
       return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string; status: string }[];
     },
   });
 
   const { data: bankMovs } = useQuery({
-    queryKey: ["balancete-bankmovs", from, to],
+    queryKey: ["balancete-bankmovs", from, to, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bank_movements" as any)
+      let query = supabase
+        .from("bank_movements")
         .select("account_id, movement_date, type, category, amount, origin")
         .gte("movement_date", from).lte("movement_date", to)
         .neq("origin", "saldo_inicial");
-      if (error) { console.error("[balancete] bank_movements error", error); throw error; }
+      
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+
+      const { data, error } = await query;
       console.log("[balancete] bank_movements:", data?.length, "período:", from, "→", to);
       return (data ?? []) as unknown as { account_id: string; movement_date: string; type: string; category: string | null; amount: number }[];
     },
@@ -83,11 +91,15 @@ function BalancetePage() {
 
   // Todas as movimentações (com data) para calcular saldo até uma data de corte
   const { data: allMovs } = useQuery({
-    queryKey: ["balancete-allmovs"],
+    queryKey: ["balancete-allmovs", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bank_movements" as any)
+      let query = supabase
+        .from("bank_movements")
         .select("account_id, movement_date, type, amount");
+      
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []) as unknown as { account_id: string; movement_date: string; type: string; amount: number }[];
     },
@@ -137,12 +149,16 @@ function BalancetePage() {
   }, [bankAccounts, bankMovs]);
 
   const { data: payables } = useQuery({
-    queryKey: ["balancete-pay", from, to],
+    queryKey: ["balancete-pay", from, to, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("payables")
         .select("id, amount, paid_amount, status, category, due_date, paid_at")
         .gte("due_date", from).lte("due_date", to);
+      
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+
+      const { data, error } = await query;
       if (error) throw error;
       return data ?? [];
     },
