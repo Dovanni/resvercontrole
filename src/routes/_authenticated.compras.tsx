@@ -737,7 +737,8 @@ function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode
       const itensRows = itens.map((it) => ({
         user_id: userId, compra_id: compraId, produto_id: it.produto_id,
         quantidade: it.quantidade, preco_unitario: it.preco_unitario, subtotal: it.subtotal,
-      , empresa_id: empresaId! }));
+        empresa_id: empresaId!,
+      }));
       const { error: e2 } = await (supabase.from("compras_itens" as any).insert(itensRows));
       if (e2) throw e2;
 
