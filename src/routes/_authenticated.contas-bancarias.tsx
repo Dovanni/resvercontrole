@@ -345,6 +345,7 @@ function AccountForm({ initial, onDone }: { initial: BankAccount | null; onDone:
 }
 
 function ExtractView({ account, accounts, balance, onClose }: { account: BankAccount; accounts: BankAccount[]; balance: number; onClose: () => void }) {
+  const { empresaId, isEnabled } = useMultiempresa();
   const qc = useQueryClient();
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
