@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { VejamaisMark } from "@/components/vejamais-logo";
 import { useServerFn } from "@tanstack/react-start";
 import { secureSignUp } from "@/lib/auth-security.functions";
-import { RecaptchaV2, RecaptchaV2Ref } from "@/components/recaptcha-v2";
+import { TurnstileWidget, TurnstileWidgetRef } from "@/components/turnstile-widget";
 import { useRef } from "react";
 import { MathChallengeField } from "@/components/math-challenge";
 
@@ -34,8 +34,8 @@ function SignupPage() {
   const [mathAnswer, setMathAnswer] = useState("");
   
   const signUpFn = useServerFn(secureSignUp);
-  const recaptchaRef = useRef<RecaptchaV2Ref>(null);
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileWidgetRef>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,8 +53,8 @@ function SignupPage() {
     setBusy(true);
     
     try {
-      if (!recaptchaToken) {
-        toast.error("Por favor, marque 'Não sou um robô'.");
+      if (!turnstileToken) {
+        toast.error("Por favor, resolva o desafio de segurança.");
         setBusy(false);
         return;
       }
@@ -66,7 +66,7 @@ function SignupPage() {
           empresaNome,
           cnpj,
           nomeAdministrador: nomeAdmin,
-          recaptchaToken,
+          turnstileToken,
           mathChallengeToken: mathToken,
           mathChallengeAnswer: mathAnswer,
           consent: {
@@ -79,13 +79,13 @@ function SignupPage() {
       toast.success("Conta criada! Verifique seu e-mail para confirmar.");
       navigate({ to: "/login" });
     } catch (error: any) {
-      if (error.message === "RECAPTCHA_CONFIGURATION_REQUIRED") {
-        toast.error("Configuração de segurança necessária (RECAPTCHA_CONFIGURATION_REQUIRED).");
+      if (error.message.includes("TURNSTILE_CONFIGURATION_REQUIRED")) {
+        toast.error("Configuração de segurança necessária (TURNSTILE_SITE_KEY).");
       } else {
         toast.error(error.message || "Erro ao criar conta.");
       }
-      recaptchaRef.current?.reset();
-      setRecaptchaToken(null);
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
     } finally {
       setBusy(false);
     }
@@ -181,23 +181,21 @@ function SignupPage() {
 
             <MathChallengeField onVerify={(t, a) => { setMathToken(t); setMathAnswer(a); }} />
 
-            <RecaptchaV2 
-              ref={recaptchaRef} 
-              onVerify={setRecaptchaToken} 
+            <TurnstileWidget 
+              ref={turnstileRef} 
+              onVerify={setTurnstileToken} 
             />
 
             <Button 
               type="submit" 
-              disabled={busy || (import.meta.env.VITE_RECAPTCHA_SITE_KEY ? !recaptchaToken : true)} 
+              disabled={busy || (import.meta.env.VITE_TURNSTILE_SITE_KEY ? !turnstileToken : true)} 
               className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95"
             >
               {busy ? "Processando..." : "Criar conta"}
             </Button>
             
             <p className="text-[10px] text-center text-muted-foreground mt-2">
-              Este site é protegido pelo reCAPTCHA e a 
-              <a href="https://policies.google.com/privacy" className="underline ml-1">Política de Privacidade</a> e
-              <a href="https://policies.google.com/terms" className="underline ml-1">Termos de Serviço</a> do Google se aplicam.
+              Este site é protegido pelo Cloudflare Turnstile.
             </p>
 
             <div className="text-center mt-4 text-sm text-muted-foreground">
