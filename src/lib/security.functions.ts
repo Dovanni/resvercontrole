@@ -64,6 +64,7 @@ const TURNSTILE_SECRET = process.env['TURNSTILE_SECRET_KEY'];
 const HOSTNAME_ALLOWLIST = [
   'resvercontrole.lovable.app',
   'id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app',
+  'c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovableproject.com',
   'vejamais.com.br',
   'www.vejamais.com.br'
 ];
