@@ -203,7 +203,7 @@ export async function clearRateLimitPersistent(scope: string, email: string) {
   const ipHash = hashIdentity(clientIp);
   const emailHash = hashIdentity(email);
 
-  await Promise.all([
+    await Promise.all([
     supabaseAdmin.rpc('reset_auth_rate_limit', {
       p_scope: scope,
       p_identity_kind: 'ip',
@@ -215,4 +215,50 @@ export async function clearRateLimitPersistent(scope: string, email: string) {
       p_identity_hash: emailHash
     })
   ]);
+}
+
+/**
+ * Legado SOFT_THROTTLE (Baseado em Map) - Mantido temporariamente para fluxos não-auth
+ * até migração total para estrutura persistente.
+ */
+const rateLimitsLegacy = new Map<string, { count: number, resetAt: number, level: number }>();
+
+export async function checkRateLimit(key: string, limit: number, baseWindowMs: number) {
+  const now = Date.now();
+  const record = rateLimitsLegacy.get(key);
+  const REINCIDENCE_WINDOW = 60 * 60 * 1000;
+  
+  if (!record || now > (record.resetAt + REINCIDENCE_WINDOW)) {
+    rateLimitsLegacy.set(key, { count: 1, resetAt: now + baseWindowMs, level: 0 });
+    return { allowed: true };
+  }
+  
+  if (now < record.resetAt && record.count >= limit) {
+    const retryAfterSeconds = Math.ceil((record.resetAt - now) / 1000);
+    return { allowed: false, retryAfterSeconds };
+  }
+
+  if (now > record.resetAt) {
+    record.count = 0;
+  }
+  
+  record.count++;
+  
+  if (record.count >= limit) {
+    const levels = [5, 15, 30];
+    const minutes = levels[Math.min(record.level, levels.length - 1)];
+    const windowMs = minutes * 60 * 1000;
+    
+    record.resetAt = now + windowMs;
+    record.level++;
+    
+    const retryAfterSeconds = Math.ceil(windowMs / 1000);
+    return { allowed: false, retryAfterSeconds };
+  }
+  
+  return { allowed: true };
+}
+
+export async function clearRateLimit(key: string) {
+  rateLimitsLegacy.delete(key);
 }
