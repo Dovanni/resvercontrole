@@ -36,6 +36,7 @@ import { Route as AuthenticatedCategoriasRouteImport } from './routes/_authentic
 import { Route as AuthenticatedCartoesCreditoRouteImport } from './routes/_authenticated.cartoes-credito'
 import { Route as AuthenticatedBiRouteImport } from './routes/_authenticated.bi'
 import { Route as AuthenticatedBalanceteRouteImport } from './routes/_authenticated.balancete'
+import { Route as ApiPublicRpcTestRouteImport } from './routes/api/public/rpc-test'
 import { Route as ApiPublicAcceptInvitationRouteImport } from './routes/api/public/accept-invitation'
 import { Route as AuthenticatedConfiguracoesCategoriasRouteImport } from './routes/_authenticated.configuracoes.categorias'
 
@@ -182,6 +183,11 @@ const AuthenticatedBalanceteRoute = AuthenticatedBalanceteRouteImport.update({
   path: '/balancete',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiPublicRpcTestRoute = ApiPublicRpcTestRouteImport.update({
+  id: '/api/public/rpc-test',
+  path: '/api/public/rpc-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicAcceptInvitationRoute =
   ApiPublicAcceptInvitationRouteImport.update({
     id: '/api/public/accept-invitation',
@@ -224,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/vendas': typeof AuthenticatedVendasRoute
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
+  '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -254,6 +261,7 @@ export interface FileRoutesByTo {
   '/vendas': typeof AuthenticatedVendasRoute
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
+  '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -286,6 +294,7 @@ export interface FileRoutesById {
   '/_authenticated/vendas': typeof AuthenticatedVendasRoute
   '/_authenticated/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
+  '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -318,6 +327,7 @@ export interface FileRouteTypes {
     | '/vendas'
     | '/configuracoes/categorias'
     | '/api/public/accept-invitation'
+    | '/api/public/rpc-test'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -348,6 +358,7 @@ export interface FileRouteTypes {
     | '/vendas'
     | '/configuracoes/categorias'
     | '/api/public/accept-invitation'
+    | '/api/public/rpc-test'
   id:
     | '__root__'
     | '/'
@@ -379,6 +390,7 @@ export interface FileRouteTypes {
     | '/_authenticated/vendas'
     | '/_authenticated/configuracoes/categorias'
     | '/api/public/accept-invitation'
+    | '/api/public/rpc-test'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -387,6 +399,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicAcceptInvitationRoute: typeof ApiPublicAcceptInvitationRoute
+  ApiPublicRpcTestRoute: typeof ApiPublicRpcTestRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -580,6 +593,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBalanceteRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/rpc-test': {
+      id: '/api/public/rpc-test'
+      path: '/api/public/rpc-test'
+      fullPath: '/api/public/rpc-test'
+      preLoaderRoute: typeof ApiPublicRpcTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/accept-invitation': {
       id: '/api/public/accept-invitation'
       path: '/api/public/accept-invitation'
@@ -674,6 +694,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicAcceptInvitationRoute: ApiPublicAcceptInvitationRoute,
+  ApiPublicRpcTestRoute: ApiPublicRpcTestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
