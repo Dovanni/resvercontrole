@@ -22,8 +22,6 @@ export const Route = createFileRoute("/cadastro")({
 function SignupPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [empresaNome, setEmpresaNome] = useState("");
   const [nomeAdmin, setNomeAdmin] = useState("");
   const [cnpj, setCnpj] = useState("");
