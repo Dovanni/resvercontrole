@@ -1,6 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import crypto from "crypto";
+import { 
+  isTokenUsed, 
+  markTokenAsUsed, 
+  checkRateLimit, 
+  verifyMathChallenge 
+} from "./security.functions";
 
 // Tipos e Interfaces
 export interface MathChallenge {
@@ -68,6 +74,11 @@ export async function verifyRecaptcha(token: string) {
     throw new Error("RECAPTCHA_CONFIGURATION_REQUIRED");
   }
 
+  // Proteção contra reuso de token (Single Use)
+  if (await isTokenUsed(token)) {
+    return { success: false, error: 'Token already used' };
+  }
+
   const response = await fetch(`https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${token}`, {
     method: 'POST'
   });
@@ -77,6 +88,9 @@ export async function verifyRecaptcha(token: string) {
   if (!data.success) {
     return { success: false, error: 'reCAPTCHA verification failed' };
   }
+
+  // Marcar token como usado imediatamente após validação de sucesso
+  await markTokenAsUsed(token);
 
   // Validação de hostname (domínios autorizados)
   const allowedHostnames = [
@@ -97,8 +111,44 @@ export async function verifyRecaptcha(token: string) {
 // Rate limiting simples em memória (per-isolate no Worker)
 // Para o preview é suficiente para evitar ataques básicos de bot.
 const rateLimits = new Map<string, { count: number, resetAt: number }>();
+const usedTokens = new Map<string, number>(); // token -> expiry
 
 export async function checkRateLimit(key: string, limit: number, windowMs: number) {
+  const now = Date.now();
+  
+  // Limpeza periódica de tokens expirados (pode ser feita aqui de forma simples)
+  if (usedTokens.size > 1000) {
+    for (const [token, expiry] of usedTokens.entries()) {
+      if (now > expiry) usedTokens.delete(token);
+    }
+  }
+
+  const record = rateLimits.get(key);
+  
+  if (!record || now > record.resetAt) {
+    rateLimits.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  
+  if (record.count >= limit) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
+export async function isTokenUsed(token: string) {
+  const now = Date.now();
+  const expiry = usedTokens.get(token);
+  if (expiry && now < expiry) return true;
+  return false;
+}
+
+export async function markTokenAsUsed(token: string, expiryMs: number = 2 * 60 * 1000) {
+  usedTokens.set(token, Date.now() + expiryMs);
+}
+
   const now = Date.now();
   const record = rateLimits.get(key);
   
