@@ -56,10 +56,13 @@ function MinhaEmpresaPage() {
     queryKey: ["company-members", empresa?.id],
     enabled: !!empresa?.id,
     queryFn: async () => {
+      // Usar a empresa ativa carregada pelo hook, que já contém o papel
+      // do usuário atual, mas precisamos da lista completa para a tabela.
       const { data, error } = await supabase
         .from("user_company_access")
         .select("*")
-        .eq("empresa_id", empresa!.id);
+        .eq("empresa_id", empresa!.id)
+        .eq("status", "active");
       if (error) throw error;
       return data;
     }
