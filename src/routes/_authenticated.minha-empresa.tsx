@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useMultiempresa } from "@/hooks/use-multiempresa";
-import { listMyCompanies } from "@/lib/multiempresa.functions";
 import { createInternalInvitation } from "@/lib/multiempresa-admin.functions";
 import { toast } from "sonner";
 import { useState } from "react";
