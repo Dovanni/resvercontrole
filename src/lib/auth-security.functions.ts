@@ -82,9 +82,13 @@ export const secureSignIn = createServerFn({ method: "POST" })
     const emailHash = data.email.toLowerCase().trim();
     
     // 1. Rate Limit (Login: 5 tentativas em 15 min por identidade)
-    const userAllowed = await checkRateLimit(`login:email:${emailHash}`, 5, 15 * 60 * 1000);
-    if (!userAllowed) {
-      throw new Error("Muitas tentativas de acesso. Tente novamente em 15 minutos.");
+    const rateLimit = await checkRateLimit(`login:email:${emailHash}`, 5, 15 * 60 * 1000);
+    if (!rateLimit.allowed) {
+      throw new Error(JSON.stringify({
+        code: "RATE_LIMITED",
+        retryAfterSeconds: rateLimit.retryAfterSeconds,
+        message: "Muitas tentativas de acesso. Aguarde para tentar novamente."
+      }));
     }
     
     // 2. Math Challenge (Sempre no login conforme requisito VMEAP)

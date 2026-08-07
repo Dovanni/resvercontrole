@@ -28,6 +28,7 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [retryAfter, setRetryAfter] = useState<number | null>(null);
   const [mathToken, setMathToken] = useState("");
   const [mathAnswer, setMathAnswer] = useState("");
 
@@ -40,6 +41,32 @@ function LoginPage() {
       navigate({ to: "/dashboard" });
     }
   }, [session, loading, navigate]);
+
+  const mathChallengeRef = useRef<{ refresh: () => void }>(null);
+
+  useEffect(() => {
+    if (retryAfter === null || retryAfter <= 0) return;
+
+    const timer = setInterval(() => {
+      setRetryAfter((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(timer);
+          mathChallengeRef.current?.refresh();
+          turnstileRef.current?.reset();
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [retryAfter]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
   async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
