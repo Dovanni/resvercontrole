@@ -48,23 +48,21 @@ function MinhaEmpresaPage() {
     refetch: refetchMultiempresa
   } = useMultiempresa();
   const [inviteForm, setInviteForm] = useState({ email: "", role: "vendedor" as any });
-
-  if (!isEnabled) return <Navigate to="/dashboard" />;
+  const isAdmin = empresa?.user_role === 'admin';
 
   const { 
     data: members = [], 
+
     isLoading: loadingMembers, 
     error: membersError,
     refetch: refetchMembers
   } = useQuery({
     queryKey: ["company-members", empresa?.id],
-    enabled: !!empresa?.id,
+    enabled: !!empresa?.id && isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("user_company_access")
-        .select("*")
-        .eq("empresa_id", empresa!.id)
-        .eq("status", "active");
+      const { data, error } = await supabase.rpc("list_my_company_members", {
+        p_empresa_id: empresa!.id
+      });
       
       if (error) {
         console.error("Erro ao carregar membros:", error);
@@ -101,7 +99,6 @@ function MinhaEmpresaPage() {
     setInviteForm({ email: "", role: "vendedor" });
   };
 
-  const isAdmin = empresa?.user_role === 'admin';
 
   if (multiempresaError) {
     return (
@@ -219,7 +216,7 @@ function MinhaEmpresaPage() {
                     </tr>
                   ) : (
                     members.map((m) => (
-                      <tr key={m.id} className="hover:bg-muted/30 transition-colors">
+                      <tr key={m.user_id} className="hover:bg-muted/30 transition-colors">
                         <td className="p-4">
                           <div className="flex items-center gap-3">
                             <div className="size-8 rounded-full bg-accent flex items-center justify-center text-xs font-bold text-accent-foreground">
