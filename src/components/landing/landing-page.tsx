@@ -530,8 +530,8 @@ function PlanCard({ plan }: { plan: Plan }) {
         </li>
       </ul>
       <div className="mt-6">
-        {plan.ctaTarget === "/auth" ? (
-          <Link to="/auth">
+        {plan.ctaTarget === "/cadastro" ? (
+          <Link to="/cadastro">
             <Button className="w-full" variant={highlight ? "default" : "outline"} disabled={!plan.available}>
               {plan.cta}
             </Button>
