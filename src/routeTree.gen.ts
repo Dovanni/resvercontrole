@@ -40,7 +40,6 @@ import { Route as AuthenticatedCartoesCreditoRouteImport } from './routes/_authe
 import { Route as AuthenticatedBiRouteImport } from './routes/_authenticated.bi'
 import { Route as AuthenticatedBalanceteRouteImport } from './routes/_authenticated.balancete'
 import { Route as ApiPublicRpcTestRouteImport } from './routes/api/public/rpc-test'
-import { Route as ApiPublicDiagSecretRouteImport } from './routes/api/public/diag-secret'
 import { Route as ApiPublicAcceptInvitationRouteImport } from './routes/api/public/accept-invitation'
 import { Route as AuthenticatedConfiguracoesCategoriasRouteImport } from './routes/_authenticated.configuracoes.categorias'
 
@@ -207,11 +206,6 @@ const ApiPublicRpcTestRoute = ApiPublicRpcTestRouteImport.update({
   path: '/api/public/rpc-test',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicDiagSecretRoute = ApiPublicDiagSecretRouteImport.update({
-  id: '/api/public/diag-secret',
-  path: '/api/public/diag-secret',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicAcceptInvitationRoute =
   ApiPublicAcceptInvitationRouteImport.update({
     id: '/api/public/accept-invitation',
@@ -257,7 +251,6 @@ export interface FileRoutesByFullPath {
   '/vendas': typeof AuthenticatedVendasRoute
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
-  '/api/public/diag-secret': typeof ApiPublicDiagSecretRoute
   '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
 }
 export interface FileRoutesByTo {
@@ -292,7 +285,6 @@ export interface FileRoutesByTo {
   '/vendas': typeof AuthenticatedVendasRoute
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
-  '/api/public/diag-secret': typeof ApiPublicDiagSecretRoute
   '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
 }
 export interface FileRoutesById {
@@ -329,7 +321,6 @@ export interface FileRoutesById {
   '/_authenticated/vendas': typeof AuthenticatedVendasRoute
   '/_authenticated/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
-  '/api/public/diag-secret': typeof ApiPublicDiagSecretRoute
   '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
 }
 export interface FileRouteTypes {
@@ -366,7 +357,6 @@ export interface FileRouteTypes {
     | '/vendas'
     | '/configuracoes/categorias'
     | '/api/public/accept-invitation'
-    | '/api/public/diag-secret'
     | '/api/public/rpc-test'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -401,7 +391,6 @@ export interface FileRouteTypes {
     | '/vendas'
     | '/configuracoes/categorias'
     | '/api/public/accept-invitation'
-    | '/api/public/diag-secret'
     | '/api/public/rpc-test'
   id:
     | '__root__'
@@ -437,7 +426,6 @@ export interface FileRouteTypes {
     | '/_authenticated/vendas'
     | '/_authenticated/configuracoes/categorias'
     | '/api/public/accept-invitation'
-    | '/api/public/diag-secret'
     | '/api/public/rpc-test'
   fileRoutesById: FileRoutesById
 }
@@ -450,7 +438,6 @@ export interface RootRouteChildren {
   RecuperarSenhaRoute: typeof RecuperarSenhaRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicAcceptInvitationRoute: typeof ApiPublicAcceptInvitationRoute
-  ApiPublicDiagSecretRoute: typeof ApiPublicDiagSecretRoute
   ApiPublicRpcTestRoute: typeof ApiPublicRpcTestRoute
 }
 
@@ -673,13 +660,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicRpcTestRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/diag-secret': {
-      id: '/api/public/diag-secret'
-      path: '/api/public/diag-secret'
-      fullPath: '/api/public/diag-secret'
-      preLoaderRoute: typeof ApiPublicDiagSecretRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/accept-invitation': {
       id: '/api/public/accept-invitation'
       path: '/api/public/accept-invitation'
@@ -777,9 +757,18 @@ const rootRouteChildren: RootRouteChildren = {
   RecuperarSenhaRoute: RecuperarSenhaRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicAcceptInvitationRoute: ApiPublicAcceptInvitationRoute,
-  ApiPublicDiagSecretRoute: ApiPublicDiagSecretRoute,
   ApiPublicRpcTestRoute: ApiPublicRpcTestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
