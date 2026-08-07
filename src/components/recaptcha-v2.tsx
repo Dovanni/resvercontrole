@@ -1,4 +1,4 @@
-import { useRef, forwardRef, useImperativeHandle, useState } from 'react';
+import { useRef, forwardRef, useImperativeHandle, useState, useEffect } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -38,6 +38,18 @@ export const RecaptchaV2 = forwardRef<RecaptchaV2Ref, RecaptchaV2Props>(({ onVer
       </Alert>
     );
   }
+
+  useEffect(() => {
+    // If we have a site key, ensure window.grecaptcha is being monitored
+    // The component handles its own error, but let's be extra defensive
+    const timer = setTimeout(() => {
+      if (typeof window !== 'undefined' && !window.grecaptcha && !loadError) {
+        // If after 10 seconds still no grecaptcha and no error yet, it might be stuck
+        console.warn("reCAPTCHA script load timeout detected");
+      }
+    }, 10000);
+    return () => clearTimeout(timer);
+  }, [loadError]);
 
   if (loadError) {
     return (
