@@ -725,8 +725,13 @@ function FinalCta() {
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link to="/auth">
+              <Button size="lg" className="gap-1.5" variant="secondary">
+                {HERO.existingClientCta} <ArrowRight className="size-4" />
+              </Button>
+            </Link>
+            <Link to="/cadastro">
               <Button size="lg" className="gap-1.5">
-                Entrar <ArrowRight className="size-4" />
+                {HERO.primaryCta} <ArrowRight className="size-4" />
               </Button>
             </Link>
             <a href="#planos">
