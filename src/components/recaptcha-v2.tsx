@@ -28,7 +28,7 @@ export const RecaptchaV2 = forwardRef<RecaptchaV2Ref, RecaptchaV2Props>(({ onVer
     }
   }));
 
-  if (!siteKey) {
+  if (!siteKey || siteKey === 'COLE_AQUI_A_CHAVE_DO_SITE') {
     return (
       <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 mb-4">
         <AlertCircle className="h-4 w-4" />
