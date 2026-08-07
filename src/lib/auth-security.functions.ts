@@ -104,8 +104,20 @@ export const secureSignIn = createServerFn({ method: "POST" })
     const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
     const emailHash = data.email.toLowerCase().trim();
     
-    // 1. Rate Limit (Login: 5 tentativas em 15 min por identidade)
-    const rateLimit = await checkRateLimit(`login:email:${emailHash}`, 5, 15 * 60 * 1000);
+    // 1. Math Challenge
+    const mathValid = await verifyMathChallenge(data.mathChallengeToken, data.mathChallengeAnswer);
+    if (!mathValid) {
+      throw new Error("Desafio matemático incorreto ou expirado.");
+    }
+
+    // 2. Segurança (Turnstile)
+    const turnstileValid = await verifyTurnstile(data.turnstileToken);
+    if (!turnstileValid.success) {
+      throw new Error("Verificação de segurança falhou. Por favor, tente novamente.");
+    }
+    
+    // 3. Rate Limit (Login: 5 tentativas, inicial 5min - Progressivo)
+    const rateLimit = await checkRateLimit(`login:email:${emailHash}`, 5, 5 * 60 * 1000);
     if (!rateLimit.allowed) {
       throw new Error(JSON.stringify({
         code: "RATE_LIMITED",
@@ -114,21 +126,15 @@ export const secureSignIn = createServerFn({ method: "POST" })
       }));
     }
     
-    // 2. Math Challenge (Sempre no login conforme requisito VMEAP)
-    const mathValid = await verifyMathChallenge(data.mathChallengeToken, data.mathChallengeAnswer);
-    if (!mathValid) {
-      throw new Error("Desafio matemático incorreto ou expirado.");
-    }
-
-    // 3. Segurança (Turnstile - Application Layer SiteVerify) - Chamado APÓS o math challenge
-    const turnstileValid = await verifyTurnstile(data.turnstileToken);
-    if (!turnstileValid.success) {
-      throw new Error("Verificação de segurança falhou. Por favor, tente novamente.");
-    }
-    
-    // 4. Se chegou aqui, as precondições passaram.
-    // O Auth REAL deve ser feito no CLIENTE.
     return { 
       success: true 
     };
+  });
+
+export const completeSignInSuccess = createServerFn({ method: "POST" })
+  .inputValidator((data) => z.object({ email: z.string().email() }).parse(data))
+  .handler(async ({ data }) => {
+    const emailHash = data.email.toLowerCase().trim();
+    await clearRateLimit(`login:email:${emailHash}`);
+    return { success: true };
   });
