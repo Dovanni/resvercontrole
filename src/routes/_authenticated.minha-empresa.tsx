@@ -108,41 +108,58 @@ function MinhaEmpresaPage() {
           <Building2 className="size-5 text-primary" />
           Empresas e Unidades
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {companies.map((c) => (
-            <Card key={c.id} className={c.id === empresa?.id ? "border-primary/50 shadow-md ring-1 ring-primary/20" : "shadow-soft"}>
-              <CardContent className="p-5 flex flex-col h-full">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Building2 className="size-5 text-primary" />
+        
+        {loadingMultiempresa ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1].map(i => (
+              <Card key={i} className="animate-pulse shadow-soft h-40 bg-muted/20" />
+            ))}
+          </div>
+        ) : companies.length === 0 ? (
+          <Card className="shadow-soft border-dashed border-2">
+            <CardContent className="p-8 text-center flex flex-col items-center">
+              <Building2 className="size-10 text-muted-foreground/30 mb-3" />
+              <p className="text-sm text-muted-foreground font-medium">Nenhuma empresa encontrada.</p>
+              <p className="text-xs text-muted-foreground mt-1">Verifique seu vínculo de acesso com o administrador.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {companies.map((c) => (
+              <Card key={c.id} className={c.id === empresa?.id ? "border-primary/50 shadow-md ring-1 ring-primary/20" : "shadow-soft"}>
+                <CardContent className="p-5 flex flex-col h-full">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Building2 className="size-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-sm">{c.nome}</h3>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{c.tipo || 'Unidade'}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-sm">{c.nome}</h3>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{c.tipo || 'Unidade'}</p>
+                    {c.id === empresa?.id && (
+                      <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px]">Ativa</Badge>
+                    )}
+                  </div>
+                  
+                  <div className="mt-auto pt-4 border-t flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Seu Papel</span>
+                      <span className="font-medium flex items-center gap-1 capitalize">
+                        <Shield className="size-3 text-primary" /> {c.user_role}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Vínculo</span>
+                      <Badge variant="outline" className="text-[9px] h-4 px-1.5 uppercase border-green-500/30 text-green-600 bg-green-50/50">Ativo</Badge>
                     </div>
                   </div>
-                  {c.id === empresa?.id && (
-                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px]">Ativa</Badge>
-                  )}
-                </div>
-                
-                <div className="mt-auto pt-4 border-t flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Seu Papel</span>
-                    <span className="font-medium flex items-center gap-1 capitalize">
-                      <Shield className="size-3 text-primary" /> {c.user_role}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Vínculo</span>
-                    <Badge variant="outline" className="text-[9px] h-4 px-1.5 uppercase border-green-500/30 text-green-600 bg-green-50/50">Ativo</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
