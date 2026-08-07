@@ -107,6 +107,7 @@ export const secureSignIn = createServerFn({ method: "POST" })
     }
     
     // 2. reCAPTCHA
+    try {
       const recaptcha = await verifyRecaptcha(data.recaptchaToken);
       if (!recaptcha.success) {
         throw new Error("Falha na verificação de segurança (bot detectado).");
