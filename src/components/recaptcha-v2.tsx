@@ -1,9 +1,10 @@
-import { useRef, forwardRef, useImperativeHandle, useState, useEffect } from 'react';
+import { useRef, forwardRef, useImperativeHandle, useState } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 
-const siteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+const siteKey = (import.meta.env.VITE_RECAPTCHA_SITE_KEY || '').trim();
 
 interface RecaptchaV2Props {
   onVerify: (token: string | null) => void;
@@ -15,9 +16,14 @@ export interface RecaptchaV2Ref {
   getValue: () => string | null;
 }
 
+/**
+ * Componente Único reCAPTCHA v2.
+ * Responsável exclusivo por carregar o script oficial via react-google-recaptcha.
+ */
 export const RecaptchaV2 = forwardRef<RecaptchaV2Ref, RecaptchaV2Props>(({ onVerify, className }, ref) => {
   const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [loadError, setLoadError] = useState(false);
+  const [key, setKey] = useState(0); // Usada para forçar o remonte e retry seguro
 
   useImperativeHandle(ref, () => ({
     reset: () => {
@@ -28,52 +34,54 @@ export const RecaptchaV2 = forwardRef<RecaptchaV2Ref, RecaptchaV2Props>(({ onVer
     }
   }));
 
-  if (!siteKey || siteKey === 'COLE_AQUI_A_CHAVE_DO_SITE') {
+  // Validação de configuração
+  if (!siteKey || siteKey === 'COLE_AQUI_A_CHAVE_DO_SITE' || siteKey === 'your-site-key-here') {
     return (
       <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 mb-4">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription className="text-xs">
-          A proteção contra robôs está aguardando configuração. Nenhum dado foi enviado.
+          A proteção contra robôs está aguardando configuração técnica. Por favor, contate o suporte.
         </AlertDescription>
       </Alert>
     );
   }
 
-  useEffect(() => {
-    // If we have a site key, ensure window.grecaptcha is being monitored
-    // The component handles its own error, but let's be extra defensive
-    const timer = setTimeout(() => {
-      if (typeof window !== 'undefined' && !(window as any).grecaptcha && !loadError) {
-        // If after 10 seconds still no grecaptcha and no error yet, it might be stuck
-        console.warn("reCAPTCHA script load timeout detected");
-      }
-    }, 10000);
-    return () => clearTimeout(timer);
-  }, [loadError]);
-
+  // Estado de erro de carga
   if (loadError) {
     return (
-      <div className="flex flex-col items-center gap-2 mb-4 p-4 border rounded-md bg-muted/50">
+      <div className="flex flex-col items-center gap-3 mb-4 p-4 border rounded-md bg-muted/50 border-destructive/30">
         <AlertCircle className="h-8 w-8 text-destructive" />
-        <p className="text-sm text-center font-medium">Erro ao carregar o reCAPTCHA.</p>
-        <button 
-          onClick={() => window.location.reload()} 
-          className="text-xs text-primary hover:underline"
+        <div className="text-center">
+          <p className="text-sm font-medium">Erro ao carregar o serviço de segurança.</p>
+          <p className="text-xs text-muted-foreground mt-1">Isso pode ser causado por bloqueadores de anúncios ou instabilidade de rede.</p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => {
+            setLoadError(false);
+            setKey(prev => prev + 1);
+          }} 
+          className="text-xs gap-2"
         >
+          <RefreshCw className="h-3 w-3" />
           Tentar carregar novamente
-        </button>
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className={`flex justify-center mb-4 ${className || ''}`}>
+    <div className={`flex justify-center mb-4 ${className || ''}`} key={key}>
       <ReCAPTCHA
         ref={recaptchaRef}
         sitekey={siteKey}
         hl="pt-BR"
         onChange={onVerify}
-        onErrored={() => setLoadError(true)}
+        onErrored={() => {
+          console.error("reCAPTCHA component reported an error during load/execution");
+          setLoadError(true);
+        }}
         onExpired={() => onVerify(null)}
       />
     </div>
