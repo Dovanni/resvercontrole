@@ -27,9 +27,6 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [failedAttempts, setFailedAttempts] = useState(0);
-  const [showMath, setShowMath] = useState(false);
-  
   const [mathToken, setMathToken] = useState("");
   const [mathAnswer, setMathAnswer] = useState("");
 
@@ -54,23 +51,22 @@ function LoginPage() {
         return;
       }
 
-      // 1. Validar precondições de segurança no servidor
-      const securityCheck = await signInSecurityFn({
+      if (!mathToken || !mathAnswer) {
+        toast.error("Por favor, resolva o desafio matemático.");
+        setBusy(false);
+        return;
+      }
+
+      // 1. Validar precondições de segurança no servidor (Math -> Turnstile)
+      await signInSecurityFn({
         data: {
           email,
           password,
           turnstileToken,
-          mathChallengeToken: showMath ? mathToken : undefined,
-          mathChallengeAnswer: showMath ? mathAnswer : undefined,
+          mathChallengeToken: mathToken,
+          mathChallengeAnswer: mathAnswer,
         }
       });
-
-      if (securityCheck.requireMath) {
-        setShowMath(true);
-        toast.info("Por favor, resolva o desafio de segurança.");
-        setBusy(false);
-        return;
-      }
 
       // 2. Se a segurança passou, prosseguir com o login real (sem captchaToken nativo)
       const { error } = await supabase.auth.signInWithPassword({ 
@@ -79,8 +75,6 @@ function LoginPage() {
       });
       
       if (error) {
-        setFailedAttempts(prev => prev + 1);
-        if (failedAttempts >= 2) setShowMath(true);
         toast.error("Não foi possível entrar com os dados informados.");
       } else {
         toast.success("Bem-vinda de volta!");
@@ -91,8 +85,6 @@ function LoginPage() {
       } else {
         toast.error(error.message || "Não foi possível entrar com os dados informados.");
       }
-      setFailedAttempts(prev => prev + 1);
-      if (failedAttempts >= 2) setShowMath(true);
       turnstileRef.current?.reset();
       setTurnstileToken(null);
     } finally {
@@ -126,9 +118,7 @@ function LoginPage() {
               <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
 
-            {showMath && (
-              <MathChallengeField onVerify={(t, a) => { setMathToken(t); setMathAnswer(a); }} />
-            )}
+            <MathChallengeField onVerify={(t, a) => { setMathToken(t); setMathAnswer(a); }} />
 
             <TurnstileWidget 
               ref={turnstileRef} 
