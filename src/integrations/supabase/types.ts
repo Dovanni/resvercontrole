@@ -1712,6 +1712,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      list_my_company_members: {
+        Args: { p_empresa_id: string }
+        Returns: {
+          created_at: string
+          is_primary: boolean
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+          user_id: string
+        }[]
+      }
       rpc_editar_compra_pendente: {
         Args: {
           _compra_id: string
