@@ -100,9 +100,10 @@ function Header() {
           ))}
         </nav>
         <div className="ml-auto hidden lg:flex items-center gap-3">
-          <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             {HERO.existingClientCta}
           </Link>
+
           <Link to="/cadastro">
             <Button size="sm">{HERO.primaryCta}</Button>
           </Link>
@@ -131,9 +132,10 @@ function Header() {
               </a>
             ))}
             <div className="mt-2 grid gap-2">
-              <Link to="/auth" onClick={() => setOpen(false)}>
+              <Link to="/login" onClick={() => setOpen(false)}>
                 <Button variant="outline" className="w-full">{HERO.existingClientCta}</Button>
               </Link>
+
               <Link to="/cadastro" onClick={() => setOpen(false)}>
                 <Button className="w-full gap-1">
                   {HERO.primaryCta} <ArrowRight className="size-4" />
