@@ -94,7 +94,7 @@ export const secureSignUp = createServerFn({ method: "POST" })
         p_email_hash: identityEmailHash,
         p_terms_version: "1.0",
         p_privacy_version: "1.0"
-      });
+      }) as { data: string, error: any };
 
       if (onboardingError) throw onboardingError;
       onboardingId = newOnboardingId;
