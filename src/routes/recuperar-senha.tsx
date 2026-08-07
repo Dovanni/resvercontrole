@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { VejamaisMark } from "@/components/vejamais-logo";
 import { useServerFn } from "@tanstack/react-start";
 import { secureRequestPasswordReset } from "@/lib/recovery-security.functions";
-import { RecaptchaV2, RecaptchaV2Ref } from "@/components/recaptcha-v2";
+import { TurnstileWidget, TurnstileWidgetRef } from "@/components/turnstile-widget";
 
 export const Route = createFileRoute("/recuperar-senha")({
   head: () => ({ meta: [{ title: "Recuperar senha — Vejamais" }] }),
@@ -32,8 +32,8 @@ function RecoveryPage() {
       return;
     }
 
-    if (!recaptchaToken) {
-      toast.error("Por favor, marque 'Não sou um robô'.");
+    if (!turnstileToken) {
+      toast.error("Por favor, resolva o desafio de segurança.");
       return;
     }
 
@@ -43,24 +43,23 @@ function RecoveryPage() {
       await requestResetFn({
         data: {
           email,
-          recaptchaToken,
+          turnstileToken,
         }
       });
       
       toast.success("Se existir uma conta com esse e-mail, enviaremos as orientações.");
       // Opcional: redirecionar ou limpar
       setEmail("");
-      recaptchaRef.current?.reset();
-      setRecaptchaToken(null);
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
     } catch (error: any) {
-      if (error.message === "RECAPTCHA_CONFIGURATION_REQUIRED") {
-        toast.error("Configuração de segurança necessária (RECAPTCHA_CONFIGURATION_REQUIRED).");
+      if (error.message.includes("TURNSTILE")) {
+        toast.error("Erro na verificação de segurança.");
       } else {
-        // Mensagem genérica para proteção contra enumeração, mas permitimos erros de validação técnica
         toast.success("Se existir uma conta com esse e-mail, enviaremos as orientações.");
       }
-      recaptchaRef.current?.reset();
-      setRecaptchaToken(null);
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
     } finally {
       setBusy(false);
     }
@@ -94,14 +93,14 @@ function RecoveryPage() {
               />
             </div>
 
-            <RecaptchaV2 
-              ref={recaptchaRef} 
-              onVerify={setRecaptchaToken} 
+            <TurnstileWidget 
+              ref={turnstileRef} 
+              onVerify={setTurnstileToken} 
             />
 
             <Button 
               type="submit" 
-              disabled={busy || (import.meta.env.VITE_RECAPTCHA_SITE_KEY ? !recaptchaToken : true)} 
+              disabled={busy || (import.meta.env.VITE_TURNSTILE_SITE_KEY ? !turnstileToken : true)} 
               className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95"
             >
               {busy ? "Enviando..." : "Enviar orientações"}
