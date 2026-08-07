@@ -88,3 +88,73 @@ export const getActiveEmpresa = createServerFn({ method: "GET" })
     return primary;
   });
 
+/**
+ * Lista membros de uma empresa específica (apenas para admins).
+ */
+export const listCompanyMembers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => {
+    if (typeof data !== "string") throw new Error("ID da empresa inválido");
+    return data;
+  })
+  .handler(async ({ data: empresaId, context }) => {
+    const { supabase: authenticatedClient } = context;
+    const start = Date.now();
+    try {
+      const { data, error } = await authenticatedClient.rpc("list_my_company_members", {
+        p_empresa_id: empresaId
+      });
+      
+      const duration = Date.now() - start;
+      if (error) {
+        console.error("Secondary Operation Error (Members):", {
+          operation: "list_my_company_members",
+          error_code: error.code,
+          error_message: error.message,
+          duration_ms: duration
+        });
+        throw error;
+      }
+      return data || [];
+    } catch (err: any) {
+      console.error("Critical Runtime Error in listCompanyMembers:", err);
+      throw err;
+    }
+  });
+
+/**
+ * Lista convites pendentes de uma empresa específica (apenas para admins).
+ */
+export const listCompanyInvitations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => {
+    if (typeof data !== "string") throw new Error("ID da empresa inválido");
+    return data;
+  })
+  .handler(async ({ data: empresaId, context }) => {
+    const { supabase: authenticatedClient } = context;
+    const start = Date.now();
+    try {
+      const { data, error } = await authenticatedClient
+        .from("company_invitations")
+        .select("*")
+        .eq("empresa_id", empresaId)
+        .eq("status", "pending");
+        
+      const duration = Date.now() - start;
+      if (error) {
+        console.error("Secondary Operation Error (Invitations):", {
+          operation: "fetch_invitations",
+          error_code: error.code,
+          error_message: error.message,
+          duration_ms: duration
+        });
+        throw error;
+      }
+      return data || [];
+    } catch (err: any) {
+      console.error("Critical Runtime Error in listCompanyInvitations:", err);
+      throw err;
+    }
+  });
+
