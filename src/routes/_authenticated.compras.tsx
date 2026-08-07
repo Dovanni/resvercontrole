@@ -467,8 +467,8 @@ function DetalheCompra({ compra, fornName, payables }: { compra: Compra; fornNam
   );
 }
 
-function NovaCompraDialog({ userId, fornecedores, produtos, contas, onDone, mode = "create", editCompra }: {
-  userId: string; fornecedores: { id: string; name: string }[];
+function NovaCompraDialog({ userId, empresaId, fornecedores, produtos, contas, onDone, mode = "create", editCompra }: {
+  userId: string; empresaId?: string; fornecedores: { id: string; name: string }[];
   produtos: { id: string; name: string; sku: string | null; cost_price: number; stock: number }[];
   contas: { id: string; name: string }[]; onDone: () => void;
   mode?: "create" | "edit"; editCompra?: Compra;
