@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { VejamaisMark } from "@/components/vejamais-logo";
 import { translateAuthError } from "@/lib/auth-errors";
-import { RecaptchaV2, RecaptchaV2Ref } from "@/components/recaptcha-v2";
+import { TurnstileWidget, TurnstileWidgetRef } from "@/components/turnstile-widget";
 import { useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { secureSignIn } from "@/lib/auth-security.functions";
@@ -34,8 +34,8 @@ function LoginPage() {
   const [mathAnswer, setMathAnswer] = useState("");
 
   const signInSecurityFn = useServerFn(secureSignIn);
-  const recaptchaRef = useRef<RecaptchaV2Ref>(null);
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileWidgetRef>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && session) {
@@ -48,8 +48,8 @@ function LoginPage() {
     setBusy(true);
 
     try {
-      if (!recaptchaToken) {
-        toast.error("Por favor, marque 'Não sou um robô'.");
+      if (!turnstileToken) {
+        toast.error("Por favor, resolva o desafio de segurança.");
         setBusy(false);
         return;
       }
@@ -59,7 +59,7 @@ function LoginPage() {
         data: {
           email,
           password,
-          recaptchaToken,
+          turnstileToken,
           mathChallengeToken: showMath ? mathToken : undefined,
           mathChallengeAnswer: showMath ? mathAnswer : undefined,
         }
@@ -73,7 +73,13 @@ function LoginPage() {
       }
 
       // 2. Se a segurança passou, prosseguir com o login real
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password,
+        options: {
+          captchaToken: turnstileToken || undefined
+        }
+      });
       
       if (error) {
         setFailedAttempts(prev => prev + 1);
@@ -83,15 +89,15 @@ function LoginPage() {
         toast.success("Bem-vinda de volta!");
       }
     } catch (error: any) {
-      if (error.message === "RECAPTCHA_CONFIGURATION_REQUIRED") {
-        toast.error("Configuração de segurança necessária (RECAPTCHA_CONFIGURATION_REQUIRED).");
+      if (error.message.includes("TURNSTILE")) {
+        toast.error("Erro na verificação de segurança.");
       } else {
         toast.error(error.message || "Não foi possível entrar com os dados informados.");
       }
       setFailedAttempts(prev => prev + 1);
       if (failedAttempts >= 2) setShowMath(true);
-      recaptchaRef.current?.reset();
-      setRecaptchaToken(null);
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
     } finally {
       setBusy(false);
     }
@@ -127,14 +133,14 @@ function LoginPage() {
               <MathChallengeField onVerify={(t, a) => { setMathToken(t); setMathAnswer(a); }} />
             )}
 
-            <RecaptchaV2 
-              ref={recaptchaRef} 
-              onVerify={setRecaptchaToken} 
+            <TurnstileWidget 
+              ref={turnstileRef} 
+              onVerify={setTurnstileToken} 
             />
 
             <Button 
               type="submit" 
-              disabled={busy || (import.meta.env.VITE_RECAPTCHA_SITE_KEY ? !recaptchaToken : true)} 
+              disabled={busy || (import.meta.env.VITE_TURNSTILE_SITE_KEY ? !turnstileToken : true)} 
               className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95"
             >
               {busy ? "Entrando..." : "Entrar"}
@@ -148,9 +154,7 @@ function LoginPage() {
             </Link>
             
             <p className="text-[10px] text-center text-muted-foreground mt-2">
-              Este site é protegido pelo reCAPTCHA e a 
-              <a href="https://policies.google.com/privacy" className="underline ml-1">Política de Privacidade</a> e
-              <a href="https://policies.google.com/terms" className="underline ml-1">Termos de Serviço</a> do Google se aplicam.
+              Este site é protegido pelo Cloudflare Turnstile.
             </p>
 
             <div className="text-center text-sm text-muted-foreground pt-2">

@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { 
-  verifyRecaptcha, 
+  // verifyRecaptcha removido para migração Turnstile-Supabase 
   verifyMathChallenge, 
   checkRateLimit 
 } from "./security.functions";
@@ -13,7 +13,7 @@ const signupSchema = z.object({
   empresaNome: z.string().min(1),
   cnpj: z.string().optional(),
   nomeAdministrador: z.string().min(1),
-  recaptchaToken: z.string(),
+  turnstileToken: z.string(),
   mathChallengeToken: z.string(),
   mathChallengeAnswer: z.string(),
   consent: z.object({
@@ -41,17 +41,11 @@ export const secureSignUp = createServerFn({ method: "POST" })
       throw new Error("Desafio matemático incorreto ou expirado.");
     }
     
-    // 3. reCAPTCHA
-    try {
-      const recaptcha = await verifyRecaptcha(data.recaptchaToken);
-      if (!recaptcha.success) {
-        throw new Error("Falha na verificação de segurança (bot detectado).");
-      }
-    } catch (e: any) {
-      if (e.message === "RECAPTCHA_CONFIGURATION_REQUIRED") {
-        throw new Error("RECAPTCHA_CONFIGURATION_REQUIRED");
-      }
-      throw e;
+    // 3. Segurança (Turnstile)
+    // A validação real ocorre no Supabase Auth via options.captchaToken.
+    // O backend apenas garante que um token foi enviado.
+    if (!data.turnstileToken) {
+      throw new Error("Token de segurança ausente.");
     }
     
     // 4. Validações de duplicidade (CNPJ/Email)
@@ -88,7 +82,7 @@ export const secureSignUp = createServerFn({ method: "POST" })
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string(),
-  recaptchaToken: z.string(),
+  turnstileToken: z.string(),
   mathChallengeToken: z.string().optional(),
   mathChallengeAnswer: z.string().optional(),
 });
@@ -106,17 +100,9 @@ export const secureSignIn = createServerFn({ method: "POST" })
       throw new Error("Muitas tentativas de acesso. Tente novamente em 15 minutos.");
     }
     
-    // 2. reCAPTCHA
-    try {
-      const recaptcha = await verifyRecaptcha(data.recaptchaToken);
-      if (!recaptcha.success) {
-        throw new Error("Falha na verificação de segurança (bot detectado).");
-      }
-    } catch (e: any) {
-      if (e.message === "RECAPTCHA_CONFIGURATION_REQUIRED") {
-        throw new Error("RECAPTCHA_CONFIGURATION_REQUIRED");
-      }
-      throw e;
+    // 2. Segurança (Turnstile)
+    if (!data.turnstileToken) {
+      throw new Error("Token de segurança ausente.");
     }
     
     // 3. Math Challenge Adaptativo (se score baixo ou muitas falhas)

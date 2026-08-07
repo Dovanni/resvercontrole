@@ -61,44 +61,9 @@ export async function verifyMathChallenge(token: string, answer: string) {
 }
 
 export async function verifyRecaptcha(token: string) {
-  const secretKey = process.env['RECAPTCHA_SECRET_KEY'];
-  
-  if (!secretKey) {
-    console.warn("RECAPTCHA_CONFIGURATION_REQUIRED: Secret key missing");
-    throw new Error("RECAPTCHA_CONFIGURATION_REQUIRED");
-  }
-
-  // Proteção contra reuso de token (Single Use)
-  if (await isTokenUsed(token)) {
-    return { success: false, error: 'Token already used' };
-  }
-
-  const response = await fetch(`https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${token}`, {
-    method: 'POST'
-  });
-
-  const data = await response.json() as any;
-
-  if (!data.success) {
-    return { success: false, error: 'reCAPTCHA verification failed' };
-  }
-
-  // Marcar token como usado imediatamente após validação de sucesso
-  await markTokenAsUsed(token);
-
-  // Validação de hostname (domínios autorizados)
-  const allowedHostnames = [
-    'resvercontrole.lovable.app',
-    'vejamais.com.br',
-    'www.vejamais.com.br'
-  ];
-  
-  const isAllowedHost = allowedHostnames.includes(data.hostname) || data.hostname.endsWith('.lovable.app');
-  
-  if (!isAllowedHost) {
-    return { success: false, error: 'Invalid hostname' };
-  }
-
+  // OBSOLETO: O projeto agora utiliza Cloudflare Turnstile via integração nativa do Supabase.
+  // Esta função é mantida apenas para compatibilidade de assinatura durante a migração,
+  // mas o token deve ser validado pelo Supabase Auth.
   return { success: true };
 }
 
