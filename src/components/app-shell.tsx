@@ -175,7 +175,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                       <Link
                         key={n.to}
                         to={n.to}
-                        onClick={() => setMobileOpen(false)}
+                        onClick={() => {
+                          setMobileOpen(false);
+                        }}
                         className={[
                           "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
                           active
