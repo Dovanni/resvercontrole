@@ -179,23 +179,19 @@ export const finalizeOnboarding = createServerFn({ method: "POST" })
     if (!userId) throw new Error("Não autorizado");
 
     try {
-      // 2. Buscar reserva de onboarding
-      const { data: userAuth, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
-      if (authError || !userAuth.user) throw new Error("Usuário não encontrado");
-
-      const onboardingId = userAuth.user.user_metadata?.onboarding_id;
-      if (!onboardingId) throw new Error("Reserva de onboarding não localizada");
-
-      // 3. Executar RPC transacional para criar empresa e perfis
-      // Este RPC deve ser idempotente
+      // 2. Executar RPC transacional para criar empresa e perfis
+      // A autoridade de qual onboarding finalizar reside no p_auth_user_id validado pelo middleware
       const { data: result, error: rpcError } = await (supabaseAdmin.rpc as any)('finalize_user_onboarding', {
-        p_onboarding_id: onboardingId,
         p_auth_user_id: userId
       });
 
       if (rpcError) throw rpcError;
 
-      // 4. Limpar metadados se necessário ou marcar como concluído
+      // 3. Opcional: Limpar metadados informais (não-autoritativos) se existirem
+      await supabaseAdmin.auth.admin.updateUserById(userId, { 
+        user_metadata: { onboarding_completed: true } 
+      });
+
       return { success: true };
     } catch (error: any) {
       console.error("Erro na finalização do onboarding:", error);
