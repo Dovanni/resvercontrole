@@ -1,10 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { verifyRecaptcha, checkRateLimit } from "./security.functions";
+import { checkRateLimit } from "./security.functions";
 
 const recoverySchema = z.object({
   email: z.string().email(),
-  recaptchaToken: z.string(),
+  turnstileToken: z.string(),
 });
 
 export const secureRequestPasswordReset = createServerFn({ method: "POST" })
@@ -21,17 +21,9 @@ export const secureRequestPasswordReset = createServerFn({ method: "POST" })
       return { success: true, message: "Se existir uma conta com esse e-mail, enviaremos as orientações." };
     }
 
-    // 2. reCAPTCHA
-    try {
-      const recaptcha = await verifyRecaptcha(data.recaptchaToken);
-      if (!recaptcha.success) {
-        throw new Error("Falha na verificação de segurança.");
-      }
-    } catch (e: any) {
-      if (e.message === "RECAPTCHA_CONFIGURATION_REQUIRED") {
-        throw new Error("RECAPTCHA_CONFIGURATION_REQUIRED");
-      }
-      throw e;
+    // 2. Segurança (Turnstile)
+    if (!data.turnstileToken) {
+      throw new Error("Token de segurança ausente.");
     }
 
     // A chamada real ao Supabase Auth é feita pelo cliente. 
