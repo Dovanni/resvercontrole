@@ -2,79 +2,29 @@ import { createServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Resolve a empresa ativa para o usuário atual.
- * Wave B: Valida o membership e retorna a empresa ativa.
+ * Resolve o contexto multiempresa canônico para o usuário autenticado.
+ * Substitui SELECTs diretos e garante isolamento via RPC.
  */
-export const getActiveEmpresa = createServerFn({ method: "GET" })
+export const getMyMultiempresaContext = createServerFn({ method: "GET" })
   .handler(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Não autenticado");
+    // A RPC usa auth.uid() internamente, garantindo segurança
+    const { data, error } = await supabase.rpc('get_my_multiempresa_context');
 
-    const { data: access, error } = await supabase
-      .from("user_company_access")
-      .select(`
-        empresa_id, 
-        role, 
-        status, 
-        is_primary,
-        empresas (
-          id,
-          nome,
-          razao_social,
-          logo_url,
-          tipo,
-          parent_id,
-          configuracoes
-        )
-      `)
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .order("is_primary", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error || !access) {
-      throw new Error("Nenhuma empresa ativa encontrada para este usuário.");
+    if (error) {
+      console.error("Erro na RPC get_my_multiempresa_context:", error);
+      throw new Error("Erro ao carregar contexto de empresas");
     }
 
-    const companyData = access.empresas as any;
-    return {
-      ...companyData,
-      user_role: access.role,
-      membership_status: access.status,
-      is_primary: access.is_primary
-    };
-  });
+    if (!data || data.length === 0) {
+      // Se não houver empresas, o frontend tratará o estado vazio explicativo
+      return [];
+    }
 
-/**
- * Lista todas as empresas que o usuário tem acesso.
- */
-export const listMyCompanies = createServerFn({ method: "GET" })
-  .handler(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Não autenticado");
-
-    const { data, error } = await supabase
-      .from("user_company_access")
-      .select(`
-        role, 
-        status, 
-        is_primary,
-        empresas (
-          id,
-          nome,
-          razao_social,
-          logo_url,
-          tipo,
-          parent_id
-        )
-      `)
-      .eq("user_id", user.id)
-      .eq("status", "active");
-
-    if (error) throw error;
-    return (data as any[]).map(item => ({
-      ...item.empresas,
+    return data.map((item: any) => ({
+      id: item.empresa_id,
+      nome: item.nome,
+      razao_social: item.razao_social,
+      tipo: item.tipo,
       user_role: item.role,
       membership_status: item.status,
       is_primary: item.is_primary
@@ -82,7 +32,7 @@ export const listMyCompanies = createServerFn({ method: "GET" })
   });
 
 /**
- * Valida se o usuário tem acesso a uma empresa específica.
+ * Valida acesso a uma empresa específica usando a fonte canônica.
  */
 export const validateCompanyAccess = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) => {
@@ -107,3 +57,20 @@ export const validateCompanyAccess = createServerFn({ method: "GET" })
 
     return data;
   });
+
+/**
+ * Legado/Compatibilidade: Resolve a empresa principal.
+ * Em breve será removido em favor do uso direto do contexto no hook.
+ */
+export const getActiveEmpresa = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const companies = await getMyMultiempresaContext();
+    const primary = companies.find(c => c.is_primary) || companies[0];
+    
+    if (!primary) {
+      throw new Error("Nenhuma empresa ativa encontrada.");
+    }
+    
+    return primary;
+  });
+

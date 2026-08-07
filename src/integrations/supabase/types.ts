@@ -1685,6 +1685,18 @@ export type Database = {
         Returns: boolean
       }
       ensure_default_routing: { Args: { _user_id: string }; Returns: undefined }
+      get_my_multiempresa_context: {
+        Args: never
+        Returns: {
+          empresa_id: string
+          is_primary: boolean
+          nome: string
+          razao_social: string
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+          tipo: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
