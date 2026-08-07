@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { checkRateLimit } from "./security.functions";
 
 const onboardingSchema = z.object({
   empresa: z.object({
@@ -23,6 +24,12 @@ export const completeCompanyOnboarding = createServerFn({ method: "POST" })
   .inputValidator((data) => onboardingSchema.parse(data))
   .handler(async ({ data, context }) => {
     const { userId } = context;
+    const request = (globalThis as any).request as Request;
+    const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
+
+    // Anti-bot/Rate limit para onboarding
+    const allowed = await checkRateLimit(`onboarding:user:${userId}`, 5, 60 * 60 * 1000);
+    if (!allowed) throw new Error("Muitas tentativas de configuração. Aguarde.");
 
     // 1. Verificar se já possui empresa (idempotência)
     const { data: existing } = await supabaseAdmin
