@@ -1,5 +1,5 @@
 import { Link, useRouterState, useRouter, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingBag, Wallet, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, BarChartBig, FileText, Settings, CalendarDays, TrendingUp, Landmark, CreditCard, ShoppingCart, Scale, Menu } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Wallet, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, BarChartBig, FileText, Settings, CalendarDays, TrendingUp, Landmark, CreditCard, ShoppingCart, Scale, Menu, Building2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth, type Permission } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
   { to: "/dre", label: "DRE", icon: Scale, perm: "view:reports" },
   { to: "/relatorios", label: "Relatórios", icon: FileText, perm: "view:reports" },
   { to: "/configuracoes", label: "Configurações", icon: Settings, perm: "view:settings" },
+  { to: "/minha-empresa", label: "Minha Empresa", icon: Building2, perm: "view:settings" },
 ];
 
 const ROLE_LABEL: Record<string, string> = { admin: "Admin", vendedor: "Vendedor", financeiro: "Financeiro" };

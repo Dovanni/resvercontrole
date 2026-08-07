@@ -8,7 +8,7 @@ import {
   DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Check, ChevronsUpDown, Building2, Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, Building2, Loader2, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -22,18 +22,6 @@ export function CompanySelector({ className }: { className?: string }) {
       <div className={cn("flex items-center gap-2 px-3 h-10 border rounded-md", className)}>
         <Skeleton className="h-4 w-24" />
         <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  // Se o usuário tem apenas uma empresa, apenas exibe o nome (como solicitado nos requisitos)
-  if (companies.length <= 1) {
-    return (
-      <div className={cn("flex items-center gap-2 px-3 py-1.5 h-10 border rounded-md bg-muted/30 max-w-[200px] md:max-w-[280px]", className)}>
-        <Building2 className="h-4 w-4 shrink-0 text-primary" />
-        <span className="text-sm font-medium truncate">
-          {empresa?.nome || "Minha Empresa"}
-        </span>
       </div>
     );
   }
@@ -52,7 +40,7 @@ export function CompanySelector({ className }: { className?: string }) {
           <div className="flex items-center gap-2 overflow-hidden mr-2">
             <Building2 className="h-4 w-4 shrink-0 text-primary" />
             <span className="text-sm font-medium truncate">
-              {empresa?.nome || "Selecionar Empresa"}
+              {empresa?.nome || "Minha Empresa"}
             </span>
           </div>
           <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
@@ -63,33 +51,48 @@ export function CompanySelector({ className }: { className?: string }) {
           Empresas e Unidades
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {companies.map((item) => (
-          <DropdownMenuItem
-            key={item.id}
-            onSelect={() => changeEmpresa(item.id)}
-            className={cn(
-              "flex items-center justify-between py-2 px-3 cursor-pointer rounded-sm mb-0.5",
-              item.id === empresa?.id && "bg-accent"
-            )}
-          >
-            <div className="flex flex-col gap-0.5 overflow-hidden">
-              <div className="flex items-center gap-2">
-                <span className={cn(
-                  "text-sm font-medium truncate",
-                  item.id === empresa?.id ? "text-primary" : "text-foreground"
-                )}>
-                  {item.nome}
+        
+        {companies.length > 1 ? (
+          companies.map((item) => (
+            <DropdownMenuItem
+              key={item.id}
+              onSelect={() => changeEmpresa(item.id)}
+              className={cn(
+                "flex items-center justify-between py-2 px-3 cursor-pointer rounded-sm mb-0.5",
+                item.id === empresa?.id && "bg-accent"
+              )}
+            >
+              <div className="flex flex-col gap-0.5 overflow-hidden">
+                <div className="flex items-center gap-2">
+                  <span className={cn(
+                    "text-sm font-medium truncate",
+                    item.id === empresa?.id ? "text-primary" : "text-foreground"
+                  )}>
+                    {item.nome}
+                  </span>
+                </div>
+                <span className="text-[11px] text-muted-foreground truncate">
+                  {item.documento || "Sem documento"}
                 </span>
               </div>
-              <span className="text-[11px] text-muted-foreground truncate">
-                {item.documento || "Sem documento"}
-              </span>
-            </div>
-            {item.id === empresa?.id && (
-              <Check className="h-4 w-4 text-primary shrink-0 ml-2" />
-            )}
-          </DropdownMenuItem>
-        ))}
+              {item.id === empresa?.id && (
+                <Check className="h-4 w-4 text-primary shrink-0 ml-2" />
+              )}
+            </DropdownMenuItem>
+          ))
+        ) : (
+          <div className="px-3 py-4 text-center">
+            <p className="text-xs text-muted-foreground italic">Nenhuma outra empresa disponível para alternância.</p>
+          </div>
+        )}
+
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <a href="/minha-empresa" className="flex items-center w-full py-2 px-3 cursor-pointer text-sm">
+            <Settings className="h-4 w-4 mr-2" />
+            Gerenciar empresas e equipe
+          </a>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedVendasRouteImport } from './routes/_authenticated.vendas'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated.relatorios'
 import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated.produtos'
+import { Route as AuthenticatedMinhaEmpresaRouteImport } from './routes/_authenticated.minha-empresa'
 import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticated.importar'
 import { Route as AuthenticatedFornecedoresRouteImport } from './routes/_authenticated.fornecedores'
 import { Route as AuthenticatedFluxoCaixaRouteImport } from './routes/_authenticated.fluxo-caixa'
@@ -72,6 +73,12 @@ const AuthenticatedProdutosRoute = AuthenticatedProdutosRouteImport.update({
   path: '/produtos',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMinhaEmpresaRoute =
+  AuthenticatedMinhaEmpresaRouteImport.update({
+    id: '/minha-empresa',
+    path: '/minha-empresa',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedImportarRoute = AuthenticatedImportarRouteImport.update({
   id: '/importar',
   path: '/importar',
@@ -211,6 +218,7 @@ export interface FileRoutesByFullPath {
   '/fluxo-caixa': typeof AuthenticatedFluxoCaixaRoute
   '/fornecedores': typeof AuthenticatedFornecedoresRoute
   '/importar': typeof AuthenticatedImportarRoute
+  '/minha-empresa': typeof AuthenticatedMinhaEmpresaRoute
   '/produtos': typeof AuthenticatedProdutosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/vendas': typeof AuthenticatedVendasRoute
@@ -240,6 +248,7 @@ export interface FileRoutesByTo {
   '/fluxo-caixa': typeof AuthenticatedFluxoCaixaRoute
   '/fornecedores': typeof AuthenticatedFornecedoresRoute
   '/importar': typeof AuthenticatedImportarRoute
+  '/minha-empresa': typeof AuthenticatedMinhaEmpresaRoute
   '/produtos': typeof AuthenticatedProdutosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/vendas': typeof AuthenticatedVendasRoute
@@ -271,6 +280,7 @@ export interface FileRoutesById {
   '/_authenticated/fluxo-caixa': typeof AuthenticatedFluxoCaixaRoute
   '/_authenticated/fornecedores': typeof AuthenticatedFornecedoresRoute
   '/_authenticated/importar': typeof AuthenticatedImportarRoute
+  '/_authenticated/minha-empresa': typeof AuthenticatedMinhaEmpresaRoute
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/vendas': typeof AuthenticatedVendasRoute
@@ -302,6 +312,7 @@ export interface FileRouteTypes {
     | '/fluxo-caixa'
     | '/fornecedores'
     | '/importar'
+    | '/minha-empresa'
     | '/produtos'
     | '/relatorios'
     | '/vendas'
@@ -331,6 +342,7 @@ export interface FileRouteTypes {
     | '/fluxo-caixa'
     | '/fornecedores'
     | '/importar'
+    | '/minha-empresa'
     | '/produtos'
     | '/relatorios'
     | '/vendas'
@@ -361,6 +373,7 @@ export interface FileRouteTypes {
     | '/_authenticated/fluxo-caixa'
     | '/_authenticated/fornecedores'
     | '/_authenticated/importar'
+    | '/_authenticated/minha-empresa'
     | '/_authenticated/produtos'
     | '/_authenticated/relatorios'
     | '/_authenticated/vendas'
@@ -425,6 +438,13 @@ declare module '@tanstack/react-router' {
       path: '/produtos'
       fullPath: '/produtos'
       preLoaderRoute: typeof AuthenticatedProdutosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/minha-empresa': {
+      id: '/_authenticated/minha-empresa'
+      path: '/minha-empresa'
+      fullPath: '/minha-empresa'
+      preLoaderRoute: typeof AuthenticatedMinhaEmpresaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/importar': {
@@ -612,6 +632,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedFluxoCaixaRoute: typeof AuthenticatedFluxoCaixaRoute
   AuthenticatedFornecedoresRoute: typeof AuthenticatedFornecedoresRoute
   AuthenticatedImportarRoute: typeof AuthenticatedImportarRoute
+  AuthenticatedMinhaEmpresaRoute: typeof AuthenticatedMinhaEmpresaRoute
   AuthenticatedProdutosRoute: typeof AuthenticatedProdutosRoute
   AuthenticatedRelatoriosRoute: typeof AuthenticatedRelatoriosRoute
   AuthenticatedVendasRoute: typeof AuthenticatedVendasRoute
@@ -637,6 +658,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedFluxoCaixaRoute: AuthenticatedFluxoCaixaRoute,
   AuthenticatedFornecedoresRoute: AuthenticatedFornecedoresRoute,
   AuthenticatedImportarRoute: AuthenticatedImportarRoute,
+  AuthenticatedMinhaEmpresaRoute: AuthenticatedMinhaEmpresaRoute,
   AuthenticatedProdutosRoute: AuthenticatedProdutosRoute,
   AuthenticatedRelatoriosRoute: AuthenticatedRelatoriosRoute,
   AuthenticatedVendasRoute: AuthenticatedVendasRoute,
@@ -656,13 +678,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
