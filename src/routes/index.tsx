@@ -1,3 +1,4 @@
+// VEJAMAIS_PUBLIC_SIGNUP_ADMIN_NAME_CONTRACT_CORRECTED
 import { createFileRoute } from "@tanstack/react-router";
 import { LandingPage } from "@/components/landing/landing-page";
 
