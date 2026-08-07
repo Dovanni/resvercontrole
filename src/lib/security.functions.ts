@@ -117,26 +117,20 @@ const usedTokens = new Map<string, number>(); // token -> expiry
 export async function checkRateLimit(key: string, limit: number, windowMs: number) {
   const now = Date.now();
   
-  // Limpeza periódica de tokens expirados (pode ser feita aqui de forma simples)
-  if (usedTokens.size > 1000) {
-    for (const [token, expiry] of usedTokens.entries()) {
-      if (now > expiry) usedTokens.delete(token);
-    }
-  }
-
   const record = rateLimits.get(key);
   
   if (!record || now > record.resetAt) {
     rateLimits.set(key, { count: 1, resetAt: now + windowMs });
-    return true;
+    return { allowed: true };
   }
   
   if (record.count >= limit) {
-    return false;
+    const retryAfterSeconds = Math.ceil((record.resetAt - now) / 1000);
+    return { allowed: false, retryAfterSeconds };
   }
   
   record.count++;
-  return true;
+  return { allowed: true };
 }
 
 export async function isTokenUsed(token: string) {

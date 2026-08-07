@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getMathChallenge, type MathChallenge } from "@/lib/security.functions";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,8 @@ interface MathChallengeProps {
   required?: boolean;
 }
 
-export function MathChallengeField({ onVerify, className, required = true }: MathChallengeProps) {
+export const MathChallengeField = forwardRef<{ refresh: () => void }, MathChallengeProps>(
+  ({ onVerify, className, required = true }, ref) => {
   const [challenge, setChallenge] = useState<MathChallenge | null>(null);
   const [answer, setAnswer] = useState("");
   const fetchChallenge = useServerFn(getMathChallenge);
@@ -30,6 +31,10 @@ export function MathChallengeField({ onVerify, className, required = true }: Mat
       setLoading(false);
     }
   };
+
+  useImperativeHandle(ref, () => ({
+    refresh: load
+  }));
 
   useEffect(() => {
     load();
@@ -75,3 +80,4 @@ export function MathChallengeField({ onVerify, className, required = true }: Mat
     </div>
   );
 }
+);
