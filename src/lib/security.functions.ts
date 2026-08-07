@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import crypto from "crypto";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 // Tipos e Interfaces
 export interface MathChallenge {
@@ -9,19 +10,14 @@ export interface MathChallenge {
   expiresAt: number;
 }
 
-// Em memória para o preview (em produção usaríamos Redis ou similar se necessário, 
-// mas para o preview e isolamento de sessão o Worker state/context pode ser volátil)
-// NOTA: Em Workers sem persistência, isso é por isolado. Para uma implementação real multi-sessão,
-// usaríamos KV ou similar. Aqui, vamos usar uma estratégia de token assinado para evitar estado no servidor.
-
 const SECRET_MATH = process.env['RECAPTCHA_SECRET_KEY'] || 'preview-secret-key-math';
+const RATE_LIMIT_HMAC_SECRET = process.env['RATE_LIMIT_HMAC_SECRET'];
 
 function generateSignedChallenge(a: number, b: number) {
   const result = a + b;
   const id = crypto.randomUUID();
   const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutos
   
-  // Criamos um payload que contém a resposta, mas assinado
   const payload = JSON.stringify({ r: result, exp: expiresAt, id });
   const signature = crypto.createHmac('sha256', SECRET_MATH).update(payload).digest('hex');
   
@@ -105,50 +101,156 @@ export async function verifyTurnstile(token: string) {
   }
 }
 
-export async function verifyRecaptcha(token: string) {
-  return verifyTurnstile(token);
+/**
+ * Gera HMAC-SHA256 para uma identidade (IP ou e-mail) de forma segura.
+ */
+function hashIdentity(value: string) {
+  if (!RATE_LIMIT_HMAC_SECRET) {
+    throw new Error("RATE_LIMIT_HMAC_SECRET não configurado.");
+  }
+  return crypto.createHmac('sha256', RATE_LIMIT_HMAC_SECRET)
+    .update(value.toLowerCase().trim())
+    .digest('hex');
 }
 
-// Rate limiting progressivo em memória (per-isolate no Worker)
-// Estrutura de cooldown: 5min -> 15min -> 30min -> ... (escalonamento interno)
-const rateLimits = new Map<string, { count: number, resetAt: number, level: number }>();
-const usedTokens = new Map<string, number>(); // token -> expiry
+/**
+ * Consulta o estado atual de rate limiting no Supabase (Persistente).
+ */
+export async function checkRateLimitPersistent(scope: string, email?: string) {
+  const request = (globalThis as any).request as Request;
+  const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
+  
+  const ipHash = hashIdentity(clientIp);
+  const emailHash = email ? hashIdentity(email) : null;
+
+  // Verifica IP
+  const { data: ipStatus, error: ipError } = await supabaseAdmin.rpc('get_auth_rate_limit_status', {
+    p_scope: scope,
+    p_identity_kind: 'ip',
+    p_identity_hash: ipHash
+  });
+
+  if (ipError) throw ipError;
+  if (ipStatus && ipStatus[0]?.is_blocked) {
+    return { allowed: false, retryAfterSeconds: ipStatus[0].retry_after_seconds };
+  }
+
+  // Verifica E-mail se fornecido
+  if (emailHash) {
+    const { data: emailStatus, error: emailError } = await supabaseAdmin.rpc('get_auth_rate_limit_status', {
+      p_scope: scope,
+      p_identity_kind: 'email',
+      p_identity_hash: emailHash
+    });
+
+    if (emailError) throw emailError;
+    if (emailStatus && emailStatus[0]?.is_blocked) {
+      return { allowed: false, retryAfterSeconds: emailStatus[0].retry_after_seconds };
+    }
+  }
+
+  return { allowed: true };
+}
+
+/**
+ * Registra uma falha de autenticação no Supabase (Persistente).
+ */
+export async function recordRateLimitFailure(scope: string, email: string, policy: { limit: number, cooldowns: number[], windowMs: number }) {
+  const request = (globalThis as any).request as Request;
+  const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
+  
+  const ipHash = hashIdentity(clientIp);
+  const emailHash = hashIdentity(email);
+
+  // Registra falha para IP e E-mail em paralelo
+  const [ipRes, emailRes] = await Promise.all([
+    supabaseAdmin.rpc('record_auth_failure', {
+      p_scope: scope,
+      p_identity_kind: 'ip',
+      p_identity_hash: ipHash,
+      p_limit: policy.limit,
+      p_cooldown_minutes: policy.cooldowns,
+      p_window_ms: policy.windowMs
+    }),
+    supabaseAdmin.rpc('record_auth_failure', {
+      p_scope: scope,
+      p_identity_kind: 'email',
+      p_identity_hash: emailHash,
+      p_limit: policy.limit,
+      p_cooldown_minutes: policy.cooldowns,
+      p_window_ms: policy.windowMs
+    })
+  ]);
+
+  if (ipRes.error) throw ipRes.error;
+  if (emailRes.error) throw emailRes.error;
+
+  const maxRetry = Math.max(ipRes.data[0]?.retry_after_seconds || 0, emailRes.data[0]?.retry_after_seconds || 0);
+  
+  return { 
+    retryAfterSeconds: maxRetry,
+    isBlocked: maxRetry > 0
+  };
+}
+
+/**
+ * Reseta o estado de rate limit após sucesso (Persistente).
+ */
+export async function clearRateLimitPersistent(scope: string, email: string) {
+  const request = (globalThis as any).request as Request;
+  const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
+  
+  const ipHash = hashIdentity(clientIp);
+  const emailHash = hashIdentity(email);
+
+    await Promise.all([
+    supabaseAdmin.rpc('reset_auth_rate_limit', {
+      p_scope: scope,
+      p_identity_kind: 'ip',
+      p_identity_hash: ipHash
+    }),
+    supabaseAdmin.rpc('reset_auth_rate_limit', {
+      p_scope: scope,
+      p_identity_kind: 'email',
+      p_identity_hash: emailHash
+    })
+  ]);
+}
+
+/**
+ * Legado SOFT_THROTTLE (Baseado em Map) - Mantido temporariamente para fluxos não-auth
+ * até migração total para estrutura persistente.
+ */
+const rateLimitsLegacy = new Map<string, { count: number, resetAt: number, level: number }>();
 
 export async function checkRateLimit(key: string, limit: number, baseWindowMs: number) {
   const now = Date.now();
-  const record = rateLimits.get(key);
-  
-  // Janela de reincidência: se o registro expirou há muito tempo, resetamos o nível
-  // Se o registro expirou recentemente, mantemos o nível para o próximo cooldown
-  const REINCIDENCE_WINDOW = 60 * 60 * 1000; // 1 hora
+  const record = rateLimitsLegacy.get(key);
+  const REINCIDENCE_WINDOW = 60 * 60 * 1000;
   
   if (!record || now > (record.resetAt + REINCIDENCE_WINDOW)) {
-    rateLimits.set(key, { count: 1, resetAt: now + baseWindowMs, level: 0 });
+    rateLimitsLegacy.set(key, { count: 1, resetAt: now + baseWindowMs, level: 0 });
     return { allowed: true };
   }
   
-  // Se ainda estamos dentro do cooldown anterior
   if (now < record.resetAt && record.count >= limit) {
     const retryAfterSeconds = Math.ceil((record.resetAt - now) / 1000);
     return { allowed: false, retryAfterSeconds };
   }
 
-  // Se a janela expirou mas estamos na janela de reincidência, resetamos count mas mantemos level
   if (now > record.resetAt) {
     record.count = 0;
-    // O resetAt será definido quando atingir o limite novamente
   }
   
   record.count++;
   
   if (record.count >= limit) {
-    // Escalonamento progressivo: 5, 15, 30...
     const levels = [5, 15, 30];
     const minutes = levels[Math.min(record.level, levels.length - 1)];
     const windowMs = minutes * 60 * 1000;
     
     record.resetAt = now + windowMs;
-    record.level++; // Incrementa para a próxima reincidência
+    record.level++;
     
     const retryAfterSeconds = Math.ceil(windowMs / 1000);
     return { allowed: false, retryAfterSeconds };
@@ -157,20 +259,6 @@ export async function checkRateLimit(key: string, limit: number, baseWindowMs: n
   return { allowed: true };
 }
 
-/**
- * Reseta o rate limit para uma chave específica após sucesso.
- */
 export async function clearRateLimit(key: string) {
-  rateLimits.delete(key);
-}
-
-export async function isTokenUsed(token: string) {
-  const now = Date.now();
-  const expiry = usedTokens.get(token);
-  if (expiry && now < expiry) return true;
-  return false;
-}
-
-export async function markTokenAsUsed(token: string, expiryMs: number = 2 * 60 * 1000) {
-  usedTokens.set(token, Date.now() + expiryMs);
+  rateLimitsLegacy.delete(key);
 }

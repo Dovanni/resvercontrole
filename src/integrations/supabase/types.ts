@@ -127,6 +127,51 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_rate_limits: {
+        Row: {
+          blocked_until: string | null
+          created_at: string
+          escalation_level: number
+          expires_at: string
+          failure_count: number
+          id: string
+          identity_hash: string
+          identity_kind: string
+          last_attempt_at: string
+          scope: string
+          updated_at: string
+          window_started_at: string
+        }
+        Insert: {
+          blocked_until?: string | null
+          created_at?: string
+          escalation_level?: number
+          expires_at: string
+          failure_count?: number
+          id?: string
+          identity_hash: string
+          identity_kind: string
+          last_attempt_at?: string
+          scope: string
+          updated_at?: string
+          window_started_at?: string
+        }
+        Update: {
+          blocked_until?: string | null
+          created_at?: string
+          escalation_level?: number
+          expires_at?: string
+          failure_count?: number
+          id?: string
+          identity_hash?: string
+          identity_kind?: string
+          last_attempt_at?: string
+          scope?: string
+          updated_at?: string
+          window_started_at?: string
+        }
+        Relationships: []
+      }
       bank_accounts: {
         Row: {
           account_number: string | null
@@ -1684,7 +1729,21 @@ export type Database = {
         Args: { _token_hash: string }
         Returns: boolean
       }
+      cleanup_expired_auth_rate_limits: { Args: never; Returns: undefined }
       ensure_default_routing: { Args: { _user_id: string }; Returns: undefined }
+      get_auth_rate_limit_status: {
+        Args: {
+          p_identity_hash: string
+          p_identity_kind: string
+          p_scope: string
+        }
+        Returns: {
+          escalation_level: number
+          failure_count: number
+          is_blocked: boolean
+          retry_after_seconds: number
+        }[]
+      }
       get_my_multiempresa_context: {
         Args: never
         Returns: {
@@ -1721,6 +1780,29 @@ export type Database = {
           status: string
           user_id: string
         }[]
+      }
+      record_auth_failure: {
+        Args: {
+          p_cooldown_minutes: number[]
+          p_identity_hash: string
+          p_identity_kind: string
+          p_limit: number
+          p_scope: string
+          p_window_ms: number
+        }
+        Returns: {
+          new_escalation_level: number
+          new_failure_count: number
+          retry_after_seconds: number
+        }[]
+      }
+      reset_auth_rate_limit: {
+        Args: {
+          p_identity_hash: string
+          p_identity_kind: string
+          p_scope: string
+        }
+        Returns: undefined
       }
       rpc_editar_compra_pendente: {
         Args: {

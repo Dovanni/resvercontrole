@@ -3,9 +3,10 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { 
   verifyMathChallenge, 
-  checkRateLimit,
+  checkRateLimitPersistent,
   verifyTurnstile,
-  clearRateLimit
+  clearRateLimitPersistent,
+  recordRateLimitFailure
 } from "./security.functions";
 
 const signupSchema = z.object({
@@ -28,9 +29,19 @@ export const secureSignUp = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const request = (globalThis as any).request as Request;
     const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
-    const rateLimitKey = `signup:ip:${clientIp}`;
+    const emailHash = data.email.toLowerCase().trim();
     
     try {
+      // 0. Pré-check Rate Limit (Persistente)
+      const rateCheck = await checkRateLimitPersistent('signup', emailHash);
+      if (!rateCheck.allowed) {
+        throw new Error(JSON.stringify({
+          code: "RATE_LIMITED",
+          retryAfterSeconds: rateCheck.retryAfterSeconds,
+          message: "Muitas tentativas de cadastro. Aguarde para tentar novamente."
+        }));
+      }
+
       // 1. Math Challenge
       const mathValid = await verifyMathChallenge(data.mathChallengeToken, data.mathChallengeAnswer);
       if (!mathValid) {
@@ -44,8 +55,10 @@ export const secureSignUp = createServerFn({ method: "POST" })
       }
 
       // 3. Rate Limit (Contabiliza apenas tentativas estruturalmente válidas que passaram pelos desafios)
-      const rateLimit = await checkRateLimit(rateLimitKey, 3, 5 * 60 * 1000); // 3 tentativas, inicial 5min
-      if (!rateLimit.allowed) {
+      const signupPolicy = { limit: 3, cooldowns: [5, 15, 30], windowMs: 60 * 60 * 1000 };
+      const rateLimit = await recordRateLimitFailure('signup', data.email, signupPolicy);
+      
+      if (rateLimit.isBlocked) {
         throw new Error(JSON.stringify({
           code: "RATE_LIMITED",
           retryAfterSeconds: rateLimit.retryAfterSeconds,
@@ -76,8 +89,7 @@ export const completeSignUpSuccess = createServerFn({ method: "POST" })
   .inputValidator((data) => z.object({ email: z.string().email() }).parse(data))
   .handler(async ({ data }) => {
     const request = (globalThis as any).request as Request;
-    const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
-    await clearRateLimit(`signup:ip:${clientIp}`);
+    await clearRateLimitPersistent('signup', data.email);
     return { success: true };
   });
 
@@ -97,6 +109,16 @@ export const secureSignIn = createServerFn({ method: "POST" })
     const emailHash = data.email.toLowerCase().trim();
     
     try {
+      // 0. Pré-check Rate Limit (Persistente)
+      const rateCheck = await checkRateLimitPersistent('login', emailHash);
+      if (!rateCheck.allowed) {
+        throw new Error(JSON.stringify({
+          code: "RATE_LIMITED",
+          retryAfterSeconds: rateCheck.retryAfterSeconds,
+          message: "Muitas tentativas de acesso. Aguarde para tentar novamente."
+        }));
+      }
+
       // 1. Math Challenge
       const mathValid = await verifyMathChallenge(data.mathChallengeToken, data.mathChallengeAnswer);
       if (!mathValid) {
@@ -109,9 +131,11 @@ export const secureSignIn = createServerFn({ method: "POST" })
         throw new Error("Verificação de segurança falhou. Por favor, tente novamente.");
       }
       
-      // 3. Rate Limit (Login: 5 tentativas, inicial 5min - Progressivo)
-      const rateLimit = await checkRateLimit(`login:email:${emailHash}`, 5, 5 * 60 * 1000);
-      if (!rateLimit.allowed) {
+      // 3. Rate Limit (Login: 5 tentativas, inicial 15min - Progressivo)
+      const loginPolicy = { limit: 5, cooldowns: [15, 30, 60], windowMs: 60 * 60 * 1000 };
+      const rateLimit = await recordRateLimitFailure('login', data.email, loginPolicy);
+      
+      if (rateLimit.isBlocked) {
         throw new Error(JSON.stringify({
           code: "RATE_LIMITED",
           retryAfterSeconds: rateLimit.retryAfterSeconds,
@@ -132,6 +156,6 @@ export const completeSignInSuccess = createServerFn({ method: "POST" })
   .inputValidator((data) => z.object({ email: z.string().email() }).parse(data))
   .handler(async ({ data }) => {
     const emailHash = data.email.toLowerCase().trim();
-    await clearRateLimit(`login:email:${emailHash}`);
+    await clearRateLimitPersistent('login', data.email);
     return { success: true };
   });

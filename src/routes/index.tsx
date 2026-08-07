@@ -1,4 +1,4 @@
-// VEJAMAIS_RATE_LIMIT_RETRY_TIME_USER_EXPERIENCE
+
 import { createFileRoute } from "@tanstack/react-router";
 import { LandingPage } from "@/components/landing/landing-page";
 
