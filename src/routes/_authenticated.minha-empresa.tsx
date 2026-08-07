@@ -181,45 +181,63 @@ function MinhaEmpresaPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {members.map((m) => (
-                    <tr key={m.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="size-8 rounded-full bg-accent flex items-center justify-center text-xs font-bold text-accent-foreground">
-                            {m.user_id === user?.id ? "EU" : "MB"}
-                          </div>
-                          <div>
-                            <div className="font-medium text-xs truncate max-w-[150px]">{m.user_id === user?.id ? "Você" : m.user_id}</div>
-                            {m.is_primary && <div className="text-[10px] text-primary">Dono do Tenant</div>}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <Badge variant="outline" className="capitalize text-[10px] font-normal border-primary/20 bg-primary/5">
-                          {m.role}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-1.5 text-green-600">
-                          <CheckCircle2 className="size-3" />
-                          <span className="text-[11px] font-medium">Ativo</span>
-                        </div>
-                      </td>
-                      <td className="p-4 text-right">
-                        {isAdmin && m.user_id !== user?.id && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="size-8"><MoreVertical className="size-4" /></Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>Alterar papel</DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive">Remover acesso</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
+                  {loadingMembers ? (
+                    <tr>
+                      <td colSpan={4} className="p-8 text-center text-muted-foreground animate-pulse">Carregando equipe...</td>
+                    </tr>
+                  ) : membersError ? (
+                    <tr>
+                      <td colSpan={4} className="p-8 text-center text-destructive">
+                        Erro ao carregar membros. Verifique sua conexão ou permissões.
                       </td>
                     </tr>
-                  ))}
+                  ) : members.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="p-8 text-center text-muted-foreground italic">
+                        Nenhum membro encontrado nesta empresa.
+                      </td>
+                    </tr>
+                  ) : (
+                    members.map((m) => (
+                      <tr key={m.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="size-8 rounded-full bg-accent flex items-center justify-center text-xs font-bold text-accent-foreground">
+                              {m.user_id === user?.id ? "EU" : "MB"}
+                            </div>
+                            <div>
+                              <div className="font-medium text-xs truncate max-w-[150px]">{m.user_id === user?.id ? "Você" : m.user_id}</div>
+                              {m.is_primary && <div className="text-[10px] text-primary">Dono do Tenant</div>}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <Badge variant="outline" className="capitalize text-[10px] font-normal border-primary/20 bg-primary/5">
+                            {m.role}
+                          </Badge>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-1.5 text-green-600">
+                            <CheckCircle2 className="size-3" />
+                            <span className="text-[11px] font-medium">Ativo</span>
+                          </div>
+                        </td>
+                        <td className="p-4 text-right">
+                          {isAdmin && m.user_id !== user?.id && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="size-8"><MoreVertical className="size-4" /></Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>Alterar papel</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive">Remover acesso</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
