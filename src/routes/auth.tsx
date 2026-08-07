@@ -34,31 +34,6 @@ function AuthPage() {
     if (!loading && session) navigate({ to: "/dashboard" });
   }, [session, loading, navigate]);
 
-  // Public signup temporarily disabled: any attempt to reach /auth with a
-  // signup intent (query string, hash, deep link) is normalized to sign-in
-  // and the user is notified once.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const url = new URL(window.location.href);
-    const q = url.searchParams;
-    const hash = (url.hash || "").toLowerCase();
-    const signupIntent =
-      q.get("mode") === "signup" ||
-      q.get("tab") === "signup" ||
-      q.has("signup") ||
-      q.has("register") ||
-      q.has("cadastro") ||
-      hash.includes("signup") ||
-      hash.includes("register") ||
-      hash.includes("cadastro");
-    if (signupIntent) {
-      toast.info("O cadastro de novas contas está temporariamente indisponível.");
-      ["mode", "tab", "signup", "register", "cadastro"].forEach((k) => q.delete(k));
-      const clean = url.pathname + (q.toString() ? `?${q}` : "");
-      window.history.replaceState({}, "", clean);
-    }
-  }, []);
-
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -121,7 +96,10 @@ function AuthPage() {
             >
               Esqueci minha senha
             </button>
-            <div className="pt-1 flex justify-center">
+            <div className="text-center text-sm text-muted-foreground pt-2">
+              Ainda não tem conta? <Link to="/cadastro" className="text-primary hover:underline font-medium">Começar agora</Link>
+            </div>
+            <div className="pt-2 flex justify-center border-t mt-4">
               <Link
                 to="/"
                 aria-label="Voltar para o Vejamais"

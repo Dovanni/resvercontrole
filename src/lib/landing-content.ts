@@ -98,7 +98,7 @@ export type Plan = {
   features: string[];
   support: string;
   cta: string;
-  ctaTarget: "/auth" | "contato";
+  ctaTarget: "/cadastro" | "contato";
   recommended?: boolean;
   available: boolean;
 };
@@ -121,8 +121,8 @@ export const PLANS: Plan[] = [
       "Fluxo de caixa básico",
     ],
     support: "Suporte por e-mail",
-    cta: "Entrar",
-    ctaTarget: "/auth",
+    cta: "Começar agora",
+    ctaTarget: "/cadastro",
     available: true,
   },
   {
@@ -139,8 +139,8 @@ export const PLANS: Plan[] = [
       "Balancete e despesas anuais",
     ],
     support: "Suporte prioritário",
-    cta: "Entrar",
-    ctaTarget: "/auth",
+    cta: "Começar agora",
+    ctaTarget: "/cadastro",
     recommended: true,
     available: true,
   },
