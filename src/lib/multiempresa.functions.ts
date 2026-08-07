@@ -30,15 +30,25 @@ export const getMyMultiempresaContext = createServerFn({ method: "GET" })
         return [];
       }
 
-      return data.map((item: any) => ({
-        id: item.empresa_id,
-        nome: item.nome,
-        razao_social: item.razao_social,
-        tipo: item.tipo,
-        user_role: item.role,
-        membership_status: item.status,
-        is_primary: item.is_primary
-      }));
+      return data.map((item: any) => {
+        // Resolve o nome real da empresa seguindo a prioridade:
+        // 1. nome (da tabela empresas) se não for o placeholder
+        // 2. razao_social
+        // 3. Fallback "Empresa principal"
+        const resolvedName = (item.nome && item.nome !== "Empresa Principal") 
+          ? item.nome 
+          : (item.razao_social || "Empresa principal");
+
+        return {
+          id: item.empresa_id,
+          nome: resolvedName,
+          razao_social: item.razao_social,
+          tipo: item.tipo,
+          user_role: item.role,
+          membership_status: item.status,
+          is_primary: item.is_primary
+        };
+      });
     } catch (err: any) {
       console.error("Critical Runtime Error in getMyMultiempresaContext:", err);
       throw err;
