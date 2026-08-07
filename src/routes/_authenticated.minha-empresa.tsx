@@ -48,11 +48,11 @@ function MinhaEmpresaPage() {
     refetch: refetchMultiempresa
   } = useMultiempresa();
   const [inviteForm, setInviteForm] = useState({ email: "", role: "vendedor" as any });
-
-  if (!isEnabled) return <Navigate to="/dashboard" />;
+  const isAdmin = empresa?.user_role === 'admin';
 
   const { 
     data: members = [], 
+
     isLoading: loadingMembers, 
     error: membersError,
     refetch: refetchMembers
@@ -99,7 +99,6 @@ function MinhaEmpresaPage() {
     setInviteForm({ email: "", role: "vendedor" });
   };
 
-  const isAdmin = empresa?.user_role === 'admin';
 
   if (multiempresaError) {
     return (
