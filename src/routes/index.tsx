@@ -4,11 +4,43 @@ import { LandingPage } from "@/components/landing/landing-page";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Vejamais — Gestão Comercial e Financeira para o seu negócio" },
-      { name: "description", content: "Controle financeiro, comercial e e-commerce em uma única plataforma. Do pedido ao lucro com clareza e rentabilidade." },
-      { property: "og:title", content: "Vejamais — Gestão Comercial e Financeira" },
-      { property: "og:description", content: "Plataforma completa para gestão de e-commerce e comércio em geral." },
-      { name: "twitter:card", content: "summary_large_image" }
+      { title: "VEJAMAIS | Gestão Comercial e Financeira para E-commerce" },
+      {
+        name: "description",
+        content:
+          "Controle pedidos, vendas, produtos, estoque, fretes, taxas, contas, margens e lucros do seu e-commerce em uma plataforma de gestão comercial e financeira.",
+      },
+      { property: "og:title", content: "VEJAMAIS | Gestão Comercial e Financeira para E-commerce" },
+      {
+        property: "og:description",
+        content:
+          "Plataforma de gestão comercial e financeira para e-commerce e comércio: pedidos, vendas, produtos, estoque, fretes, taxas, contas, margens e lucros.",
+      },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://vejamais.com.br/" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "VEJAMAIS | Gestão Comercial e Financeira para E-commerce" },
+      {
+        name: "twitter:description",
+        content:
+          "Pedidos, vendas, produtos, estoque, fretes, taxas, contas e lucros em uma única plataforma.",
+      },
+    ],
+    links: [{ rel: "canonical", href: "https://vejamais.com.br/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "Vejamais",
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          url: "https://vejamais.com.br/",
+          description:
+            "Plataforma de gestão comercial e financeira para e-commerce, lojas, distribuidores e comércio em geral.",
+        }),
+      },
     ],
   }),
   component: LandingPage,
