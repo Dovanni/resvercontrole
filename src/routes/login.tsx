@@ -14,7 +14,7 @@ import { translateAuthError } from "@/lib/auth-errors";
 import { TurnstileWidget, TurnstileWidgetRef } from "@/components/turnstile-widget";
 import { useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { secureSignIn } from "@/lib/auth-security.functions";
+import { secureSignIn, completeSignInSuccess } from "@/lib/auth-security.functions";
 import { MathChallengeField } from "@/components/math-challenge";
 
 export const Route = createFileRoute("/login")({
@@ -33,6 +33,7 @@ function LoginPage() {
   const [mathAnswer, setMathAnswer] = useState("");
 
   const signInSecurityFn = useServerFn(secureSignIn);
+  const completeSignInFn = useServerFn(completeSignInSuccess);
   const turnstileRef = useRef<TurnstileWidgetRef>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
@@ -105,6 +106,7 @@ function LoginPage() {
       if (error) {
         toast.error("Não foi possível entrar com os dados informados.");
       } else {
+        await completeSignInFn({ data: { email: email.trim() } });
         toast.success("Bem-vinda de volta!");
       }
     } catch (error: any) {
