@@ -21,6 +21,10 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useMultiempresa } from "@/hooks/use-multiempresa";
+import { 
+  listCompanyMembers, 
+  listCompanyInvitations 
+} from "@/lib/multiempresa.functions";
 import { createInternalInvitation } from "@/lib/multiempresa-admin.functions";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -49,6 +53,9 @@ function MinhaEmpresaPage() {
   const [inviteForm, setInviteForm] = useState({ email: "", role: "vendedor" as any });
   const isAdmin = empresa?.user_role === 'admin';
 
+  const fetchMembers = useServerFn(listCompanyMembers);
+  const fetchInvitations = useServerFn(listCompanyInvitations);
+
   // State isolado para membros
   const { 
     data: members = [], 
@@ -58,28 +65,7 @@ function MinhaEmpresaPage() {
   } = useQuery({
     queryKey: ["company-members", empresa?.id],
     enabled: !!empresa?.id && isAdmin,
-    queryFn: async () => {
-      const start = Date.now();
-      try {
-        const { data, error } = await supabase.rpc("list_my_company_members", {
-          p_empresa_id: empresa!.id
-        });
-        
-        const duration = Date.now() - start;
-        if (error) {
-          console.error("Secondary Operation Error (Members):", {
-            operation: "list_my_company_members",
-            error_code: error.code,
-            error_message: error.message,
-            duration_ms: duration
-          });
-          throw error;
-        }
-        return data || [];
-      } catch (err: any) {
-        throw err;
-      }
-    }
+    queryFn: () => fetchMembers({ data: empresa!.id })
   });
 
   // State isolado para convites
@@ -92,30 +78,7 @@ function MinhaEmpresaPage() {
   } = useQuery({
     queryKey: ["company-invitations", empresa?.id],
     enabled: !!empresa?.id && isAdmin,
-    queryFn: async () => {
-      const start = Date.now();
-      try {
-        const { data, error } = await supabase
-          .from("company_invitations")
-          .select("*")
-          .eq("empresa_id", empresa!.id)
-          .eq("status", "pending");
-          
-        const duration = Date.now() - start;
-        if (error) {
-          console.error("Secondary Operation Error (Invitations):", {
-            operation: "fetch_invitations",
-            error_code: error.code,
-            error_message: error.message,
-            duration_ms: duration
-          });
-          throw error;
-        }
-        return data || [];
-      } catch (err: any) {
-        throw err;
-      }
-    }
+    queryFn: () => fetchInvitations({ data: empresa!.id })
   });
 
   const handleInvite = async (e: React.FormEvent) => {
