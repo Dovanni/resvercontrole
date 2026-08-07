@@ -215,7 +215,7 @@ function MinhaEmpresaPage() {
                             </div>
                             <div>
                               <div className="font-medium text-xs truncate max-w-[150px]">{m.user_id === user?.id ? "Você" : m.user_id}</div>
-                              {m.is_primary && <div className="text-[10px] text-primary">Dono do Tenant</div>}
+                              {m.is_primary && <div className="text-[10px] text-primary">Administrador principal</div>}
                             </div>
                           </div>
                         </td>
