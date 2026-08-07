@@ -66,8 +66,8 @@ const loginSchema = z.object({
   email: z.string().email(),
   password: z.string(),
   turnstileToken: z.string(),
-  mathChallengeToken: z.string().optional(),
-  mathChallengeAnswer: z.string().optional(),
+  mathChallengeToken: z.string(),
+  mathChallengeAnswer: z.string(),
 });
 
 export const secureSignIn = createServerFn({ method: "POST" })
@@ -83,32 +83,21 @@ export const secureSignIn = createServerFn({ method: "POST" })
       throw new Error("Muitas tentativas de acesso. Tente novamente em 15 minutos.");
     }
     
-    // 2. Segurança (Turnstile - Application Layer SiteVerify)
+    // 2. Math Challenge (Sempre no login conforme requisito VMEAP)
+    const mathValid = await verifyMathChallenge(data.mathChallengeToken, data.mathChallengeAnswer);
+    if (!mathValid) {
+      throw new Error("Desafio matemático incorreto ou expirado.");
+    }
+
+    // 3. Segurança (Turnstile - Application Layer SiteVerify) - Chamado APÓS o math challenge
     const turnstileValid = await verifyTurnstile(data.turnstileToken);
     if (!turnstileValid.success) {
       throw new Error("Verificação de segurança falhou. Por favor, tente novamente.");
     }
     
-    // 3. Math Challenge Adaptativo (se score baixo ou muitas falhas)
-    // Aqui no server-side validamos se foi enviado e se é correto se exigido.
-    // A lógica de "exigir" é controlada pelo frontend com base em erros passados ou score.
-    if (data.mathChallengeToken && data.mathChallengeAnswer) {
-      const mathValid = await verifyMathChallenge(data.mathChallengeToken, data.mathChallengeAnswer);
-      if (!mathValid) {
-        throw new Error("Desafio matemático incorreto.");
-      }
-    }
-    
-    // 4. Supabase Auth
-    // Nota: Server functions não mantêm sessão automaticamente no cliente como o SDK.
-    // O ideal seria o cliente chamar o SDK, mas aqui centralizamos a validação.
-    // No entanto, Auth.signInWithPassword precisa ser chamado no CLIENTE para setar cookies/storage.
-    // Por isso, esta server function valida as precondições e o cliente chama o Supabase se passar.
-    // OU: usamos admin para validar a senha sem logar e retornamos um OK.
-    
-    // Como queremos segurança máxima, validamos TUDO aqui antes.
+    // 4. Se chegou aqui, as precondições passaram.
+    // O Auth REAL deve ser feito no CLIENTE.
     return { 
-      success: true, 
-      requireMath: false 
+      success: true 
     };
   });
