@@ -118,15 +118,15 @@ export const secureSignUp = createServerFn({ method: "POST" })
       authUserId = inviteData.user.id;
 
       // 7. Vincular Auth User ID à reserva
-      const { error: linkError } = await supabaseAdmin.rpc('link_auth_user_to_onboarding', {
+      const { error: linkError } = await (supabaseAdmin.rpc as any)('link_auth_user_to_onboarding', {
         p_onboarding_id: onboardingId,
         p_auth_user_id: authUserId
       });
 
       if (linkError) {
         // Compensação crítica: deletar usuário e cancelar reserva
-        await supabaseAdmin.auth.admin.deleteUser(authUserId);
-        await supabaseAdmin.rpc('cancel_pending_onboarding', { p_onboarding_id: onboardingId });
+        await supabaseAdmin.auth.admin.deleteUser(authUserId as string);
+        await (supabaseAdmin.rpc as any)('cancel_pending_onboarding', { p_onboarding_id: onboardingId });
         throw linkError;
       }
       
