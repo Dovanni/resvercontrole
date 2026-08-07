@@ -146,6 +146,37 @@ export const secureSignUp = createServerFn({ method: "POST" })
     }
   });
 
+export const finalizeOnboarding = createServerFn({ method: "POST" })
+  .handler(async ({ context }) => {
+    // 1. Obter usuário autenticado (TanStack Start context injetado pelo middleware)
+    const { supabase: userClient, userId } = context as any;
+    if (!userId) throw new Error("Não autorizado");
+
+    try {
+      // 2. Buscar reserva de onboarding
+      const { data: userAuth, error: authError } = await supabaseAdmin.auth.admin.getUserById(userId);
+      if (authError || !userAuth.user) throw new Error("Usuário não encontrado");
+
+      const onboardingId = userAuth.user.user_metadata?.onboarding_id;
+      if (!onboardingId) throw new Error("Reserva de onboarding não localizada");
+
+      // 3. Executar RPC transacional para criar empresa e perfis
+      // Este RPC deve ser idempotente
+      const { data: result, error: rpcError } = await (supabaseAdmin.rpc as any)('finalize_user_onboarding', {
+        p_onboarding_id: onboardingId,
+        p_auth_user_id: userId
+      });
+
+      if (rpcError) throw rpcError;
+
+      // 4. Limpar metadados se necessário ou marcar como concluído
+      return { success: true };
+    } catch (error: any) {
+      console.error("Erro na finalização do onboarding:", error);
+      throw new Error(error.message || "Falha ao concluir a criação da empresa.");
+    }
+  });
+
 export const completeSignUpSuccess = createServerFn({ method: "POST" })
   .inputValidator((data) => z.object({ email: z.string().email() }).parse(data))
   .handler(async ({ data }) => {

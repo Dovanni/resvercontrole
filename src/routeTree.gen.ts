@@ -14,6 +14,7 @@ import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AtivarContaRouteImport } from './routes/ativar-conta'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedVendasRouteImport } from './routes/_authenticated.vendas'
@@ -66,6 +67,11 @@ const CadastroRoute = CadastroRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AtivarContaRoute = AtivarContaRouteImport.update({
+  id: '/ativar-conta',
+  path: '/ativar-conta',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -221,6 +227,7 @@ const AuthenticatedConfiguracoesCategoriasRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ativar-conta': typeof AtivarContaRoute
   '/auth': typeof AuthRoute
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
@@ -255,6 +262,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ativar-conta': typeof AtivarContaRoute
   '/auth': typeof AuthRoute
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
@@ -291,6 +299,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/ativar-conta': typeof AtivarContaRoute
   '/auth': typeof AuthRoute
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
@@ -327,6 +336,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/ativar-conta'
     | '/auth'
     | '/cadastro'
     | '/login'
@@ -361,6 +371,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/ativar-conta'
     | '/auth'
     | '/cadastro'
     | '/login'
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/ativar-conta'
     | '/auth'
     | '/cadastro'
     | '/login'
@@ -432,6 +444,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AtivarContaRoute: typeof AtivarContaRoute
   AuthRoute: typeof AuthRoute
   CadastroRoute: typeof CadastroRoute
   LoginRoute: typeof LoginRoute
@@ -476,6 +489,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ativar-conta': {
+      id: '/ativar-conta'
+      path: '/ativar-conta'
+      fullPath: '/ativar-conta'
+      preLoaderRoute: typeof AtivarContaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -751,6 +771,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AtivarContaRoute: AtivarContaRoute,
   AuthRoute: AuthRoute,
   CadastroRoute: CadastroRoute,
   LoginRoute: LoginRoute,
