@@ -103,7 +103,7 @@ function Header() {
           <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             {HERO.existingClientCta}
           </Link>
-          <Link to="/auth">
+          <Link to="/cadastro">
             <Button size="sm">{HERO.primaryCta}</Button>
           </Link>
         </div>
