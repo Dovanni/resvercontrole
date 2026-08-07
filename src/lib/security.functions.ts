@@ -60,7 +60,7 @@ export async function verifyMathChallenge(token: string, answer: string) {
   }
 }
 
-const TURNSTILE_SECRET = process.env['TURNSTILE_SECRET_KEY'];
+const getTurnstileSecret = () => process.env['TURNSTILE_SECRET_KEY'];
 const HOSTNAME_ALLOWLIST = [
   'resvercontrole.lovable.app',
   'id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app',
@@ -71,14 +71,15 @@ const HOSTNAME_ALLOWLIST = [
 
 export async function verifyTurnstile(token: string) {
   if (!token) return { success: false, error: 'Token ausente' };
-  if (!TURNSTILE_SECRET) {
+  const secret = getTurnstileSecret();
+  if (!secret) {
     console.error('TURNSTILE_SECRET_KEY não configurada no servidor');
     return { success: false, error: 'Erro de configuração' };
   }
 
   try {
     const formData = new FormData();
-    formData.append('secret', TURNSTILE_SECRET);
+    formData.append('secret', secret);
     formData.append('response', token);
 
     const result = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
