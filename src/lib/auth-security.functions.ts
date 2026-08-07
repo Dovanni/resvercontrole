@@ -101,7 +101,7 @@ export const secureSignUp = createServerFn({ method: "POST" })
 
       // 6. Invite User (Server-Only)
       const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
-        redirectTo: `${process.env['SITE_URL'] || 'http://localhost:8080'}/ativar-conta`,
+        redirectTo: getInviteRedirectUrl(),
         data: {
           onboarding_id: onboardingId
         }
