@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { VejamaisMark } from "@/components/vejamais-logo";
 import { useServerFn } from "@tanstack/react-start";
-import { secureRequestPasswordReset } from "@/lib/recovery-security.functions";
+import { secureRequestPasswordReset, getInviteRedirectUrl } from "@/lib/auth-security.functions";
 import { TurnstileWidget, TurnstileWidgetRef } from "@/components/turnstile-widget";
 
 export const Route = createFileRoute("/recuperar-senha")({
@@ -47,7 +47,9 @@ function RecoveryPage() {
       });
 
       // 2. Prosseguir com o reset real (sem captchaToken nativo)
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: getInviteRedirectUrl()
+      });
 
       if (error) throw error;
       

@@ -30,27 +30,24 @@ const signupSchema = z.object({
 /**
  * Resolve a URL de redirecionamento do convite baseada no ambiente.
  */
-function getInviteRedirectUrl() {
+export function getInviteRedirectUrl() {
   const siteUrl = process.env['SITE_URL'];
   const previewId = "c1cf42e3-5ea4-4a1b-a6cc-454256b65835";
   
-  // Se estivermos em um ambiente Lovable (verificando SITE_URL ou HOST)
+  const path = "/auth/callback";
+
   if (siteUrl?.includes("lovable.app")) {
-    // Se for o preview específico solicitado
     if (siteUrl.includes(previewId)) {
-      return `https://id-preview--${previewId}.lovable.app/ativar-conta`;
+      return `https://id-preview--${previewId}.lovable.app${path}`;
     }
-    // Fallback para o site_url configurado se for produção lovable
-    return `${siteUrl}/ativar-conta`;
+    return `${siteUrl}${path}`;
   }
 
-  // Produção custom domain
   if (siteUrl) {
-    return `${siteUrl}/ativar-conta`;
+    return `${siteUrl}${path}`;
   }
 
-  // Localhost fallback
-  return "http://localhost:8080/ativar-conta";
+  return `http://localhost:8080${path}`;
 }
 
 function hashEmail(email: string) {
