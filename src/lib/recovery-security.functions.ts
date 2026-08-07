@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { checkRateLimit } from "./security.functions";
+import { checkRateLimit, verifyTurnstile } from "./security.functions";
 
 const recoverySchema = z.object({
   email: z.string().email(),
@@ -21,9 +21,10 @@ export const secureRequestPasswordReset = createServerFn({ method: "POST" })
       return { success: true, message: "Se existir uma conta com esse e-mail, enviaremos as orientações." };
     }
 
-    // 2. Segurança (Turnstile)
-    if (!data.turnstileToken) {
-      throw new Error("Token de segurança ausente.");
+    // 2. Segurança (Turnstile - Application Layer SiteVerify)
+    const turnstileValid = await verifyTurnstile(data.turnstileToken);
+    if (!turnstileValid.success) {
+      throw new Error("Verificação de segurança falhou. Por favor, tente novamente.");
     }
 
     // A chamada real ao Supabase Auth é feita pelo cliente. 

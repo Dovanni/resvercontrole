@@ -72,13 +72,10 @@ function LoginPage() {
         return;
       }
 
-      // 2. Se a segurança passou, prosseguir com o login real
+      // 2. Se a segurança passou, prosseguir com o login real (sem captchaToken nativo)
       const { error } = await supabase.auth.signInWithPassword({ 
         email, 
-        password,
-        options: {
-          captchaToken: turnstileToken,
-        }
+        password
       });
       
       if (error) {

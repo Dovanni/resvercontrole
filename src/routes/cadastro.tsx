@@ -60,11 +60,26 @@ function SignupPage() {
         return;
       }
       
+      // 1. Validar precondições e SiteVerify no servidor antes do Supabase
+      await signUpFn({
+        data: {
+          email,
+          password,
+          empresaNome,
+          cnpj,
+          nomeAdmin,
+          turnstileToken,
+          mathChallengeToken: mathToken,
+          mathChallengeAnswer: mathAnswer,
+          consent: { termos: acceptTerms, privacidade: acceptPrivacy }
+        }
+      });
+
+      // 2. Se a segurança passou, prosseguir com o signup real (sem captchaToken nativo)
       const { error: authError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          captchaToken: turnstileToken,
           data: {
             nome_empresa: empresaNome,
             cnpj,

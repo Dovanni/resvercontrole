@@ -41,9 +41,13 @@ function RecoveryPage() {
     setBusy(true);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        captchaToken: turnstileToken,
+      // 1. Validar precondições e SiteVerify no servidor
+      await requestResetFn({
+        data: { email, turnstileToken }
       });
+
+      // 2. Prosseguir com o reset real (sem captchaToken nativo)
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
 
       if (error) throw error;
       
