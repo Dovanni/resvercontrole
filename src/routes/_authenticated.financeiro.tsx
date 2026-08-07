@@ -356,7 +356,7 @@ function HelpDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
   );
 }
 
-function EntryForm({ onDone }: { onDone: () => void }) {
+function EntryForm({ onDone, empresaId }: { onDone: () => void; empresaId?: string }) {
   const [type, setType] = useState<"income" | "expense">("expense");
   const [category, setCategory] = useState("estoque");
   const [amount, setAmount] = useState(0);
@@ -367,8 +367,10 @@ function EntryForm({ onDone }: { onDone: () => void }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
       const { error } = await supabase.from("finance_entries").insert({
-        user_id: user.id, type, category, amount, description: description || null,
-      } as any);
+        user_id: user.id,
+        empresa_id: empresaId!,
+        type, category, amount, description: description || null,
+      });
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Salvo"); onDone(); },
