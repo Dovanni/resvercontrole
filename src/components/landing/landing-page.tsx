@@ -188,7 +188,7 @@ function Hero() {
           </p>
 
           <div className="mt-7 flex flex-wrap gap-3">
-            <Link to="/auth">
+            <Link to="/cadastro">
               <Button size="lg" className="gap-1.5">
                 {HERO.primaryCta} <ArrowRight className="size-4" />
               </Button>
