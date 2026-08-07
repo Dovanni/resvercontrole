@@ -1287,6 +1287,57 @@ export type Database = {
           },
         ]
       }
+      pending_onboardings: {
+        Row: {
+          auth_user_id: string | null
+          cnpj_formatado: string | null
+          cnpj_limpo: string | null
+          consent_version_privacy: string
+          consent_version_terms: string
+          consented_at: string
+          created_at: string
+          email_hash: string
+          expires_at: string
+          id: string
+          nome_admin: string
+          nome_empresa: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          auth_user_id?: string | null
+          cnpj_formatado?: string | null
+          cnpj_limpo?: string | null
+          consent_version_privacy: string
+          consent_version_terms: string
+          consented_at?: string
+          created_at?: string
+          email_hash: string
+          expires_at: string
+          id?: string
+          nome_admin: string
+          nome_empresa: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          auth_user_id?: string | null
+          cnpj_formatado?: string | null
+          cnpj_limpo?: string | null
+          consent_version_privacy?: string
+          consent_version_terms?: string
+          consented_at?: string
+          created_at?: string
+          email_hash?: string
+          expires_at?: string
+          id?: string
+          nome_admin?: string
+          nome_empresa?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           brand: string | null
@@ -1729,7 +1780,24 @@ export type Database = {
         Args: { _token_hash: string }
         Returns: boolean
       }
+      cancel_pending_onboarding: {
+        Args: { p_onboarding_id: string }
+        Returns: undefined
+      }
       cleanup_expired_auth_rate_limits: { Args: never; Returns: undefined }
+      create_pending_onboarding: {
+        Args: {
+          p_cnpj_formatado: string
+          p_cnpj_limpo: string
+          p_email_hash: string
+          p_expires_in_hours?: number
+          p_nome_admin: string
+          p_nome_empresa: string
+          p_privacy_version: string
+          p_terms_version: string
+        }
+        Returns: string
+      }
       ensure_default_routing: { Args: { _user_id: string }; Returns: undefined }
       get_auth_rate_limit_status: {
         Args: {
@@ -1770,6 +1838,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      link_auth_user_to_onboarding: {
+        Args: { p_auth_user_id: string; p_onboarding_id: string }
+        Returns: undefined
       }
       list_my_company_members: {
         Args: { p_empresa_id: string }
