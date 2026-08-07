@@ -38,37 +38,39 @@ export const Route = createFileRoute("/_authenticated/minha-empresa")({
 });
 
 function MinhaEmpresaPage() {
-  const { user, can } = useAuth();
-  const { empresa, isEnabled } = useMultiempresa();
-  const fetchMyCompanies = useServerFn(listMyCompanies);
-  const qc = useQueryClient();
-  
+  const { user } = useAuth();
+  const { empresa, companies, isEnabled, isLoading: loadingMultiempresa } = useMultiempresa();
   const [inviteForm, setInviteForm] = useState({ email: "", role: "vendedor" as any });
 
   if (!isEnabled) return <Navigate to="/dashboard" />;
 
-  const { data: companies = [], isLoading: loadingCompanies } = useQuery({
-    queryKey: ["my-companies-detail"],
-    queryFn: () => fetchMyCompanies(),
-  });
-
-  const { data: members = [], isLoading: loadingMembers } = useQuery({
+  const { 
+    data: members = [], 
+    isLoading: loadingMembers, 
+    error: membersError 
+  } = useQuery({
     queryKey: ["company-members", empresa?.id],
     enabled: !!empresa?.id,
     queryFn: async () => {
-      // Usar a empresa ativa carregada pelo hook, que já contém o papel
-      // do usuário atual, mas precisamos da lista completa para a tabela.
       const { data, error } = await supabase
         .from("user_company_access")
         .select("*")
         .eq("empresa_id", empresa!.id)
         .eq("status", "active");
-      if (error) throw error;
-      return data;
+      
+      if (error) {
+        console.error("Erro ao carregar membros:", error);
+        throw error;
+      }
+      return data || [];
     }
   });
 
-  const { data: invitations = [], isLoading: loadingInvites } = useQuery({
+  const { 
+    data: invitations = [], 
+    isLoading: loadingInvites,
+    error: invitesError 
+  } = useQuery({
     queryKey: ["company-invitations", empresa?.id],
     enabled: !!empresa?.id && empresa?.user_role === 'admin',
     queryFn: async () => {
@@ -77,8 +79,11 @@ function MinhaEmpresaPage() {
         .select("*")
         .eq("empresa_id", empresa!.id)
         .eq("status", "pending");
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error("Erro ao carregar convites:", error);
+        throw error;
+      }
+      return data || [];
     }
   });
 
