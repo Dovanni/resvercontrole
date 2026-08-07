@@ -31,9 +31,13 @@ export const secureSignUp = createServerFn({ method: "POST" })
     const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
     
     // 1. Rate Limit (Signup: 3 tentativas em 30 min por IP)
-    const ipAllowed = await checkRateLimit(`signup:ip:${clientIp}`, 3, 30 * 60 * 1000);
-    if (!ipAllowed) {
-      throw new Error("Muitas tentativas de cadastro. Tente novamente mais tarde.");
+    const rateLimit = await checkRateLimit(`signup:ip:${clientIp}`, 3, 30 * 60 * 1000);
+    if (!rateLimit.allowed) {
+      throw new Error(JSON.stringify({
+        code: "RATE_LIMITED",
+        retryAfterSeconds: rateLimit.retryAfterSeconds,
+        message: "Muitas tentativas de cadastro. Aguarde para tentar novamente."
+      }));
     }
     
     // 2. Math Challenge (Sempre no cadastro)
