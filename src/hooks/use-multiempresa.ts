@@ -1,15 +1,18 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMyMultiempresaContext, validateCompanyAccess } from "@/lib/multiempresa.functions";
 import { useServerFn } from "@tanstack/react-start";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth";
 
 const STORAGE_KEY = "vejamais:active_empresa_id";
+const CONTEXT_TIMEOUT = 10000; // 10 segundos
 
 export function useMultiempresa() {
   const queryClient = useQueryClient();
   const fetchContext = useServerFn(getMyMultiempresaContext);
   const validateAccess = useServerFn(validateCompanyAccess);
+  const { user, loading: authLoading } = useAuth();
   
   const [activeId, setActiveId] = useState<string | null>(() => {
     if (typeof window !== "undefined") {
@@ -21,17 +24,37 @@ export function useMultiempresa() {
   const { 
     data: companies = [], 
     isLoading: isListLoading, 
-    error: listError,
+    isError,
+    error,
     refetch 
   } = useQuery({
-    queryKey: ["my-companies-context"],
-    queryFn: () => fetchContext(),
+    queryKey: ["multiempresa-context", user?.id],
+    queryFn: async () => {
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("TIMEOUT_ERROR")), CONTEXT_TIMEOUT)
+      );
+      
+      try {
+        const result = await Promise.race([fetchContext(), timeoutPromise]);
+        return result as any[];
+      } catch (err: any) {
+        if (err.message === "TIMEOUT_ERROR") {
+          throw new Error("O carregamento das empresas expirou. Verifique sua conexão.");
+        }
+        throw err;
+      }
+    },
+    enabled: !authLoading && !!user?.id,
     staleTime: 1000 * 60 * 5,
+    retry: 1,
   });
 
-  const empresa = companies.find(c => c.id === activeId) || 
-                  companies.find(c => c.is_primary) || 
-                  companies[0];
+  const empresa = useMemo(() => {
+    if (!companies || companies.length === 0) return null;
+    return companies.find(c => c.id === activeId) || 
+           companies.find(c => c.is_primary) || 
+           companies[0];
+  }, [companies, activeId]);
 
   useEffect(() => {
     if (empresa?.id && empresa.id !== activeId) {
@@ -58,15 +81,20 @@ export function useMultiempresa() {
 
   const isEnabled = import.meta.env.VITE_ENABLE_MULTIEMPRESA === "true";
 
+  // O loading só é verdadeiro se auth ainda carrega OU se a lista está carregando E temos um usuário
+  const isLoading = authLoading || (isListLoading && !!user?.id);
+
   return {
     empresa,
     empresaId: empresa?.id,
     companies,
     activeEmpresaId: activeId,
-    isLoading: isListLoading,
+    isLoading,
     isEnabled,
-    error: listError,
+    isError,
+    error: error as Error | null,
     changeEmpresa,
-    refetch
+    refetch,
+    signedOut: !authLoading && !user
   };
 }

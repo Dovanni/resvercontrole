@@ -38,7 +38,15 @@ export const Route = createFileRoute("/_authenticated/minha-empresa")({
 
 function MinhaEmpresaPage() {
   const { user } = useAuth();
-  const { empresa, companies, isEnabled, isLoading: loadingMultiempresa } = useMultiempresa();
+  const { 
+    empresa, 
+    companies, 
+    isEnabled, 
+    isLoading: loadingMultiempresa, 
+    isError: multiempresaError,
+    error: multiError,
+    refetch: refetchMultiempresa
+  } = useMultiempresa();
   const [inviteForm, setInviteForm] = useState({ email: "", role: "vendedor" as any });
 
   if (!isEnabled) return <Navigate to="/dashboard" />;
@@ -46,7 +54,8 @@ function MinhaEmpresaPage() {
   const { 
     data: members = [], 
     isLoading: loadingMembers, 
-    error: membersError 
+    error: membersError,
+    refetch: refetchMembers
   } = useQuery({
     queryKey: ["company-members", empresa?.id],
     enabled: !!empresa?.id,
@@ -93,6 +102,17 @@ function MinhaEmpresaPage() {
   };
 
   const isAdmin = empresa?.user_role === 'admin';
+
+  if (multiempresaError) {
+    return (
+      <div className="p-8 text-center space-y-4">
+        <div className="text-destructive font-medium">Erro ao carregar dados da empresa</div>
+        <p className="text-sm text-muted-foreground">{multiError?.message || "Ocorreu um erro inesperado."}</p>
+        <Button onClick={() => refetchMultiempresa()}>Tentar novamente</Button>
+      </div>
+    );
+  }
+
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8">
@@ -186,8 +206,9 @@ function MinhaEmpresaPage() {
                     </tr>
                   ) : membersError ? (
                     <tr>
-                      <td colSpan={4} className="p-8 text-center text-destructive">
-                        Erro ao carregar membros. Verifique sua conexão ou permissões.
+                      <td colSpan={4} className="p-8 text-center space-y-3">
+                        <p className="text-destructive text-xs font-medium">Erro ao carregar membros.</p>
+                        <Button variant="outline" size="sm" onClick={() => refetchMembers()}>Tentar novamente</Button>
                       </td>
                     </tr>
                   ) : members.length === 0 ? (
