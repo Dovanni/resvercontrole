@@ -62,8 +62,7 @@ export async function verifyMathChallenge(token: string, answer: string) {
 
 export async function verifyRecaptcha(token: string) {
   // OBSOLETO: O projeto agora utiliza Cloudflare Turnstile via integração nativa do Supabase.
-  // Esta função é mantida apenas para compatibilidade de assinatura durante a migração,
-  // mas o token deve ser validado pelo Supabase Auth.
+  // O token deve ser validado pelo Supabase Auth enviando-o em options.captchaToken.
   return { success: true };
 }
 

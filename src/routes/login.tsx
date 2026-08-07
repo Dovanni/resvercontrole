@@ -77,7 +77,7 @@ function LoginPage() {
         email, 
         password,
         options: {
-          captchaToken: turnstileToken || undefined
+          captchaToken: turnstileToken,
         }
       });
       

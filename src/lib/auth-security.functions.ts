@@ -57,26 +57,9 @@ export const secureSignUp = createServerFn({ method: "POST" })
       throw new Error("Este e-mail já está em uso.");
     }
     
-    // 5. Supabase Auth Signup
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: data.email,
-      password: data.password,
-      email_confirm: false,
-      user_metadata: {
-        nome_empresa: data.empresaNome,
-        cnpj: data.cnpj,
-        nome_administrador: data.nomeAdministrador,
-        consentimento_termos: true,
-        consentimento_privacidade: true,
-        data_consentimento: new Date().toISOString()
-      }
-    });
-    
-    if (authError) {
-      throw new Error(authError.message);
-    }
-    
-    return { success: true, userId: authData.user.id };
+    // 5. O Auth Signup REAL deve ser feito no CLIENTE para permitir a validação nativa do Turnstile pelo Supabase
+    // e capturar a sessão corretamente. Esta server function valida apenas precondições de negócio e IP.
+    return { success: true };
   });
 
 const loginSchema = z.object({

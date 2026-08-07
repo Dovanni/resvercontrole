@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 import { useState, useRef } from "react";
 import { useNavigate, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
@@ -40,12 +41,11 @@ function RecoveryPage() {
     setBusy(true);
 
     try {
-      await requestResetFn({
-        data: {
-          email,
-          turnstileToken,
-        }
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        captchaToken: turnstileToken,
       });
+
+      if (error) throw error;
       
       toast.success("Se existir uma conta com esse e-mail, enviaremos as orientações.");
       // Opcional: redirecionar ou limpar
