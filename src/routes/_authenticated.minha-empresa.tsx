@@ -17,7 +17,7 @@ import {
   CheckCircle2, 
   Clock,
   MoreVertical,
-  UserCheck
+  Trash2
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useMultiempresa } from "@/hooks/use-multiempresa";
@@ -41,7 +41,6 @@ function MinhaEmpresaPage() {
   const { user, can } = useAuth();
   const { empresa, isEnabled } = useMultiempresa();
   const fetchMyCompanies = useServerFn(listMyCompanies);
-  const inviteFn = useServerFn(createInternalInvitation);
   const qc = useQueryClient();
   
   const [inviteForm, setInviteForm] = useState({ email: "", role: "vendedor" as any });
@@ -83,7 +82,6 @@ function MinhaEmpresaPage() {
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     toast.info("A funcionalidade de convite está em modo preview e não criará dados reais no banco de dados.");
-    // No-op conforme requisitos de validação
     setInviteForm({ email: "", role: "vendedor" });
   };
 
@@ -205,16 +203,16 @@ function MinhaEmpresaPage() {
 
         {/* Convites */}
         <section className="space-y-4">
-          <h2 className="text-xl font-display flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <Mail className="size-5 text-primary" />
-            Convites
-          </h2>
+            <h2 className="text-xl font-display">Convites</h2>
+          </div>
           
           <Card className="shadow-soft">
             <CardHeader className="pb-3 border-b mb-4">
               <CardTitle className="text-sm font-semibold flex items-center justify-between">
                 Convidar Membro
-                {!isAdmin && <Shield className="size-3 text-muted-foreground" title="Apenas admins" />}
+                {!isAdmin && <Shield className="size-3 text-muted-foreground" />}
               </CardTitle>
             </CardHeader>
             <CardContent>

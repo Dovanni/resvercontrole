@@ -1,5 +1,5 @@
 import { Link, useRouterState, useRouter, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Package, ShoppingBag, Wallet, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, BarChartBig, FileText, Settings, CalendarDays, TrendingUp, Landmark, CreditCard, ShoppingCart, Scale, Menu } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Wallet, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, BarChartBig, FileText, Settings, CalendarDays, TrendingUp, Landmark, CreditCard, ShoppingCart, Scale, Menu, Building2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth, type Permission } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
