@@ -89,8 +89,8 @@ export const secureSignUp = createServerFn({ method: "POST" })
       const { data: newOnboardingId, error: onboardingError } = await supabaseAdmin.rpc('create_pending_onboarding', {
         p_nome_admin: data.nomeAdmin,
         p_nome_empresa: data.empresaNome,
-        p_cnpj_formatado: data.cnpj || null,
-        p_cnpj_limpo: data.cnpj ? data.cnpj.replace(/\D/g, '') : null,
+        p_cnpj_formatado: (data.cnpj || null) as string | null,
+        p_cnpj_limpo: (data.cnpj ? data.cnpj.replace(/\D/g, '') : null) as string | null,
         p_email_hash: identityEmailHash,
         p_terms_version: "1.0",
         p_privacy_version: "1.0"
