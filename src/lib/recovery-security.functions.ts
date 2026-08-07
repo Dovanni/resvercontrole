@@ -23,7 +23,7 @@ export const secureRequestPasswordReset = createServerFn({ method: "POST" })
 
     // 2. reCAPTCHA
     try {
-      const recaptcha = await verifyRecaptcha(data.recaptchaToken, 'vejamais_password_recovery');
+      const recaptcha = await verifyRecaptcha(data.recaptchaToken);
       if (!recaptcha.success) {
         throw new Error("Falha na verificação de segurança.");
       }

@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -45,6 +46,11 @@ import { Route as AuthenticatedConfiguracoesCategoriasRouteImport } from './rout
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
+  id: '/recuperar-senha',
+  path: '/recuperar-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -218,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
   '/reset-password': typeof ResetPasswordRoute
   '/balancete': typeof AuthenticatedBalanceteRoute
   '/bi': typeof AuthenticatedBiRoute
@@ -251,6 +258,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
   '/reset-password': typeof ResetPasswordRoute
   '/balancete': typeof AuthenticatedBalanceteRoute
   '/bi': typeof AuthenticatedBiRoute
@@ -286,6 +294,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
+  '/recuperar-senha': typeof RecuperarSenhaRoute
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/balancete': typeof AuthenticatedBalanceteRoute
   '/_authenticated/bi': typeof AuthenticatedBiRoute
@@ -321,6 +330,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cadastro'
     | '/login'
+    | '/recuperar-senha'
     | '/reset-password'
     | '/balancete'
     | '/bi'
@@ -354,6 +364,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cadastro'
     | '/login'
+    | '/recuperar-senha'
     | '/reset-password'
     | '/balancete'
     | '/bi'
@@ -388,6 +399,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cadastro'
     | '/login'
+    | '/recuperar-senha'
     | '/reset-password'
     | '/_authenticated/balancete'
     | '/_authenticated/bi'
@@ -423,6 +435,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CadastroRoute: typeof CadastroRoute
   LoginRoute: typeof LoginRoute
+  RecuperarSenhaRoute: typeof RecuperarSenhaRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicAcceptInvitationRoute: typeof ApiPublicAcceptInvitationRoute
   ApiPublicRpcTestRoute: typeof ApiPublicRpcTestRoute
@@ -435,6 +448,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recuperar-senha': {
+      id: '/recuperar-senha'
+      path: '/recuperar-senha'
+      fullPath: '/recuperar-senha'
+      preLoaderRoute: typeof RecuperarSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -734,6 +754,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CadastroRoute: CadastroRoute,
   LoginRoute: LoginRoute,
+  RecuperarSenhaRoute: RecuperarSenhaRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicAcceptInvitationRoute: ApiPublicAcceptInvitationRoute,
   ApiPublicRpcTestRoute: ApiPublicRpcTestRoute,

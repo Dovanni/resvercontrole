@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { VejamaisMark } from "@/components/vejamais-logo";
 import { translateAuthError } from "@/lib/auth-errors";
-import { useRecaptcha } from "@/hooks/use-recaptcha";
+import { RecaptchaV2, RecaptchaV2Ref } from "@/components/recaptcha-v2";
+import { useRef } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { secureSignIn } from "@/lib/auth-security.functions";
 import { MathChallengeField } from "@/components/math-challenge";
@@ -33,7 +34,8 @@ function LoginPage() {
   const [mathAnswer, setMathAnswer] = useState("");
 
   const signInSecurityFn = useServerFn(secureSignIn);
-  const { getToken } = useRecaptcha();
+  const recaptchaRef = useRef<RecaptchaV2Ref>(null);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && session) {
@@ -46,9 +48,8 @@ function LoginPage() {
     setBusy(true);
 
     try {
-      const recaptchaToken = await getToken("vejamais_login");
       if (!recaptchaToken) {
-        toast.error("Falha na validação do reCAPTCHA.");
+        toast.error("Por favor, marque 'Não sou um robô'.");
         setBusy(false);
         return;
       }
@@ -89,31 +90,13 @@ function LoginPage() {
       }
       setFailedAttempts(prev => prev + 1);
       if (failedAttempts >= 2) setShowMath(true);
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
     } finally {
       setBusy(false);
     }
   }
 
-  async function handleForgot() {
-    if (!email) {
-      toast.error("Digite seu email no campo acima e clique em 'Esqueci minha senha' novamente.");
-      return;
-    }
-    setBusy(true);
-    // Para recuperação de senha, o requisito diz para exibir após atividade suspeita.
-    // Aqui simplificamos permitindo o envio, mas o backend deve aplicar rate limits.
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    setBusy(false);
-    
-    // Mensagem genérica conforme requisito de proteção contra enumeração
-    toast.success("Se existir uma conta com esse e-mail, enviaremos as orientações.");
-    
-    if (error) {
-      console.error("Reset password error:", error);
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gradient-rose flex items-center justify-center px-4">
@@ -144,18 +127,25 @@ function LoginPage() {
               <MathChallengeField onVerify={(t, a) => { setMathToken(t); setMathAnswer(a); }} />
             )}
 
-            <Button type="submit" disabled={busy} className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95">
+            <RecaptchaV2 
+              ref={recaptchaRef} 
+              onVerify={setRecaptchaToken} 
+            />
+
+            <Button 
+              type="submit" 
+              disabled={busy || (import.meta.env.VITE_RECAPTCHA_SITE_KEY ? !recaptchaToken : true)} 
+              className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95"
+            >
               {busy ? "Entrando..." : "Entrar"}
             </Button>
             
-            <button
-              type="button"
-              onClick={handleForgot}
-              disabled={busy}
-              className="w-full text-sm text-muted-foreground hover:text-foreground underline underline-offset-2"
+            <Link
+              to="/recuperar-senha"
+              className="block w-full text-center text-sm text-muted-foreground hover:text-foreground underline underline-offset-2"
             >
               Esqueci minha senha
-            </button>
+            </Link>
             
             <p className="text-[10px] text-center text-muted-foreground mt-2">
               Este site é protegido pelo reCAPTCHA e a 

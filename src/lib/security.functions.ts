@@ -60,14 +60,17 @@ export async function verifyMathChallenge(token: string, answer: string) {
   }
 }
 
-export async function verifyRecaptcha(token: string, action: string) {
+export async function verifyRecaptcha(token: string) {
   const secretKey = process.env['RECAPTCHA_SECRET_KEY'];
   
   if (!secretKey) {
     console.warn("RECAPTCHA_CONFIGURATION_REQUIRED: Secret key missing");
-    // Em preview se não houver chave, podemos permitir ou bloquear.
-    // O requisito diz: "se as chaves não estiverem configuradas... retornar RECAPTCHA_CONFIGURATION_REQUIRED"
     throw new Error("RECAPTCHA_CONFIGURATION_REQUIRED");
+  }
+
+  // Proteção contra reuso de token (Single Use)
+  if (await isTokenUsed(token)) {
+    return { success: false, error: 'Token already used' };
   }
 
   const response = await fetch(`https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${token}`, {
@@ -80,42 +83,40 @@ export async function verifyRecaptcha(token: string, action: string) {
     return { success: false, error: 'reCAPTCHA verification failed' };
   }
 
-  // Validações adicionais conforme requisitos
-  if (data.action !== action) {
-    return { success: false, error: 'Action mismatch' };
-  }
+  // Marcar token como usado imediatamente após validação de sucesso
+  await markTokenAsUsed(token);
 
+  // Validação de hostname (domínios autorizados)
   const allowedHostnames = [
     'resvercontrole.lovable.app',
     'vejamais.com.br',
-    'www.vejamais.com.br',
-    'localhost' // para preview local se necessário
+    'www.vejamais.com.br'
   ];
   
-  // No Lovable, os domínios de preview variam. 
-  // O requisito diz: "Não inventar domínio. Retornar quais domínios precisam ser cadastrados".
-  // Vamos validar se o hostname termina com .lovable.app ou é um dos oficiais.
   const isAllowedHost = allowedHostnames.includes(data.hostname) || data.hostname.endsWith('.lovable.app');
   
   if (!isAllowedHost) {
     return { success: false, error: 'Invalid hostname' };
   }
 
-  // Score threshold configurável (default 0.5)
-  const threshold = parseFloat(process.env['RECAPTCHA_THRESHOLD'] || '0.5');
-  if (data.score < threshold) {
-    return { success: false, error: 'Low score', score: data.score };
-  }
-
-  return { success: true, score: data.score };
+  return { success: true };
 }
 
 // Rate limiting simples em memória (per-isolate no Worker)
 // Para o preview é suficiente para evitar ataques básicos de bot.
 const rateLimits = new Map<string, { count: number, resetAt: number }>();
+const usedTokens = new Map<string, number>(); // token -> expiry
 
 export async function checkRateLimit(key: string, limit: number, windowMs: number) {
   const now = Date.now();
+  
+  // Limpeza periódica de tokens expirados (pode ser feita aqui de forma simples)
+  if (usedTokens.size > 1000) {
+    for (const [token, expiry] of usedTokens.entries()) {
+      if (now > expiry) usedTokens.delete(token);
+    }
+  }
+
   const record = rateLimits.get(key);
   
   if (!record || now > record.resetAt) {
@@ -129,4 +130,15 @@ export async function checkRateLimit(key: string, limit: number, windowMs: numbe
   
   record.count++;
   return true;
+}
+
+export async function isTokenUsed(token: string) {
+  const now = Date.now();
+  const expiry = usedTokens.get(token);
+  if (expiry && now < expiry) return true;
+  return false;
+}
+
+export async function markTokenAsUsed(token: string, expiryMs: number = 2 * 60 * 1000) {
+  usedTokens.set(token, Date.now() + expiryMs);
 }

@@ -9,7 +9,8 @@ import { toast } from "sonner";
 import { VejamaisMark } from "@/components/vejamais-logo";
 import { useServerFn } from "@tanstack/react-start";
 import { secureSignUp } from "@/lib/auth-security.functions";
-import { useRecaptcha } from "@/hooks/use-recaptcha";
+import { RecaptchaV2, RecaptchaV2Ref } from "@/components/recaptcha-v2";
+import { useRef } from "react";
 import { MathChallengeField } from "@/components/math-challenge";
 
 export const Route = createFileRoute("/cadastro")({
@@ -33,7 +34,8 @@ function SignupPage() {
   const [mathAnswer, setMathAnswer] = useState("");
   
   const signUpFn = useServerFn(secureSignUp);
-  const { getToken } = useRecaptcha();
+  const recaptchaRef = useRef<RecaptchaV2Ref>(null);
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,9 +53,8 @@ function SignupPage() {
     setBusy(true);
     
     try {
-      const recaptchaToken = await getToken("vejamais_signup");
       if (!recaptchaToken) {
-        toast.error("Falha na validação do reCAPTCHA. Tente novamente.");
+        toast.error("Por favor, marque 'Não sou um robô'.");
         setBusy(false);
         return;
       }
@@ -83,6 +84,8 @@ function SignupPage() {
       } else {
         toast.error(error.message || "Erro ao criar conta.");
       }
+      recaptchaRef.current?.reset();
+      setRecaptchaToken(null);
     } finally {
       setBusy(false);
     }
@@ -178,7 +181,16 @@ function SignupPage() {
 
             <MathChallengeField onVerify={(t, a) => { setMathToken(t); setMathAnswer(a); }} />
 
-            <Button type="submit" disabled={busy} className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95">
+            <RecaptchaV2 
+              ref={recaptchaRef} 
+              onVerify={setRecaptchaToken} 
+            />
+
+            <Button 
+              type="submit" 
+              disabled={busy || (import.meta.env.VITE_RECAPTCHA_SITE_KEY ? !recaptchaToken : true)} 
+              className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95"
+            >
               {busy ? "Processando..." : "Criar conta"}
             </Button>
             
