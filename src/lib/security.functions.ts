@@ -109,28 +109,59 @@ export async function verifyRecaptcha(token: string) {
   return verifyTurnstile(token);
 }
 
-// Rate limiting simples em memória (per-isolate no Worker)
-// Para o preview é suficiente para evitar ataques básicos de bot.
-const rateLimits = new Map<string, { count: number, resetAt: number }>();
+// Rate limiting progressivo em memória (per-isolate no Worker)
+// Estrutura de cooldown: 5min -> 15min -> 30min -> ... (escalonamento interno)
+const rateLimits = new Map<string, { count: number, resetAt: number, level: number }>();
 const usedTokens = new Map<string, number>(); // token -> expiry
 
-export async function checkRateLimit(key: string, limit: number, windowMs: number) {
+export async function checkRateLimit(key: string, limit: number, baseWindowMs: number) {
   const now = Date.now();
-  
   const record = rateLimits.get(key);
   
-  if (!record || now > record.resetAt) {
-    rateLimits.set(key, { count: 1, resetAt: now + windowMs });
+  // Janela de reincidência: se o registro expirou há muito tempo, resetamos o nível
+  // Se o registro expirou recentemente, mantemos o nível para o próximo cooldown
+  const REINCIDENCE_WINDOW = 60 * 60 * 1000; // 1 hora
+  
+  if (!record || now > (record.resetAt + REINCIDENCE_WINDOW)) {
+    rateLimits.set(key, { count: 1, resetAt: now + baseWindowMs, level: 0 });
     return { allowed: true };
   }
   
-  if (record.count >= limit) {
+  // Se ainda estamos dentro do cooldown anterior
+  if (now < record.resetAt && record.count >= limit) {
     const retryAfterSeconds = Math.ceil((record.resetAt - now) / 1000);
     return { allowed: false, retryAfterSeconds };
   }
+
+  // Se a janela expirou mas estamos na janela de reincidência, resetamos count mas mantemos level
+  if (now > record.resetAt) {
+    record.count = 0;
+    // O resetAt será definido quando atingir o limite novamente
+  }
   
   record.count++;
+  
+  if (record.count >= limit) {
+    // Escalonamento progressivo: 5, 15, 30...
+    const levels = [5, 15, 30];
+    const minutes = levels[Math.min(record.level, levels.length - 1)];
+    const windowMs = minutes * 60 * 1000;
+    
+    record.resetAt = now + windowMs;
+    record.level++; // Incrementa para a próxima reincidência
+    
+    const retryAfterSeconds = Math.ceil(windowMs / 1000);
+    return { allowed: false, retryAfterSeconds };
+  }
+  
   return { allowed: true };
+}
+
+/**
+ * Reseta o rate limit para uma chave específica após sucesso.
+ */
+export async function clearRateLimit(key: string) {
+  rateLimits.delete(key);
 }
 
 export async function isTokenUsed(token: string) {

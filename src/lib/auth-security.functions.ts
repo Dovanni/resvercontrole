@@ -2,10 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { 
-  // verifyRecaptcha removido para migração Turnstile-Supabase 
   verifyMathChallenge, 
   checkRateLimit,
-  verifyTurnstile
+  verifyTurnstile,
+  clearRateLimit
 } from "./security.functions";
 
 const signupSchema = z.object({
@@ -26,43 +26,58 @@ const signupSchema = z.object({
 export const secureSignUp = createServerFn({ method: "POST" })
   .inputValidator((data) => signupSchema.parse(data))
   .handler(async ({ data }) => {
-    // In TanStack Start, the request is available in the global context during server execution
     const request = (globalThis as any).request as Request;
     const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimitKey = `signup:ip:${clientIp}`;
     
-    // 1. Rate Limit (Signup: 3 tentativas em 30 min por IP)
-    const rateLimit = await checkRateLimit(`signup:ip:${clientIp}`, 3, 30 * 60 * 1000);
-    if (!rateLimit.allowed) {
-      throw new Error(JSON.stringify({
-        code: "RATE_LIMITED",
-        retryAfterSeconds: rateLimit.retryAfterSeconds,
-        message: "Muitas tentativas de cadastro. Aguarde para tentar novamente."
-      }));
+    try {
+      // 1. Math Challenge
+      const mathValid = await verifyMathChallenge(data.mathChallengeToken, data.mathChallengeAnswer);
+      if (!mathValid) {
+        throw new Error("Desafio matemático incorreto ou expirado.");
+      }
+      
+      // 2. Segurança (Turnstile)
+      const turnstileValid = await verifyTurnstile(data.turnstileToken);
+      if (!turnstileValid.success) {
+        throw new Error("Verificação de segurança falhou. Por favor, tente novamente.");
+      }
+
+      // 3. Rate Limit (Contabiliza apenas tentativas estruturalmente válidas que passaram pelos desafios)
+      const rateLimit = await checkRateLimit(rateLimitKey, 3, 5 * 60 * 1000); // 3 tentativas, inicial 5min
+      if (!rateLimit.allowed) {
+        throw new Error(JSON.stringify({
+          code: "RATE_LIMITED",
+          retryAfterSeconds: rateLimit.retryAfterSeconds,
+          message: "Muitas tentativas de cadastro. Aguarde para tentar novamente."
+        }));
+      }
+      
+      // 4. Validações de duplicidade
+      const { data: existingUser } = await supabaseAdmin.from('profiles' as any).select('id').eq('email', data.email).maybeSingle();
+      if (existingUser) {
+        throw new Error("Este e-mail já está em uso.");
+      }
+      
+      return { success: true };
+    } catch (error: any) {
+      if (error.message?.includes("RATE_LIMITED")) {
+        throw error;
+      }
+      const isInternalError = error.status >= 500 || error.message?.includes("configuração");
+      if (isInternalError) {
+        throw new Error("Erro interno temporário. Tente novamente em instantes.");
+      }
+      throw error;
     }
-    
-    // 2. Math Challenge (Sempre no cadastro)
-    const mathValid = await verifyMathChallenge(data.mathChallengeToken, data.mathChallengeAnswer);
-    if (!mathValid) {
-      throw new Error("Desafio matemático incorreto ou expirado.");
-    }
-    
-    // 3. Segurança (Turnstile - Application Layer SiteVerify)
-    const turnstileValid = await verifyTurnstile(data.turnstileToken);
-    if (!turnstileValid.success) {
-      throw new Error("Verificação de segurança falhou. Por favor, tente novamente.");
-    }
-    
-    // 4. Validações de duplicidade (CNPJ/Email)
-    const { data: existingUser } = await supabaseAdmin.from('profiles' as any).select('id').eq('email', data.email).maybeSingle();
-    if (existingUser) {
-      // Proteção contra enumeração: Retornamos sucesso genérico ou erro genérico.
-      // Mas no cadastro, o usuário precisa saber se o e-mail já existe.
-      // O requisito diz: "Não revelar detalhes internos... manter mensagens úteis para erros locais".
-      throw new Error("Este e-mail já está em uso.");
-    }
-    
-    // 5. O Auth Signup REAL deve ser feito no CLIENTE para permitir a validação nativa do Turnstile pelo Supabase
-    // e capturar a sessão corretamente. Esta server function valida apenas precondições de negócio e IP.
+  });
+
+export const completeSignUpSuccess = createServerFn({ method: "POST" })
+  .inputValidator((data) => z.object({ email: z.string().email() }).parse(data))
+  .handler(async ({ data }) => {
+    const request = (globalThis as any).request as Request;
+    const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
+    await clearRateLimit(`signup:ip:${clientIp}`);
     return { success: true };
   });
 
@@ -81,31 +96,42 @@ export const secureSignIn = createServerFn({ method: "POST" })
     const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
     const emailHash = data.email.toLowerCase().trim();
     
-    // 1. Rate Limit (Login: 5 tentativas em 15 min por identidade)
-    const rateLimit = await checkRateLimit(`login:email:${emailHash}`, 5, 15 * 60 * 1000);
-    if (!rateLimit.allowed) {
-      throw new Error(JSON.stringify({
-        code: "RATE_LIMITED",
-        retryAfterSeconds: rateLimit.retryAfterSeconds,
-        message: "Muitas tentativas de acesso. Aguarde para tentar novamente."
-      }));
-    }
-    
-    // 2. Math Challenge (Sempre no login conforme requisito VMEAP)
-    const mathValid = await verifyMathChallenge(data.mathChallengeToken, data.mathChallengeAnswer);
-    if (!mathValid) {
-      throw new Error("Desafio matemático incorreto ou expirado.");
-    }
+    try {
+      // 1. Math Challenge
+      const mathValid = await verifyMathChallenge(data.mathChallengeToken, data.mathChallengeAnswer);
+      if (!mathValid) {
+        throw new Error("Desafio matemático incorreto ou expirado.");
+      }
 
-    // 3. Segurança (Turnstile - Application Layer SiteVerify) - Chamado APÓS o math challenge
-    const turnstileValid = await verifyTurnstile(data.turnstileToken);
-    if (!turnstileValid.success) {
-      throw new Error("Verificação de segurança falhou. Por favor, tente novamente.");
+      // 2. Segurança (Turnstile)
+      const turnstileValid = await verifyTurnstile(data.turnstileToken);
+      if (!turnstileValid.success) {
+        throw new Error("Verificação de segurança falhou. Por favor, tente novamente.");
+      }
+      
+      // 3. Rate Limit (Login: 5 tentativas, inicial 5min - Progressivo)
+      const rateLimit = await checkRateLimit(`login:email:${emailHash}`, 5, 5 * 60 * 1000);
+      if (!rateLimit.allowed) {
+        throw new Error(JSON.stringify({
+          code: "RATE_LIMITED",
+          retryAfterSeconds: rateLimit.retryAfterSeconds,
+          message: "Muitas tentativas de acesso. Aguarde para tentar novamente."
+        }));
+      }
+      
+      return { success: true };
+    } catch (error: any) {
+      if (error.message?.includes("RATE_LIMITED")) {
+        throw error;
+      }
+      throw error;
     }
-    
-    // 4. Se chegou aqui, as precondições passaram.
-    // O Auth REAL deve ser feito no CLIENTE.
-    return { 
-      success: true 
-    };
+  });
+
+export const completeSignInSuccess = createServerFn({ method: "POST" })
+  .inputValidator((data) => z.object({ email: z.string().email() }).parse(data))
+  .handler(async ({ data }) => {
+    const emailHash = data.email.toLowerCase().trim();
+    await clearRateLimit(`login:email:${emailHash}`);
+    return { success: true };
   });
