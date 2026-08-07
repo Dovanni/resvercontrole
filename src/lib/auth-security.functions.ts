@@ -6,6 +6,43 @@ import {
   checkRateLimitPersistent,
   verifyTurnstile,
   clearRateLimitPersistent,
+  recordRateLimitFailure,
+  checkRateLimit
+} from "./security.functions";
+import crypto from "crypto";
+
+const recoverySchema = z.object({
+  email: z.string().email(),
+  turnstileToken: z.string(),
+});
+
+export const secureRequestPasswordReset = createServerFn({ method: "POST" })
+  .inputValidator((data) => recoverySchema.parse(data))
+  .handler(async ({ data }) => {
+    const emailHash = data.email.toLowerCase().trim();
+
+    // 1. Rate Limit
+    const allowed = await checkRateLimit(`recovery:email:${emailHash}`, 3, 60 * 60 * 1000);
+    if (!allowed) {
+      return { success: true, message: "Se existir uma conta com esse e-mail, enviaremos as orientações." };
+    }
+
+    // 2. Segurança (Turnstile)
+    const turnstileValid = await verifyTurnstile(data.turnstileToken);
+    if (!turnstileValid.success) {
+      throw new Error("Verificação de segurança falhou. Por favor, tente novamente.");
+    }
+
+    return { success: true };
+  });
+
+import { z } from "zod";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { 
+  verifyMathChallenge, 
+  checkRateLimitPersistent,
+  verifyTurnstile,
+  clearRateLimitPersistent,
   recordRateLimitFailure
 } from "./security.functions";
 import crypto from "crypto";
