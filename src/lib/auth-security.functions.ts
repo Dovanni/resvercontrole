@@ -27,6 +27,32 @@ const signupSchema = z.object({
 /**
  * Gera HMAC-SHA256 para o e-mail (usado para busca segura no pending_onboardings).
  */
+/**
+ * Resolve a URL de redirecionamento do convite baseada no ambiente.
+ */
+function getInviteRedirectUrl() {
+  const siteUrl = process.env['SITE_URL'];
+  const previewId = "c1cf42e3-5ea4-4a1b-a6cc-454256b65835";
+  
+  // Se estivermos em um ambiente Lovable (verificando SITE_URL ou HOST)
+  if (siteUrl?.includes("lovable.app")) {
+    // Se for o preview específico solicitado
+    if (siteUrl.includes(previewId)) {
+      return `https://id-preview--${previewId}.lovable.app/ativar-conta`;
+    }
+    // Fallback para o site_url configurado se for produção lovable
+    return `${siteUrl}/ativar-conta`;
+  }
+
+  // Produção custom domain
+  if (siteUrl) {
+    return `${siteUrl}/ativar-conta`;
+  }
+
+  // Localhost fallback
+  return "http://localhost:8080/ativar-conta";
+}
+
 function hashEmail(email: string) {
   const secret = process.env['RATE_LIMIT_HMAC_SECRET'];
   if (!secret) throw new Error("RATE_LIMIT_HMAC_SECRET não configurado.");
