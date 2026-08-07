@@ -38,37 +38,39 @@ export const Route = createFileRoute("/_authenticated/minha-empresa")({
 });
 
 function MinhaEmpresaPage() {
-  const { user, can } = useAuth();
-  const { empresa, isEnabled } = useMultiempresa();
-  const fetchMyCompanies = useServerFn(listMyCompanies);
-  const qc = useQueryClient();
-  
+  const { user } = useAuth();
+  const { empresa, companies, isEnabled, isLoading: loadingMultiempresa } = useMultiempresa();
   const [inviteForm, setInviteForm] = useState({ email: "", role: "vendedor" as any });
 
   if (!isEnabled) return <Navigate to="/dashboard" />;
 
-  const { data: companies = [], isLoading: loadingCompanies } = useQuery({
-    queryKey: ["my-companies-detail"],
-    queryFn: () => fetchMyCompanies(),
-  });
-
-  const { data: members = [], isLoading: loadingMembers } = useQuery({
+  const { 
+    data: members = [], 
+    isLoading: loadingMembers, 
+    error: membersError 
+  } = useQuery({
     queryKey: ["company-members", empresa?.id],
     enabled: !!empresa?.id,
     queryFn: async () => {
-      // Usar a empresa ativa carregada pelo hook, que já contém o papel
-      // do usuário atual, mas precisamos da lista completa para a tabela.
       const { data, error } = await supabase
         .from("user_company_access")
         .select("*")
         .eq("empresa_id", empresa!.id)
         .eq("status", "active");
-      if (error) throw error;
-      return data;
+      
+      if (error) {
+        console.error("Erro ao carregar membros:", error);
+        throw error;
+      }
+      return data || [];
     }
   });
 
-  const { data: invitations = [], isLoading: loadingInvites } = useQuery({
+  const { 
+    data: invitations = [], 
+    isLoading: loadingInvites,
+    error: invitesError 
+  } = useQuery({
     queryKey: ["company-invitations", empresa?.id],
     enabled: !!empresa?.id && empresa?.user_role === 'admin',
     queryFn: async () => {
@@ -77,8 +79,11 @@ function MinhaEmpresaPage() {
         .select("*")
         .eq("empresa_id", empresa!.id)
         .eq("status", "pending");
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error("Erro ao carregar convites:", error);
+        throw error;
+      }
+      return data || [];
     }
   });
 
@@ -103,41 +108,58 @@ function MinhaEmpresaPage() {
           <Building2 className="size-5 text-primary" />
           Empresas e Unidades
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {companies.map((c) => (
-            <Card key={c.id} className={c.id === empresa?.id ? "border-primary/50 shadow-md ring-1 ring-primary/20" : "shadow-soft"}>
-              <CardContent className="p-5 flex flex-col h-full">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Building2 className="size-5 text-primary" />
+        
+        {loadingMultiempresa ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1].map(i => (
+              <Card key={i} className="animate-pulse shadow-soft h-40 bg-muted/20" />
+            ))}
+          </div>
+        ) : companies.length === 0 ? (
+          <Card className="shadow-soft border-dashed border-2">
+            <CardContent className="p-8 text-center flex flex-col items-center">
+              <Building2 className="size-10 text-muted-foreground/30 mb-3" />
+              <p className="text-sm text-muted-foreground font-medium">Nenhuma empresa encontrada.</p>
+              <p className="text-xs text-muted-foreground mt-1">Verifique seu vínculo de acesso com o administrador.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {companies.map((c) => (
+              <Card key={c.id} className={c.id === empresa?.id ? "border-primary/50 shadow-md ring-1 ring-primary/20" : "shadow-soft"}>
+                <CardContent className="p-5 flex flex-col h-full">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Building2 className="size-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-sm">{c.nome}</h3>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{c.tipo || 'Unidade'}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-sm">{c.nome}</h3>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{c.tipo || 'Unidade'}</p>
+                    {c.id === empresa?.id && (
+                      <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px]">Ativa</Badge>
+                    )}
+                  </div>
+                  
+                  <div className="mt-auto pt-4 border-t flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Seu Papel</span>
+                      <span className="font-medium flex items-center gap-1 capitalize">
+                        <Shield className="size-3 text-primary" /> {c.user_role}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Vínculo</span>
+                      <Badge variant="outline" className="text-[9px] h-4 px-1.5 uppercase border-green-500/30 text-green-600 bg-green-50/50">Ativo</Badge>
                     </div>
                   </div>
-                  {c.id === empresa?.id && (
-                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[10px]">Ativa</Badge>
-                  )}
-                </div>
-                
-                <div className="mt-auto pt-4 border-t flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Seu Papel</span>
-                    <span className="font-medium flex items-center gap-1 capitalize">
-                      <Shield className="size-3 text-primary" /> {c.user_role}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Vínculo</span>
-                    <Badge variant="outline" className="text-[9px] h-4 px-1.5 uppercase border-green-500/30 text-green-600 bg-green-50/50">Ativo</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -159,45 +181,63 @@ function MinhaEmpresaPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {members.map((m) => (
-                    <tr key={m.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="size-8 rounded-full bg-accent flex items-center justify-center text-xs font-bold text-accent-foreground">
-                            {m.user_id === user?.id ? "EU" : "MB"}
-                          </div>
-                          <div>
-                            <div className="font-medium text-xs truncate max-w-[150px]">{m.user_id === user?.id ? "Você" : m.user_id}</div>
-                            {m.is_primary && <div className="text-[10px] text-primary">Dono do Tenant</div>}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <Badge variant="outline" className="capitalize text-[10px] font-normal border-primary/20 bg-primary/5">
-                          {m.role}
-                        </Badge>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-1.5 text-green-600">
-                          <CheckCircle2 className="size-3" />
-                          <span className="text-[11px] font-medium">Ativo</span>
-                        </div>
-                      </td>
-                      <td className="p-4 text-right">
-                        {isAdmin && m.user_id !== user?.id && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="size-8"><MoreVertical className="size-4" /></Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>Alterar papel</DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive">Remover acesso</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
+                  {loadingMembers ? (
+                    <tr>
+                      <td colSpan={4} className="p-8 text-center text-muted-foreground animate-pulse">Carregando equipe...</td>
+                    </tr>
+                  ) : membersError ? (
+                    <tr>
+                      <td colSpan={4} className="p-8 text-center text-destructive">
+                        Erro ao carregar membros. Verifique sua conexão ou permissões.
                       </td>
                     </tr>
-                  ))}
+                  ) : members.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="p-8 text-center text-muted-foreground italic">
+                        Nenhum membro encontrado nesta empresa.
+                      </td>
+                    </tr>
+                  ) : (
+                    members.map((m) => (
+                      <tr key={m.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="size-8 rounded-full bg-accent flex items-center justify-center text-xs font-bold text-accent-foreground">
+                              {m.user_id === user?.id ? "EU" : "MB"}
+                            </div>
+                            <div>
+                              <div className="font-medium text-xs truncate max-w-[150px]">{m.user_id === user?.id ? "Você" : m.user_id}</div>
+                              {m.is_primary && <div className="text-[10px] text-primary">Dono do Tenant</div>}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <Badge variant="outline" className="capitalize text-[10px] font-normal border-primary/20 bg-primary/5">
+                            {m.role}
+                          </Badge>
+                        </td>
+                        <td className="p-4">
+                          <div className="flex items-center gap-1.5 text-green-600">
+                            <CheckCircle2 className="size-3" />
+                            <span className="text-[11px] font-medium">Ativo</span>
+                          </div>
+                        </td>
+                        <td className="p-4 text-right">
+                          {isAdmin && m.user_id !== user?.id && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="size-8"><MoreVertical className="size-4" /></Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>Alterar papel</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive">Remover acesso</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
