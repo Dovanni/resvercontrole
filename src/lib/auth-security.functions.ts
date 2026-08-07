@@ -43,7 +43,7 @@ export const secureSignUp = createServerFn({ method: "POST" })
     
     // 3. reCAPTCHA
     try {
-      const recaptcha = await verifyRecaptcha(data.recaptchaToken, 'vejamais_signup');
+      const recaptcha = await verifyRecaptcha(data.recaptchaToken);
       if (!recaptcha.success) {
         throw new Error("Falha na verificação de segurança (bot detectado).");
       }
@@ -107,13 +107,10 @@ export const secureSignIn = createServerFn({ method: "POST" })
     }
     
     // 2. reCAPTCHA
-    let recaptchaScore = 1.0;
-    try {
-      const recaptcha = await verifyRecaptcha(data.recaptchaToken, 'vejamais_login');
+      const recaptcha = await verifyRecaptcha(data.recaptchaToken);
       if (!recaptcha.success) {
         throw new Error("Falha na verificação de segurança (bot detectado).");
       }
-      recaptchaScore = (recaptcha as any).score || 1.0;
     } catch (e: any) {
       if (e.message === "RECAPTCHA_CONFIGURATION_REQUIRED") {
         throw new Error("RECAPTCHA_CONFIGURATION_REQUIRED");
@@ -141,6 +138,6 @@ export const secureSignIn = createServerFn({ method: "POST" })
     // Como queremos segurança máxima, validamos TUDO aqui antes.
     return { 
       success: true, 
-      requireMath: recaptchaScore < 0.7 
+      requireMath: false 
     };
   });

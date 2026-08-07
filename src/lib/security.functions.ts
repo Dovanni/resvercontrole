@@ -60,13 +60,11 @@ export async function verifyMathChallenge(token: string, answer: string) {
   }
 }
 
-export async function verifyRecaptcha(token: string, action: string) {
+export async function verifyRecaptcha(token: string) {
   const secretKey = process.env['RECAPTCHA_SECRET_KEY'];
   
   if (!secretKey) {
     console.warn("RECAPTCHA_CONFIGURATION_REQUIRED: Secret key missing");
-    // Em preview se não houver chave, podemos permitir ou bloquear.
-    // O requisito diz: "se as chaves não estiverem configuradas... retornar RECAPTCHA_CONFIGURATION_REQUIRED"
     throw new Error("RECAPTCHA_CONFIGURATION_REQUIRED");
   }
 
@@ -80,34 +78,20 @@ export async function verifyRecaptcha(token: string, action: string) {
     return { success: false, error: 'reCAPTCHA verification failed' };
   }
 
-  // Validações adicionais conforme requisitos
-  if (data.action !== action) {
-    return { success: false, error: 'Action mismatch' };
-  }
-
+  // Validação de hostname (domínios autorizados)
   const allowedHostnames = [
     'resvercontrole.lovable.app',
     'vejamais.com.br',
-    'www.vejamais.com.br',
-    'localhost' // para preview local se necessário
+    'www.vejamais.com.br'
   ];
   
-  // No Lovable, os domínios de preview variam. 
-  // O requisito diz: "Não inventar domínio. Retornar quais domínios precisam ser cadastrados".
-  // Vamos validar se o hostname termina com .lovable.app ou é um dos oficiais.
   const isAllowedHost = allowedHostnames.includes(data.hostname) || data.hostname.endsWith('.lovable.app');
   
   if (!isAllowedHost) {
     return { success: false, error: 'Invalid hostname' };
   }
 
-  // Score threshold configurável (default 0.5)
-  const threshold = parseFloat(process.env['RECAPTCHA_THRESHOLD'] || '0.5');
-  if (data.score < threshold) {
-    return { success: false, error: 'Low score', score: data.score };
-  }
-
-  return { success: true, score: data.score };
+  return { success: true };
 }
 
 // Rate limiting simples em memória (per-isolate no Worker)
