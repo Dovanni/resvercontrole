@@ -104,8 +104,8 @@ function FinancePage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["finance"] });
-      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["finance", empresaId] });
+      qc.invalidateQueries({ queryKey: ["dashboard", empresaId] });
       toast.success("Removido");
     },
   });
@@ -127,7 +127,7 @@ function FinancePage() {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader><DialogTitle className="font-display">Nova movimentação</DialogTitle></DialogHeader>
-                <EntryForm onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["finance"] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); }} empresaId={isEnabled ? (empresaId ?? undefined) : undefined} />
+                <EntryForm onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["finance", empresaId] }); qc.invalidateQueries({ queryKey: ["dashboard", empresaId] }); }} empresaId={isEnabled ? (empresaId ?? undefined) : undefined} />
               </DialogContent>
             </Dialog>
           </div>

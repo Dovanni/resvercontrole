@@ -35,6 +35,7 @@ import { Route as AuthenticatedCategoriasRouteImport } from './routes/_authentic
 import { Route as AuthenticatedCartoesCreditoRouteImport } from './routes/_authenticated.cartoes-credito'
 import { Route as AuthenticatedBiRouteImport } from './routes/_authenticated.bi'
 import { Route as AuthenticatedBalanceteRouteImport } from './routes/_authenticated.balancete'
+import { Route as ApiPublicAcceptInvitationRouteImport } from './routes/api/public/accept-invitation'
 import { Route as AuthenticatedConfiguracoesCategoriasRouteImport } from './routes/_authenticated.configuracoes.categorias'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -174,6 +175,12 @@ const AuthenticatedBalanceteRoute = AuthenticatedBalanceteRouteImport.update({
   path: '/balancete',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiPublicAcceptInvitationRoute =
+  ApiPublicAcceptInvitationRouteImport.update({
+    id: '/api/public/accept-invitation',
+    path: '/api/public/accept-invitation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedConfiguracoesCategoriasRoute =
   AuthenticatedConfiguracoesCategoriasRouteImport.update({
     id: '/categorias',
@@ -208,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/vendas': typeof AuthenticatedVendasRoute
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
+  '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -236,6 +244,7 @@ export interface FileRoutesByTo {
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/vendas': typeof AuthenticatedVendasRoute
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
+  '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -266,6 +275,7 @@ export interface FileRoutesById {
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/vendas': typeof AuthenticatedVendasRoute
   '/_authenticated/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
+  '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -296,6 +306,7 @@ export interface FileRouteTypes {
     | '/relatorios'
     | '/vendas'
     | '/configuracoes/categorias'
+    | '/api/public/accept-invitation'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -324,6 +335,7 @@ export interface FileRouteTypes {
     | '/relatorios'
     | '/vendas'
     | '/configuracoes/categorias'
+    | '/api/public/accept-invitation'
   id:
     | '__root__'
     | '/'
@@ -353,6 +365,7 @@ export interface FileRouteTypes {
     | '/_authenticated/relatorios'
     | '/_authenticated/vendas'
     | '/_authenticated/configuracoes/categorias'
+    | '/api/public/accept-invitation'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -360,6 +373,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicAcceptInvitationRoute: typeof ApiPublicAcceptInvitationRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -546,6 +560,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBalanceteRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/api/public/accept-invitation': {
+      id: '/api/public/accept-invitation'
+      path: '/api/public/accept-invitation'
+      fullPath: '/api/public/accept-invitation'
+      preLoaderRoute: typeof ApiPublicAcceptInvitationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/configuracoes/categorias': {
       id: '/_authenticated/configuracoes/categorias'
       path: '/categorias'
@@ -630,6 +651,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicAcceptInvitationRoute: ApiPublicAcceptInvitationRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

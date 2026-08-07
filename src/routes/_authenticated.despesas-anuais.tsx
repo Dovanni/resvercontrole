@@ -81,8 +81,8 @@ function AnnualExpensesPage() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["payables-annual"] });
-      qc.invalidateQueries({ queryKey: ["payables"] });
+      qc.invalidateQueries({ queryKey: ["payables-annual", year, empresaId] });
+      qc.invalidateQueries({ queryKey: ["payables", empresaId] });
       toast.success("Conta marcada como paga");
       setSelectedCell(null);
     },

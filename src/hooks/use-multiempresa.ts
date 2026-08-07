@@ -61,16 +61,16 @@ export function useMultiempresa() {
     if (newId === activeId) return;
 
     try {
-      // Validação server-side antes de trocar
+      // 1. Validação server-side antes de trocar
       await validateAccess({ data: newId });
       
-      // 1. Cancelar todas as queries em andamento para evitar "race conditions" ou respostas tardias
+      // 2. Cancelar todas as queries em andamento para evitar "race conditions" ou respostas tardias
       await queryClient.cancelQueries();
       
-      // 2. Limpar o cache completamente para garantir que nenhum dado da empresa anterior vaze
+      // 3. Limpar o cache completamente para garantir que nenhum dado da empresa anterior vaze
       queryClient.clear();
       
-      // 3. Atualiza estado local e storage
+      // 4. Atualiza estado local e storage
       setActiveId(newId);
       localStorage.setItem(STORAGE_KEY, newId);
       
