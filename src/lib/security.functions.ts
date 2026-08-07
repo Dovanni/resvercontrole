@@ -1,0 +1,132 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import crypto from "crypto";
+
+// Tipos e Interfaces
+export interface MathChallenge {
+  id: string;
+  question: string;
+  expiresAt: number;
+}
+
+// Em memória para o preview (em produção usaríamos Redis ou similar se necessário, 
+// mas para o preview e isolamento de sessão o Worker state/context pode ser volátil)
+// NOTA: Em Workers sem persistência, isso é por isolado. Para uma implementação real multi-sessão,
+// usaríamos KV ou similar. Aqui, vamos usar uma estratégia de token assinado para evitar estado no servidor.
+
+const SECRET_MATH = process.env['RECAPTCHA_SECRET_KEY'] || 'preview-secret-key-math';
+
+function generateSignedChallenge(a: number, b: number) {
+  const result = a + b;
+  const id = crypto.randomUUID();
+  const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutos
+  
+  // Criamos um payload que contém a resposta, mas assinado
+  const payload = JSON.stringify({ r: result, exp: expiresAt, id });
+  const signature = crypto.createHmac('sha256', SECRET_MATH).update(payload).digest('hex');
+  
+  return {
+    challenge: {
+      id: `${Buffer.from(payload).toString('base64')}.${signature}`,
+      question: `Quanto é ${a} + ${b}?`,
+      expiresAt
+    }
+  };
+}
+
+export const getMathChallenge = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const a = Math.floor(Math.random() * 20) + 1;
+    const b = Math.floor(Math.random() * 20) + 1;
+    return generateSignedChallenge(a, b);
+  });
+
+export async function verifyMathChallenge(token: string, answer: string) {
+  try {
+    const [payloadBase64, signature] = token.split('.');
+    if (!payloadBase64 || !signature) return false;
+    
+    const payloadRaw = Buffer.from(payloadBase64, 'base64').toString();
+    const expectedSignature = crypto.createHmac('sha256', SECRET_MATH).update(payloadRaw).digest('hex');
+    
+    if (signature !== expectedSignature) return false;
+    
+    const payload = JSON.parse(payloadRaw);
+    if (Date.now() > payload.exp) return false;
+    
+    return parseInt(answer, 10) === payload.r;
+  } catch {
+    return false;
+  }
+}
+
+export async function verifyRecaptcha(token: string, action: string) {
+  const secretKey = process.env['RECAPTCHA_SECRET_KEY'];
+  
+  if (!secretKey) {
+    console.warn("RECAPTCHA_CONFIGURATION_REQUIRED: Secret key missing");
+    // Em preview se não houver chave, podemos permitir ou bloquear.
+    // O requisito diz: "se as chaves não estiverem configuradas... retornar RECAPTCHA_CONFIGURATION_REQUIRED"
+    throw new Error("RECAPTCHA_CONFIGURATION_REQUIRED");
+  }
+
+  const response = await fetch(`https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${token}`, {
+    method: 'POST'
+  });
+
+  const data = await response.json() as any;
+
+  if (!data.success) {
+    return { success: false, error: 'reCAPTCHA verification failed' };
+  }
+
+  // Validações adicionais conforme requisitos
+  if (data.action !== action) {
+    return { success: false, error: 'Action mismatch' };
+  }
+
+  const allowedHostnames = [
+    'resvercontrole.lovable.app',
+    'vejamais.com.br',
+    'www.vejamais.com.br',
+    'localhost' // para preview local se necessário
+  ];
+  
+  // No Lovable, os domínios de preview variam. 
+  // O requisito diz: "Não inventar domínio. Retornar quais domínios precisam ser cadastrados".
+  // Vamos validar se o hostname termina com .lovable.app ou é um dos oficiais.
+  const isAllowedHost = allowedHostnames.includes(data.hostname) || data.hostname.endsWith('.lovable.app');
+  
+  if (!isAllowedHost) {
+    return { success: false, error: 'Invalid hostname' };
+  }
+
+  // Score threshold configurável (default 0.5)
+  const threshold = parseFloat(process.env['RECAPTCHA_THRESHOLD'] || '0.5');
+  if (data.score < threshold) {
+    return { success: false, error: 'Low score', score: data.score };
+  }
+
+  return { success: true, score: data.score };
+}
+
+// Rate limiting simples em memória (per-isolate no Worker)
+// Para o preview é suficiente para evitar ataques básicos de bot.
+const rateLimits = new Map<string, { count: number, resetAt: number }>();
+
+export async function checkRateLimit(key: string, limit: number, windowMs: number) {
+  const now = Date.now();
+  const record = rateLimits.get(key);
+  
+  if (!record || now > record.resetAt) {
+    rateLimits.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  
+  if (record.count >= limit) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
