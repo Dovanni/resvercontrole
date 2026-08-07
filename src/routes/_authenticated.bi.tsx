@@ -372,13 +372,17 @@ function BIPage() {
   });
 
   const { data: cvd } = useQuery({
-    queryKey: ["bi-cvd", from, to],
+    queryKey: ["bi-cvd", from, to, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("controle_vendas_diario")
         .select("data, loja, custo, juros_ml, frete_empresa, frete_cliente, lucro")
         .gte("data", from)
         .lte("data", to);
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },
