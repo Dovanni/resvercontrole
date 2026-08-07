@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { VejamaisMark } from "@/components/vejamais-logo";
 import { useServerFn } from "@tanstack/react-start";
-import { secureSignUp } from "@/lib/auth-security.functions";
+import { secureSignUp, completeSignUpSuccess } from "@/lib/auth-security.functions";
 import { TurnstileWidget, TurnstileWidgetRef } from "@/components/turnstile-widget";
 import { useRef } from "react";
 import { MathChallengeField } from "@/components/math-challenge";
@@ -36,6 +36,7 @@ function SignupPage() {
   const [mathAnswer, setMathAnswer] = useState("");
   
   const signUpFn = useServerFn(secureSignUp);
+  const completeSignUpFn = useServerFn(completeSignUpSuccess);
   const turnstileRef = useRef<TurnstileWidgetRef>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const mathChallengeRef = useRef<{ refresh: () => void }>(null);
@@ -118,15 +119,9 @@ function SignupPage() {
       });
 
       if (authError) throw authError;
-
-      // Opcional: Manter chamada à server fn se houver lógica adicional necessária (como logs)
-      // mas a criação do usuário já foi feita acima.
-      // Se a server function 'secureSignUp' for necessária para lógica extra (ex: tabelas de empresa),
-      // ela deve ser chamada, mas agora sabemos que o auth.signUp tratou o token.
       
-      // Para este projeto, o cadastro multiempresa é trigado por hooks no banco após o signup,
-      // ou a server fn faz a gestão de tabelas. Vamos manter a consistência com a instrução:
-      // "enviar o token do Turnstile em options.captchaToken nas operações de signup"
+      // 3. Sucesso total: limpar rate limit
+      await completeSignUpFn({ data: { email: email.trim() } });
 
       toast.success("Conta criada! Verifique seu e-mail para confirmar.");
       navigate({ to: "/login" });
