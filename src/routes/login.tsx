@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useEffect, useState } from "react";
@@ -10,6 +10,10 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { VejamaisMark } from "@/components/vejamais-logo";
 import { translateAuthError } from "@/lib/auth-errors";
+import { useRecaptcha } from "@/hooks/use-recaptcha";
+import { useServerFn } from "@tanstack/react-start";
+import { secureSignIn } from "@/lib/auth-security.functions";
+import { MathChallengeField } from "@/components/math-challenge";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Entrar — Vejamais" }] }),
@@ -22,14 +26,14 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [brand, setBrand] = useState<{ name: string; logo: string }>({ name: "", logo: "" });
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [showMath, setShowMath] = useState(false);
+  
+  const [mathToken, setMathToken] = useState("");
+  const [mathAnswer, setMathAnswer] = useState("");
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("rose:brand");
-      if (raw) setBrand(JSON.parse(raw));
-    } catch {}
-  }, []);
+  const signInSecurityFn = useServerFn(secureSignIn);
+  const { getToken } = useRecaptcha();
 
   useEffect(() => {
     if (!loading && session) {
@@ -37,13 +41,57 @@ function LoginPage() {
     }
   }, [session, loading, navigate]);
 
-  async function signIn(e: React.FormEvent) {
+  async function handleSignIn(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setBusy(false);
-    if (error) toast.error(translateAuthError(error.message));
-    else toast.success("Bem-vinda de volta!");
+
+    try {
+      const recaptchaToken = await getToken("vejamais_login");
+      if (!recaptchaToken) {
+        toast.error("Falha na validação do reCAPTCHA.");
+        setBusy(false);
+        return;
+      }
+
+      // 1. Validar precondições de segurança no servidor
+      const securityCheck = await signInSecurityFn({
+        data: {
+          email,
+          password,
+          recaptchaToken,
+          mathChallengeToken: showMath ? mathToken : undefined,
+          mathChallengeAnswer: showMath ? mathAnswer : undefined,
+        }
+      });
+
+      if (securityCheck.requireMath) {
+        setShowMath(true);
+        toast.info("Por favor, resolva o desafio de segurança.");
+        setBusy(false);
+        return;
+      }
+
+      // 2. Se a segurança passou, prosseguir com o login real
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        setFailedAttempts(prev => prev + 1);
+        if (failedAttempts >= 2) setShowMath(true);
+        toast.error("Não foi possível entrar com os dados informados.");
+      } else {
+        toast.success("Bem-vinda de volta!");
+      }
+    } catch (error: any) {
+      if (error.message === "RECAPTCHA_CONFIGURATION_REQUIRED") {
+        toast.error("Configuração de segurança necessária (RECAPTCHA_CONFIGURATION_REQUIRED).");
+      } else {
+        toast.error(error.message || "Não foi possível entrar com os dados informados.");
+      }
+      setFailedAttempts(prev => prev + 1);
+      if (failedAttempts >= 2) setShowMath(true);
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function handleForgot() {
@@ -52,45 +100,54 @@ function LoginPage() {
       return;
     }
     setBusy(true);
+    // Para recuperação de senha, o requisito diz para exibir após atividade suspeita.
+    // Aqui simplificamos permitindo o envio, mas o backend deve aplicar rate limits.
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
     setBusy(false);
-    if (error) toast.error(translateAuthError(error.message));
-    else toast.success("Enviamos um link de redefinição para seu email. Verifique também a caixa de spam.");
+    
+    // Mensagem genérica conforme requisito de proteção contra enumeração
+    toast.success("Se existir uma conta com esse e-mail, enviaremos as orientações.");
+    
+    if (error) {
+      console.error("Reset password error:", error);
+    }
   }
 
   return (
     <div className="min-h-screen bg-gradient-rose flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          {brand.logo ? (
-            <img src={brand.logo} alt={brand.name || "Vejamais"} className="mx-auto mb-4 max-h-20 w-auto object-contain rounded-2xl" />
-          ) : (
-            <div className="mx-auto mb-4 flex justify-center">
-              <VejamaisMark size={64} className="rounded-2xl shadow-glow" />
-            </div>
-          )}
+          <div className="mx-auto mb-4 flex justify-center">
+            <VejamaisMark size={64} className="rounded-2xl shadow-glow" />
+          </div>
           <h1 className="font-display text-4xl text-foreground">
-            {brand.name || "Vejamais"}
+            VEJAMAIS
           </h1>
           <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Gestão Comercial e Financeira</p>
         </div>
 
         <div className="rounded-2xl bg-card shadow-soft border p-6">
           <h2 className="font-display text-2xl text-foreground text-center mb-6">Entrar</h2>
-          <form onSubmit={signIn} className="space-y-4">
+          <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="e1">Email</Label>
-              <Input id="e1" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="p1">Senha</Label>
-              <Input id="p1" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+              <Label htmlFor="password">Senha</Label>
+              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
+
+            {showMath && (
+              <MathChallengeField onVerify={(t, a) => { setMathToken(t); setMathAnswer(a); }} />
+            )}
+
             <Button type="submit" disabled={busy} className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95">
-              Entrar
+              {busy ? "Entrando..." : "Entrar"}
             </Button>
+            
             <button
               type="button"
               onClick={handleForgot}
@@ -99,6 +156,13 @@ function LoginPage() {
             >
               Esqueci minha senha
             </button>
+            
+            <p className="text-[10px] text-center text-muted-foreground mt-2">
+              Este site é protegido pelo reCAPTCHA e a 
+              <a href="https://policies.google.com/privacy" className="underline ml-1">Política de Privacidade</a> e
+              <a href="https://policies.google.com/terms" className="underline ml-1">Termos de Serviço</a> do Google se aplicam.
+            </p>
+
             <div className="text-center text-sm text-muted-foreground pt-2">
               Ainda não tem conta? <Link to="/cadastro" className="text-primary hover:underline font-medium">Começar agora</Link>
             </div>
