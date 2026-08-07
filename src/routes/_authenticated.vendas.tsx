@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,6 +58,7 @@ const CHANNEL_LABEL: Record<string, string> = {
 
 function SalesPage() {
   const qc = useQueryClient();
+  const { empresaId, isEnabled } = useMultiempresa();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const [open, setOpen] = useState(false);
@@ -72,11 +74,17 @@ function SalesPage() {
   }, [search.edit]);
 
   const { data: sales } = useQuery({
-    queryKey: ["sales"],
+    queryKey: ["sales", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("sales")
-        .select("id,customer_name,channel,status,payment_method,total,discount,sold_at, customers(name), sale_items(quantity, products(name))")
+        .select("id,customer_name,channel,status,payment_method,total,discount,sold_at, customers(name), sale_items(quantity, products(name))");
+      
+      if (isEnabled && empresaId) {
+        query = query.eq("empresa_id", empresaId);
+      }
+
+      const { data, error } = await query
         .order("sold_at", { ascending: false }).limit(100);
       if (error) throw error;
       return data;
@@ -86,11 +94,11 @@ function SalesPage() {
   const { page, setPage, totalPages, total, pageItems } = usePagination(sales as any[] | undefined);
 
   const invalidate = () => {
-    qc.invalidateQueries({ queryKey: ["sales"] });
-    qc.invalidateQueries({ queryKey: ["products"] });
-    qc.invalidateQueries({ queryKey: ["dashboard"] });
-    qc.invalidateQueries({ queryKey: ["finance"] });
-    qc.invalidateQueries({ queryKey: ["bank-movements"] });
+    qc.invalidateQueries({ queryKey: ["sales", empresaId] });
+    qc.invalidateQueries({ queryKey: ["products", empresaId] });
+    qc.invalidateQueries({ queryKey: ["dashboard", empresaId] });
+    qc.invalidateQueries({ queryKey: ["finance", empresaId] });
+    qc.invalidateQueries({ queryKey: ["bank-movements", empresaId] });
   };
 
   return (
@@ -288,12 +296,19 @@ type Product = { id: string; name: string; sku: string | null; sale_price: numbe
 type LineItem = { product_id: string; quantity: number; unit_price: number; unit_cost: number; name: string; max: number };
 
 function SaleView({ saleId }: { saleId: string }) {
+  const { empresaId, isEnabled } = useMultiempresa();
   const { data, isLoading } = useQuery({
-    queryKey: ["sale-detail", saleId],
+    queryKey: ["sale-detail", saleId, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("sales")
-        .select("*, customers(name), bank_accounts(name,bank), sale_items(quantity,unit_price,products(name))")
+        .select("*, customers(name), bank_accounts(name,bank), sale_items(quantity,unit_price,products(name))");
+      
+      if (isEnabled && empresaId) {
+        query = query.eq("empresa_id", empresaId);
+      }
+
+      const { data, error } = await query
         .eq("id", saleId).single();
       if (error) throw error;
       return data as any;
@@ -330,14 +345,21 @@ function SaleView({ saleId }: { saleId: string }) {
 }
 
 function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
+  const { empresaId, isEnabled } = useMultiempresa();
   const editing = !!saleId;
 
   const { data: products } = useQuery({
-    queryKey: ["products-for-sale"],
+    queryKey: ["products-for-sale", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("products")
-        .select("id,name,sku,sale_price,wholesale_price,cost_price,stock")
+        .select("id,name,sku,sale_price,wholesale_price,cost_price,stock");
+      
+      if (isEnabled && empresaId) {
+        query = query.eq("empresa_id", empresaId);
+      }
+
+      const { data, error } = await query
         .order("name");
       if (error) throw error;
       return data as Product[];
@@ -345,21 +367,33 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
   });
 
   const { data: customers } = useQuery({
-    queryKey: ["customers-for-sale"],
+    queryKey: ["customers-for-sale", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("customers").select("id,name,customer_type").eq("status", "ativo").order("name");
+      let query = supabase.from("customers").select("id,name,customer_type");
+      
+      if (isEnabled && empresaId) {
+        query = query.eq("empresa_id", empresaId);
+      }
+
+      const { data, error } = await query.eq("status", "ativo").order("name");
       if (error) throw error;
       return data as { id: string; name: string; customer_type: "varejo" | "atacado" | "recursos_financeiros" }[];
     },
   });
 
   const { data: existing } = useQuery({
-    queryKey: ["sale-edit", saleId],
+    queryKey: ["sale-edit", saleId, empresaId],
     enabled: editing,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("sales")
-        .select("*, sale_items(product_id,quantity,unit_price,unit_cost,products(name,stock))")
+        .select("*, sale_items(product_id,quantity,unit_price,unit_cost,products(name,stock))");
+      
+      if (isEnabled && empresaId) {
+        query = query.eq("empresa_id", empresaId);
+      }
+
+      const { data, error } = await query
         .eq("id", saleId!).single();
       if (error) throw error;
       return data as any;
@@ -394,24 +428,35 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
   );
 
   const { data: bankAccounts } = useQuery({
-    queryKey: ["bank-accounts-active"],
+    queryKey: ["bank-accounts-active", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bank_accounts" as any)
+      let query = supabase
+        .from("bank_accounts")
         .select("id,name,bank,color")
-        .eq("status", "ativa")
-        .order("name");
+        .eq("status", "ativa");
+      
+      if (isEnabled && empresaId) {
+        query = query.eq("empresa_id", empresaId);
+      }
+
+      const { data, error } = await query.order("name");
       if (error) throw error;
-      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string }[];
+      return (data ?? []) as any[];
     },
   });
 
   const { data: rules } = useQuery({
-    queryKey: ["routing-rules"],
+    queryKey: ["routing-rules", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("payment_routing_rules" as any).select("payment_method,bank_account_id,fixo");
+      let query = supabase.from("payment_routing_rules").select("payment_method,bank_account_id,fixo");
+      
+      if (isEnabled && empresaId) {
+        query = query.eq("empresa_id", empresaId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []) as unknown as { payment_method: string; bank_account_id: string | null; fixo: boolean }[];
+      return (data ?? []) as any[];
     },
   });
 
@@ -535,7 +580,11 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
           const { error: updErr } = await supabase.from("sales").update(payload as any).eq("id", saleId!);
           if (updErr) throw updErr;
         } else {
-          const { error } = await supabase.from("sales").insert({ user_id: user.id, ...payload } as any);
+          const { error } = await supabase.from("sales").insert({ 
+            user_id: user.id, 
+            empresa_id: isEnabled ? empresaId : undefined,
+            ...payload 
+          } as any);
           if (error) throw error;
         }
         return;
@@ -566,12 +615,21 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
       } else {
         const { data: sale, error } = await supabase
           .from("sales")
-          .insert({ user_id: user.id, ...payload } as any)
+          .insert({ 
+            user_id: user.id, 
+            empresa_id: isEnabled ? empresaId : undefined,
+            ...payload 
+          } as any)
           .select().single();
         if (error) throw error;
         const rows = items.map(i => ({
-          sale_id: sale.id, user_id: user.id, product_id: i.product_id,
-          quantity: i.quantity, unit_price: i.unit_price, unit_cost: i.unit_cost,
+          sale_id: sale.id, 
+          user_id: user.id, 
+          empresa_id: isEnabled ? empresaId : undefined,
+          product_id: i.product_id,
+          quantity: i.quantity, 
+          unit_price: i.unit_price, 
+          unit_cost: i.unit_cost,
         }));
         const { error: e2 } = await supabase.from("sale_items").insert(rows as any);
         if (e2) throw e2;

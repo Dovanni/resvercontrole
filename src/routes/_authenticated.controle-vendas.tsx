@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
@@ -81,6 +82,7 @@ function ControleVendasPage() {
   const navigate = useNavigate();
   const confirm = useConfirm();
   const [mes, setMes] = useState<number>(new Date().getMonth() + 1);
+  const { empresaId, isEnabled } = useMultiempresa();
   const [form, setForm] = useState(emptyForm());
   const [fornecedorInput, setFornecedorInput] = useState("");
   const [editingFornecedor, setEditingFornecedor] = useState(false);
@@ -94,7 +96,7 @@ function ControleVendasPage() {
   const [auditoriaId, setAuditoriaId] = useState<string | null>(null);
 
   const { data: vendasMes = [] } = useQuery({
-    queryKey: ["controle-vendas-pedidos", YEAR, mes],
+    queryKey: ["controle-vendas-pedidos", YEAR, mes, empresaId],
     queryFn: async () => {
       const mm = String(mes).padStart(2, "0");
       const nextMes = mes === 12 ? 1 : mes + 1;
@@ -102,14 +104,17 @@ function ControleVendasPage() {
       const nmm = String(nextMes).padStart(2, "0");
       const ini = `${YEAR}-${mm}-01T00:00:00`;
       const fim = `${nextAno}-${nmm}-01T00:00:00`;
-      const { data, error } = await supabase
+      let q = supabase
         .from("sales")
         .select("id, sold_at, customer_name, customer_id, channel, payment_method, total, discount, status, bank_account_id, notes, customers(name), bank_accounts(name, bank), sale_items(quantity, unit_price, unit_cost, products(name))")
         .gte("sold_at", ini)
         .lt("sold_at", fim)
         .neq("channel", "recursos_financeiros")
-        .neq("status", "cancelado")
-        .order("sold_at", { ascending: false });
+        .neq("status", "cancelado");
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q.order("sold_at", { ascending: false });
       if (error) {
         console.error("[controle-vendas-pedidos] erro:", error);
         throw error;
@@ -119,14 +124,17 @@ function ControleVendasPage() {
   });
 
   const { data: rows = [] } = useQuery({
-    queryKey: ["controle-vendas", YEAR, mes],
+    queryKey: ["controle-vendas", YEAR, mes, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("controle_vendas_diario")
         .select("*, sales:sale_id(customer_name, customers:customer_id(name))")
         .eq("ano", YEAR)
-        .eq("mes", mes)
-        .order("data", { ascending: true });
+        .eq("mes", mes);
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q.order("data", { ascending: true });
       if (error) throw error;
       return (data ?? []) as Row[];
     },
@@ -204,8 +212,9 @@ function ControleVendasPage() {
       const user_id = userRes.user?.id;
       if (!user_id) throw new Error("Sem usuário");
       const d = new Date(form.data + "T00:00:00");
-      const payload = {
+      const payload: any = {
         user_id,
+        empresa_id: empresaId!,
         data: form.data,
         mes: d.getMonth() + 1,
         ano: d.getFullYear(),

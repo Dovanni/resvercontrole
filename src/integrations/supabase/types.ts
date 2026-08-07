@@ -492,6 +492,53 @@ export type Database = {
           },
         ]
       }
+      company_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          empresa_id: string
+          expires_at: string
+          id: string
+          invited_by: string
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+          token_hash: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          empresa_id: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          token_hash: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          empresa_id?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_invitations_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_settings: {
         Row: {
           cnpj: string | null
@@ -674,6 +721,7 @@ export type Database = {
           created_at: string
           custo: number
           data: string
+          empresa_id: string
           frete_cliente: number
           frete_empresa: number
           id: string
@@ -693,6 +741,7 @@ export type Database = {
           created_at?: string
           custo?: number
           data: string
+          empresa_id: string
           frete_cliente?: number
           frete_empresa?: number
           id?: string
@@ -712,6 +761,7 @@ export type Database = {
           created_at?: string
           custo?: number
           data?: string
+          empresa_id?: string
           frete_cliente?: number
           frete_empresa?: number
           id?: string
@@ -727,6 +777,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "controle_vendas_diario_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "controle_vendas_diario_sale_id_fkey"
             columns: ["sale_id"]
@@ -953,33 +1010,56 @@ export type Database = {
       }
       empresas: {
         Row: {
+          configuracoes: Json | null
           created_at: string
           documento: string | null
           id: string
+          logo_url: string | null
           nome: string
           owner_id: string
+          parent_id: string | null
+          razao_social: string | null
           status: string
+          tipo: string | null
           updated_at: string
         }
         Insert: {
+          configuracoes?: Json | null
           created_at?: string
           documento?: string | null
           id?: string
+          logo_url?: string | null
           nome: string
           owner_id: string
+          parent_id?: string | null
+          razao_social?: string | null
           status?: string
+          tipo?: string | null
           updated_at?: string
         }
         Update: {
+          configuracoes?: Json | null
           created_at?: string
           documento?: string | null
           id?: string
+          logo_url?: string | null
           nome?: string
           owner_id?: string
+          parent_id?: string | null
+          razao_social?: string | null
           status?: string
+          tipo?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "empresas_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       finance_entries: {
         Row: {
@@ -987,6 +1067,7 @@ export type Database = {
           category: string
           created_at: string
           description: string | null
+          empresa_id: string
           entry_date: string
           id: string
           sale_id: string | null
@@ -998,6 +1079,7 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          empresa_id: string
           entry_date?: string
           id?: string
           sale_id?: string | null
@@ -1009,6 +1091,7 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          empresa_id?: string
           entry_date?: string
           id?: string
           sale_id?: string | null
@@ -1016,6 +1099,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "finance_entries_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "finance_entries_sale_id_fkey"
             columns: ["sale_id"]
@@ -1108,6 +1198,7 @@ export type Database = {
         Row: {
           bank_account_id: string | null
           created_at: string
+          empresa_id: string
           fixo: boolean
           id: string
           payment_method: string
@@ -1117,6 +1208,7 @@ export type Database = {
         Insert: {
           bank_account_id?: string | null
           created_at?: string
+          empresa_id: string
           fixo?: boolean
           id?: string
           payment_method: string
@@ -1126,6 +1218,7 @@ export type Database = {
         Update: {
           bank_account_id?: string | null
           created_at?: string
+          empresa_id?: string
           fixo?: boolean
           id?: string
           payment_method?: string
@@ -1138,6 +1231,13 @@ export type Database = {
             columns: ["bank_account_id"]
             isOneToOne: false
             referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_routing_rules_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
             referencedColumns: ["id"]
           },
         ]
@@ -1521,6 +1621,7 @@ export type Database = {
           created_at: string
           empresa_id: string
           id: string
+          is_primary: boolean | null
           role: Database["public"]["Enums"]["app_role"]
           status: string
           user_id: string
@@ -1529,6 +1630,7 @@ export type Database = {
           created_at?: string
           empresa_id: string
           id?: string
+          is_primary?: boolean | null
           role?: Database["public"]["Enums"]["app_role"]
           status?: string
           user_id: string
@@ -1537,6 +1639,7 @@ export type Database = {
           created_at?: string
           empresa_id?: string
           id?: string
+          is_primary?: boolean | null
           role?: Database["public"]["Enums"]["app_role"]
           status?: string
           user_id?: string
@@ -1577,6 +1680,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_company_invitation: {
+        Args: { _token_hash: string }
+        Returns: boolean
+      }
       ensure_default_routing: { Args: { _user_id: string }; Returns: undefined }
       has_role: {
         Args: {

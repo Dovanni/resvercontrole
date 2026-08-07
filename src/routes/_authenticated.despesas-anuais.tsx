@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -46,6 +47,7 @@ function AnnualExpensesPage() {
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth(); // 0-based
   const [year, setYear] = useState(currentYear);
+  const { empresaId, isEnabled } = useMultiempresa();
   const [category, setCategory] = useState("todos");
   const [selectedCell, setSelectedCell] = useState<{ row: string; monthIdx: number; items: Payable[] } | null>(null);
   const [showHelp, setShowHelp] = useState(false);
@@ -55,14 +57,17 @@ function AnnualExpensesPage() {
   const endDate = `${year + 1}-01-31`;
 
   const { data } = useQuery({
-    queryKey: ["payables-annual", year],
+    queryKey: ["payables-annual", year, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("payables")
         .select("id, supplier_id, description, category, amount, due_date, status, paid_amount, paid_at, suppliers(name)")
         .gte("due_date", startDate)
-        .lte("due_date", endDate)
-        .order("due_date", { ascending: true });
+        .lte("due_date", endDate);
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q.order("due_date", { ascending: true });
       if (error) throw error;
       return data as Payable[];
     },

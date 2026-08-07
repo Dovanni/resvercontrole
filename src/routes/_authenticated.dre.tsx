@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import {
   AlertTriangle,
   ChevronDown,
@@ -95,6 +96,7 @@ const PRESETS: PeriodPreset[] = [
 
 function DrePage() {
   const { user } = useAuth();
+  const { empresaId, isEnabled } = useMultiempresa();
   const [preset, setPreset] = useState<PeriodPreset>("mes_atual");
   const [custom, setCustom] = useState(() => {
     const p = resolvePreset("mes_atual");
@@ -108,12 +110,16 @@ function DrePage() {
   const fetchDre = useServerFn(getDreReport);
 
   const { data: company } = useQuery({
-    queryKey: ["dre-company", user?.id],
+    queryKey: ["dre-company", empresaId],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("company_settings")
-        .select("company_name, cnpj")
-        .maybeSingle();
+      let query = supabase.from("empresas").select("razao_social, documento");
+      if (isEnabled && empresaId) {
+        query = query.eq("id", empresaId);
+      } else {
+        // Fallback para o owner_id se não estiver no modo multiempresa explicito
+        query = query.eq("owner_id", user?.id || "");
+      }
+      const { data } = await query.maybeSingle();
       return data;
     },
   });
@@ -133,8 +139,8 @@ function DrePage() {
     return null;
   }, [comparison, resolved]);
 
-  const { data, isFetching, error } = useQuery({
-    queryKey: ["dre", resolvedStartDate, resolvedEndDate, comparison],
+  const { data: dreData, isFetching, error } = useQuery({
+    queryKey: ["dre", resolvedStartDate, resolvedEndDate, comparison, empresaId],
     queryFn: () =>
       fetchDre({
         data: {
@@ -143,6 +149,7 @@ function DrePage() {
           from: resolvedStartDate,
           to: resolvedEndDate,
           comparison,
+          empresaId: isEnabled ? empresaId : undefined,
         },
       }),
   });
@@ -150,8 +157,8 @@ function DrePage() {
 
   const meta = useMemo(
     () => ({
-      empresa: company?.company_name || "Vejamais — Gestão Comercial e Financeira",
-      documento: company?.cnpj ? `CNPJ ${company.cnpj}` : null,
+      empresa: company?.razao_social || "Vejamais — Gestão Comercial e Financeira",
+      documento: company?.documento ? `CNPJ/Doc ${company.documento}` : null,
       emitidoEm: formatCivil(todayInTz()),
       regime: "Competência (accrual) — princípio da entidade",
     }),
@@ -159,14 +166,14 @@ function DrePage() {
   );
 
   const visibleLines = useMemo(() => {
-    if (!data) return [];
-    const lines = data.current.lines.filter((l) => l.kind !== "item" || l.amountCents !== 0);
+    if (!dreData) return [];
+    const lines = dreData.current.lines.filter((l) => l.kind !== "item" || l.amountCents !== 0);
     if (view === "simplificado") {
       // Mesmo motor, mesmas linhas: apenas o recorte estruturante.
       return lines.filter((l) => SIMPLIFIED_LINE_KEYS.includes(l.key));
     }
     return lines;
-  }, [data, view]);
+  }, [dreData, view]);
 
   const toggle = (key: string) =>
     setExpanded((e) => ({ ...e, [key]: !e[key] }));
@@ -185,8 +192,8 @@ function DrePage() {
             <Button
               variant="outline"
               size="sm"
-              disabled={!data}
-              onClick={() => data && exportDrePdf(data, meta)}
+              disabled={!dreData}
+              onClick={() => dreData && exportDrePdf(dreData, meta)}
             >
               <FileText className="mr-2 h-4 w-4" />
               PDF
@@ -194,8 +201,8 @@ function DrePage() {
             <Button
               variant="outline"
               size="sm"
-              disabled={!data}
-              onClick={() => data && exportDreXlsx(data, meta)}
+              disabled={!dreData}
+              onClick={() => dreData && exportDreXlsx(dreData, meta)}
             >
               <FileSpreadsheet className="mr-2 h-4 w-4" />
               Excel
@@ -274,21 +281,21 @@ function DrePage() {
         </Card>
       )}
 
-      {data && (
+      {dreData && (
         <>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <MarginCard label="Margem bruta" value={data.current.margins.brutaPct} />
-            <MarginCard label="Margem EBITDA" value={data.current.margins.ebitdaPct} />
-            <MarginCard label="Margem operacional" value={data.current.margins.operacionalPct} />
-            <MarginCard label="Margem líquida" value={data.current.margins.liquidaPct} />
+            <MarginCard label="Margem bruta" value={dreData.current.margins.brutaPct} />
+            <MarginCard label="Margem EBITDA" value={dreData.current.margins.ebitdaPct} />
+            <MarginCard label="Margem operacional" value={dreData.current.margins.operacionalPct} />
+            <MarginCard label="Margem líquida" value={dreData.current.margins.liquidaPct} />
           </div>
 
-          {data.current.unclassifiedCents > 0 && (
+          {dreData.current.unclassifiedCents > 0 && (
             <Card className="border-amber-500/60 bg-amber-500/5">
               <CardContent className="flex items-start gap-2 p-4 text-sm">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
                 <span>
-                  Existem <strong>{brlCents(data.current.unclassifiedCents)}</strong> em lançamentos
+                  Existem <strong>{brlCents(dreData.current.unclassifiedCents)}</strong> em lançamentos
                   ainda não classificados no plano de contas do DRE. Eles ficam fora do resultado e
                   aparecem nas notas gerenciais até serem classificados.
                 </span>
@@ -303,7 +310,7 @@ function DrePage() {
                   <p className="font-semibold">{meta.empresa}</p>
                   <p className="text-sm text-muted-foreground">
                     {formatCivil(resolvedStartDate)} a {formatCivil(resolvedEndDate)} · Regime de
-                    competência · {data.current.timezone}
+                    competência · {dreData.current.timezone}
                     {comparisonPeriod ? ` · vs ${comparisonPeriod.label}` : ""}
                   </p>
                 </div>
@@ -313,7 +320,7 @@ function DrePage() {
                     <TabsTrigger value="simplificado">Simplificado</TabsTrigger>
                     <TabsTrigger
                       value="mensal"
-                      disabled={data.current.monthly.length < 2}
+                      disabled={dreData.current.monthly.length < 2}
                     >
                       Mensal
                     </TabsTrigger>
@@ -336,10 +343,10 @@ function DrePage() {
                         <th className="px-4 py-2 text-left font-medium">Conta</th>
                         <th className="px-4 py-2 text-right font-medium">Valor</th>
                         <th className="px-4 py-2 text-right font-medium">% RL</th>
-                        {data.comparison && (
+                        {dreData.comparison && (
                           <>
                             <th className="px-4 py-2 text-right font-medium">
-                              {data.comparison.period.label}
+                              {dreData.comparison.period.label}
                             </th>
                             <th className="px-4 py-2 text-right font-medium">Variação</th>
                           </>
@@ -351,7 +358,7 @@ function DrePage() {
                         <LineRow
                           key={l.key}
                           line={l}
-                          comparison={data.comparison?.amountByLineKey[l.key]}
+                          comparison={dreData.comparison?.amountByLineKey[l.key]}
                           expanded={!!expanded[l.key]}
                           onToggle={() => toggle(l.key)}
                         />
@@ -365,7 +372,7 @@ function DrePage() {
                         <th className="sticky left-0 z-10 bg-muted/50 px-4 py-2 text-left font-medium">
                           Conta
                         </th>
-                        {data.current.monthly.map((m) => (
+                        {dreData.current.monthly.map((m) => (
                           <th key={m.key} className="px-4 py-2 text-right font-medium">
                             {m.label}
                           </th>
@@ -388,7 +395,7 @@ function DrePage() {
                               {l.level > 0 && <span className="pl-4" />}
                               {l.label}
                             </td>
-                            {data.current.monthly.map((m) => (
+                            {dreData.current.monthly.map((m) => (
                               <td key={m.key} className="px-4 py-2 text-right tabular-nums">
                                 {brlCents(m.amountByLineKey[l.key] ?? 0)}
                               </td>
@@ -416,7 +423,7 @@ function DrePage() {
               </div>
               <table className="w-full text-sm">
                 <tbody>
-                  {data.current.notes.map((n) => (
+                  {dreData.current.notes.map((n) => (
                     <tr key={n.key} className="border-b last:border-0">
                       <td className="px-4 py-2">{n.label}</td>
                       <td className="px-4 py-2 text-right tabular-nums">
@@ -457,7 +464,7 @@ function DrePage() {
             </p>
             <p>
               <strong className="text-foreground">Datas.</strong> Todo o recorte usa datas civis no
-              fuso da empresa ({data?.current.timezone ?? "America/Sao_Paulo"}), o que impede que um
+              fuso da empresa ({dreData?.current.timezone ?? "America/Sao_Paulo"}), o que impede que um
               lançamento do dia 1º apareça no mês anterior.
             </p>
             <p>

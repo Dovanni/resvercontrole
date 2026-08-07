@@ -10,24 +10,39 @@ export const getActiveEmpresa = createServerFn({ method: "GET" })
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Não autenticado");
 
-    // Busca a empresa onde o usuário tem vínculo ativo
-    // Na Wave B, começamos a suportar a troca de empresa, mas por enquanto pegamos a primeira ativa
     const { data: access, error } = await supabase
       .from("user_company_access")
-      .select("empresa_id, role, status, empresas(*)")
+      .select(`
+        empresa_id, 
+        role, 
+        status, 
+        is_primary,
+        empresas (
+          id,
+          nome,
+          razao_social,
+          logo_url,
+          tipo,
+          parent_id,
+          configuracoes
+        )
+      `)
       .eq("user_id", user.id)
       .eq("status", "active")
+      .order("is_primary", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
     if (error || !access) {
       throw new Error("Nenhuma empresa ativa encontrada para este usuário.");
     }
 
+    const companyData = access.empresas as any;
     return {
-      ...access.empresas,
+      ...companyData,
       user_role: access.role,
-      membership_status: access.status
+      membership_status: access.status,
+      is_primary: access.is_primary
     };
   });
 
@@ -41,15 +56,28 @@ export const listMyCompanies = createServerFn({ method: "GET" })
 
     const { data, error } = await supabase
       .from("user_company_access")
-      .select("role, status, empresas(*)")
+      .select(`
+        role, 
+        status, 
+        is_primary,
+        empresas (
+          id,
+          nome,
+          razao_social,
+          logo_url,
+          tipo,
+          parent_id
+        )
+      `)
       .eq("user_id", user.id)
       .eq("status", "active");
 
     if (error) throw error;
-    return data.map(item => ({
+    return (data as any[]).map(item => ({
       ...item.empresas,
       user_role: item.role,
-      membership_status: item.status
+      membership_status: item.status,
+      is_primary: item.is_primary
     }));
   });
 

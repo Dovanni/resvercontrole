@@ -64,17 +64,19 @@ export function useMultiempresa() {
       // Validação server-side antes de trocar
       await validateAccess({ data: newId });
       
-      // Atualiza estado local e storage
+      // 1. Cancelar todas as queries em andamento para evitar "race conditions" ou respostas tardias
+      await queryClient.cancelQueries();
+      
+      // 2. Limpar o cache completamente para garantir que nenhum dado da empresa anterior vaze
+      queryClient.clear();
+      
+      // 3. Atualiza estado local e storage
       setActiveId(newId);
       localStorage.setItem(STORAGE_KEY, newId);
       
-      // Invalida todas as queries para garantir isolamento de dados
-      // Isso força o recarregamento de todos os dados da nova empresa
-      await queryClient.cancelQueries();
-      queryClient.clear();
-      
       toast.success("Empresa alterada com sucesso");
     } catch (err) {
+      console.error("Erro ao trocar de empresa:", err);
       toast.error("Erro ao trocar de empresa. Acesso não autorizado.");
     }
   }, [activeId, queryClient, validateAccess]);

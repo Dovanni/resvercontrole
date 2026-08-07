@@ -9,6 +9,8 @@ import { brl } from "@/lib/format";
 import { TrendingUp, TrendingDown, ShoppingBag, Wallet, AlertTriangle, ChevronDown, LineChart as LineChartIcon, ArrowRight, HelpCircle } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Vejamais" }] }),
@@ -17,17 +19,30 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const [showHelp, setShowHelp] = useState(false);
+  const { empresaId, isEnabled } = useMultiempresa();
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["dashboard"],
+    queryKey: ["dashboard", empresaId],
     queryFn: async () => {
       const now = new Date();
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
+      const querySales = supabase.from("sales").select("id,total,sold_at,customer_name,channel");
+      const queryFinance = supabase.from("finance_entries").select("type,amount,entry_date");
+      const queryProducts = supabase.from("products").select("id,name,stock,min_stock");
+      const queryItems = supabase.from("sale_items").select("quantity,unit_price,unit_cost,product_id,products(name)");
+
+      if (isEnabled && empresaId) {
+        querySales.eq("empresa_id", empresaId);
+        queryFinance.eq("empresa_id", empresaId);
+        queryProducts.eq("empresa_id", empresaId);
+        queryItems.eq("empresa_id", empresaId);
+      }
+
       const [sales, finance, products, items] = await Promise.all([
-        supabase.from("sales").select("id,total,sold_at,customer_name,channel").gte("sold_at", monthStart).order("sold_at", { ascending: false }),
-        supabase.from("finance_entries").select("type,amount,entry_date").gte("entry_date", monthStart),
-        supabase.from("products").select("id,name,stock,min_stock"),
-        supabase.from("sale_items").select("quantity,unit_price,unit_cost,product_id,products(name)").gte("created_at", monthStart),
+        querySales.gte("sold_at", monthStart).order("sold_at", { ascending: false }),
+        queryFinance.gte("entry_date", monthStart),
+        queryProducts,
+        queryItems.gte("created_at", monthStart),
       ]);
 
       const queryError = sales.error ?? finance.error ?? products.error ?? items.error;
@@ -94,11 +109,19 @@ function Dashboard() {
   });
 
   const { data: bankData } = useQuery({
-    queryKey: ["dashboard-bank-balances"],
+    queryKey: ["dashboard-bank-balances", empresaId],
     queryFn: async () => {
+      const queryAccounts = supabase.from("bank_accounts").select("id,name,bank,color,initial_balance");
+      const queryMovements = supabase.from("bank_movements").select("account_id,type,amount");
+
+      if (isEnabled && empresaId) {
+        queryAccounts.eq("empresa_id", empresaId);
+        queryMovements.eq("empresa_id", empresaId);
+      }
+
       const [accountsRes, movsRes] = await Promise.all([
-        supabase.from("bank_accounts" as any).select("id,name,bank,color,initial_balance").eq("status", "ativa").order("name"),
-        supabase.from("bank_movements" as any).select("account_id,type,amount"),
+        queryAccounts.eq("status", "ativa").order("name"),
+        queryMovements,
       ]);
       const queryError = accountsRes.error ?? movsRes.error;
       if (queryError) {

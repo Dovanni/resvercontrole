@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -182,6 +183,7 @@ function BIPage() {
   const defaultTo = today.toISOString().slice(0, 10);
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
+  const { empresaId, isEnabled } = useMultiempresa();
   const [showHelp, setShowHelp] = useState(false);
 
 
@@ -189,24 +191,28 @@ function BIPage() {
 
   // ─────────── QUERIES ───────────
   const { data: sales } = useQuery({
-    queryKey: ["bi-sales", from, to],
+    queryKey: ["bi-sales", from, to, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("sales")
         .select(
           "id, total, channel, sold_at, customer_id, customer_name, payment_method, status, customers(name)",
         )
         .gte("sold_at", new Date(from).toISOString())
         .lte("sold_at", new Date(to + "T23:59:59").toISOString());
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },
   });
 
   const { data: items } = useQuery({
-    queryKey: ["bi-items", from, to],
+    queryKey: ["bi-items", from, to, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("sale_items")
         .select(
           "quantity, unit_cost, unit_price, products(name), sales!inner(sold_at, status)",
@@ -214,46 +220,62 @@ function BIPage() {
         .gte("sales.sold_at", new Date(from).toISOString())
         .lte("sales.sold_at", new Date(to + "T23:59:59").toISOString())
         .neq("sales.status", "cancelado");
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },
   });
 
   const { data: overdue } = useQuery({
-    queryKey: ["bi-overdue"],
+    queryKey: ["bi-overdue", empresaId],
     queryFn: async () => {
       const todayStr = new Date().toISOString().slice(0, 10);
-      const { data, error } = await supabase
+      let q = supabase
         .from("receivables")
         .select("amount, received_amount, due_date, description, customers(name)")
         .lt("due_date", todayStr)
         .not("status", "in", "(recebido,cancelado)");
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },
   });
 
   const { data: payables } = useQuery({
-    queryKey: ["bi-payables", from, to],
+    queryKey: ["bi-payables", from, to, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("payables")
         .select("amount, paid_amount, due_date, category, status")
         .gte("due_date", from)
         .lte("due_date", to);
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },
   });
 
   const { data: receivables } = useQuery({
-    queryKey: ["bi-receivables", from, to],
+    queryKey: ["bi-receivables", from, to, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("receivables")
         .select("amount, received_amount, due_date, status")
         .gte("due_date", from)
         .lte("due_date", to);
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },
@@ -262,12 +284,16 @@ function BIPage() {
   // Para "A pagar vs A receber": busca TODOS os pendentes/atrasados, sem filtro
   // de período — o gráfico mostra o que está em aberto por mês de vencimento.
   const { data: pendingPayables } = useQuery({
-    queryKey: ["bi-pending-payables"],
+    queryKey: ["bi-pending-payables", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("payables")
         .select("amount, paid_amount, due_date, status")
         .in("status", ["pendente", "atrasado"]);
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q;
       if (error) {
         console.error("[BI] pendingPayables error:", error);
         throw error;
@@ -278,12 +304,16 @@ function BIPage() {
   });
 
   const { data: pendingReceivables } = useQuery({
-    queryKey: ["bi-pending-receivables"],
+    queryKey: ["bi-pending-receivables", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("receivables")
         .select("amount, received_amount, due_date, status")
         .in("status", ["pendente", "atrasado", "parcial"]);
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q;
       if (error) {
         console.error("[BI] pendingReceivables error:", error);
         throw error;
@@ -294,96 +324,128 @@ function BIPage() {
   });
 
   const { data: finance } = useQuery({
-    queryKey: ["bi-finance", from, to],
+    queryKey: ["bi-finance", from, to, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("finance_entries")
         .select("type, amount, entry_date, category")
         .gte("entry_date", from)
         .lte("entry_date", to);
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },
   });
 
   const { data: bankAccounts } = useQuery({
-    queryKey: ["bi-bank-accounts"],
+    queryKey: ["bi-bank-accounts", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("bank_accounts")
         .select("id, name, initial_balance");
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },
   });
 
   const { data: bankMoves } = useQuery({
-    queryKey: ["bi-bank-moves", from, to],
+    queryKey: ["bi-bank-moves", from, to, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("bank_movements")
         .select("account_id, movement_date, type, amount")
         .lte("movement_date", to);
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },
   });
 
   const { data: cvd } = useQuery({
-    queryKey: ["bi-cvd", from, to],
+    queryKey: ["bi-cvd", from, to, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("controle_vendas_diario")
         .select("data, loja, custo, juros_ml, frete_empresa, frete_cliente, lucro")
         .gte("data", from)
         .lte("data", to);
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },
   });
 
   const { data: products } = useQuery({
-    queryKey: ["bi-products"],
+    queryKey: ["bi-products", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("products")
         .select("id, name, stock, min_stock, cost_price, sale_price");
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },
   });
 
   const { data: customers } = useQuery({
-    queryKey: ["bi-customers"],
+    queryKey: ["bi-customers", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("customers")
         .select("id, name, customer_type, created_at");
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },
   });
 
   const { data: cartoes } = useQuery({
-    queryKey: ["bi-cartoes"],
+    queryKey: ["bi-cartoes", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("cartoes_credito")
         .select("id, nome, limite_total, cor, status");
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },
   });
 
   const { data: cartoesLanc } = useQuery({
-    queryKey: ["bi-cartoes-lanc", from, to],
+    queryKey: ["bi-cartoes-lanc", from, to, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("cartoes_lancamentos")
         .select("cartao_id, data, valor, categoria")
         .is("deleted_at", null)
         .gte("data", from)
         .lte("data", to);
+      
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      
+      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },

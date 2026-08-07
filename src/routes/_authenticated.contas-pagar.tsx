@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -89,6 +90,7 @@ type SortKey = "due_date" | "description" | "supplier" | "category" | "status" |
 
 function PayablesPage() {
   const qc = useQueryClient();
+  const { empresaId, isEnabled } = useMultiempresa();
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -120,34 +122,50 @@ function PayablesPage() {
   };
 
   const { data } = useQuery({
-    queryKey: ["payables"],
+    queryKey: ["payables", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("payables")
-        .select("*, suppliers(name)")
-        .order("due_date", { ascending: true });
+        .select("*, suppliers(name)");
+      
+      if (isEnabled && empresaId) {
+        query = query.eq("empresa_id", empresaId);
+      }
+
+      const { data, error } = await query.order("due_date", { ascending: true });
       if (error) throw error;
       return data as Payable[];
     },
   });
 
   const { data: bankAccounts } = useQuery({
-    queryKey: ["bank-accounts-active"],
+    queryKey: ["bank-accounts-active", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bank_accounts" as any)
+      let query = supabase
+        .from("bank_accounts")
         .select("id,name,bank,color")
-        .eq("status", "ativa")
-        .order("name");
+        .eq("status", "ativa");
+      
+      if (isEnabled && empresaId) {
+        query = query.eq("empresa_id", empresaId);
+      }
+
+      const { data, error } = await query.order("name");
       if (error) throw error;
-      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string }[];
+      return (data ?? []) as any[];
     },
   });
 
   const { data: suppliers } = useQuery({
-    queryKey: ["suppliers-light"],
+    queryKey: ["suppliers-light", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("suppliers").select("id,name").order("name");
+      let query = supabase.from("suppliers").select("id,name");
+      
+      if (isEnabled && empresaId) {
+        query = query.eq("empresa_id", empresaId);
+      }
+
+      const { data, error } = await query.order("name");
       if (error) throw error;
       return data as { id: string; name: string }[];
     },
@@ -233,7 +251,7 @@ function PayablesPage() {
 
   const remove = useMutation({
     mutationFn: async (id: string) => { const { error } = await supabase.from("payables").delete().eq("id", id); if (error) throw error; },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["payables"] }); toast.success("Removido"); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["payables", empresaId] }); toast.success("Removido"); },
   });
 
   const { page, setPage, totalPages, total, pageItems } = usePagination(filtered);
@@ -293,7 +311,7 @@ function PayablesPage() {
           <InlineDate value={p.due_date} onSave={async (v) => {
             const { error } = await supabase.from("payables").update({ due_date: v }).eq("id", p.id);
             if (error) throw error;
-            qc.invalidateQueries({ queryKey: ["payables"] });
+            qc.invalidateQueries({ queryKey: ["payables", empresaId] });
           }} />
         </TableCell>
         <TableCell className="font-medium">
@@ -301,7 +319,7 @@ function PayablesPage() {
             if (!v.trim()) throw new Error("Descrição obrigatória");
             const { error } = await supabase.from("payables").update({ description: v.trim() }).eq("id", p.id);
             if (error) throw error;
-            qc.invalidateQueries({ queryKey: ["payables"] });
+            qc.invalidateQueries({ queryKey: ["payables", empresaId] });
           }} />
         </TableCell>
         <TableCell className="text-muted-foreground text-sm">{p.suppliers?.name ?? "—"}</TableCell>
@@ -312,7 +330,7 @@ function PayablesPage() {
             if (v <= 0) throw new Error("Informe um valor maior que zero");
             const { error } = await supabase.from("payables").update({ amount: v }).eq("id", p.id);
             if (error) throw error;
-            qc.invalidateQueries({ queryKey: ["payables"] });
+            qc.invalidateQueries({ queryKey: ["payables", empresaId] });
           }} />
         </TableCell>
         <TableCell className="text-right whitespace-nowrap">
@@ -357,7 +375,7 @@ function PayablesPage() {
                 <PayableForm
                   suppliers={suppliers ?? []}
                   bankAccounts={bankAccounts ?? []}
-                  onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["payables"] }); }}
+                  onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["payables", empresaId] }); }}
                 />
               </DialogContent>
             </Dialog>
@@ -715,6 +733,7 @@ function InlineDate({ value, onSave }: { value: string; onSave: (v: string) => P
 // ===== Edit Form =====
 
 function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { payable: Payable; all: Payable[]; suppliers: { id: string; name: string }[]; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
+  const { empresaId, isEnabled } = useMultiempresa();
   const series = useMemo(() => findSeriesItems(all, payable), [all, payable]);
   const [scope, setScope] = useState<"one" | "forward" | "all">("one");
   const navCats = useNavigate();
@@ -901,6 +920,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
 }
 
 function PayPayableForm({ payable, bankAccounts, onDone }: { payable: Payable; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
+  const { empresaId, isEnabled } = useMultiempresa();
   const [paid_at, setPaidAt] = useState(new Date().toISOString().slice(0, 10));
   const [bank_account_id, setBankAccountId] = useState<string>(payable.bank_account_id ?? "");
   const [amount, setAmount] = useState(Number(payable.amount));
@@ -979,6 +999,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: string; name: string }[]; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
+  const { empresaId, isEnabled } = useMultiempresa();
   const confirm = useConfirm();
   const [f, setF] = useState({
     supplier_id: "", description: "", category: "fornecedor",
@@ -1015,6 +1036,7 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
           bank_account_id: f.bank_account_id || null,
           recurrence: f.recurrence,
           user_id: user.id,
+          empresa_id: isEnabled ? empresaId : undefined,
         };
       });
       const { error } = await supabase.from("payables").insert(rows as any);

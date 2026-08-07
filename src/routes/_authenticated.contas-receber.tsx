@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,6 +56,7 @@ const STATUS_STYLE: Record<string, string> = {
 
 function ReceivablesPage() {
   const qc = useQueryClient();
+  const { empresaId, isEnabled } = useMultiempresa();
   const confirm = useConfirm();
   const [statusFilter, setStatusFilter] = useState<string>("todos");
   const [customerFilter, setCustomerFilter] = useState<string>("todos");
@@ -66,23 +68,34 @@ function ReceivablesPage() {
   const [editTarget, setEditTarget] = useState<Receivable | null>(null);
 
   const { data: customers } = useQuery({
-    queryKey: ["customers-min"],
+    queryKey: ["customers-min", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("customers").select("id,name").order("name");
+      let query = supabase.from("customers").select("id,name");
+      
+      if (isEnabled && empresaId) {
+        query = query.eq("empresa_id", empresaId);
+      }
+
+      const { data, error } = await query.order("name");
       if (error) throw error;
       return data;
     },
   });
 
   const { data: rows } = useQuery({
-    queryKey: ["receivables"],
+    queryKey: ["receivables", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("receivables" as any)
-        .select("*, customers(name)")
-        .order("due_date", { ascending: true });
+      let query = supabase
+        .from("receivables")
+        .select("*, customers(name)");
+      
+      if (isEnabled && empresaId) {
+        query = query.eq("empresa_id", empresaId);
+      }
+
+      const { data, error } = await query.order("due_date", { ascending: true });
       if (error) throw error;
-      return data as unknown as Receivable[];
+      return data as Receivable[];
     },
   });
 
@@ -228,7 +241,7 @@ function ReceivablesPage() {
                   const { error } = await supabase.from("receivables" as any).update(patch as any).eq("id", r.id);
                   if (error) { toast.error(error.message); return; }
                   toast.success("Atualizado!");
-                  qc.invalidateQueries({ queryKey: ["receivables"] });
+                  qc.invalidateQueries({ queryKey: ["receivables", empresaId] });
                 };
 
                 const handleDelete = async () => {
@@ -247,7 +260,7 @@ function ReceivablesPage() {
                   const { error } = await supabase.from("receivables" as any).delete().eq("id", r.id);
                   if (error) { toast.error(error.message); return; }
                   toast.success("Excluído!");
-                  qc.invalidateQueries({ queryKey: ["receivables"] });
+                   qc.invalidateQueries({ queryKey: ["receivables", empresaId] });
                   qc.invalidateQueries({ queryKey: ["finance"] });
                   qc.invalidateQueries({ queryKey: ["cashflow"] });
                 };
@@ -307,7 +320,7 @@ function ReceivablesPage() {
           <DialogHeader><DialogTitle className="font-display">Nova conta a receber</DialogTitle></DialogHeader>
           <NewReceivableForm customers={customers ?? []} onDone={() => {
             setOpenNew(false);
-            qc.invalidateQueries({ queryKey: ["receivables"] });
+            qc.invalidateQueries({ queryKey: ["receivables", empresaId] });
           }} />
         </DialogContent>
       </Dialog>
@@ -320,7 +333,7 @@ function ReceivablesPage() {
               receivable={payTarget}
               onDone={() => {
                 setPayTarget(null);
-                qc.invalidateQueries({ queryKey: ["receivables"] });
+                qc.invalidateQueries({ queryKey: ["receivables", empresaId] });
                 qc.invalidateQueries({ queryKey: ["finance"] });
                 qc.invalidateQueries({ queryKey: ["cashflow"] });
                 qc.invalidateQueries({ queryKey: ["dashboard"] });
@@ -339,7 +352,7 @@ function ReceivablesPage() {
               customers={customers ?? []}
               onDone={() => {
                 setEditTarget(null);
-                qc.invalidateQueries({ queryKey: ["receivables"] });
+                qc.invalidateQueries({ queryKey: ["receivables", empresaId] });
               }}
             />
           )}
@@ -381,6 +394,7 @@ function InlineEdit({ value, type, display, onSave }: {
 }
 
 function EditReceivableForm({ receivable, customers, onDone }: { receivable: Receivable; customers: any[]; onDone: () => void }) {
+  const { empresaId, isEnabled } = useMultiempresa();
   const [customer_id, setCustomerId] = useState<string>(receivable.customer_id ?? "");
   const [description, setDescription] = useState(receivable.description);
   const [amount, setAmount] = useState(Number(receivable.amount));
@@ -390,11 +404,13 @@ function EditReceivableForm({ receivable, customers, onDone }: { receivable: Rec
   const [status, setStatus] = useState<string>(receivable.status);
 
   const { data: bankAccounts } = useQuery({
-    queryKey: ["bank-accounts-active"],
+    queryKey: ["bank-accounts-active", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("bank_accounts" as any).select("id,name,bank,color").eq("status", "ativa").order("name");
+      let query = supabase.from("bank_accounts").select("id,name,bank,color").eq("status", "ativa");
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+      const { data, error } = await query.order("name");
       if (error) throw error;
-      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string }[];
+      return (data ?? []) as any[];
     },
   });
 
@@ -493,6 +509,7 @@ function EditReceivableForm({ receivable, customers, onDone }: { receivable: Rec
 }
 
 function NewReceivableForm({ customers, onDone }: { customers: any[]; onDone: () => void }) {
+  const { empresaId, isEnabled } = useMultiempresa();
   const [customer_id, setCustomerId] = useState<string>("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState(0);
@@ -501,24 +518,29 @@ function NewReceivableForm({ customers, onDone }: { customers: any[]; onDone: ()
   const [bank_account_id, setBankAccountId] = useState<string>("");
 
   const { data: bankAccounts } = useQuery({
-    queryKey: ["bank-accounts-active"],
+    queryKey: ["bank-accounts-active", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bank_accounts" as any)
+      let query = supabase
+        .from("bank_accounts")
         .select("id,name,bank,color")
-        .eq("status", "ativa")
-        .order("name");
+        .eq("status", "ativa");
+      
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+
+      const { data, error } = await query.order("name");
       if (error) throw error;
-      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string }[];
+      return (data ?? []) as any[];
     },
   });
 
   const { data: rules } = useQuery({
-    queryKey: ["routing-rules"],
+    queryKey: ["routing-rules", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("payment_routing_rules" as any).select("payment_method,bank_account_id,fixo");
+      let query = supabase.from("payment_routing_rules").select("payment_method,bank_account_id,fixo");
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+      const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []) as unknown as { payment_method: string; bank_account_id: string | null; fixo: boolean }[];
+      return (data ?? []) as any[];
     },
   });
 
@@ -538,7 +560,10 @@ function NewReceivableForm({ customers, onDone }: { customers: any[]; onDone: ()
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
       const { error } = await supabase.from("receivables" as any).insert({
-        user_id: user.id, customer_id: customer_id || null, description, amount, due_date, payment_method,
+        user_id: user.id, 
+        empresa_id: isEnabled ? empresaId : undefined,
+        customer_id: customer_id || null, 
+        description, amount, due_date, payment_method,
         bank_account_id: bank_account_id || null,
       } as any);
       if (error) throw error;
@@ -625,6 +650,7 @@ function NewReceivableForm({ customers, onDone }: { customers: any[]; onDone: ()
 
 
 function ReceivePaymentForm({ receivable, onDone }: { receivable: Receivable; onDone: () => void }) {
+  const { empresaId, isEnabled } = useMultiempresa();
   const remaining = Number(receivable.amount) - Number(receivable.received_amount);
   const [amount, setAmount] = useState(remaining);
   const [received_at, setReceivedAt] = useState(new Date().toISOString().slice(0, 10));
@@ -632,24 +658,29 @@ function ReceivePaymentForm({ receivable, onDone }: { receivable: Receivable; on
   const [bank_account_id, setBankAccountId] = useState<string>("");
 
   const { data: bankAccounts } = useQuery({
-    queryKey: ["bank-accounts-active"],
+    queryKey: ["bank-accounts-active", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bank_accounts" as any)
+      let query = supabase
+        .from("bank_accounts")
         .select("id,name,bank,color")
-        .eq("status", "ativa")
-        .order("name");
+        .eq("status", "ativa");
+      
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+
+      const { data, error } = await query.order("name");
       if (error) throw error;
-      return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string }[];
+      return (data ?? []) as any[];
     },
   });
 
   const { data: rules } = useQuery({
-    queryKey: ["routing-rules"],
+    queryKey: ["routing-rules", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("payment_routing_rules" as any).select("payment_method,bank_account_id,fixo");
+      let query = supabase.from("payment_routing_rules").select("payment_method,bank_account_id,fixo");
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+      const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []) as unknown as { payment_method: string; bank_account_id: string | null; fixo: boolean }[];
+      return (data ?? []) as any[];
     },
   });
 

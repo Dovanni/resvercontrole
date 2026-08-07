@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,29 +24,37 @@ const EXPENSE_CATS = ["estoque", "embalagem", "marketing", "frete", "operacional
 
 function FinancePage() {
   const qc = useQueryClient();
+  const { empresaId, isEnabled } = useMultiempresa();
   const [open, setOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [expandedBalance, setExpandedBalance] = useState(false);
 
   const { data: bankAccounts } = useQuery({
-    queryKey: ["finance", "bank-accounts"],
+    queryKey: ["finance", "bank-accounts", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bank_accounts" as any)
+      let query = supabase
+        .from("bank_accounts")
         .select("id,name,bank,color,initial_balance,status")
-        .eq("status", "ativa")
-        .order("name");
+        .eq("status", "ativa");
+      
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+
+      const { data, error } = await query.order("name");
       if (error) throw error;
       return (data ?? []) as unknown as { id: string; name: string; bank: string; color: string; initial_balance: number }[];
     },
   });
 
   const { data: bankMovements } = useQuery({
-    queryKey: ["finance", "bank-movements-all"],
+    queryKey: ["finance", "bank-movements-all", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("bank_movements" as any)
+      let query = supabase
+        .from("bank_movements")
         .select("account_id,destination_account_id,type,amount");
+      
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []) as unknown as { account_id: string; destination_account_id: string | null; type: string; amount: number }[];
     },
@@ -73,9 +82,11 @@ function FinancePage() {
 
 
   const { data } = useQuery({
-    queryKey: ["finance"],
+    queryKey: ["finance", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("finance_entries").select("*").order("entry_date", { ascending: false }).limit(200);
+      let q = supabase.from("finance_entries").select("*");
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+      const { data, error } = await q.order("entry_date", { ascending: false }).limit(200);
       if (error) throw error;
       return data;
     },
@@ -116,7 +127,7 @@ function FinancePage() {
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader><DialogTitle className="font-display">Nova movimentação</DialogTitle></DialogHeader>
-                <EntryForm onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["finance"] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); }} />
+                <EntryForm onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["finance"] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); }} empresaId={isEnabled ? (empresaId ?? undefined) : undefined} />
               </DialogContent>
             </Dialog>
           </div>
@@ -345,7 +356,7 @@ function HelpDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
   );
 }
 
-function EntryForm({ onDone }: { onDone: () => void }) {
+function EntryForm({ onDone, empresaId }: { onDone: () => void; empresaId?: string }) {
   const [type, setType] = useState<"income" | "expense">("expense");
   const [category, setCategory] = useState("estoque");
   const [amount, setAmount] = useState(0);
@@ -356,8 +367,10 @@ function EntryForm({ onDone }: { onDone: () => void }) {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
       const { error } = await supabase.from("finance_entries").insert({
-        user_id: user.id, type, category, amount, description: description || null,
-      } as any);
+        user_id: user.id,
+        empresa_id: empresaId!,
+        type, category, amount, description: description || null,
+      });
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Salvo"); onDone(); },
