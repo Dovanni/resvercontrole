@@ -31,6 +31,7 @@ function LoginPage() {
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
   const [mathToken, setMathToken] = useState("");
   const [mathAnswer, setMathAnswer] = useState("");
+  const [mathToken, setMathToken] = useState("");
 
   const signInSecurityFn = useServerFn(secureSignIn);
   const turnstileRef = useRef<TurnstileWidgetRef>(null);
@@ -108,10 +109,20 @@ function LoginPage() {
         toast.success("Bem-vinda de volta!");
       }
     } catch (error: any) {
-      if (error.message.includes("TURNSTILE")) {
-        toast.error("Erro na verificação de segurança.");
-      } else {
-        toast.error(error.message || "Não foi possível entrar com os dados informados.");
+      try {
+        const parsedError = JSON.parse(error.message);
+        if (parsedError.code === "RATE_LIMITED") {
+          setRetryAfter(parsedError.retryAfterSeconds);
+          toast.error(parsedError.message);
+        } else {
+          toast.error(parsedError.message || error.message || "Erro de segurança.");
+        }
+      } catch {
+        if (error.message.includes("TURNSTILE")) {
+          toast.error("Erro na verificação de segurança.");
+        } else {
+          toast.error(error.message || "Não foi possível entrar com os dados informados.");
+        }
       }
       turnstileRef.current?.reset();
       setTurnstileToken(null);
@@ -146,7 +157,25 @@ function LoginPage() {
               <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
 
-            <MathChallengeField onVerify={(t, a) => { setMathToken(t); setMathAnswer(a); }} />
+            <div 
+              aria-live="polite" 
+              className="text-center p-3 rounded-lg bg-muted/50 text-sm font-medium"
+            >
+              {retryAfter !== null && retryAfter > 0 ? (
+                <span className="text-destructive">
+                  Muitas tentativas de acesso. Aguarde {formatTime(retryAfter)} para tentar novamente.
+                </span>
+              ) : retryAfter === 0 || (retryAfter === null && busy === false && turnstileToken === null && mathToken === "") ? (
+                retryAfter === null && busy === false && turnstileToken === null && mathToken === "" ? null : (
+                  <span className="text-primary">Você já pode tentar novamente</span>
+                )
+              ) : null}
+            </div>
+
+            <MathChallengeField 
+              ref={mathChallengeRef}
+              onVerify={(t, a) => { setMathToken(t); setMathAnswer(a); }} 
+            />
 
             <TurnstileWidget 
               ref={turnstileRef} 
@@ -155,7 +184,7 @@ function LoginPage() {
 
             <Button 
               type="submit" 
-              disabled={busy || (import.meta.env.VITE_TURNSTILE_SITE_KEY ? !turnstileToken : true)} 
+              disabled={busy || retryAfter !== null || (import.meta.env.VITE_TURNSTILE_SITE_KEY ? !turnstileToken : true)} 
               className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95"
             >
               {busy ? "Entrando..." : "Entrar"}
