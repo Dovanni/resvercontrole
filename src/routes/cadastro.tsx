@@ -1,13 +1,16 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { VejamaisMark } from "@/components/vejamais-logo";
-import { translateAuthError } from "@/lib/auth-errors";
+import { useServerFn } from "@tanstack/react-start";
+import { secureSignUp } from "@/lib/auth-security.functions";
+import { useRecaptcha } from "@/hooks/use-recaptcha";
+import { MathChallengeField } from "@/components/math-challenge";
 
 export const Route = createFileRoute("/cadastro")({
   head: () => ({ meta: [{ title: "Criar conta — Vejamais" }] }),
@@ -20,35 +23,69 @@ function SignupPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [empresaNome, setEmpresaNome] = useState("");
+  const [nomeAdmin, setNomeAdmin] = useState("");
   const [cnpj, setCnpj] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [busy, setBusy] = useState(false);
+  
+  const [mathToken, setMathToken] = useState("");
+  const [mathAnswer, setMathAnswer] = useState("");
+  
+  const signUpFn = useServerFn(secureSignUp);
+  const { getToken } = useRecaptcha();
 
-  async function signUp(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    
     if (password !== confirmPassword) {
       toast.error("As senhas não coincidem.");
       return;
     }
-    setBusy(true);
-    
-    // 1. SignUp
-    const { data: authData, error: authError } = await supabase.auth.signUp({ 
-      email, 
-      password,
-      options: {
-        data: { nome_empresa: empresaNome, cnpj }
-      }
-    });
 
-    if (authError) {
-      toast.error(translateAuthError(authError.message));
-      setBusy(false);
+    if (!acceptTerms || !acceptPrivacy) {
+      toast.error("Você precisa aceitar os termos e a política de privacidade.");
       return;
     }
 
-    toast.success("Conta criada! Verifique seu e-mail para confirmar.");
-    setBusy(false);
-    navigate({ to: "/login" });
+    setBusy(true);
+    
+    try {
+      const recaptchaToken = await getToken("vejamais_signup");
+      if (!recaptchaToken) {
+        toast.error("Falha na validação do reCAPTCHA. Tente novamente.");
+        setBusy(false);
+        return;
+      }
+
+      await signUpFn({
+        data: {
+          email,
+          password,
+          empresaNome,
+          cnpj,
+          nomeAdministrador: nomeAdmin,
+          recaptchaToken,
+          mathChallengeToken: mathToken,
+          mathChallengeAnswer: mathAnswer,
+          consent: {
+            termos: acceptTerms,
+            privacidade: acceptPrivacy
+          }
+        }
+      });
+
+      toast.success("Conta criada! Verifique seu e-mail para confirmar.");
+      navigate({ to: "/login" });
+    } catch (error: any) {
+      if (error.message === "RECAPTCHA_CONFIGURATION_REQUIRED") {
+        toast.error("Configuração de segurança necessária (RECAPTCHA_CONFIGURATION_REQUIRED).");
+      } else {
+        toast.error(error.message || "Erro ao criar conta.");
+      }
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -61,19 +98,33 @@ function SignupPage() {
         </div>
 
         <div className="rounded-2xl bg-card shadow-soft border p-8">
-          <form onSubmit={signUp} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="admin_name">Nome do Administrador</Label>
+              <Input 
+                id="admin_name" 
+                required 
+                placeholder="Seu nome completo"
+                value={nomeAdmin} 
+                onChange={(e) => setNomeAdmin(e.target.value)} 
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="empresa">Nome da Empresa</Label>
               <Input id="empresa" required value={empresaNome} onChange={(e) => setEmpresaNome(e.target.value)} />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="cnpj">CNPJ</Label>
               <Input id="cnpj" placeholder="00.000.000/0000-00" value={cnpj} onChange={(e) => setCnpj(e.target.value)} />
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="email">Email do Administrador</Label>
               <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
@@ -84,9 +135,59 @@ function SignupPage() {
                 <Input id="confirm" type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
               </div>
             </div>
+
+            <div className="space-y-4 py-2 border-t border-b border-border/50">
+              <div className="flex items-start space-x-2">
+                <Checkbox 
+                  id="terms" 
+                  checked={acceptTerms} 
+                  onCheckedChange={(v) => setAcceptTerms(!!v)} 
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <label
+                    htmlFor="terms"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Aceito os Termos de Uso
+                  </label>
+                  <a href="/termos" target="_blank" className="text-xs text-primary inline-flex items-center gap-1 hover:underline">
+                    Ler termos <ExternalLink className="size-3" />
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-2">
+                <Checkbox 
+                  id="privacy" 
+                  checked={acceptPrivacy} 
+                  onCheckedChange={(v) => setAcceptPrivacy(!!v)} 
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <label
+                    htmlFor="privacy"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Aceito a Política de Privacidade
+                  </label>
+                  <a href="/privacidade" target="_blank" className="text-xs text-primary inline-flex items-center gap-1 hover:underline">
+                    Ler política <ExternalLink className="size-3" />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <MathChallengeField onVerify={(t, a) => { setMathToken(t); setMathAnswer(a); }} />
+
             <Button type="submit" disabled={busy} className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95">
-              Criar conta
+              {busy ? "Processando..." : "Criar conta"}
             </Button>
+            
+            <p className="text-[10px] text-center text-muted-foreground mt-2">
+              Este site é protegido pelo reCAPTCHA e a 
+              <a href="https://policies.google.com/privacy" className="underline ml-1">Política de Privacidade</a> e
+              <a href="https://policies.google.com/terms" className="underline ml-1">Termos de Serviço</a> do Google se aplicam.
+            </p>
+
             <div className="text-center mt-4 text-sm text-muted-foreground">
               Já tem uma conta? <Link to="/login" className="text-primary hover:underline font-medium">Entrar</Link>
             </div>
