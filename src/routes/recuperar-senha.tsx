@@ -40,12 +40,11 @@ function RecoveryPage() {
     setBusy(true);
 
     try {
-      await requestResetFn({
-        data: {
-          email,
-          turnstileToken,
-        }
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        captchaToken: turnstileToken,
       });
+
+      if (error) throw error;
       
       toast.success("Se existir uma conta com esse e-mail, enviaremos as orientações.");
       // Opcional: redirecionar ou limpar
