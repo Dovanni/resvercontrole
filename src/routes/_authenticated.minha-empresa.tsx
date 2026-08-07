@@ -206,8 +206,9 @@ function MinhaEmpresaPage() {
                     </tr>
                   ) : membersError ? (
                     <tr>
-                      <td colSpan={4} className="p-8 text-center text-destructive">
-                        Erro ao carregar membros. Verifique sua conexão ou permissões.
+                      <td colSpan={4} className="p-8 text-center space-y-3">
+                        <p className="text-destructive text-xs font-medium">Erro ao carregar membros.</p>
+                        <Button variant="outline" size="sm" onClick={() => refetchMembers()}>Tentar novamente</Button>
                       </td>
                     </tr>
                   ) : members.length === 0 ? (
