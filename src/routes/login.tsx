@@ -97,26 +97,6 @@ function LoginPage() {
     }
   }
 
-  async function handleForgot() {
-    if (!email) {
-      toast.error("Digite seu email no campo acima e clique em 'Esqueci minha senha' novamente.");
-      return;
-    }
-    setBusy(true);
-    // Para recuperação de senha, o requisito diz para exibir após atividade suspeita.
-    // Aqui simplificamos permitindo o envio, mas o backend deve aplicar rate limits.
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    setBusy(false);
-    
-    // Mensagem genérica conforme requisito de proteção contra enumeração
-    toast.success("Se existir uma conta com esse e-mail, enviaremos as orientações.");
-    
-    if (error) {
-      console.error("Reset password error:", error);
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gradient-rose flex items-center justify-center px-4">
@@ -160,14 +140,12 @@ function LoginPage() {
               {busy ? "Entrando..." : "Entrar"}
             </Button>
             
-            <button
-              type="button"
-              onClick={handleForgot}
-              disabled={busy}
-              className="w-full text-sm text-muted-foreground hover:text-foreground underline underline-offset-2"
+            <Link
+              to="/recuperar-senha"
+              className="block w-full text-center text-sm text-muted-foreground hover:text-foreground underline underline-offset-2"
             >
               Esqueci minha senha
-            </button>
+            </Link>
             
             <p className="text-[10px] text-center text-muted-foreground mt-2">
               Este site é protegido pelo reCAPTCHA e a 
