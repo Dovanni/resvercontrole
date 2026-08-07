@@ -1799,6 +1799,10 @@ export type Database = {
         Returns: string
       }
       ensure_default_routing: { Args: { _user_id: string }; Returns: undefined }
+      ensure_empresa_defaults: {
+        Args: { p_empresa_id: string; p_user_id: string }
+        Returns: undefined
+      }
       finalize_user_onboarding:
         | { Args: { p_auth_user_id: string }; Returns: Json }
         | {
