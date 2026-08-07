@@ -3,9 +3,10 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { 
   verifyMathChallenge, 
-  checkRateLimit,
+  checkRateLimitPersistent,
   verifyTurnstile,
-  clearRateLimit
+  clearRateLimitPersistent,
+  recordRateLimitFailure
 } from "./security.functions";
 
 const signupSchema = z.object({
