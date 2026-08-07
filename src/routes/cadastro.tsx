@@ -65,11 +65,6 @@ function SignupPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    
-    if (password !== confirmPassword) {
-      toast.error("As senhas não coincidem.");
-      return;
-    }
 
     if (!acceptTerms || !acceptPrivacy) {
       toast.error("Você precisa aceitar os termos e a política de privacidade.");
@@ -86,10 +81,9 @@ function SignupPage() {
       }
       
       // 1. Validar precondições e SiteVerify no servidor antes do Supabase
-      await signUpFn({
+      const result = await signUpFn({
         data: {
           email: email.trim(),
-          password,
           empresaNome: empresaNome.trim(),
           cnpj: cnpj.trim(),
           nomeAdmin: nomeAdmin.trim(),
@@ -100,26 +94,11 @@ function SignupPage() {
         }
       });
 
-      // 2. Se a segurança passou, prosseguir com o signup real (sem captchaToken nativo)
-      const { error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            nome_empresa: empresaNome,
-            cnpj,
-            nome_administrador: nomeAdmin,
-            consentimento_termos: true,
-            consentimento_privacidade: true,
-            data_consentimento: new Date().toISOString()
-          }
-        }
-      });
-
-      if (authError) throw authError;
-      
       // 3. Sucesso total: limpar rate limit
       await completeSignUpFn({ data: { email: email.trim() } });
+
+      toast.success(result.message || "Solicitação enviada! Verifique seu e-mail.");
+      navigate({ to: "/login" });
 
       toast.success("Conta criada! Verifique seu e-mail para confirmar.");
       navigate({ to: "/login" });
@@ -183,16 +162,6 @@ function SignupPage() {
               <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirm">Confirmar Senha</Label>
-                <Input id="confirm" type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
-              </div>
-            </div>
 
             <div className="space-y-4 py-2 border-t border-b border-border/50">
               <div className="flex items-start space-x-2">
@@ -265,7 +234,7 @@ function SignupPage() {
               disabled={busy || retryAfter !== null || (import.meta.env.VITE_TURNSTILE_SITE_KEY ? !turnstileToken : true)} 
               className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95"
             >
-              {busy ? "Processando..." : "Criar conta"}
+              {busy ? "Processando..." : "Enviar convite de ativação"}
             </Button>
             
             <p className="text-[10px] text-center text-muted-foreground mt-2">
