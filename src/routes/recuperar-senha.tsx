@@ -20,8 +20,8 @@ function RecoveryPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
-  const recaptchaRef = useRef<RecaptchaV2Ref>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileWidgetRef>(null);
 
   const requestResetFn = useServerFn(secureRequestPasswordReset);
 
