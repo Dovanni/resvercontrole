@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/app-shell";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -96,13 +97,14 @@ function CurvaABCPage() {
   const [from, setFrom] = useState(defaultFrom);
   const [to, setTo] = useState(defaultTo);
   const [channel, setChannel] = useState<"todos" | "atacado" | "varejo">("todos");
+  const { empresaId, isEnabled } = useMultiempresa();
   const [applied, setApplied] = useState({ from: defaultFrom, to: defaultTo, channel: "todos" as typeof channel });
   const [preset, setPreset] = useState("3m");
   const [showHelp, setShowHelp] = useState(false);
 
 
   const { data: sales } = useQuery({
-    queryKey: ["abc-sales", applied],
+    queryKey: ["abc-sales", applied, empresaId],
     queryFn: async () => {
       let q = supabase
         .from("sales")
@@ -112,6 +114,7 @@ function CurvaABCPage() {
         .neq("status", "cancelado")
         .neq("channel", "recursos_financeiros");
       if (applied.channel !== "todos") q = q.eq("channel", applied.channel);
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
       const { data, error } = await q;
       if (error) throw error;
       return data as any[];
@@ -119,7 +122,7 @@ function CurvaABCPage() {
   });
 
   const { data: items } = useQuery({
-    queryKey: ["abc-items", applied],
+    queryKey: ["abc-items", applied, empresaId],
     queryFn: async () => {
       let q = supabase
         .from("sale_items")
@@ -129,6 +132,7 @@ function CurvaABCPage() {
         .neq("sales.status", "cancelado")
         .neq("sales.channel", "recursos_financeiros");
       if (applied.channel !== "todos") q = q.eq("sales.channel", applied.channel);
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
       const { data, error } = await q;
       if (error) throw error;
       return data as any[];
