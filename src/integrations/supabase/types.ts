@@ -1799,10 +1799,12 @@ export type Database = {
         Returns: string
       }
       ensure_default_routing: { Args: { _user_id: string }; Returns: undefined }
-      finalize_user_onboarding: {
-        Args: { p_auth_user_id: string; p_onboarding_id: string }
-        Returns: Json
-      }
+      finalize_user_onboarding:
+        | { Args: { p_auth_user_id: string }; Returns: Json }
+        | {
+            Args: { p_auth_user_id: string; p_onboarding_id: string }
+            Returns: Json
+          }
       get_auth_rate_limit_status: {
         Args: {
           p_identity_hash: string

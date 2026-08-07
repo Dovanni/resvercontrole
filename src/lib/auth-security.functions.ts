@@ -180,7 +180,7 @@ export const finalizeOnboarding = createServerFn({ method: "POST" })
 
     try {
       // 2. Executar RPC transacional para criar empresa e perfis
-      // A autoridade de qual onboarding finalizar reside no p_auth_user_id validado pelo middleware
+      // A autoridade de qual onboarding finalizar reside no userId validado pelo middleware
       const { data: result, error: rpcError } = await (supabaseAdmin.rpc as any)('finalize_user_onboarding', {
         p_auth_user_id: userId
       });
