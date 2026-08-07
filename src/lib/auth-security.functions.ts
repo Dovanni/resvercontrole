@@ -61,21 +61,13 @@ export const secureSignUp = createServerFn({ method: "POST" })
       
       return { success: true };
     } catch (error: any) {
-      // Se for um erro do Zod ou erro de código que não atingiu a camada de segurança real,
-      // não contabilizamos no rate limit (o checkRateLimit acima já é condicional).
-      // Mas se o erro for de negócio APÓS o checkRateLimit, ele conta.
-      
-      // Se for o erro de RATE_LIMITED, apenas repassamos
       if (error.message?.includes("RATE_LIMITED")) {
         throw error;
       }
-
-      // Erros internos ou falhas de configuração não devem punir o usuário
       const isInternalError = error.status >= 500 || error.message?.includes("configuração");
       if (isInternalError) {
         throw new Error("Erro interno temporário. Tente novamente em instantes.");
       }
-
       throw error;
     }
   });
@@ -104,31 +96,36 @@ export const secureSignIn = createServerFn({ method: "POST" })
     const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
     const emailHash = data.email.toLowerCase().trim();
     
-    // 1. Math Challenge
-    const mathValid = await verifyMathChallenge(data.mathChallengeToken, data.mathChallengeAnswer);
-    if (!mathValid) {
-      throw new Error("Desafio matemático incorreto ou expirado.");
-    }
+    try {
+      // 1. Math Challenge
+      const mathValid = await verifyMathChallenge(data.mathChallengeToken, data.mathChallengeAnswer);
+      if (!mathValid) {
+        throw new Error("Desafio matemático incorreto ou expirado.");
+      }
 
-    // 2. Segurança (Turnstile)
-    const turnstileValid = await verifyTurnstile(data.turnstileToken);
-    if (!turnstileValid.success) {
-      throw new Error("Verificação de segurança falhou. Por favor, tente novamente.");
+      // 2. Segurança (Turnstile)
+      const turnstileValid = await verifyTurnstile(data.turnstileToken);
+      if (!turnstileValid.success) {
+        throw new Error("Verificação de segurança falhou. Por favor, tente novamente.");
+      }
+      
+      // 3. Rate Limit (Login: 5 tentativas, inicial 5min - Progressivo)
+      const rateLimit = await checkRateLimit(`login:email:${emailHash}`, 5, 5 * 60 * 1000);
+      if (!rateLimit.allowed) {
+        throw new Error(JSON.stringify({
+          code: "RATE_LIMITED",
+          retryAfterSeconds: rateLimit.retryAfterSeconds,
+          message: "Muitas tentativas de acesso. Aguarde para tentar novamente."
+        }));
+      }
+      
+      return { success: true };
+    } catch (error: any) {
+      if (error.message?.includes("RATE_LIMITED")) {
+        throw error;
+      }
+      throw error;
     }
-    
-    // 3. Rate Limit (Login: 5 tentativas, inicial 5min - Progressivo)
-    const rateLimit = await checkRateLimit(`login:email:${emailHash}`, 5, 5 * 60 * 1000);
-    if (!rateLimit.allowed) {
-      throw new Error(JSON.stringify({
-        code: "RATE_LIMITED",
-        retryAfterSeconds: rateLimit.retryAfterSeconds,
-        message: "Muitas tentativas de acesso. Aguarde para tentar novamente."
-      }));
-    }
-    
-    return { 
-      success: true 
-    };
   });
 
 export const completeSignInSuccess = createServerFn({ method: "POST" })
