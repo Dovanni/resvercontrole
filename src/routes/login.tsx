@@ -31,7 +31,6 @@ function LoginPage() {
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
   const [mathToken, setMathToken] = useState("");
   const [mathAnswer, setMathAnswer] = useState("");
-  const [mathToken, setMathToken] = useState("");
 
   const signInSecurityFn = useServerFn(secureSignIn);
   const turnstileRef = useRef<TurnstileWidgetRef>(null);
