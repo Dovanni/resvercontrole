@@ -134,7 +134,7 @@ function Header() {
               <Link to="/auth" onClick={() => setOpen(false)}>
                 <Button variant="outline" className="w-full">{HERO.existingClientCta}</Button>
               </Link>
-              <Link to="/auth" onClick={() => setOpen(false)}>
+              <Link to="/cadastro" onClick={() => setOpen(false)}>
                 <Button className="w-full gap-1">
                   {HERO.primaryCta} <ArrowRight className="size-4" />
                 </Button>
