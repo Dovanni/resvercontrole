@@ -24,8 +24,10 @@ const signupSchema = z.object({
 
 export const secureSignUp = createServerFn({ method: "POST" })
   .inputValidator((data) => signupSchema.parse(data))
-  .handler(async ({ data, request }) => {
-    const clientIp = request.headers.get('x-forwarded-for') || 'unknown';
+  .handler(async ({ data }) => {
+    // In TanStack Start, the request is available in the global context during server execution
+    const request = (globalThis as any).request as Request;
+    const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
     
     // 1. Rate Limit (Signup: 3 tentativas em 30 min por IP)
     const ipAllowed = await checkRateLimit(`signup:ip:${clientIp}`, 3, 30 * 60 * 1000);
@@ -93,8 +95,9 @@ const loginSchema = z.object({
 
 export const secureSignIn = createServerFn({ method: "POST" })
   .inputValidator((data) => loginSchema.parse(data))
-  .handler(async ({ data, request }) => {
-    const clientIp = request.headers.get('x-forwarded-for') || 'unknown';
+  .handler(async ({ data }) => {
+    const request = (globalThis as any).request as Request;
+    const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
     const emailHash = data.email.toLowerCase().trim();
     
     // 1. Rate Limit (Login: 5 tentativas em 15 min por identidade)
