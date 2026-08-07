@@ -358,7 +358,7 @@ function MinhaEmpresaPage() {
                 ) : hasInvitesError ? (
                   <div className="p-6 text-center space-y-2">
                     <p className="text-destructive text-[10px] font-medium">Erro na listagem de convites.</p>
-                    <Button variant="outline" size="xs" className="h-7 text-[10px]" onClick={() => refetchInvites()}>Tentar</Button>
+                    <Button variant="outline" size="sm" className="h-7 text-[10px]" onClick={() => refetchInvites()}>Tentar</Button>
                   </div>
                 ) : invitations.length === 0 ? (
                   <div className="p-8 text-center">
