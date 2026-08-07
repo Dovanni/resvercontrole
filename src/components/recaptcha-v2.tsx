@@ -43,7 +43,7 @@ export const RecaptchaV2 = forwardRef<RecaptchaV2Ref, RecaptchaV2Props>(({ onVer
     // If we have a site key, ensure window.grecaptcha is being monitored
     // The component handles its own error, but let's be extra defensive
     const timer = setTimeout(() => {
-      if (typeof window !== 'undefined' && !window.grecaptcha && !loadError) {
+      if (typeof window !== 'undefined' && !(window as any).grecaptcha && !loadError) {
         // If after 10 seconds still no grecaptcha and no error yet, it might be stuck
         console.warn("reCAPTCHA script load timeout detected");
       }
