@@ -7,28 +7,39 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export const getMyMultiempresaContext = createServerFn({ method: "GET" })
   .handler(async () => {
-    // A RPC usa auth.uid() internamente, garantindo segurança
-    const { data, error } = await supabase.rpc('get_my_multiempresa_context');
+    const start = Date.now();
+    try {
+      // A RPC usa auth.uid() internamente, garantindo segurança
+      const { data, error } = await supabase.rpc('get_my_multiempresa_context');
 
-    if (error) {
-      console.error("Erro na RPC get_my_multiempresa_context:", error);
-      throw new Error("Erro ao carregar contexto de empresas");
+      const duration = Date.now() - start;
+      if (error) {
+        console.error("Primary Operation Error (Context):", {
+          operation: "get_my_multiempresa_context",
+          error_code: error.code,
+          error_message: error.message,
+          duration_ms: duration
+        });
+        throw new Error(`[${error.code}] Erro ao carregar contexto de empresas: ${error.message}`);
+      }
+
+      if (!data || data.length === 0) {
+        return [];
+      }
+
+      return data.map((item: any) => ({
+        id: item.empresa_id,
+        nome: item.nome,
+        razao_social: item.razao_social,
+        tipo: item.tipo,
+        user_role: item.role,
+        membership_status: item.status,
+        is_primary: item.is_primary
+      }));
+    } catch (err: any) {
+      console.error("Critical Runtime Error in getMyMultiempresaContext:", err);
+      throw err;
     }
-
-    if (!data || data.length === 0) {
-      // Se não houver empresas, o frontend tratará o estado vazio explicativo
-      return [];
-    }
-
-    return data.map((item: any) => ({
-      id: item.empresa_id,
-      nome: item.nome,
-      razao_social: item.razao_social,
-      tipo: item.tipo,
-      user_role: item.role,
-      membership_status: item.status,
-      is_primary: item.is_primary
-    }));
   });
 
 /**

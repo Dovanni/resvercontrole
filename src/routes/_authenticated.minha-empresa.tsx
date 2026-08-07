@@ -41,18 +41,17 @@ function MinhaEmpresaPage() {
   const { 
     empresa, 
     companies, 
-    isEnabled, 
     isLoading: loadingMultiempresa, 
-    isError: multiempresaError,
-    error: multiError,
+    isError: contextError,
+    error: contextErrorInfo,
     refetch: refetchMultiempresa
   } = useMultiempresa();
   const [inviteForm, setInviteForm] = useState({ email: "", role: "vendedor" as any });
   const isAdmin = empresa?.user_role === 'admin';
 
+  // State isolado para membros
   const { 
     data: members = [], 
-
     isLoading: loadingMembers, 
     error: membersError,
     refetch: refetchMembers
@@ -60,36 +59,62 @@ function MinhaEmpresaPage() {
     queryKey: ["company-members", empresa?.id],
     enabled: !!empresa?.id && isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("list_my_company_members", {
-        p_empresa_id: empresa!.id
-      });
-      
-      if (error) {
-        console.error("Erro ao carregar membros:", error);
-        throw error;
+      const start = Date.now();
+      try {
+        const { data, error } = await supabase.rpc("list_my_company_members", {
+          p_empresa_id: empresa!.id
+        });
+        
+        const duration = Date.now() - start;
+        if (error) {
+          console.error("Secondary Operation Error (Members):", {
+            operation: "list_my_company_members",
+            error_code: error.code,
+            error_message: error.message,
+            duration_ms: duration
+          });
+          throw error;
+        }
+        return data || [];
+      } catch (err: any) {
+        throw err;
       }
-      return data || [];
     }
   });
 
+  // State isolado para convites
   const { 
     data: invitations = [], 
     isLoading: loadingInvites,
-    error: invitesError 
+    isError: hasInvitesError,
+    error: invitesError,
+    refetch: refetchInvites
   } = useQuery({
     queryKey: ["company-invitations", empresa?.id],
-    enabled: !!empresa?.id && empresa?.user_role === 'admin',
+    enabled: !!empresa?.id && isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("company_invitations")
-        .select("*")
-        .eq("empresa_id", empresa!.id)
-        .eq("status", "pending");
-      if (error) {
-        console.error("Erro ao carregar convites:", error);
-        throw error;
+      const start = Date.now();
+      try {
+        const { data, error } = await supabase
+          .from("company_invitations")
+          .select("*")
+          .eq("empresa_id", empresa!.id)
+          .eq("status", "pending");
+          
+        const duration = Date.now() - start;
+        if (error) {
+          console.error("Secondary Operation Error (Invitations):", {
+            operation: "fetch_invitations",
+            error_code: error.code,
+            error_message: error.message,
+            duration_ms: duration
+          });
+          throw error;
+        }
+        return data || [];
+      } catch (err: any) {
+        throw err;
       }
-      return data || [];
     }
   });
 
@@ -99,12 +124,15 @@ function MinhaEmpresaPage() {
     setInviteForm({ email: "", role: "vendedor" });
   };
 
-
-  if (multiempresaError) {
+  // ERRO CRÍTICO: Contexto primário falhou
+  if (contextError) {
     return (
       <div className="p-8 text-center space-y-4">
-        <div className="text-destructive font-medium">Erro ao carregar dados da empresa</div>
-        <p className="text-sm text-muted-foreground">{multiError?.message || "Ocorreu um erro inesperado."}</p>
+        <div className="text-destructive font-medium">Erro ao carregar contexto de empresas</div>
+        <div className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-md max-w-md mx-auto overflow-hidden">
+          <p className="font-mono">Code: {contextErrorInfo?.name || "UNKNOWN"}</p>
+          <p className="mt-1">{contextErrorInfo?.message || "Ocorreu um erro ao resolver o acesso às suas empresas."}</p>
+        </div>
         <Button onClick={() => refetchMultiempresa()}>Tentar novamente</Button>
       </div>
     );
@@ -325,7 +353,14 @@ function MinhaEmpresaPage() {
                 <CardTitle className="text-sm font-semibold">Pendentes</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
-                {invitations.length === 0 ? (
+                {loadingInvites ? (
+                  <div className="p-8 text-center text-muted-foreground animate-pulse text-xs">Carregando convites...</div>
+                ) : hasInvitesError ? (
+                  <div className="p-6 text-center space-y-2">
+                    <p className="text-destructive text-[10px] font-medium">Erro na listagem de convites.</p>
+                    <Button variant="outline" size="xs" className="h-7 text-[10px]" onClick={() => refetchInvites()}>Tentar</Button>
+                  </div>
+                ) : invitations.length === 0 ? (
                   <div className="p-8 text-center">
                     <Clock className="size-8 text-muted-foreground/30 mx-auto mb-2" />
                     <p className="text-xs text-muted-foreground italic">Nenhum convite pendente</p>
