@@ -60,10 +60,51 @@ export async function verifyMathChallenge(token: string, answer: string) {
   }
 }
 
+const TURNSTILE_SECRET = process.env['TURNSTILE_SECRET_KEY'];
+const HOSTNAME_ALLOWLIST = [
+  'resvercontrole.lovable.app',
+  'id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app',
+  'vejamais.com.br',
+  'www.vejamais.com.br'
+];
+
+export async function verifyTurnstile(token: string) {
+  if (!token) return { success: false, error: 'Token ausente' };
+  if (!TURNSTILE_SECRET) {
+    console.error('TURNSTILE_SECRET_KEY não configurada no servidor');
+    return { success: false, error: 'Erro de configuração' };
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append('secret', TURNSTILE_SECRET);
+    formData.append('response', token);
+
+    const result = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const outcome = await result.json();
+
+    if (!outcome.success) {
+      return { success: false, error: 'Desafio inválido' };
+    }
+
+    if (outcome.hostname && !HOSTNAME_ALLOWLIST.includes(outcome.hostname)) {
+      console.error(`Hostname não autorizado: ${outcome.hostname}`);
+      return { success: false, error: 'Origem não autorizada' };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error('Erro ao validar Turnstile:', err);
+    return { success: false, error: 'Erro na verificação' };
+  }
+}
+
 export async function verifyRecaptcha(token: string) {
-  // OBSOLETO: O projeto agora utiliza Cloudflare Turnstile via integração nativa do Supabase.
-  // O token deve ser validado pelo Supabase Auth enviando-o em options.captchaToken.
-  return { success: true };
+  return verifyTurnstile(token);
 }
 
 // Rate limiting simples em memória (per-isolate no Worker)

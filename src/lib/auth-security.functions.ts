@@ -4,7 +4,8 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { 
   // verifyRecaptcha removido para migração Turnstile-Supabase 
   verifyMathChallenge, 
-  checkRateLimit 
+  checkRateLimit,
+  verifyTurnstile
 } from "./security.functions";
 
 const signupSchema = z.object({
@@ -41,11 +42,10 @@ export const secureSignUp = createServerFn({ method: "POST" })
       throw new Error("Desafio matemático incorreto ou expirado.");
     }
     
-    // 3. Segurança (Turnstile)
-    // A validação real ocorre no Supabase Auth via options.captchaToken.
-    // O backend apenas garante que um token foi enviado.
-    if (!data.turnstileToken) {
-      throw new Error("Token de segurança ausente.");
+    // 3. Segurança (Turnstile - Application Layer SiteVerify)
+    const turnstileValid = await verifyTurnstile(data.turnstileToken);
+    if (!turnstileValid.success) {
+      throw new Error("Verificação de segurança falhou. Por favor, tente novamente.");
     }
     
     // 4. Validações de duplicidade (CNPJ/Email)
@@ -83,9 +83,10 @@ export const secureSignIn = createServerFn({ method: "POST" })
       throw new Error("Muitas tentativas de acesso. Tente novamente em 15 minutos.");
     }
     
-    // 2. Segurança (Turnstile)
-    if (!data.turnstileToken) {
-      throw new Error("Token de segurança ausente.");
+    // 2. Segurança (Turnstile - Application Layer SiteVerify)
+    const turnstileValid = await verifyTurnstile(data.turnstileToken);
+    if (!turnstileValid.success) {
+      throw new Error("Verificação de segurança falhou. Por favor, tente novamente.");
     }
     
     // 3. Math Challenge Adaptativo (se score baixo ou muitas falhas)
