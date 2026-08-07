@@ -100,9 +100,10 @@ function Header() {
           ))}
         </nav>
         <div className="ml-auto hidden lg:flex items-center gap-3">
-          <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <Link to="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             {HERO.existingClientCta}
           </Link>
+
           <Link to="/cadastro">
             <Button size="sm">{HERO.primaryCta}</Button>
           </Link>
@@ -131,9 +132,10 @@ function Header() {
               </a>
             ))}
             <div className="mt-2 grid gap-2">
-              <Link to="/auth" onClick={() => setOpen(false)}>
+              <Link to="/login" onClick={() => setOpen(false)}>
                 <Button variant="outline" className="w-full">{HERO.existingClientCta}</Button>
               </Link>
+
               <Link to="/cadastro" onClick={() => setOpen(false)}>
                 <Button className="w-full gap-1">
                   {HERO.primaryCta} <ArrowRight className="size-4" />
@@ -724,11 +726,12 @@ function FinalCta() {
             Organize vendas, finanças, contas e resultados com o Vejamais.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link to="/auth">
+            <Link to="/login">
               <Button size="lg" className="gap-1.5" variant="secondary">
                 {HERO.existingClientCta} <ArrowRight className="size-4" />
               </Button>
             </Link>
+
             <Link to="/cadastro">
               <Button size="lg" className="gap-1.5">
                 {HERO.primaryCta} <ArrowRight className="size-4" />
@@ -771,7 +774,7 @@ function Footer() {
         <div>
           <div className="text-sm font-medium text-foreground">Plataforma</div>
           <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-            <li><Link to="/auth" className="hover:text-foreground">Entrar</Link></li>
+            <li><Link to="/login" className="hover:text-foreground">Entrar</Link></li>
             <li><Link to="/cadastro" className="hover:text-foreground">Cadastrar</Link></li>
             <li><a href="#recursos" className="hover:text-foreground">Recursos</a></li>
             <li><a href="#planos" className="hover:text-foreground">Planos</a></li>
