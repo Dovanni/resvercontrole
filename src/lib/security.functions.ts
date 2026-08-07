@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { crypto } from "crypto";
+import crypto from "crypto";
 
 // Tipos e Interfaces
 export interface MathChallenge {
