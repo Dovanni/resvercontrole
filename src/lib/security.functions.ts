@@ -1,12 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import crypto from "crypto";
-import { 
-  isTokenUsed, 
-  markTokenAsUsed, 
-  checkRateLimit, 
-  verifyMathChallenge 
-} from "./security.functions";
 
 // Tipos e Interfaces
 export interface MathChallenge {
@@ -147,20 +141,4 @@ export async function isTokenUsed(token: string) {
 
 export async function markTokenAsUsed(token: string, expiryMs: number = 2 * 60 * 1000) {
   usedTokens.set(token, Date.now() + expiryMs);
-}
-
-  const now = Date.now();
-  const record = rateLimits.get(key);
-  
-  if (!record || now > record.resetAt) {
-    rateLimits.set(key, { count: 1, resetAt: now + windowMs });
-    return true;
-  }
-  
-  if (record.count >= limit) {
-    return false;
-  }
-  
-  record.count++;
-  return true;
 }
