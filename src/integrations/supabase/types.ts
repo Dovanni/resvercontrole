@@ -721,6 +721,7 @@ export type Database = {
           created_at: string
           custo: number
           data: string
+          empresa_id: string
           frete_cliente: number
           frete_empresa: number
           id: string
@@ -740,6 +741,7 @@ export type Database = {
           created_at?: string
           custo?: number
           data: string
+          empresa_id: string
           frete_cliente?: number
           frete_empresa?: number
           id?: string
@@ -759,6 +761,7 @@ export type Database = {
           created_at?: string
           custo?: number
           data?: string
+          empresa_id?: string
           frete_cliente?: number
           frete_empresa?: number
           id?: string
@@ -774,6 +777,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "controle_vendas_diario_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "controle_vendas_diario_sale_id_fkey"
             columns: ["sale_id"]
