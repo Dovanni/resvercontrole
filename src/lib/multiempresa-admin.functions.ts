@@ -48,10 +48,11 @@ export const createInternalInvitation = createServerFn({ method: "POST" })
     const { error } = await supabase.from("company_invitations").insert({
       empresa_id: data.empresaId,
       role: data.role,
-      token,
+      token_hash: token, // O schema usa token_hash
       expires_at: expiresAt.toISOString(),
-      created_by: context.userId,
-      status: "pending"
+      invited_by: context.userId,
+      status: "pending",
+      email: data.email || ""
     });
 
     if (error) throw error;
@@ -70,8 +71,8 @@ export const acceptInvitation = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     // Chama a função RPC que executa a lógica atômica de validação e criação de acesso
     const { data: result, error } = await supabase.rpc("accept_company_invitation", {
-      p_token: data.token,
-      p_user_id: context.userId
+      _token_hash: data.token,
+      _user_id: context.userId
     });
 
     if (error) throw error;
