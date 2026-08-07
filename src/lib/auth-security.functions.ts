@@ -13,7 +13,7 @@ const signupSchema = z.object({
   password: z.string().min(6),
   empresaNome: z.string().min(1),
   cnpj: z.string().optional(),
-  nomeAdministrador: z.string().min(1),
+  nomeAdmin: z.string().min(1),
   turnstileToken: z.string(),
   mathChallengeToken: z.string(),
   mathChallengeAnswer: z.string(),

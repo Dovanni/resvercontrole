@@ -1,3 +1,4 @@
+// VEJAMAIS_PUBLIC_SIGNUP_ADMIN_NAME_CONTRACT_CORRECTED
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";

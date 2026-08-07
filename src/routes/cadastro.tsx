@@ -63,11 +63,11 @@ function SignupPage() {
       // 1. Validar precondições e SiteVerify no servidor antes do Supabase
       await signUpFn({
         data: {
-          email,
+          email: email.trim(),
           password,
-          empresaNome,
-          cnpj,
-          nomeAdmin,
+          empresaNome: empresaNome.trim(),
+          cnpj: cnpj.trim(),
+          nomeAdmin: nomeAdmin.trim(),
           turnstileToken,
           mathChallengeToken: mathToken,
           mathChallengeAnswer: mathAnswer,
