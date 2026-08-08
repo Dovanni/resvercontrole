@@ -53,14 +53,20 @@ function AuthCallbackPage() {
         // But the prompt says: "O callback de recuperação deverá encaminhar somente para /reset-password."
         
         // We check if it's a recovery flow by looking at the URL hash or state
+        // 3. Destino permitido
+        // O destino deve ser determinado por estado seguro do fluxo, não por parâmetro next arbitrário.
         const isRecovery = window.location.hash.includes("type=recovery") || search.type === "recovery";
+        const isSignup = window.location.hash.includes("type=signup") || search.type === "signup" || search.type === "invite";
 
         if (isRecovery) {
           setStatus("Redirecionando para redefinição de senha...");
           navigate({ to: "/reset-password", replace: true });
-        } else {
-          // Default: onboarding activation jump
+        } else if (isSignup) {
           setStatus("Redirecionando para ativação...");
+          navigate({ to: "/ativar-conta", replace: true });
+        } else {
+          // Fallback para ativação se houver sessão
+          setStatus("Redirecionando...");
           navigate({ to: "/ativar-conta", replace: true });
         }
       } catch (error: any) {
