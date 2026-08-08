@@ -1,0 +1,162 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSubscriptionContext } from "@/hooks/use-subscription-context";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
+import { PageHeader } from "@/components/app-shell";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Check, CreditCard, Users, Clock, AlertCircle } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+
+export const Route = createFileRoute("/_authenticated/configuracoes/assinatura")({
+  head: () => ({ meta: [{ title: "Assinatura e Planos — Vejamais" }] }),
+  component: SubscriptionSettingsPage,
+});
+
+function SubscriptionSettingsPage() {
+  const { empresaId } = useMultiempresa();
+  const { data: sub, isLoading } = useSubscriptionContext(empresaId);
+
+  if (isLoading) return <div className="p-8 text-muted-foreground">Carregando informações da assinatura...</div>;
+
+  if (!sub) {
+    return (
+      <div className="p-6 md:p-8 max-w-4xl mx-auto">
+        <PageHeader title="Assinatura" subtitle="Gerencie seu plano e pagamentos" />
+        <Card>
+          <CardContent className="p-12 text-center">
+            <AlertCircle className="size-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium">Assinatura não encontrada</h3>
+            <p className="text-muted-foreground mb-6">Não foi possível carregar os dados da sua assinatura.</p>
+            <Button asChild>
+              <Link to="/configuracoes">Voltar para Configurações</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const isTrial = sub.status === "trialing";
+  const statusColor = {
+    active: "bg-green-500/10 text-green-600 border-green-200",
+    trialing: "bg-primary/10 text-primary border-primary/20",
+    past_due: "bg-amber-500/10 text-amber-600 border-amber-200",
+    grace_read_only: "bg-orange-500/10 text-orange-600 border-orange-200",
+    restricted: "bg-destructive/10 text-destructive border-destructive/20",
+    none: "bg-muted text-muted-foreground",
+  }[sub.status] || "bg-muted text-muted-foreground";
+
+  const statusLabel = {
+    active: "Ativa",
+    trialing: "Período de Teste",
+    past_due: "Pagamento Pendente",
+    grace_read_only: "Aguardando Pagamento",
+    restricted: "Restrita",
+    none: "Sem Assinatura",
+  }[sub.status] || sub.status;
+
+  return (
+    <div className="p-6 md:p-8 max-w-5xl mx-auto">
+      <PageHeader 
+        title="Assinatura" 
+        subtitle="Controle seu plano, limites e faturamento" 
+      />
+
+      <div className="grid gap-6 md:grid-cols-3 mb-8">
+        <Card className="md:col-span-2 shadow-soft">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <CardTitle className="font-display text-2xl">Plano Atual: {sub.plan_name}</CardTitle>
+                <CardDescription>
+                  Identificador do plano: <code className="text-[10px] bg-muted px-1 rounded">{sub.plan_code}</code>
+                </CardDescription>
+              </div>
+              <Badge className={`${statusColor} capitalize px-3 py-1 font-semibold`}>
+                {statusLabel}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                <Users className="size-5 text-primary" />
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Usuários</div>
+                  <div className="text-sm font-medium">
+                    {sub.current_user_count} de {sub.max_users} utilizados
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                <Clock className="size-5 text-primary" />
+                <div>
+                  <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                    {isTrial ? "Expira em" : "Próximo Vencimento"}
+                  </div>
+                  <div className="text-sm font-medium">
+                    {sub.current_period_ends_at ? format(new Date(sub.current_period_ends_at), "dd/MM/yyyy", { locale: ptBR }) : 'N/A'}
+                    <span className="ml-2 text-xs text-muted-foreground">
+                      ({sub.days_remaining} {sub.days_remaining === 1 ? 'dia' : 'dias'})
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {isTrial && (
+              <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20">
+                <h4 className="font-semibold text-primary flex items-center gap-2 mb-2">
+                  <CreditCard className="size-4" />
+                  Aproveite o Vejamais ao máximo
+                </h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Sua avaliação gratuita termina em breve. Adicione um método de pagamento para garantir a continuidade do seu acesso e desbloquear todos os recursos sem interrupções.
+                </p>
+                <Button className="bg-gradient-primary text-primary-foreground shadow-glow">
+                  Assinar Plano Empresarial (R$ 35,90/mês)
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-soft">
+          <CardHeader>
+            <CardTitle className="text-lg">Recursos do Plano</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-3">
+              {[
+                "Multiempresa Ativo",
+                "Gestão Comercial Completa",
+                "Controle Financeiro & DRE",
+                `${sub.max_users} Usuários inclusos`,
+                sub.priority_suggestions ? "Sugestões Prioritárias" : "Suporte Padrão",
+                "Importação via Excel",
+                "Segurança RLS Enterprise"
+              ].map((feature, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                  <Check className="size-4 text-green-500 mt-0.5 shrink-0" />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+      
+      <div className="flex justify-between items-center mt-4">
+        <Button variant="ghost" asChild>
+          <Link to="/configuracoes">← Voltar para Configurações</Link>
+        </Button>
+        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+          ID da Empresa: {empresaId}
+        </p>
+      </div>
+    </div>
+  );
+}
