@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { VejamaisMark } from "@/components/vejamais-logo";
 import { toast } from "sonner";
 import { translateAuthError } from "@/lib/auth-errors";
+import { useServerFn } from "@tanstack/react-start";
+import { finalizeOnboarding } from "@/lib/auth-security.functions";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({ meta: [{ title: "Redefinir senha" }] }),
@@ -19,6 +21,9 @@ function ResetPasswordPage() {
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [ready, setReady] = useState(false);
+  const [hasPending, setHasPending] = useState(false);
+  
+  const finalizeFn = useServerFn(finalizeOnboarding);
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
@@ -37,9 +42,32 @@ function ResetPasswordPage() {
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password });
     setBusy(false);
-    if (error) toast.error(translateAuthError(error.message));
-    else {
+    if (error) {
+      toast.error(translateAuthError(error.message));
+    } else {
       toast.success("Senha redefinida com sucesso!");
+      
+      // Verificar se há onboarding pendente
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // Busca read-only via RPC ou query direta para saber se deve ativar
+          const { data: onboarding } = await supabase
+            .from('pending_onboardings' as any)
+            .select('id')
+            .eq('auth_user_id', user.id)
+            .eq('status', 'pending')
+            .maybeSingle();
+            
+          if (onboarding) {
+            navigate({ to: "/ativar-conta" });
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao verificar onboarding:", err);
+      }
+      
       navigate({ to: "/dashboard" });
     }
   }
