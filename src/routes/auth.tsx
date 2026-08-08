@@ -5,7 +5,7 @@ export const Route = createFileRoute("/auth")({
     const searchParams = search as any;
     const { code, type, token_hash } = searchParams;
 
-    // Se houver parâmetros, decide o destino
+    // 1. Prioridade absoluta: Se houver parâmetros de fluxo, redirecionar para as rotas dedicadas
     if ((token_hash || code) && type === "recovery") {
       if (location.pathname === "/auth/callback/recovery") return;
       throw redirect({ to: "/auth/callback/recovery", search: { ...searchParams }, replace: true });
@@ -16,10 +16,13 @@ export const Route = createFileRoute("/auth")({
       throw redirect({ to: "/auth/callback", search: { ...searchParams }, replace: true });
     }
 
-    // Se cair aqui e estiver no path /auth, manda para login
+    // 2. Se estiver na raiz /auth sem parâmetros identificados, redireciona para login
     if (location.pathname === "/auth" || location.pathname === "/auth/") {
       throw redirect({ to: "/login", replace: true });
     }
+    
+    // 3. Se estiver em uma sub-rota filha (/auth/callback/*) sem parâmetros,
+    // o componente da própria rota lidará com o estado de erro.
   },
   component: () => <Outlet />,
 });
