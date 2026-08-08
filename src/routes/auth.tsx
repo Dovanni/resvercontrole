@@ -17,9 +17,10 @@ export const Route = createFileRoute("/auth")({
     }
 
     // 2. Se estiver na raiz /auth sem parâmetros, vai para login
-    if (location.pathname === "/auth") {
+    if (location.pathname === "/auth" || location.pathname === "/auth/") {
       throw redirect({ to: "/login", replace: true });
     }
+
 
     // 3. Se estiver em uma sub-rota (ex: /auth/callback/recovery) e NÃO tiver parâmetros,
     // o componente da própria rota lidará com o estado de erro.
