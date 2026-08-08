@@ -10,6 +10,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { CompanySelector } from "./company-selector";
 import { useMultiempresa } from "@/hooks/use-multiempresa";
+import { TrialBanner } from "./trial-banner";
 
 const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, perm: "view:dashboard" },
@@ -210,7 +211,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Sheet>
           </div>
         </header>
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="flex-1 overflow-auto">
+          {import.meta.env.VITE_ENABLE_BILLING_SUBSCRIPTIONS === 'true' && <TrialBanner />}
+          {children}
+        </main>
         <nav className="md:hidden border-t bg-sidebar flex overflow-x-auto text-[10px]">
           {nav.map((n) => {
             const active = pathname.startsWith(n.to);

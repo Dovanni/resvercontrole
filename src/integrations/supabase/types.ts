@@ -1239,6 +1239,69 @@ export type Database = {
           },
         ]
       }
+      payment_events: {
+        Row: {
+          created_at: string | null
+          empresa_id: string | null
+          event_type: string
+          id: string
+          payload_sha256: string
+          processed_at: string | null
+          processing_attempts: number
+          processing_status: string
+          provider: string
+          provider_event_id: string
+          sanitized_error_code: string | null
+          subscription_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          empresa_id?: string | null
+          event_type: string
+          id?: string
+          payload_sha256: string
+          processed_at?: string | null
+          processing_attempts?: number
+          processing_status?: string
+          provider: string
+          provider_event_id: string
+          sanitized_error_code?: string | null
+          subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          empresa_id?: string | null
+          event_type?: string
+          id?: string
+          payload_sha256?: string
+          processed_at?: string | null
+          processing_attempts?: number
+          processing_status?: string
+          provider?: string
+          provider_event_id?: string
+          sanitized_error_code?: string | null
+          subscription_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_events_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_events_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_routing_rules: {
         Row: {
           bank_account_id: string | null
@@ -1335,6 +1398,75 @@ export type Database = {
           nome_empresa?: string
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      plans: {
+        Row: {
+          all_features_enabled: boolean
+          amount_cents: number
+          billing_interval: string | null
+          code: string
+          created_at: string | null
+          currency: string
+          description: string | null
+          grace_days: number
+          id: string
+          is_active: boolean
+          is_public: boolean
+          max_users: number
+          name: string
+          priority_suggestions: boolean
+          requires_payment_method: boolean
+          sort_order: number | null
+          stripe_price_id: string | null
+          stripe_product_id: string | null
+          trial_days: number
+          updated_at: string | null
+        }
+        Insert: {
+          all_features_enabled?: boolean
+          amount_cents: number
+          billing_interval?: string | null
+          code: string
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          grace_days?: number
+          id?: string
+          is_active?: boolean
+          is_public?: boolean
+          max_users: number
+          name: string
+          priority_suggestions?: boolean
+          requires_payment_method?: boolean
+          sort_order?: number | null
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
+          trial_days?: number
+          updated_at?: string | null
+        }
+        Update: {
+          all_features_enabled?: boolean
+          amount_cents?: number
+          billing_interval?: string | null
+          code?: string
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          grace_days?: number
+          id?: string
+          is_active?: boolean
+          is_public?: boolean
+          max_users?: number
+          name?: string
+          priority_suggestions?: boolean
+          requires_payment_method?: boolean
+          sort_order?: number | null
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
+          trial_days?: number
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1656,6 +1788,87 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          cancel_at_period_end: boolean
+          canceled_at: string | null
+          created_at: string | null
+          current_period_ends_at: string | null
+          current_period_started_at: string | null
+          empresa_id: string
+          grace_ends_at: string | null
+          id: string
+          last_payment_status: string | null
+          plan_id: string
+          restricted_at: string | null
+          source: string
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_ends_at: string | null
+          trial_started_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cancel_at_period_end?: boolean
+          canceled_at?: string | null
+          created_at?: string | null
+          current_period_ends_at?: string | null
+          current_period_started_at?: string | null
+          empresa_id: string
+          grace_ends_at?: string | null
+          id?: string
+          last_payment_status?: string | null
+          plan_id: string
+          restricted_at?: string | null
+          source: string
+          status: string
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          trial_started_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cancel_at_period_end?: boolean
+          canceled_at?: string | null
+          created_at?: string | null
+          current_period_ends_at?: string | null
+          current_period_started_at?: string | null
+          empresa_id?: string
+          grace_ends_at?: string | null
+          id?: string
+          last_payment_status?: string | null
+          plan_id?: string
+          restricted_at?: string | null
+          source?: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          trial_started_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           contact_name: string | null
@@ -1780,6 +1993,10 @@ export type Database = {
         Args: { _token_hash: string }
         Returns: boolean
       }
+      can_company_invite_member: {
+        Args: { p_empresa_id: string }
+        Returns: Json
+      }
       cancel_pending_onboarding: {
         Args: { p_onboarding_id: string }
         Returns: undefined
@@ -1821,6 +2038,10 @@ export type Database = {
           is_blocked: boolean
           retry_after_seconds: number
         }[]
+      }
+      get_company_subscription_context: {
+        Args: { p_empresa_id: string }
+        Returns: Json
       }
       get_my_multiempresa_context: {
         Args: never

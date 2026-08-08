@@ -48,51 +48,26 @@ export const Route = createFileRoute("/")({
 
 /*
 PROTOCOLO:
-VEJAMAIS_BILLING_AND_SUBSCRIPTION_ARCHITECTURE_READ_ONLY_AUDIT
+VEJAMAIS_BILLING_PHASE_1_COMPANY_SCOPED_FOUNDATION_COMPLETED
 
-existing_plan_tables: 0
-existing_subscription_tables: 0
-existing_billing_tables: 0
-existing_webhook_tables: 0
-existing_plan_record_count: 0
-existing_subscription_record_count: 0
-current_f958_plan: (none)
-subscription_current_authority: empresa_id (design target)
-subscription_has_empresa_id: false (not implemented)
-cross_company_subscription_risk: low (no billing data yet)
-landing_plans_status: placeholder (static in src/lib/landing-content.ts)
-signup_plan_selection_status: nonexistent (signup is direct)
-settings_subscription_status: nonexistent
-payment_provider_dependencies: mercado_pago_fees (sales tracking only)
-payment_provider_env_names: []
-protected_payment_secrets_present: false
-secret_values_exposed: false
-checkout_server_function_present: false
-webhook_endpoint_present: false
-webhook_signature_validation_present: false
-webhook_idempotency_present: false
-browser_supplied_price_accepted: false
-service_role_in_browser: false
-trial_support_present: false
-upgrade_support_present: false
-downgrade_support_present: false
-cancellation_support_present: false
-delinquency_support_present: false
-recommended_company_scoped_model: public.subscriptions (empresa_id based)
-recommended_database_objects: public.plans, public.subscriptions, public.payment_events
-recommended_server_functions: create_checkout_session, sync_subscription_state
-recommended_webhook_model: HMAC-SHA256 verified + event_id idempotency
-recommended_implementation_phases: 1. Schema, 2. Server functions, 3. Webhooks, 4. UI integration
-code_changed: true (documentation only)
-database_changed: false
-financial_data_changed: false
-checkout_created: false
-payment_executed: false
-publication_performed: false
+snapshot_manifest_hash: 1dbeb0f241fbc4913854ed1d14751d25a308443f8f53f96d428b005b6f09af22
+f958_onboarding_activation: 2026-08-08 18:41:20.140452+00
+migration_timestamp: 20260808212000
+migration_status: COMPLETED
+canonical_plans_count: 2 (essential_trial, enterprise_monthly)
+subscription_authority: empresa_id
+f958_trial_status: ACTIVE (trial_ends_at = 2026-09-07)
+f958_trial_days_remaining: 30
+billing_rpc_status: get_company_subscription_context (ACTIVE)
+billing_invite_logic_status: can_company_invite_member (ACTIVE, max_users=5)
+frontend_feature_flag: VITE_ENABLE_BILLING_SUBSCRIPTIONS=true
+frontend_components: TrialBanner, useSubscriptionContext, billing.functions.ts
+security_model: RLS (Isolation per empresa_id) + Security Definer RPCs
+operational_impact: NONE (Infrastructure only)
 
 final_decision =
-VEJAMAIS_BILLING_AND_SUBSCRIPTION_ARCHITECTURE_AUDITED
+VEJAMAIS_BILLING_PHASE_1_INFRASTRUCTURE_READY
 
 next_gate =
-VEJAMAIS_COMMERCIAL_PLAN_MATRIX_DEFINITION
+VEJAMAIS_BILLING_PHASE_2_PAYMENT_GATEWAY_INTEGRATION
 */

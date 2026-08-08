@@ -276,6 +276,22 @@ function SettingsPage() {
         </CardContent>
       </Card>
 
+      {import.meta.env.VITE_ENABLE_BILLING_SUBSCRIPTIONS === 'true' && (
+        <Card className="shadow-soft mt-6">
+          <CardContent className="p-6 flex items-center justify-between gap-4">
+            <div>
+              <h3 className="font-display text-lg">Assinatura e Plano</h3>
+              <p className="text-sm text-muted-foreground">
+                Gerencie seu plano atual, usuários e faturamento.
+              </p>
+            </div>
+            <Button asChild variant="link" className="text-primary">
+              <Link to="/configuracoes/assinatura">Gerenciar assinatura →</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
 
       {role === "admin" && (
         <Card className="shadow-soft mt-6 border-destructive/30">
