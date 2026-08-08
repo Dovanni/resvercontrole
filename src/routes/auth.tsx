@@ -1,7 +1,12 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/auth")({
   beforeLoad: ({ search, location }) => {
+    // Se acessado diretamente /auth sem nada, vai para login
+    if (location.pathname === "/auth") {
+      throw redirect({ to: "/login", replace: true });
+    }
+
     // Preservar parâmetros se existirem (para o callback)
     const searchParams = search as any;
     const code = searchParams.code;
@@ -9,8 +14,6 @@ export const Route = createFileRoute("/auth")({
     const token_hash = searchParams.token_hash;
 
     // Se já estamos no pathname de destino do redirecionamento, não redirecionar (evita loop)
-    // Nota: TanStack Router normaliza pathnames.
-    
     // Se houver token_hash e type=recovery, vai para o callback de recuperação dedicado
     if ((token_hash || code) && type === "recovery") {
       if (location.pathname === "/auth/callback/recovery") return;
@@ -30,10 +33,8 @@ export const Route = createFileRoute("/auth")({
         replace: true 
       });
     }
-
-    // Fallback padrão se não houver parâmetros de fluxo
-    throw redirect({ to: "/login", replace: true });
   },
-  component: () => null,
+  component: () => <Outlet />,
 });
+
 
