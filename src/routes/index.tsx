@@ -48,26 +48,33 @@ export const Route = createFileRoute("/")({
 
 /*
 PROTOCOLO:
-VEJAMAIS_BILLING_PHASE_1_COMPANY_SCOPED_FOUNDATION_COMPLETED
+VEJAMAIS_BILLING_PHASE_1_TARGETED_SAFETY_AND_UX_COMPLETED
 
-snapshot_manifest_hash: 1dbeb0f241fbc4913854ed1d14751d25a308443f8f53f96d428b005b6f09af22
-f958_onboarding_activation: 2026-08-08 18:41:20.140452+00
-migration_timestamp: 20260808212000
-migration_status: COMPLETED
-canonical_plans_count: 2 (essential_trial, enterprise_monthly)
-subscription_authority: empresa_id
-f958_trial_status: ACTIVE (trial_ends_at = 2026-09-07)
-f958_trial_days_remaining: 30
-billing_rpc_status: get_company_subscription_context (ACTIVE)
-billing_invite_logic_status: can_company_invite_member (ACTIVE, max_users=5)
-frontend_feature_flag: VITE_ENABLE_BILLING_SUBSCRIPTIONS=true
-frontend_components: TrialBanner, useSubscriptionContext, billing.functions.ts
-security_model: RLS (Isolation per empresa_id) + Security Definer RPCs
-operational_impact: NONE (Infrastructure only)
+preconditions_match: YES
+migration_name: 20260808212921_cca5c478-hardening
+migration_applied: YES
+plans_full_public_select_revoked: YES
+plans_public_column_grants: 15 columns
+subscriptions_access_via_rpc_only: YES
+payment_events_public_access: NONE (service_role only)
+runtime_hostname_guard_present: YES
+allowed_preview_hostnames: id-preview..., localhost, 127.0.0.1
+blocked_production_hostnames: resvercontrole..., vejamais..., www.vejamais...
+canonical_subscription_url: /configuracoes/assinatura
+internal_route_filename: configuracoes.assinatura.tsx
+milestone_modal_implemented: YES (15, 7, 3, 1, 0 days)
+milestone_local_storage_isolated: YES (user:company:ends:milestone)
+preview_simulation_available: YES (?previewTrialMilestone=X)
+checkout_created: NO
+stripe_api_called: NO
+f958_subscription_changed: NO
+snapshot_manifest_match: 1dbeb0f2...
+typecheck_status: PASS
+build_status: PASS
 
 final_decision =
-VEJAMAIS_BILLING_PHASE_1_INFRASTRUCTURE_READY
+VEJAMAIS_BILLING_PHASE_1_SAFETY_AND_UX_COMPLETED
 
 next_gate =
-VEJAMAIS_BILLING_PHASE_2_PAYMENT_GATEWAY_INTEGRATION
+VEJAMAIS_BILLING_PHASE_1_HUMAN_VISUAL_VALIDATION
 */
