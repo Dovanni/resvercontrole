@@ -21,29 +21,42 @@ function RecoveryCallbackPage() {
       processingRef.current = true;
 
       try {
-        // 1. PKCE: exchangeCodeForSession
-        // Na recuperação, o código vem no parâmetro 'code'
+        // 1. Novo formato: token_hash (verifyOtp)
+        const token_hash = search.token_hash;
+        const type = search.type || "recovery";
+        
+        // Mantemos compatibilidade com 'code' (PKCE) se necessário, mas priorizamos token_hash
         const code = search.code;
         
-        if (!code) {
-          // Se não houver código, verificamos se já existe sessão (reload)
+        if (!token_hash && !code) {
+          // Se não houver nada, verificamos se já existe sessão (reload)
           const { data: { session } } = await supabase.auth.getSession();
           if (session) {
             setStatus("Sessão confirmada. Redirecionando...");
             navigate({ to: "/reset-password", replace: true });
             return;
           }
-          throw new Error("Código de recuperação ausente. Por favor, utilize o link do e-mail.");
+          throw new Error("Link de segurança inválido ou expirado.");
         }
 
         setStatus("Estabelecendo conexão segura...");
         
-        // Exchange code for session (PKCE)
-        // Isso consome o code e estabelece a sessão no storage configurado
-        const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        let result;
+        if (token_hash) {
+          // Novo fluxo oficial: verifyOtp com token_hash
+          result = await supabase.auth.verifyOtp({
+            token_hash,
+            type: type as any
+          });
+        } else {
+          // Compatibilidade PKCE
+          result = await supabase.auth.exchangeCodeForSession(code);
+        }
         
-        if (exchangeError) {
-          console.error("Exchange error:", exchangeError);
+        const { data, error: authError } = result;
+        
+        if (authError) {
+          console.error("Auth verification error:", authError);
           throw new Error("Este link expirou ou já foi utilizado.");
         }
 
@@ -63,7 +76,8 @@ function RecoveryCallbackPage() {
         setStatus("Acesso concedido.");
         
         // Redirecionar para reset-password
-        // O navigate com replace remove o código da URL na barra do navegador
+        // O navigate com replace remove os parâmetros sensíveis da barra de endereço
+        window.history.replaceState({}, document.title, window.location.pathname);
         navigate({ to: "/reset-password", replace: true });
 
       } catch (err: any) {

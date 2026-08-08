@@ -19,21 +19,58 @@ const recoverySchema = z.object({
 export const secureRequestPasswordReset = createServerFn({ method: "POST" })
   .inputValidator((data) => recoverySchema.parse(data))
   .handler(async ({ data }) => {
-    const emailHash = data.email.toLowerCase().trim();
+    const email = data.email.toLowerCase().trim();
+    const emailHash = email;
 
-    // 1. Rate Limit
-    const allowed = await checkRateLimit(`recovery:email:${emailHash}`, 3, 60 * 60 * 1000);
-    if (!allowed) {
-      return { success: true, message: "Se existir uma conta com esse e-mail, enviaremos as orientações." };
+    try {
+      // 1. Rate Limit
+      const allowed = await checkRateLimit(`recovery:email:${emailHash}`, 3, 60 * 60 * 1000);
+      // Proteção contra enumeração: sempre retornar sucesso aparente
+      const genericResponse = { success: true, message: "Se o endereço estiver cadastrado, enviaremos as orientações para redefinição da senha." };
+      
+      if (!allowed) return genericResponse;
+
+      // 2. Segurança (Turnstile)
+      const turnstileValid = await verifyTurnstile(data.turnstileToken);
+      if (!turnstileValid.success) {
+        throw new Error("Verificação de segurança falhou. Por favor, tente novamente.");
+      }
+
+      // 3. Gerar link de recuperação via Supabase Admin (Server-Only)
+      // Não utilizamos resetPasswordForEmail para evitar envio automático do Supabase
+      const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+        type: "recovery",
+        email,
+      });
+
+      // Erro ou usuário não encontrado
+      if (linkError || !linkData.properties?.hashed_token) {
+        // Log sanitizado sem e-mail ou token
+        if (linkError) console.error("GenerateLink recovery error [sanitized]");
+        return genericResponse;
+      }
+
+      // 4. Construir link controlado da aplicação
+      const token = linkData.properties.hashed_token;
+      const baseUrl = getInviteRedirectUrl('recovery').split('/auth/callback/recovery')[0];
+      const recoveryLink = `${baseUrl}/auth/callback/recovery?token_hash=${token}&type=recovery`;
+
+      // 5. Enviar e-mail via Hostinger SMTP (Server-Only)
+      const { sendMail } = await import("./email.server");
+      const { getRecoveryEmailTemplate } = await import("./email-templates.server");
+
+      await sendMail({
+        to: email,
+        subject: "Redefina sua senha de acesso à VEJAMAIS",
+        html: getRecoveryEmailTemplate(recoveryLink),
+      });
+
+      return genericResponse;
+    } catch (error: any) {
+      // Falhas técnicas não devem revelar existência da conta
+      console.error("Recovery process failure [sanitized]");
+      return { success: true, message: "Se o endereço estiver cadastrado, enviaremos as orientações para redefinição da senha." };
     }
-
-    // 2. Segurança (Turnstile)
-    const turnstileValid = await verifyTurnstile(data.turnstileToken);
-    if (!turnstileValid.success) {
-      throw new Error("Verificação de segurança falhou. Por favor, tente novamente.");
-    }
-
-    return { success: true };
   });
 
 
