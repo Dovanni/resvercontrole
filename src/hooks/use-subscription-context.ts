@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { getCompanySubscriptionContext } from "./billing.functions";
-import { useAuth } from "@/hooks/use-auth";
+import { getCompanySubscriptionContext } from "@/lib/billing.functions";
+import { useAuth } from "@/lib/auth";
 
 export function useSubscriptionContext(empresaId: string | undefined) {
   const { user } = useAuth();
