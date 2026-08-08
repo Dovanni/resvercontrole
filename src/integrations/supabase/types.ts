@@ -1800,7 +1800,7 @@ export type Database = {
       }
       ensure_default_routing: { Args: { _user_id: string }; Returns: undefined }
       ensure_empresa_defaults: {
-        Args: { p_empresa_id: string; p_user_id: string }
+        Args: { _empresa_id: string; _user_id: string }
         Returns: undefined
       }
       finalize_user_onboarding:
