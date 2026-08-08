@@ -42,7 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { isEnabled, empresa } = useMultiempresa();
   
   // A autoridade primária de role agora é o membership da empresa ativa
-  const role = empresa?.user_role || legacyRole;
+  const role = (empresa?.user_role || legacyRole) as AppRole | null;
 
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const nav = ALL_NAV.filter((n) => role ? PERMISSIONS[role].includes(n.perm) : false);
