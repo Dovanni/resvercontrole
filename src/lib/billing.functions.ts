@@ -7,6 +7,7 @@ export const getCompanySubscriptionContext = createServerFn({ method: "GET" })
   .inputValidator((data) => z.object({ empresaId: z.string().uuid() }).parse(data))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { getRequest } = await import("@tanstack/react-start/server");
     const req = getRequest();
     const authHeader = req?.headers.get("Authorization");
     const token = authHeader?.replace("Bearer ", "");
@@ -22,17 +23,10 @@ export const getCompanySubscriptionContext = createServerFn({ method: "GET" })
       throw new Error("Unauthorized");
     }
 
-    // Usar o cliente administrativo para a RPC que internamente usa auth.uid()
-    // Como a RPC usa auth.uid(), precisamos garantir que o contexto do Supabase saiba quem é o usuário.
-    // O cliente admin não preenche auth.uid() automaticamente do token, ele ignora RLS.
-    // Mas a nossa RPC FOI desenhada para usar auth.uid().
-    
-    // CORREÇÃO: Vamos emular o comportamento da RPC mas usando o cliente admin para garantir bypass de ACLs de tabela
-    // e validando o membership manualmente aqui se necessário, ou ajustando a RPC para aceitar o user_id.
-
-    const { data: context, error } = await supabaseAdmin.rpc("get_company_subscription_context", {
+    // Chamar a RPC administrativa estrita
+    const { data: context, error } = await supabaseAdmin.rpc("get_company_subscription_context_admin", {
       p_empresa_id: data.empresaId,
-      p_user_id: userId
+      p_verified_user_id: userId
     });
 
     if (error) {
@@ -54,7 +48,7 @@ export const getCompanySubscriptionContext = createServerFn({ method: "GET" })
       current_user_count: number;
       can_invite_member: boolean;
       priority_suggestions: boolean;
-    };
+    } | null;
   });
 
 export const canInviteMember = createServerFn({ method: "GET" })
