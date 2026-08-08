@@ -1,59 +1,77 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { VejamaisMark } from "@/components/vejamais-logo";
+import { z } from "zod";
+
+const recoverySearchSchema = z.object({
+  token_hash: z.string().optional(),
+  type: z.string().optional(),
+  code: z.string().optional(),
+  error: z.string().optional(),
+  error_description: z.string().optional(),
+});
 
 export const Route = createFileRoute("/auth/callback/recovery")({
+  validateSearch: (search) => recoverySearchSchema.parse(search),
   component: RecoveryCallbackPage,
 });
 
 function RecoveryCallbackPage() {
   const navigate = useNavigate();
-  const search = useSearch({ from: "/auth/callback/recovery" }) as any;
+  const search = useSearch({ from: "/auth/callback/recovery" });
   const [status, setStatus] = useState("Validando acesso de recuperação...");
   const [error, setError] = useState<string | null>(null);
   const processingRef = useRef(false);
 
   useEffect(() => {
     async function handleRecovery() {
+      // Proteção contra dupla execução (StrictMode) e loop
       if (processingRef.current) return;
       processingRef.current = true;
 
       try {
-        // 1. Novo formato: token_hash (verifyOtp)
-        const token_hash = search.token_hash;
-        const type = search.type || "recovery";
+        const { token_hash, code, type = "recovery", error: urlError, error_description } = search;
+
+        // 0. Verificar erros do Supabase na URL
+        if (urlError) {
+          throw new Error(error_description || urlError);
+        }
+
+        // 1. Verificar se já existe sessão (evita re-processar se o usuário der refresh ou houver loop)
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
         
-        // Mantemos compatibilidade com 'code' (PKCE) se necessário, mas priorizamos token_hash
-        const code = search.code;
-        
-        if (!token_hash && !code) {
-          // Se não houver nada, verificamos se já existe sessão (reload)
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
-            setStatus("Sessão confirmada. Redirecionando...");
-            navigate({ to: "/reset-password", replace: true });
-            return;
+        // Se já temos sessão, verificamos se ela é válida para o que queremos
+        if (existingSession) {
+          setStatus("Sessão confirmada. Redirecionando...");
+          // Limpeza da URL antes de navegar
+          if (window.location.search) {
+            window.history.replaceState({}, document.title, window.location.pathname);
           }
-          throw new Error("Link de segurança inválido ou expirado.");
+          navigate({ to: "/reset-password", replace: true });
+          return;
+        }
+
+        // 2. Validar presença de tokens
+        if (!token_hash && !code) {
+          throw new Error("Link de segurança inválido ou incompleto.");
         }
 
         setStatus("Estabelecendo conexão segura...");
         
         let result;
         if (token_hash) {
-          // Novo fluxo oficial: verifyOtp com token_hash
+          // Fluxo OTP/Application-Owned
           result = await supabase.auth.verifyOtp({
             token_hash,
             type: type as any
           });
-        } else {
-          // Compatibilidade PKCE
+        } else if (code) {
+          // Fluxo PKCE fallback
           result = await supabase.auth.exchangeCodeForSession(code);
         }
         
-        const { data, error: authError } = result;
+        const { data, error: authError } = result!;
         
         if (authError) {
           console.error("Auth verification error:", authError);
@@ -64,29 +82,28 @@ function RecoveryCallbackPage() {
           throw new Error("Não foi possível estabelecer uma sessão válida.");
         }
 
-        // Confirmar persistência e usuário
+        // 3. Confirmar usuário
         setStatus("Confirmando identidade...");
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         
         if (userError || !user) {
-          throw userError || new Error("Usuário não identificado após a troca.");
+          throw userError || new Error("Usuário não identificado.");
         }
 
-        // Limpeza da URL e redirecionamento final
         setStatus("Acesso concedido.");
         
-        // Redirecionar para reset-password
-        // O navigate com replace remove os parâmetros sensíveis da barra de endereço
+        // 4. Limpeza da URL e Redirecionamento
+        // Removemos token_hash/code antes da navegação para evitar loops se o router re-avaliar
         window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Navegação final para redefinição
         navigate({ to: "/reset-password", replace: true });
 
       } catch (err: any) {
         console.error("Recovery callback fatal error:", err);
         setError(err.message || "Erro na validação do acesso.");
         setStatus("Falha na validação.");
-        
-        // Em caso de erro, não redirecionamos silenciosamente para o login
-        // Mostramos o erro na tela para o usuário saber o que aconteceu
+        processingRef.current = false; // Permite tentar novamente se for erro temporário
       }
     }
 
@@ -102,12 +119,20 @@ function RecoveryCallbackPage() {
           <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-lg border border-destructive/20 mb-6">
             {error}
           </div>
-          <button 
-            onClick={() => navigate({ to: "/login", replace: true })}
-            className="w-full py-2 px-4 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"
-          >
-            Voltar para o Login
-          </button>
+          <div className="space-y-3">
+            <button 
+              onClick={() => navigate({ to: "/recuperar-senha", replace: true })}
+              className="w-full py-2 px-4 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"
+            >
+              Solicitar novo link
+            </button>
+            <button 
+              onClick={() => navigate({ to: "/login", replace: true })}
+              className="w-full py-2 px-4 bg-secondary text-secondary-foreground rounded-lg hover:opacity-90 transition-opacity"
+            >
+              Voltar para o Login
+            </button>
+          </div>
         </div>
       </div>
     );
