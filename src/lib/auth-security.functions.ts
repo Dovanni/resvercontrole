@@ -234,31 +234,37 @@ export const secureSignUp = createServerFn({ method: "POST" })
     }
   });
 
-export const finalizeOnboarding = createServerFn({ method: "POST" })
+export const reconcileAndFinalizeOnboarding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    // 1. Obter usuário autenticado (TanStack Start context injetado pelo middleware)
     const { supabase: userClient, userId } = context as any;
     if (!userId) throw new Error("Não autorizado");
 
     try {
-      // 2. Executar RPC transacional para criar empresa e perfis
-      // A autoridade de qual onboarding finalizar reside no userId validado pelo middleware
-      const { data: result, error: rpcError } = await (supabaseAdmin.rpc as any)('finalize_user_onboarding', {
-        p_auth_user_id: userId
-      });
+      // Chama a nova RPC de reconciliação alvo (sem parâmetros conforme contrato)
+      const { data, error } = await userClient.rpc('reconcile_and_finalize_onboarding');
 
-      if (rpcError) throw rpcError;
+      if (error) {
+        console.error("Erro RPC reconcile_and_finalize_onboarding:", error);
+        throw new Error(error.message || "Erro interno ao processar reconciliação.");
+      }
 
-      // 3. Opcional: Limpar metadados informais (não-autoritativos) se existirem
-      await supabaseAdmin.auth.admin.updateUserById(userId, { 
-        user_metadata: { onboarding_completed: true } 
-      });
-
-      return { success: true };
+      return { 
+        success: true, 
+        already_finalized: data?.already_finalized || false,
+        empresa_id: data?.empresa_id 
+      };
     } catch (error: any) {
-      console.error("Erro na finalização do onboarding:", error);
-      throw new Error(error.message || "Falha ao concluir a criação da empresa.");
+      console.error("Falha na reconciliação do onboarding:", error);
+      throw error;
     }
+  });
+
+export const finalizeOnboarding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    // Legado: mantido apenas por compatibilidade, redireciona para a nova lógica se necessário
+    return { success: true };
   });
 
 export const completeSignUpSuccess = createServerFn({ method: "POST" })

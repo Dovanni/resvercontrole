@@ -38,10 +38,14 @@ const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
 const ROLE_LABEL: Record<string, string> = { admin: "Admin", vendedor: "Vendedor", financeiro: "Financeiro" };
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { signOut, user, role, can } = useAuth();
+  const { signOut, user, role: legacyRole, can } = useAuth();
   const { isEnabled, empresa } = useMultiempresa();
+  
+  // A autoridade primária de role agora é o membership da empresa ativa
+  const role = empresa?.user_role || legacyRole;
+
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const nav = ALL_NAV.filter((n) => can(n.perm));
+  const nav = ALL_NAV.filter((n) => can(n.perm, role));
   const queryClient = useQueryClient();
   const router = useRouter();
   const navigate = useNavigate();
