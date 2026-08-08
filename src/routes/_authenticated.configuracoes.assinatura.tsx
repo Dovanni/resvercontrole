@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSubscriptionContext } from "@/hooks/use-subscription-context";
 import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { PageHeader } from "@/components/app-shell";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, CreditCard, Users, Clock, AlertCircle } from "lucide-react";
@@ -50,7 +50,7 @@ function SubscriptionSettingsPage() {
 
   const statusLabel = {
     active: "Ativa",
-    trialing: "Período de Teste",
+    trialing: "Período de avaliação",
     past_due: "Pagamento Pendente",
     grace_read_only: "Aguardando Pagamento",
     restricted: "Restrita",
@@ -70,9 +70,6 @@ function SubscriptionSettingsPage() {
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <CardTitle className="font-display text-2xl">Plano Atual: {sub.plan_name}</CardTitle>
-                <CardDescription>
-                  Identificador do plano: <code className="text-[10px] bg-muted px-1 rounded">{sub.plan_code}</code>
-                </CardDescription>
               </div>
               <Badge className={`${statusColor} capitalize px-3 py-1 font-semibold`}>
                 {statusLabel}
@@ -116,9 +113,14 @@ function SubscriptionSettingsPage() {
                 <p className="text-sm text-muted-foreground mb-4">
                   Sua avaliação gratuita termina em breve. Adicione um método de pagamento para garantir a continuidade do seu acesso e desbloquear todos os recursos sem interrupções.
                 </p>
-                <Button className="bg-gradient-primary text-primary-foreground shadow-glow">
-                  Assinar Plano Empresarial (R$ 35,90/mês)
-                </Button>
+                <div className="space-y-2">
+                  <Button disabled className="bg-muted text-muted-foreground cursor-not-allowed border shadow-none">
+                    Plano Empresarial — R$ 35,90/mês
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground italic font-medium">
+                    Contratação online disponível em breve.
+                  </p>
+                </div>
               </div>
             )}
           </CardContent>
@@ -137,7 +139,7 @@ function SubscriptionSettingsPage() {
                 `${sub.max_users} Usuários inclusos`,
                 sub.priority_suggestions ? "Sugestões Prioritárias" : "Suporte Padrão",
                 "Importação via Excel",
-                "Segurança RLS Enterprise"
+                "Proteção e isolamento dos dados"
               ].map((feature, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                   <Check className="size-4 text-green-500 mt-0.5 shrink-0" />
@@ -153,9 +155,6 @@ function SubscriptionSettingsPage() {
         <Button variant="ghost" asChild>
           <Link to="/configuracoes">← Voltar para Configurações</Link>
         </Button>
-        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-          ID da Empresa: {empresaId}
-        </p>
       </div>
     </div>
   );
