@@ -28,14 +28,17 @@ export const Route = createFileRoute("/auth")({
       });
     }
 
-    // Se acessado diretamente /auth ou sub-rotas sem parâmetros de fluxo válidos, vai para login
-    // Exceto se já estivermos em uma rota de callback que queremos renderizar (Outlet cuidará disso)
-    if (location.pathname === "/auth") {
-      throw redirect({ to: "/login", replace: true });
+    // Se já estamos em uma rota filha (callback ou recovery), não redirecionar para login
+    if (location.pathname.startsWith("/auth/callback")) {
+      return;
     }
+
+    // Caso contrário, vai para login
+    throw redirect({ to: "/login", replace: true });
   },
   component: () => <Outlet />,
 });
+
 
 
 
