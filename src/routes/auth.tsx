@@ -9,8 +9,9 @@ export const Route = createFileRoute("/auth")({
 
     // Se houver código PKCE ou tipo de fluxo identificado, vai para o callback canônico
     if (code || type === "recovery" || type === "signup" || type === "invite") {
+      const destination = type === "recovery" ? "/auth/callback/recovery" : "/auth/callback";
       throw redirect({ 
-        to: "/auth/callback", 
+        to: destination, 
         search: { ...searchParams }, 
         replace: true 
       });

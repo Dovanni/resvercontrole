@@ -57,11 +57,12 @@ const signupSchema = z.object({
 /**
  * Resolve a URL de redirecionamento do convite baseada no ambiente.
  */
-export function getInviteRedirectUrl() {
+export function getInviteRedirectUrl(type: 'invite' | 'recovery' = 'invite') {
   const siteUrl = process.env['SITE_URL'];
   const previewId = "c1cf42e3-5ea4-4a1b-a6cc-454256b65835";
   
-  const path = "/auth/callback";
+  // Rota de callback dedicada dependendo do tipo
+  const path = type === 'recovery' ? "/auth/callback/recovery" : "/auth/callback";
 
   if (siteUrl?.includes("lovable.app")) {
     if (siteUrl.includes(previewId)) {
@@ -151,7 +152,7 @@ export const secureSignUp = createServerFn({ method: "POST" })
 
       // 6. Invite User (Server-Only)
       const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
-        redirectTo: getInviteRedirectUrl(),
+        redirectTo: getInviteRedirectUrl('invite'),
         data: {
           onboarding_id: onboardingId
         }
