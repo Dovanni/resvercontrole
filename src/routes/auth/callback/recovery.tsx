@@ -97,23 +97,26 @@ function RecoveryCallbackPage() {
           throw new Error("Não foi possível estabelecer uma sessão válida.");
         }
 
-        setStatusText("Confirmando identidade...");
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        setStatusText("Confirmando persistência da sessão...");
         
-        if (userError || !user) {
+        // FASE 2: Garantir persistência antes da navegação
+        const { data: { session: confirmedSession } } = await supabase.auth.getSession();
+        const { data: { user: confirmedUser } } = await supabase.auth.getUser();
+
+        if (!confirmedSession || !confirmedUser) {
           setStatus("error");
-          throw userError || new Error("Usuário não identificado.");
+          throw new Error("Falha na confirmação da sessão após autenticação.");
         }
 
         setStatus("success");
-        setStatusText("Acesso concedido com sucesso.");
+        setStatusText("Acesso concedido. Redirecionando...");
         clearTimeout(timeoutRef.current!);
         
-        setTimeout(() => {
-          // Só limpamos a URL no sucesso final para não perder o token em caso de retry
-          window.history.replaceState({}, document.title, window.location.pathname);
-          navigate({ to: "/reset-password", replace: true });
-        }, 1500);
+        // Remover token da URL antes de navegar para evitar consumo duplo acidental em reload
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Navegação imediata após confirmação de persistência
+        navigate({ to: "/reset-password", replace: true });
 
       } catch (err: any) {
         console.error("Recovery callback error:", err);
