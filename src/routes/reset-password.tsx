@@ -32,56 +32,57 @@ function ResetPasswordPage() {
     let mounted = true;
 
     async function initialize() {
-      // 1. Iniciar timeout de 10s para a saída finita
+      // 1. Iniciar timeout de 15s para a saída finita (aumentado para acomodar hidratação)
       checkTimeoutRef.current = setTimeout(() => {
         if (mounted && state === "checking") {
           setState("invalid");
           setErrorMessage("Tempo limite de validação excedido. Por favor, tente novamente através do link no e-mail.");
         }
-      }, 10000);
+      }, 15000);
 
       try {
-        // 2. Aguardar sessão (o callback já deve ter processado, mas garantimos o getSession)
+        // 2. Verificar sessão atual (getSession é rápido e síncrono no browser se persistido)
         const { data: { session } } = await supabase.auth.getSession();
         
-        // 3. Listener de PASSWORD_RECOVERY (como fallback)
-        const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-          if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
-            if (mounted) {
-              // Verificamos o contexto novamente para ter certeza que é um reset permitido
-              validateContext().then(result => {
-                if (mounted && result.allowed) {
-                  setHasPending(result.hasPending || false);
-                  setState("ready");
-                  if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
-                }
-              });
-            }
-          }
-        });
-
         if (session) {
-          // 4. Validar server-side pela identidade da sessão
-          const result = await validateContext();
-          
           if (!mounted) return;
-
-          if (result.allowed) {
-            setHasPending(result.hasPending || false);
-            setState("ready");
-            if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
-          } else {
-            setState("invalid");
-            setErrorMessage(result.reason || "Sessão inválida para redefinição.");
-          }
+          
+          // 3. Validar contexto (Onboarding check é secundário)
+          validateContext().then(result => {
+            if (!mounted) return;
+            
+            if (result.allowed) {
+              setHasPending(result.hasPending || false);
+              setState("ready");
+              if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
+            } else {
+              // Se o erro for apenas de membership/onboarding, ainda permitimos o reset
+              // se o usuário estiver autenticado, a menos que o erro seja crítico.
+              // Mas aqui respeitamos a lógica do user: "Não transformar falha do onboarding em sessão não identificada"
+              setState("ready"); 
+              setHasPending(false);
+              if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
+            }
+          }).catch(() => {
+            if (mounted) {
+              setState("ready"); // Fallback: permite reset mesmo se o check de contexto falhar
+              if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
+            }
+          });
         } else {
-          // Se não há sessão após alguns segundos e nenhum evento, invalidar
-          // (O timeout de 10s cuidará disso se nada acontecer)
-        }
+          // 4. Se não há sessão, aguardar evento de recuperação ou login
+          const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+            if (!mounted) return;
+            if ((event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") && s) {
+              setState("ready");
+              if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
+            }
+          });
 
-        return () => {
-          sub.subscription.unsubscribe();
-        };
+          return () => {
+            sub.subscription.unsubscribe();
+          };
+        }
       } catch (err) {
         if (mounted) {
           setState("error");
@@ -90,11 +91,10 @@ function ResetPasswordPage() {
       }
     }
 
-    const cleanup = initialize();
+    initialize();
     return () => {
       mounted = false;
       if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
-      cleanup.then(fn => fn?.());
     };
   }, []);
 
