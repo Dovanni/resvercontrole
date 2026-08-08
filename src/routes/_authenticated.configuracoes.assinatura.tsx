@@ -9,7 +9,7 @@ import { Check, CreditCard, Users, Clock, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-export const Route = createFileRoute("/_authenticated/configuracoes/assinatura")({
+export const Route = createFileRoute("/configuracoes/assinatura")({
   head: () => ({ meta: [{ title: "Assinatura e Planos — Vejamais" }] }),
   component: SubscriptionSettingsPage,
 });

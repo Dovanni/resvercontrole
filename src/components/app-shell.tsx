@@ -212,7 +212,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </header>
         <main className="flex-1 overflow-auto">
-          {import.meta.env.VITE_ENABLE_BILLING_SUBSCRIPTIONS === 'true' && <TrialBanner />}
+          {import.meta.env.VITE_ENABLE_BILLING_SUBSCRIPTIONS === 'true' && !["resvercontrole.lovable.app", "vejamais.com.br", "www.vejamais.com.br"].includes(typeof window !== 'undefined' ? window.location.hostname : '') && <TrialBanner />}
           {children}
         </main>
         <nav className="md:hidden border-t bg-sidebar flex overflow-x-auto text-[10px]">
