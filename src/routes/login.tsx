@@ -107,7 +107,22 @@ function LoginPage() {
         toast.error("Não foi possível entrar com os dados informados.");
       } else {
         await completeSignInFn({ data: { email: email.trim() } });
-        toast.success("Bem-vinda de volta!");
+        
+        // Verificar onboarding pendente antes do dashboard
+        const { data: onboarding } = await supabase
+          .from('pending_onboardings' as any)
+          .select('id')
+          .eq('status', 'pending')
+          .gt('expires_at', new Date().toISOString())
+          .maybeSingle();
+
+        if (onboarding) {
+          toast.success("Login realizado. Complete sua ativação.");
+          navigate({ to: "/ativar-conta", replace: true });
+        } else {
+          toast.success("Bem-vinda de volta!");
+          navigate({ to: "/dashboard", replace: true });
+        }
       }
     } catch (error: any) {
       try {

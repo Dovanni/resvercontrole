@@ -1,7 +1,7 @@
 import { Link, useRouterState, useRouter, useNavigate } from "@tanstack/react-router";
 import { LayoutDashboard, Package, ShoppingBag, Wallet, LogOut, Users, Truck, Receipt, HandCoins, LineChart, BarChart3, BarChartBig, FileText, Settings, CalendarDays, TrendingUp, Landmark, CreditCard, ShoppingCart, Scale, Menu, Building2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useAuth, type Permission } from "@/lib/auth";
+import { useAuth, type Permission, PERMISSIONS, type AppRole } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { NotificationsBell } from "@/components/notifications";
 import { VejamaisMark } from "@/components/vejamais-logo";
@@ -38,10 +38,14 @@ const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
 const ROLE_LABEL: Record<string, string> = { admin: "Admin", vendedor: "Vendedor", financeiro: "Financeiro" };
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { signOut, user, role, can } = useAuth();
+  const { signOut, user, role: legacyRole, can } = useAuth();
   const { isEnabled, empresa } = useMultiempresa();
+  
+  // A autoridade primária de role agora é o membership da empresa ativa
+  const role = (empresa?.user_role || legacyRole) as AppRole | null;
+
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const nav = ALL_NAV.filter((n) => can(n.perm));
+  const nav = ALL_NAV.filter((n) => role ? PERMISSIONS[role].includes(n.perm) : false);
   const queryClient = useQueryClient();
   const router = useRouter();
   const navigate = useNavigate();

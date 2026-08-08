@@ -1863,6 +1863,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      reconcile_and_finalize_onboarding: { Args: never; Returns: Json }
       record_auth_failure: {
         Args: {
           p_cooldown_minutes: number[]

@@ -29,7 +29,7 @@ export type Permission =
   | "view:goals"
   | "view:commissions";
 
-const PERMISSIONS: Record<AppRole, Permission[]> = {
+export const PERMISSIONS: Record<AppRole, Permission[]> = {
   admin: [
     "view:dashboard","view:bi","view:clients","view:suppliers","view:products",
     "view:sales","view:payables","view:receivables","view:cashflow","view:finance",
