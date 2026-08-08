@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.get_company_subscription_context(uuid) TO sandbox_exec;
