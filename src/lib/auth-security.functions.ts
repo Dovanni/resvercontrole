@@ -36,16 +36,6 @@ export const secureRequestPasswordReset = createServerFn({ method: "POST" })
     return { success: true };
   });
 
-import { z } from "zod";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { 
-  verifyMathChallenge, 
-  checkRateLimitPersistent,
-  verifyTurnstile,
-  clearRateLimitPersistent,
-  recordRateLimitFailure
-} from "./security.functions";
-import crypto from "crypto";
 
 const signupSchema = z.object({
   email: z.string().email(),
