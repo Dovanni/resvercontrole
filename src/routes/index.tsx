@@ -1,65 +1,47 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { LandingPage } from '@/components/LandingPage'
-import { Metadata } from '@/components/Metadata'
+import { createFileRoute } from "@tanstack/react-router";
+import { LandingPage } from "@/components/landing/landing-page";
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute("/")({
   head: () => ({
-    title: 'Vejamais - Gestão Comercial e Financeira para o seu Negócio',
     meta: [
+      { title: "VEJAMAIS | Gestão Comercial e Financeira para E-commerce" },
       {
-        name: 'description',
-        content: 'Controle financeiro completo, gestão de estoque, vendas e muito mais. O Vejamais é a solução ideal para pequenas e médias empresas que buscam eficiência e crescimento.',
+        name: "description",
+        content:
+          "Controle pedidos, vendas, produtos, estoque, fretes, taxas, contas, margens e lucros do seu e-commerce em uma plataforma de gestão comercial e financeira.",
       },
+      { property: "og:title", content: "VEJAMAIS | Gestão Comercial e Financeira para E-commerce" },
       {
-        property: 'og:title',
-        content: 'Vejamais - Gestão Comercial e Financeira',
+        property: "og:description",
+        content:
+          "Plataforma de gestão comercial e financeira para e-commerce e comércio: pedidos, vendas, produtos, estoque, fretes, taxas, contas, margens e lucros.",
       },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://vejamais.com.br/" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "VEJAMAIS | Gestão Comercial e Financeira para E-commerce" },
       {
-        property: 'og:description',
-        content: 'Sistema completo para gestão comercial e financeira de micro e pequenas empresas.',
-      },
-      {
-        property: 'og:type',
-        content: 'website',
-      },
-      {
-        property: 'og:url',
-        content: 'https://vejamais.com.br',
-      },
-      {
-        name: 'twitter:card',
-        content: 'summary_large_image',
-      },
-      {
-        name: 'twitter:title',
-        content: 'Vejamais - Gestão Comercial e Financeira',
-      },
-      {
-        name: 'twitter:description',
-        content: 'Sistema completo para gestão comercial e financeira de micro e pequenas empresas.',
-      },
-      {
-        name: 'canonical',
-        content: 'https://vejamais.com.br',
+        name: "twitter:description",
+        content:
+          "Pedidos, vendas, produtos, estoque, fretes, taxas, contas e lucros em uma única plataforma.",
       },
     ],
+    links: [{ rel: "canonical", href: "https://vejamais.com.br/" }],
     scripts: [
       {
-        type: 'application/ld+json',
+        type: "application/ld+json",
         children: JSON.stringify({
-          '@context': 'https://schema.org',
-          '@type': 'SoftwareApplication',
-          'name': 'Vejamais',
-          'operatingSystem': 'Web',
-          'applicationCategory': 'BusinessApplication',
-          'offers': {
-            '@type': 'Offer',
-            'price': '0',
-            'priceCurrency': 'BRL',
-          },
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "Vejamais",
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          url: "https://vejamais.com.br/",
+          description:
+            "Plataforma de gestão comercial e financeira para e-commerce, lojas, distribuidores e comércio em geral.",
         }),
       },
     ],
   }),
   component: LandingPage,
-})
+});
