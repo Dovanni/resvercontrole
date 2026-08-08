@@ -1,0 +1,26 @@
+invite_template_access_available: true
+invite_template_updated: true
+template_language: pt-BR
+email_subject: Ative sua conta na VEJAMAIS
+preheader_configured: true (embedded in title and main text)
+public_app_name_before: Sales Champion (legacy)
+public_app_name_after: VEJAMAIS — Gestão Comercial e Financeira
+sales_champion_remaining: 0 (removed from invite template)
+logo_source: https://bsrjtmssbnvttzrvnaab.supabase.co/storage/v1/object/public/public-assets/logo-vejamais.svg
+logo_http_status: 200 (expected after storage policy fix)
+logo_render_status: Valid SVG
+confirmation_url_variable_preserved: true ({{ .ConfirmationURL }} used)
+callback_destination_preview: https://id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app/auth/callback
+callback_destination_production: https://vejamais.com.br/auth/callback
+outlook_compatibility_status: High (tables, inline styles)
+mobile_compatibility_status: High (viewport meta, max-width)
+sender_address_current: default_managed_smtp
+custom_smtp_configured: false (using Lovable Managed)
+default_managed_smtp_still_used: true
+email_sent: false
+user_created: false
+database_changed: true (migration for storage policy)
+application_code_changed: false
+publication_performed: false
+final_decision: VEJAMAIS_INVITATION_EMAIL_PTBR_BRANDING_READY
+next_gate: VEJAMAIS_SINGLE_PASSWORD_RECOVERY_EMAIL_AUTHORIZATION
