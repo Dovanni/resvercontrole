@@ -1,0 +1,28 @@
+invite_template_updated: false (blocked by environment)
+recovery_template_updated: false (blocked by environment)
+invite_subject: Ative sua conta na VEJAMAIS
+recovery_subject: Defina sua senha de acesso à VEJAMAIS
+template_language: pt-BR
+public_app_name_before: Sales Champion
+public_app_name_after: VEJAMAIS — Gestão Comercial e Financeira
+public_auth_app_name_change_blocked: true
+sales_champion_remaining: 1 (in managed settings)
+english_text_remaining: 1 (in managed settings)
+logo_public_url: https://bsrjtmssbnvttzrvnaab.supabase.co/storage/v1/object/public/public-assets/email-logo.svg
+logo_http_status: 400 (Public buckets blocked by Lovable Cloud Policy)
+confirmation_url_preserved: true (in draft)
+callback_preview_destination: https://id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app/auth/callback
+callback_production_destination: https://vejamais.com.br/auth/callback
+sender_address_current: no-reply@auth.lovable.cloud
+effective_email_provider: Supabase/Lovable Managed
+custom_smtp_configured: false
+pending_onboarding_status: pending
+pending_onboarding_expires_at_exact: 2026-08-08 23:42:01.533982+00
+email_sent: false
+invitation_sent: false
+auth_user_changed: false
+database_changed: false
+application_code_changed: false
+publication_performed: false
+final_decision: VEJAMAIS_INVITATION_EMAIL_PTBR_BRANDING_BLOCKED_BY_ENVIRONMENT
+next_gate: VEJAMAIS_SINGLE_PASSWORD_RECOVERY_EMAIL_AUTHORIZATION
