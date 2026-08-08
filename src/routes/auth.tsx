@@ -2,7 +2,13 @@ import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/auth")({
   beforeLoad: ({ search, location }) => {
-    // Preservar parâmetros se existirem (para o callback)
+    // 1. Permitir que rotas filhas (callback e recovery) renderizem seus próprios componentes
+    // Se o pathname for uma sub-rota de /auth/callback, não redirecionamos aqui.
+    if (location.pathname.startsWith("/auth/callback")) {
+      return;
+    }
+
+    // 2. Lógica de roteamento baseada em parâmetros (para compatibilidade com links legados ou externos)
     const searchParams = search as any;
     const code = searchParams.code;
     const type = searchParams.type;
@@ -10,7 +16,6 @@ export const Route = createFileRoute("/auth")({
 
     // Se houver token_hash e type=recovery, vai para o callback de recuperação dedicado
     if ((token_hash || code) && type === "recovery") {
-      if (location.pathname === "/auth/callback/recovery") return;
       throw redirect({ 
         to: "/auth/callback/recovery", 
         search: { ...searchParams }, 
@@ -20,7 +25,6 @@ export const Route = createFileRoute("/auth")({
 
     // Se houver código PKCE ou tipo de fluxo identificado (signup/invite), vai para o callback padrão
     if (code || type === "signup" || type === "invite") {
-      if (location.pathname === "/auth/callback") return;
       throw redirect({ 
         to: "/auth/callback", 
         search: { ...searchParams }, 
@@ -28,16 +32,12 @@ export const Route = createFileRoute("/auth")({
       });
     }
 
-    // Se já estamos em uma rota filha (callback ou recovery), não redirecionar para login
-    if (location.pathname.startsWith("/auth/callback")) {
-      return;
-    }
-
-    // Caso contrário, vai para login
+    // 3. Fallback: Se for a raiz /auth ou qualquer outra coisa não identificada, vai para login
     throw redirect({ to: "/login", replace: true });
   },
   component: () => <Outlet />,
 });
+
 
 
 
