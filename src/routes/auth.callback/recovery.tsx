@@ -15,7 +15,7 @@ const recoverySearchSchema = z.object({
 
 type RecoveryStatus = "checking" | "verifying" | "success" | "invalid" | "error";
 
-export const Route = createFileRoute("/auth/recovery-callback")({
+export const Route = createFileRoute("/auth/callback/recovery")({
   validateSearch: (search) => recoverySearchSchema.parse(search),
   component: RecoveryCallbackPage,
 });
