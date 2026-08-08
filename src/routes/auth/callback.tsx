@@ -28,33 +28,27 @@ function AuthCallbackPage() {
           if (error) throw error;
         }
 
-        // 2. Fragment handling (Supabase JS SDK handles hash by default, but we ensure getSession/getUser)
+        // 2. Fragment handling
         setStatus("Confirmando identidade...");
         const { data: { session } } = await supabase.auth.getSession();
         
         if (!session) {
-          // Check for errors in URL (Supabase often puts them there)
           if (search.error) {
             throw new Error(search.error_description || search.error || "Falha na autenticação");
           }
-          throw new Error("Sessão não encontrada");
+          
+          // Se estamos em uma sub-rota específica (como recovery), deixamos a sub-rota cuidar disso
+          // Mas se o router montou este componente, precisamos decidir se redirecionamos.
+          // Se NÃO houver parâmetros, e estivermos EXATAMENTE em /auth/callback, aí redirecionamos.
+          if (window.location.pathname === "/auth/callback") {
+             throw new Error("Sessão não encontrada");
+          }
+          return;
         }
 
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (userError || !user) throw userError || new Error("Usuário não validado");
 
-        // 3. Destino permitido
-        // next pode vir de metadados ou search param (se configurado no redirectTo)
-        // No fluxo PKCE/OTP, o redirectTo aponta para /auth/callback
-        // A lógica de negócio decide o próximo passo
-        
-        // Se for recuperação de senha (detectado pelo evento ou rota anterior)
-        // Supabase session metadata or current context can tell us.
-        // But the prompt says: "O callback de recuperação deverá encaminhar somente para /reset-password."
-        
-        // We check if it's a recovery flow by looking at the URL hash or state
-        // 3. Destino permitido
-        // O destino deve ser determinado por estado seguro do fluxo, não por parâmetro next arbitrário.
         const isRecovery = window.location.hash.includes("type=recovery") || search.type === "recovery";
         const isSignup = window.location.hash.includes("type=signup") || search.type === "signup" || search.type === "invite";
 
@@ -65,7 +59,6 @@ function AuthCallbackPage() {
           setStatus("Redirecionando para ativação...");
           navigate({ to: "/ativar-conta", replace: true });
         } else {
-          // Fallback para ativação se houver sessão
           setStatus("Redirecionando...");
           navigate({ to: "/ativar-conta", replace: true });
         }
