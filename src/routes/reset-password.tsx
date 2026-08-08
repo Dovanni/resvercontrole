@@ -44,10 +44,19 @@ function ResetPasswordPage() {
         // 2. Aguardar sessão (o callback já deve ter processado, mas garantimos o getSession)
         const { data: { session } } = await supabase.auth.getSession();
         
-        // 3. Listener de PASSWORD_RECOVERY (caso o evento chegue agora)
-        const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-          if (event === "PASSWORD_RECOVERY") {
-            if (mounted) setState("ready");
+        // 3. Listener de PASSWORD_RECOVERY (como fallback)
+        const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+          if (event === "PASSWORD_RECOVERY" || (event === "SIGNED_IN" && session)) {
+            if (mounted) {
+              // Verificamos o contexto novamente para ter certeza que é um reset permitido
+              validateContext().then(result => {
+                if (mounted && result.allowed) {
+                  setHasPending(result.hasPending || false);
+                  setState("ready");
+                  if (checkTimeoutRef.current) clearTimeout(checkTimeoutRef.current);
+                }
+              });
+            }
           }
         });
 
