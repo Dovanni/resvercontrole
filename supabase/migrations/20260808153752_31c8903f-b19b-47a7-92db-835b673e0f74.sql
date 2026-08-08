@@ -1,0 +1,1 @@
+GRANT ALL ON FUNCTION public.reconcile_and_finalize_onboarding() TO service_role;
