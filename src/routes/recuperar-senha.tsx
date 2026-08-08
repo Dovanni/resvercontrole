@@ -48,7 +48,7 @@ function RecoveryPage() {
 
       // 2. Prosseguir com o reset real (sem captchaToken nativo)
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: getInviteRedirectUrl()
+        redirectTo: getInviteRedirectUrl('recovery')
       });
 
       if (error) throw error;
