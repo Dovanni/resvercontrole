@@ -10,6 +10,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { CompanySelector } from "./company-selector";
 import { useMultiempresa } from "@/hooks/use-multiempresa";
+import { TrialBanner } from "./trial-banner";
 
 const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, perm: "view:dashboard" },
