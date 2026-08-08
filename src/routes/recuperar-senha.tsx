@@ -49,17 +49,14 @@ function RecoveryPage() {
     setBusy(true);
 
     try {
-      // 1. Validar precondições e SiteVerify no servidor
-      await requestResetFn({
+      // 1. Validar e executar fluxo server-only (geração, rate limit, turnstile e envio)
+      const result = await requestResetFn({
         data: { email, turnstileToken }
       });
 
-      // 2. Prosseguir com o reset real (sem captchaToken nativo)
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: getInviteRedirectUrl('recovery')
-      });
-
-      if (error) throw error;
+      // O servidor agora lida com tudo, inclusive o envio via Hostinger.
+      // A resposta é sempre genérica por segurança.
+      toast.success(result.message || "Se existir uma conta com esse e-mail, enviaremos as orientações.");
       
       toast.success("Se existir uma conta com esse e-mail, enviaremos as orientações.");
       // Opcional: redirecionar ou limpar
