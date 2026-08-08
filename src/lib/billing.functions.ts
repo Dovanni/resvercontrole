@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getRequest } from "@tanstack/react-start/server";
 
 export const getCompanySubscriptionContext = createServerFn({ method: "GET" })
-  .inputValidator((data) => z.object({ empresaId: z.string().uuid() }).parse(data))
+  .inputValidator((data) => z.object({ empresaId: z.string().uuid() }).strict().parse(data))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { getRequest } = await import("@tanstack/react-start/server");
