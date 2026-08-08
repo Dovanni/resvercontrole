@@ -1,12 +1,38 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { getRequest } from "@tanstack/react-start/server";
 
 export const getCompanySubscriptionContext = createServerFn({ method: "GET" })
   .inputValidator((data) => z.object({ empresaId: z.string().uuid() }).parse(data))
   .handler(async ({ data }) => {
-    const { data: context, error } = await supabase.rpc("get_company_subscription_context", {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const req = getRequest();
+    const authHeader = req?.headers.get("Authorization");
+    const token = authHeader?.replace("Bearer ", "");
+
+    let userId: string | null = null;
+    if (token) {
+      const { data: { user } } = await supabaseAdmin.auth.getUser(token);
+      userId = user?.id || null;
+    }
+
+    if (!userId) {
+      console.warn("User not authenticated in getCompanySubscriptionContext");
+      throw new Error("Unauthorized");
+    }
+
+    // Usar o cliente administrativo para a RPC que internamente usa auth.uid()
+    // Como a RPC usa auth.uid(), precisamos garantir que o contexto do Supabase saiba quem é o usuário.
+    // O cliente admin não preenche auth.uid() automaticamente do token, ele ignora RLS.
+    // Mas a nossa RPC FOI desenhada para usar auth.uid().
+    
+    // CORREÇÃO: Vamos emular o comportamento da RPC mas usando o cliente admin para garantir bypass de ACLs de tabela
+    // e validando o membership manualmente aqui se necessário, ou ajustando a RPC para aceitar o user_id.
+
+    const { data: context, error } = await supabaseAdmin.rpc("get_company_subscription_context", {
       p_empresa_id: data.empresaId,
+      p_user_id: userId
     });
 
     if (error) {
