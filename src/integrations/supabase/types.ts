@@ -2039,10 +2039,9 @@ export type Database = {
           retry_after_seconds: number
         }[]
       }
-      get_company_subscription_context: {
-        Args: { p_empresa_id: string }
-        Returns: Json
-      }
+      get_company_subscription_context:
+        | { Args: { p_empresa_id: string }; Returns: Json }
+        | { Args: { p_empresa_id: string; p_user_id?: string }; Returns: Json }
       get_my_multiempresa_context: {
         Args: never
         Returns: {

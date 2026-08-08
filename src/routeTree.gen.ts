@@ -17,7 +17,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AtivarContaRouteImport } from './routes/ativar-conta'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ConfiguracoesAssinaturaRouteImport } from './routes/configuracoes.assinatura'
 import { Route as AuthenticatedVendasRouteImport } from './routes/_authenticated.vendas'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated.relatorios'
 import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated.produtos'
@@ -46,6 +45,7 @@ import { Route as AuthCallbackRecoveryRouteImport } from './routes/auth/callback
 import { Route as ApiPublicRpcTestRouteImport } from './routes/api/public/rpc-test'
 import { Route as ApiPublicAcceptInvitationRouteImport } from './routes/api/public/accept-invitation'
 import { Route as AuthenticatedConfiguracoesCategoriasRouteImport } from './routes/_authenticated.configuracoes.categorias'
+import { Route as AuthenticatedConfiguracoesAssinaturaRouteImport } from './routes/_authenticated.configuracoes.assinatura'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -84,11 +84,6 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ConfiguracoesAssinaturaRoute = ConfiguracoesAssinaturaRouteImport.update({
-  id: '/configuracoes/assinatura',
-  path: '/configuracoes/assinatura',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedVendasRoute = AuthenticatedVendasRouteImport.update({
@@ -242,6 +237,12 @@ const AuthenticatedConfiguracoesCategoriasRoute =
     path: '/categorias',
     getParentRoute: () => AuthenticatedConfiguracoesRoute,
   } as any)
+const AuthenticatedConfiguracoesAssinaturaRoute =
+  AuthenticatedConfiguracoesAssinaturaRouteImport.update({
+    id: '/assinatura',
+    path: '/assinatura',
+    getParentRoute: () => AuthenticatedConfiguracoesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -274,7 +275,7 @@ export interface FileRoutesByFullPath {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/vendas': typeof AuthenticatedVendasRoute
-  '/configuracoes/assinatura': typeof ConfiguracoesAssinaturaRoute
+  '/configuracoes/assinatura': typeof AuthenticatedConfiguracoesAssinaturaRoute
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
   '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
@@ -312,7 +313,7 @@ export interface FileRoutesByTo {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/vendas': typeof AuthenticatedVendasRoute
-  '/configuracoes/assinatura': typeof ConfiguracoesAssinaturaRoute
+  '/configuracoes/assinatura': typeof AuthenticatedConfiguracoesAssinaturaRoute
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
   '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
@@ -352,7 +353,7 @@ export interface FileRoutesById {
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/vendas': typeof AuthenticatedVendasRoute
-  '/configuracoes/assinatura': typeof ConfiguracoesAssinaturaRoute
+  '/_authenticated/configuracoes/assinatura': typeof AuthenticatedConfiguracoesAssinaturaRoute
   '/_authenticated/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
   '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
@@ -469,7 +470,7 @@ export interface FileRouteTypes {
     | '/_authenticated/produtos'
     | '/_authenticated/relatorios'
     | '/_authenticated/vendas'
-    | '/configuracoes/assinatura'
+    | '/_authenticated/configuracoes/assinatura'
     | '/_authenticated/configuracoes/categorias'
     | '/api/public/accept-invitation'
     | '/api/public/rpc-test'
@@ -486,7 +487,6 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RecuperarSenhaRoute: typeof RecuperarSenhaRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  ConfiguracoesAssinaturaRoute: typeof ConfiguracoesAssinaturaRoute
   ApiPublicAcceptInvitationRoute: typeof ApiPublicAcceptInvitationRoute
   ApiPublicRpcTestRoute: typeof ApiPublicRpcTestRoute
 }
@@ -547,13 +547,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/configuracoes/assinatura': {
-      id: '/configuracoes/assinatura'
-      path: '/configuracoes/assinatura'
-      fullPath: '/configuracoes/assinatura'
-      preLoaderRoute: typeof ConfiguracoesAssinaturaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/vendas': {
@@ -752,15 +745,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesCategoriasRouteImport
       parentRoute: typeof AuthenticatedConfiguracoesRoute
     }
+    '/_authenticated/configuracoes/assinatura': {
+      id: '/_authenticated/configuracoes/assinatura'
+      path: '/assinatura'
+      fullPath: '/configuracoes/assinatura'
+      preLoaderRoute: typeof AuthenticatedConfiguracoesAssinaturaRouteImport
+      parentRoute: typeof AuthenticatedConfiguracoesRoute
+    }
   }
 }
 
 interface AuthenticatedConfiguracoesRouteChildren {
+  AuthenticatedConfiguracoesAssinaturaRoute: typeof AuthenticatedConfiguracoesAssinaturaRoute
   AuthenticatedConfiguracoesCategoriasRoute: typeof AuthenticatedConfiguracoesCategoriasRoute
 }
 
 const AuthenticatedConfiguracoesRouteChildren: AuthenticatedConfiguracoesRouteChildren =
   {
+    AuthenticatedConfiguracoesAssinaturaRoute:
+      AuthenticatedConfiguracoesAssinaturaRoute,
     AuthenticatedConfiguracoesCategoriasRoute:
       AuthenticatedConfiguracoesCategoriasRoute,
   }
@@ -847,7 +850,6 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RecuperarSenhaRoute: RecuperarSenhaRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  ConfiguracoesAssinaturaRoute: ConfiguracoesAssinaturaRoute,
   ApiPublicAcceptInvitationRoute: ApiPublicAcceptInvitationRoute,
   ApiPublicRpcTestRoute: ApiPublicRpcTestRoute,
 }

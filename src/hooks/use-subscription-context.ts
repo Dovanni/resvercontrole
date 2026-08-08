@@ -10,7 +10,15 @@ export function useSubscriptionContext(empresaId: string | undefined) {
     queryKey: ["subscription-context", user?.id, empresaId],
     queryFn: async () => {
       if (!empresaId) return null;
-      return getCompanySubscriptionContext({ data: { empresaId } });
+      try {
+        console.log("Calling getCompanySubscriptionContext for empresa:", empresaId);
+        const result = await getCompanySubscriptionContext({ data: { empresaId } });
+        console.log("Subscription context result:", result);
+        return result;
+      } catch (err) {
+        console.error("Critical error in getCompanySubscriptionContext server fn call:", err);
+        throw err;
+      }
     },
     enabled: !!user?.id && !!empresaId && isEnabled,
     staleTime: 1000 * 60 * 5, // 5 minutes
