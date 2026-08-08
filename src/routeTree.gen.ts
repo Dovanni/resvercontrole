@@ -17,7 +17,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AtivarContaRouteImport } from './routes/ativar-conta'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AuthenticatedVendasRouteImport } from './routes/_authenticated.vendas'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated.relatorios'
 import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated.produtos'
@@ -41,6 +40,7 @@ import { Route as AuthenticatedCategoriasRouteImport } from './routes/_authentic
 import { Route as AuthenticatedCartoesCreditoRouteImport } from './routes/_authenticated.cartoes-credito'
 import { Route as AuthenticatedBiRouteImport } from './routes/_authenticated.bi'
 import { Route as AuthenticatedBalanceteRouteImport } from './routes/_authenticated.balancete'
+import { Route as AuthCallbackIndexRouteImport } from './routes/auth/callback/index'
 import { Route as AuthCallbackRecoveryRouteImport } from './routes/auth/callback/recovery'
 import { Route as ApiPublicRpcTestRouteImport } from './routes/api/public/rpc-test'
 import { Route as ApiPublicAcceptInvitationRouteImport } from './routes/api/public/accept-invitation'
@@ -84,11 +84,6 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
-const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/callback',
-  path: '/callback',
-  getParentRoute: () => AuthRoute,
 } as any)
 const AuthenticatedVendasRoute = AuthenticatedVendasRouteImport.update({
   id: '/vendas',
@@ -214,10 +209,15 @@ const AuthenticatedBalanceteRoute = AuthenticatedBalanceteRouteImport.update({
   path: '/balancete',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthCallbackIndexRoute = AuthCallbackIndexRouteImport.update({
+  id: '/callback/',
+  path: '/callback/',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthCallbackRecoveryRoute = AuthCallbackRecoveryRouteImport.update({
-  id: '/recovery',
-  path: '/recovery',
-  getParentRoute: () => AuthCallbackRoute,
+  id: '/callback/recovery',
+  path: '/callback/recovery',
+  getParentRoute: () => AuthRoute,
 } as any)
 const ApiPublicRpcTestRoute = ApiPublicRpcTestRouteImport.update({
   id: '/api/public/rpc-test',
@@ -268,11 +268,11 @@ export interface FileRoutesByFullPath {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/vendas': typeof AuthenticatedVendasRoute
-  '/auth/callback': typeof AuthCallbackRouteWithChildren
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
   '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
+  '/auth/callback/': typeof AuthCallbackIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -305,11 +305,11 @@ export interface FileRoutesByTo {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/vendas': typeof AuthenticatedVendasRoute
-  '/auth/callback': typeof AuthCallbackRouteWithChildren
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
   '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
+  '/auth/callback': typeof AuthCallbackIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -344,11 +344,11 @@ export interface FileRoutesById {
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/vendas': typeof AuthenticatedVendasRoute
-  '/auth/callback': typeof AuthCallbackRouteWithChildren
   '/_authenticated/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
   '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
+  '/auth/callback/': typeof AuthCallbackIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -383,11 +383,11 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/relatorios'
     | '/vendas'
-    | '/auth/callback'
     | '/configuracoes/categorias'
     | '/api/public/accept-invitation'
     | '/api/public/rpc-test'
     | '/auth/callback/recovery'
+    | '/auth/callback/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -420,11 +420,11 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/relatorios'
     | '/vendas'
-    | '/auth/callback'
     | '/configuracoes/categorias'
     | '/api/public/accept-invitation'
     | '/api/public/rpc-test'
     | '/auth/callback/recovery'
+    | '/auth/callback'
   id:
     | '__root__'
     | '/'
@@ -458,11 +458,11 @@ export interface FileRouteTypes {
     | '/_authenticated/produtos'
     | '/_authenticated/relatorios'
     | '/_authenticated/vendas'
-    | '/auth/callback'
     | '/_authenticated/configuracoes/categorias'
     | '/api/public/accept-invitation'
     | '/api/public/rpc-test'
     | '/auth/callback/recovery'
+    | '/auth/callback/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -535,13 +535,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/auth/callback': {
-      id: '/auth/callback'
-      path: '/callback'
-      fullPath: '/auth/callback'
-      preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof AuthRoute
     }
     '/_authenticated/vendas': {
       id: '/_authenticated/vendas'
@@ -704,12 +697,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBalanceteRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/auth/callback/': {
+      id: '/auth/callback/'
+      path: '/callback'
+      fullPath: '/auth/callback/'
+      preLoaderRoute: typeof AuthCallbackIndexRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/auth/callback/recovery': {
       id: '/auth/callback/recovery'
-      path: '/recovery'
+      path: '/callback/recovery'
       fullPath: '/auth/callback/recovery'
       preLoaderRoute: typeof AuthCallbackRecoveryRouteImport
-      parentRoute: typeof AuthCallbackRoute
+      parentRoute: typeof AuthRoute
     }
     '/api/public/rpc-test': {
       id: '/api/public/rpc-test'
@@ -806,24 +806,14 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
-interface AuthCallbackRouteChildren {
-  AuthCallbackRecoveryRoute: typeof AuthCallbackRecoveryRoute
-}
-
-const AuthCallbackRouteChildren: AuthCallbackRouteChildren = {
-  AuthCallbackRecoveryRoute: AuthCallbackRecoveryRoute,
-}
-
-const AuthCallbackRouteWithChildren = AuthCallbackRoute._addFileChildren(
-  AuthCallbackRouteChildren,
-)
-
 interface AuthRouteChildren {
-  AuthCallbackRoute: typeof AuthCallbackRouteWithChildren
+  AuthCallbackRecoveryRoute: typeof AuthCallbackRecoveryRoute
+  AuthCallbackIndexRoute: typeof AuthCallbackIndexRoute
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
-  AuthCallbackRoute: AuthCallbackRouteWithChildren,
+  AuthCallbackRecoveryRoute: AuthCallbackRecoveryRoute,
+  AuthCallbackIndexRoute: AuthCallbackIndexRoute,
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
@@ -843,13 +833,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
