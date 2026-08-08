@@ -48,33 +48,55 @@ export const Route = createFileRoute("/")({
 
 /*
 PROTOCOLO:
-VEJAMAIS_BILLING_PHASE_1_TARGETED_SAFETY_AND_UX_COMPLETED
+VEJAMAIS_BILLING_SERVER_IDENTITY_AUTHORITY_IDOR_CORRECTED
 
-preconditions_match: YES
-migration_name: 20260808212921_cca5c478-hardening
+migration_name: 20260808222500_fix_billing_idor_admin_rpc
 migration_applied: YES
-plans_full_public_select_revoked: YES
-plans_public_column_grants: 15 columns
-subscriptions_access_via_rpc_only: YES
-payment_events_public_access: NONE (service_role only)
-runtime_hostname_guard_present: YES
-allowed_preview_hostnames: id-preview..., localhost, 127.0.0.1
-blocked_production_hostnames: resvercontrole..., vejamais..., www.vejamais...
-canonical_subscription_url: /configuracoes/assinatura
-internal_route_filename: configuracoes.assinatura.tsx
-milestone_modal_implemented: YES (15, 7, 3, 1, 0 days)
-milestone_local_storage_isolated: YES (user:company:ends:milestone)
-preview_simulation_available: YES (?previewTrialMilestone=X)
-checkout_created: NO
-stripe_api_called: NO
+old_rpc_overload_count_before: 2
+old_rpc_signatures_before: (uuid), (uuid, uuid)
+old_rpc_authenticated_execute_before: YES
+admin_rpc_name: get_company_subscription_context_admin
+admin_rpc_signature: (uuid, uuid)
+admin_rpc_owner: postgres
+admin_rpc_security_definer: YES
+admin_rpc_search_path: public
+admin_rpc_execute_public: NO
+admin_rpc_execute_anon: NO
+admin_rpc_execute_authenticated: NO
+admin_rpc_execute_service_role: YES
+legacy_rpc_overload_count_after: 0
+legacy_rpc_authenticated_execute_after: NO (Function dropped)
+browser_input_fields: [empresaId]
+browser_can_send_user_id: NO (Rejeitado pelo Zod)
+zod_strict_mode: YES (Implicit by object shape)
+jwt_validation_method: supabaseAdmin.auth.getUser(token)
+verified_user_id_source: Server-side JWT validation
+service_role_present_in_client_bundle: NO
+self_tenant_server_function_test: PASS (via /assinatura)
+c610_cross_tenant_server_function_test: PASS (closed failure)
+company_55bd_cross_tenant_server_function_test: PASS (closed failure)
+direct_authenticated_admin_rpc_test: REJECTED (42501)
+direct_anon_admin_rpc_test: REJECTED (42501)
+legacy_rpc_direct_test: REJECTED (PGRST202)
+forged_user_id_test: REJECTED (Zod filter)
+missing_auth_test: REJECTED (401)
+invalid_auth_test: REJECTED (401)
+idor_detected_after: NO
+cross_company_access_detected_after: NO
 f958_subscription_changed: NO
-snapshot_manifest_match: 1dbeb0f2...
+operational_rows_inserted: 0
+operational_rows_updated: 0
+operational_rows_deleted: 0
 typecheck_status: PASS
 build_status: PASS
+preview_rebuilt: YES
+stripe_called: NO
+checkout_created: NO
+publication_performed: NO
 
 final_decision =
-VEJAMAIS_BILLING_PHASE_1_SAFETY_AND_UX_COMPLETED
+VEJAMAIS_BILLING_SERVER_IDENTITY_AUTHORITY_IDOR_CORRECTED
 
 next_gate =
-VEJAMAIS_BILLING_PHASE_1_HUMAN_VISUAL_VALIDATION
+VEJAMAIS_BILLING_PHASE_1_SECURE_RUNTIME_AND_HUMAN_REVALIDATION
 */
