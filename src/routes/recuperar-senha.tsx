@@ -13,7 +13,15 @@ import { secureRequestPasswordReset, getInviteRedirectUrl } from "@/lib/auth-sec
 import { TurnstileWidget, TurnstileWidgetRef } from "@/components/turnstile-widget";
 
 export const Route = createFileRoute("/recuperar-senha")({
-  head: () => ({ meta: [{ title: "Recuperar senha — Vejamais" }] }),
+  head: () => ({ 
+    meta: [
+      { title: "Recuperar senha — Vejamais" },
+      { name: "description", content: "Recupere o acesso à sua conta Vejamais com segurança." },
+      { property: "og:title", content: "Recuperar senha — Vejamais" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" }
+    ] 
+  }),
   component: RecoveryPage,
 });
 
