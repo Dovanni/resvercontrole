@@ -5,7 +5,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock components to avoid deep tree issues
 vi.mock('@/components/app-shell', () => ({
-  PageHeader: () => <div>PageHeader</div>
+  PageHeader: ({ title, subtitle }: any) => (
+    <div>
+      <h1>{title}</h1>
+      <p>{subtitle}</p>
+    </div>
+  )
 }));
 vi.mock('@/components/ui/card', () => ({
   Card: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -27,7 +32,7 @@ vi.mock('lucide-react', () => ({
   AlertCircle: () => <span>AlertCircle</span>,
 }));
 
-// Partial mock for @tanstack/react-router to include lazyRouteComponent
+// Partial mock for @tanstack/react-router
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual: any = await importOriginal();
   return {
@@ -66,27 +71,22 @@ vi.mock('@/lib/billing.functions', () => ({
   getCompanySubscriptionContext: vi.fn()
 }));
 
-// Import component directly (manually export the function to be tested if necessary)
-// But since the file exports the SubscriptionSettingsPage, we can just grab it.
-// We'll use a hack to get the component if the Route mock is problematic.
-import * as AssinaturaModule from '../../routes/_authenticated.configuracoes.assinatura';
+// Import component directly
+import { SubscriptionSettingsPage } from '../../routes/_authenticated.configuracoes.assinatura';
 
 const queryClient = new QueryClient();
 
 describe('SubscriptionPage UX Copy Audit', () => {
   it('displays correct truthful copy when checkout is cancelled', () => {
-    // Force search params via URL object
-    const originalLocation = window.location;
-    delete (window as any).location;
-    (window as any).location = new URL('https://id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app/configuracoes/assinatura?checkout=cancel');
-
-    // The module exports SubscriptionSettingsPage directly? Let's check.
-    // Based on previous code--view, it's defined inside SubscriptionSettingsPage function which is the component for Route.
-    const Component = AssinaturaModule.SubscriptionSettingsPage;
+    // Set hostname and origin in global window before URL overwrite
+    Object.defineProperty(window, 'location', {
+      value: new URL('https://id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app/configuracoes/assinatura?checkout=cancel'),
+      writable: true
+    });
 
     render(
       <QueryClientProvider client={queryClient}>
-        <Component />
+        <SubscriptionSettingsPage />
       </QueryClientProvider>
     );
 
@@ -105,10 +105,8 @@ describe('SubscriptionPage UX Copy Audit', () => {
     expect(alertBody.textContent).toContain('avaliação gratuita continua normalmente');
 
     // CTA permanece “Retomar checkout seguro — R$ 35,90/mês”
+    // With hostname/origin matched, CTA is enabled and text matches the ternary
     const cta = screen.getByRole('button', { name: /Retomar checkout seguro — R$ 35,90\/mês/i });
     expect(cta).toBeTruthy();
-
-    // Restore location
-    (window as any).location = originalLocation;
   });
 });
