@@ -1,10 +1,37 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { Route } from '../_authenticated.configuracoes.assinatura';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Mock hook contexts
+// Mock components to avoid deep tree issues
+vi.mock('@/components/app-shell', () => ({
+  PageHeader: () => <div>PageHeader</div>
+}));
+vi.mock('@/components/ui/card', () => ({
+  Card: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  CardContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  CardHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  CardTitle: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+vi.mock('@/components/ui/button', () => ({
+  Button: ({ children, ...props }: any) => <button {...props}>{children}</button>
+}));
+vi.mock('@/components/ui/badge', () => ({
+  Badge: ({ children }: { children: React.ReactNode }) => <span>{children}</span>
+}));
+vi.mock('lucide-react', () => ({
+  Check: () => <span>Check</span>,
+  CreditCard: () => <span>CreditCard</span>,
+  Users: () => <span>Users</span>,
+  Clock: () => <span>Clock</span>,
+  AlertCircle: () => <span>AlertCircle</span>,
+}));
+vi.mock('@tanstack/react-router', () => ({
+  createFileRoute: () => () => ({}),
+  Link: ({ children }: any) => <a>{children}</a>
+}));
+
+// Mock hooks
 vi.mock('@/hooks/use-subscription-context', () => ({
   useSubscriptionContext: vi.fn(() => ({
     data: {
@@ -26,27 +53,24 @@ vi.mock('@/hooks/use-multiempresa', () => ({
   }))
 }));
 
-// Mock server functions to ensure no calls during render
 vi.mock('@/lib/billing.functions', () => ({
   createStripeCheckoutSession: vi.fn(),
   getCompanySubscriptionContext: vi.fn()
 }));
 
+// Import component directly (bypassing route definition issues)
+import { Route } from '../_authenticated.configuracoes.assinatura';
+
 const queryClient = new QueryClient();
 
 describe('SubscriptionPage UX Copy Audit', () => {
   it('displays correct truthful copy when checkout is cancelled', () => {
-    // Force search params to contain checkout=cancel
+    // Force search params via URL object
     const originalLocation = window.location;
     delete (window as any).location;
-    window.location = {
-      ...originalLocation,
-      search: '?checkout=cancel',
-      hostname: 'localhost',
-      origin: 'http://localhost:8080'
-    } as any;
+    (window as any).location = new URL('https://id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app/configuracoes/assinatura?checkout=cancel');
 
-    const Component = Route.options.component!;
+    const Component = (Route as any).options.component;
     render(
       <QueryClientProvider client={queryClient}>
         <Component />
@@ -57,7 +81,6 @@ describe('SubscriptionPage UX Copy Audit', () => {
     expect(screen.getByText('Checkout interrompido')).toBeTruthy();
 
     // Texto não contém “sessão encerrada”
-    // Buscamos o parágrafo que contém a mensagem
     const alertBody = screen.getByText(/Você saiu do checkout antes de concluir/i);
     expect(alertBody.textContent).not.toContain('sessão de checkout foi encerrada');
     expect(alertBody.textContent).not.toContain('encerrada.');
@@ -69,12 +92,10 @@ describe('SubscriptionPage UX Copy Audit', () => {
     expect(alertBody.textContent).toContain('avaliação gratuita continua normalmente');
 
     // CTA permanece “Retomar checkout seguro — R$ 35,90/mês”
-    // Note: The CTA content depends on isCtaEnabled which checks hostname/origin.
-    // In test it might be disabled but the text should still match if checkout=cancel.
-    const cta = screen.getByText(/Retomar checkout seguro — R$ 35,90\/mês/i);
+    const cta = screen.getByRole('button', { name: /Retomar checkout seguro — R$ 35,90\/mês/i });
     expect(cta).toBeTruthy();
 
-    // Reset location
-    window.location = originalLocation;
+    // Restore location
+    (window as any).location = originalLocation;
   });
 });
