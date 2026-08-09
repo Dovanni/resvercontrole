@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/configuracoes/assinatura")
   component: SubscriptionSettingsPage,
 });
 
-function SubscriptionSettingsPage() {
+export function SubscriptionSettingsPage() {
   const { empresaId } = useMultiempresa();
   const { data: sub, isLoading } = useSubscriptionContext(empresaId);
   const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
@@ -73,7 +73,7 @@ function SubscriptionSettingsPage() {
           <div className="space-y-1">
             <p className="text-sm font-semibold text-amber-900">Checkout interrompido</p>
             <p className="text-sm text-amber-700">
-              Sua sessão de checkout foi encerrada. Seus dados estão seguros e você pode retomar o processo a qualquer momento clicando no botão abaixo.
+              Você saiu do checkout antes de concluir. Nenhum pagamento foi realizado e sua avaliação gratuita continua normalmente. Se desejar, você pode retomar o mesmo checkout com segurança.
             </p>
           </div>
         </div>
