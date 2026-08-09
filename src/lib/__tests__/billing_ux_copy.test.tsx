@@ -106,7 +106,6 @@ describe('SubscriptionPage UX Copy Audit', () => {
     expect(alertBody.textContent).toContain('avaliação gratuita continua normalmente');
 
     // CTA permanece “Retomar checkout seguro — R$ 35,90/mês”
-    // Use findByText to handle any async issues, or just getByText since we check content
     const cta = screen.getByText('Retomar checkout seguro — R$ 35,90/mês');
     expect(cta).toBeTruthy();
     expect(cta.tagName).toBe('BUTTON');
