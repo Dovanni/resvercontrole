@@ -18,6 +18,8 @@ export const Route = createFileRoute("/_authenticated/configuracoes/assinatura")
 function SubscriptionSettingsPage() {
   const { empresaId } = useMultiempresa();
   const { data: sub, isLoading } = useSubscriptionContext(empresaId);
+  const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+  const checkoutStatus = searchParams.get("checkout");
 
   if (isLoading) return <div className="p-8 text-muted-foreground">Carregando informações da assinatura...</div>;
 
