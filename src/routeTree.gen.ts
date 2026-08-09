@@ -46,7 +46,7 @@ import { Route as ApiPublicRpcTestRouteImport } from './routes/api/public/rpc-te
 import { Route as ApiPublicAcceptInvitationRouteImport } from './routes/api/public/accept-invitation'
 import { Route as AuthenticatedConfiguracoesCategoriasRouteImport } from './routes/_authenticated.configuracoes.categorias'
 import { Route as AuthenticatedConfiguracoesAssinaturaRouteImport } from './routes/_authenticated.configuracoes.assinatura'
-import { Route as ApiPublicStripeWebhookTsRouteImport } from './routes/api/public/stripe.webhook.ts'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe.webhook'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -244,12 +244,11 @@ const AuthenticatedConfiguracoesAssinaturaRoute =
     path: '/assinatura',
     getParentRoute: () => AuthenticatedConfiguracoesRoute,
   } as any)
-const ApiPublicStripeWebhookTsRoute =
-  ApiPublicStripeWebhookTsRouteImport.update({
-    id: '/api/public/stripe/webhook/ts',
-    path: '/api/public/stripe/webhook/ts',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe/webhook',
+  path: '/api/public/stripe/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -288,7 +287,7 @@ export interface FileRoutesByFullPath {
   '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
   '/auth/callback/': typeof AuthCallbackIndexRoute
-  '/api/public/stripe/webhook/ts': typeof ApiPublicStripeWebhookTsRoute
+  '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -327,7 +326,7 @@ export interface FileRoutesByTo {
   '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
   '/auth/callback': typeof AuthCallbackIndexRoute
-  '/api/public/stripe/webhook/ts': typeof ApiPublicStripeWebhookTsRoute
+  '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -368,7 +367,7 @@ export interface FileRoutesById {
   '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
   '/auth/callback/': typeof AuthCallbackIndexRoute
-  '/api/public/stripe/webhook/ts': typeof ApiPublicStripeWebhookTsRoute
+  '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -409,7 +408,7 @@ export interface FileRouteTypes {
     | '/api/public/rpc-test'
     | '/auth/callback/recovery'
     | '/auth/callback/'
-    | '/api/public/stripe/webhook/ts'
+    | '/api/public/stripe/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -448,7 +447,7 @@ export interface FileRouteTypes {
     | '/api/public/rpc-test'
     | '/auth/callback/recovery'
     | '/auth/callback'
-    | '/api/public/stripe/webhook/ts'
+    | '/api/public/stripe/webhook'
   id:
     | '__root__'
     | '/'
@@ -488,7 +487,7 @@ export interface FileRouteTypes {
     | '/api/public/rpc-test'
     | '/auth/callback/recovery'
     | '/auth/callback/'
-    | '/api/public/stripe/webhook/ts'
+    | '/api/public/stripe/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -502,7 +501,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicAcceptInvitationRoute: typeof ApiPublicAcceptInvitationRoute
   ApiPublicRpcTestRoute: typeof ApiPublicRpcTestRoute
-  ApiPublicStripeWebhookTsRoute: typeof ApiPublicStripeWebhookTsRoute
+  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -766,11 +765,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesAssinaturaRouteImport
       parentRoute: typeof AuthenticatedConfiguracoesRoute
     }
-    '/api/public/stripe/webhook/ts': {
-      id: '/api/public/stripe/webhook/ts'
-      path: '/api/public/stripe/webhook/ts'
-      fullPath: '/api/public/stripe/webhook/ts'
-      preLoaderRoute: typeof ApiPublicStripeWebhookTsRouteImport
+    '/api/public/stripe/webhook': {
+      id: '/api/public/stripe/webhook'
+      path: '/api/public/stripe/webhook'
+      fullPath: '/api/public/stripe/webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -873,7 +872,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicAcceptInvitationRoute: ApiPublicAcceptInvitationRoute,
   ApiPublicRpcTestRoute: ApiPublicRpcTestRoute,
-  ApiPublicStripeWebhookTsRoute: ApiPublicStripeWebhookTsRoute,
+  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
