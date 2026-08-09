@@ -50,6 +50,7 @@ Deno.serve(async (req: Request) => {
     return new Response('Missing signature', { status: 400 })
   }
 
+  // Verificação de configuração crítica
   if (!restrictedKey) {
     console.error('[Configuration Error] Missing STRIPE_RESTRICTED_KEY')
     return new Response('Internal Server Error', { status: 500 })
