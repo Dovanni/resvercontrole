@@ -112,14 +112,14 @@ async function validateStripeSecrets() {
       });
 
       try {
-        stripe.webhooks.constructEvent(payload, header, STRIPE_WEBHOOK_SECRET!);
+        await stripe.webhooks.constructEventAsync(payload, header, STRIPE_WEBHOOK_SECRET!);
         results.webhook_local_valid_signature_test = true;
       } catch (e) {
         results.webhook_local_valid_signature_test = false;
       }
 
       try {
-        stripe.webhooks.constructEvent(payload, 'invalid_header', STRIPE_WEBHOOK_SECRET!);
+        await stripe.webhooks.constructEventAsync(payload, 'invalid_header', STRIPE_WEBHOOK_SECRET!);
         results.webhook_local_invalid_signature_test = false;
       } catch (e) {
         results.webhook_local_invalid_signature_test = true;
