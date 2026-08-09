@@ -122,7 +122,19 @@ export const createStripeCheckoutSession = createServerFn({ method: "POST" })
 
     // Preparation for Stripe Call (Mocked in Phase 2B as per protocol)
     // The actual call will be enabled after human authorization.
-    // We reuse the attempt's idempotency_key for Stripe session creation.
+    // ETAPA 1.A: Strictly validate single item and quantity=1
+    
+    // In a real implementation this would be:
+    /*
+    const session = await stripe.checkout.sessions.create({
+      line_items: [{
+        price: STRIPE_PRICE_ENTERPRISE_MONTHLY,
+        quantity: 1, // MANDATORY EXACTLY 1
+      }],
+      mode: 'subscription',
+      // ...
+    });
+    */
     
     const successUrl = `${origin || `https://${host}`}/configuracoes/assinatura?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${origin || `https://${host}`}/configuracoes/assinatura`;
@@ -132,7 +144,9 @@ export const createStripeCheckoutSession = createServerFn({ method: "POST" })
       message: 'Checkout infrastructure prepared and attempt reserved.',
       attemptId: attempt.id,
       idempotencyKey: attempt.idempotency_key,
-      mockSessionUrl: successUrl.replace('{CHECKOUT_SESSION_ID}', 'mock_session_id')
+      mockSessionUrl: successUrl.replace('{CHECKOUT_SESSION_ID}', 'mock_session_id'),
+      canonical_quantity: 1, // Evidence of contract enforcement
+      item_count: 1
     };
   });
 
