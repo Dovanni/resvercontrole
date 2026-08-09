@@ -59,7 +59,17 @@ export const Route = createFileRoute('/api/stripe/webhook')({
             return new Response('Error processing event', { status: 500 });
           }
 
-          const status = (result as any)?.status;
+          const resultData = result as any;
+          const status = resultData?.status;
+          
+          if (status === 'failed_retryable') {
+            console.warn(`Retryable failure for event [${event.id}]: ${resultData?.reason || 'unlinked'}`);
+            return new Response(JSON.stringify({ received: true, status }), {
+              status: 503, // Service Unavailable for retry
+              headers: { 'Content-Type': 'application/json' },
+            });
+          }
+
           console.log(`Stripe webhook processed: ${event.type} [${event.id}] - Status: ${status}`);
 
           return new Response(JSON.stringify({ received: true, status }), {
