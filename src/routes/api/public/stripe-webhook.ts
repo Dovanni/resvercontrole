@@ -1,4 +1,4 @@
-import Stripe from 'npm:stripe@22.4.0'
+import Stripe from 'stripe'
 import { createFileRoute } from '@tanstack/react-router'
 
 /**
