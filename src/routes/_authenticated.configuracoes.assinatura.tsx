@@ -67,6 +67,18 @@ function SubscriptionSettingsPage() {
         subtitle="Controle seu plano, limites e faturamento" 
       />
 
+      {checkoutStatus === 'cancel' && (
+        <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+          <AlertCircle className="size-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-amber-900">Checkout interrompido</p>
+            <p className="text-sm text-amber-700">
+              Sua sessão de checkout foi encerrada. Seus dados estão seguros e você pode retomar o processo a qualquer momento clicando no botão abaixo.
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="grid gap-6 md:grid-cols-3 mb-8">
         <Card className="md:col-span-2 shadow-soft">
           <CardHeader>
@@ -160,7 +172,7 @@ function SubscriptionSettingsPage() {
                           }}
                           className="bg-primary text-primary-foreground hover:bg-primary/90 border shadow-sm transition-all active:scale-[0.98]"
                         >
-                          Assinar Plano Empresarial — R$ 35,90/mês
+                          {checkoutStatus === 'cancel' ? "Retomar checkout seguro — R$ 35,90/mês" : "Assinar Plano Empresarial — R$ 35,90/mês"}
                         </Button>
                         {!isCtaEnabled && (
                           <p className="text-[10px] text-amber-600 font-medium leading-relaxed bg-amber-50 p-2 rounded border border-amber-100 flex items-center gap-1.5">

@@ -153,6 +153,31 @@ export const Route = createFileRoute('/api/stripe/webhook')({
               };
               break;
             }
+            case 'checkout.session.expired': {
+              const session = event.data.object as Stripe.Checkout.Session;
+              sanitizedPayload = {
+                provider: 'stripe',
+                provider_event_id: event.id,
+                event_type: event.type,
+                event_created: event.created,
+                event_priority: 0,
+                empresa_id: session.metadata?.empresa_id,
+                internal_subscription_id: session.metadata?.subscription_id,
+                plan_code: session.metadata?.plan_code,
+                stripe_customer_id: typeof session.customer === 'string' ? session.customer : session.customer?.id,
+                stripe_subscription_id: typeof (session as any).subscription === 'string' ? (session as any).subscription : (session as any).subscription?.id,
+                stripe_checkout_session_id: session.id,
+                observed_price_id: null,
+                observed_currency: session.currency?.toLowerCase(),
+                observed_amount: session.amount_total || 0,
+                observed_quantity: 1,
+                current_period_start: null,
+                current_period_end: null,
+                cancel_at_period_end: false,
+                payload_sha256: payloadHash
+              };
+              break;
+            }
             default:
               console.log(`Unhandled event type: ${event.type}`);
               return new Response(JSON.stringify({ received: true, ignored: true }), { status: 200 });
