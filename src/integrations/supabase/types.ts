@@ -2128,6 +2128,15 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      finalize_checkout_attempt_v2: {
+        Args: {
+          p_attempt_id: string
+          p_expires_at: string
+          p_provider: string
+          p_provider_checkout_session_id: string
+        }
+        Returns: Json
+      }
       finalize_user_onboarding:
         | { Args: { p_auth_user_id: string }; Returns: Json }
         | {
