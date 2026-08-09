@@ -74,14 +74,20 @@ export const createStripeCheckoutSessionHandler = async ({ data }: { data: { emp
     throw new Error("Forbidden: Admin access required");
   }
 
-  // Hostname/Origin Guard - Strict validation
+  // ETAPA 2: Hostname e Origin exatos - Strict comparison
   const host = req.headers.get('host');
   const origin = req.headers.get('origin');
-  const AUTHORIZED_HOSTNAME = 'id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
   
-  if (host !== AUTHORIZED_HOSTNAME) {
-    console.warn(`Unauthorized host blocked: ${host}`);
-    return { status: 'checkout_disabled', message: 'Production checkout is disabled' };
+  const ALLOWED_PREVIEW_HOST = 'id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
+  const ALLOWED_PREVIEW_ORIGIN = 'https://id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
+  
+  if (host !== ALLOWED_PREVIEW_HOST || origin !== ALLOWED_PREVIEW_ORIGIN) {
+    console.warn(`Unauthorized host/origin blocked: Host=${host}, Origin=${origin}`);
+    return { 
+      status: 'checkout_disabled', 
+      message: 'Production checkout is disabled',
+      evidence: { host_match: host === ALLOWED_PREVIEW_HOST, origin_match: origin === ALLOWED_PREVIEW_ORIGIN }
+    };
   }
 
   const STRIPE_RESTRICTED_KEY = process.env['STRIPE_RESTRICTED_KEY'];
