@@ -6,7 +6,7 @@ export const getCompanySubscriptionContext = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) => z.object({ empresaId: z.string().uuid() }).strict().parse(data))
   .handler(async ({ data }: { data: { empresaId: string } }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { getRequest } = await import("@tanstack/react-start/server");
+    const { getRequest } = await (process.env.NODE_ENV === 'production' ? import("@tanstack/react-start/server") : Promise.resolve({ getRequest: () => null }) as any);
     const req = getRequest();
     const authHeader = req?.headers.get("Authorization");
     const token = authHeader?.replace("Bearer ", "");
@@ -52,7 +52,7 @@ export const getCompanySubscriptionContext = createServerFn({ method: "GET" })
 
 export const createStripeCheckoutSessionHandler = async ({ data }: { data: { empresaId: string } }) => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { getRequest } = await import("@tanstack/react-start/server");
+  const { getRequest } = await (process.env.NODE_ENV === 'production' ? import("@tanstack/react-start/server") : Promise.resolve({ getRequest: () => null }) as any);
   const req = getRequest();
   const authHeader = req?.headers.get("Authorization");
   const token = authHeader?.replace("Bearer ", "");
