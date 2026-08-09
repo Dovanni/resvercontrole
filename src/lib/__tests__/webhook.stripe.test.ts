@@ -18,22 +18,22 @@ describe('Stripe Webhook Contract - Corrective Type Safety and Ordering', () => 
           event_type: event.type,
           event_created: event.created,
           empresa_id: session.metadata?.empresa_id,
-          stripe_subscription_id: typeof session.subscription === 'string' ? session.subscription : session.subscription?.id,
+          stripe_subscription_id: typeof (session as any).subscription === 'string' ? (session as any).subscription : (session as any).subscription?.id,
           observed_currency: session.currency?.toLowerCase(),
           observed_amount: session.amount_total || 0,
           observed_quantity: 1,
         };
       }
       case 'invoice.paid': {
-        const invoice = event.data.object as Stripe.Invoice;
-        const lineItem = invoice.lines.data[0];
+        const invoice = event.data.object as any;
+        const lineItem = invoice.lines?.data?.[0];
         return {
           provider: 'stripe',
           provider_event_id: event.id,
           event_type: event.type,
           event_created: event.created,
-          empresa_id: invoice.metadata?.empresa_id || (invoice as any).subscription_details?.metadata?.empresa_id as string | undefined,
-          stripe_subscription_id: typeof invoice.subscription === 'string' ? invoice.subscription : (invoice.subscription as any)?.id,
+          empresa_id: invoice.metadata?.empresa_id || invoice.subscription_details?.metadata?.empresa_id,
+          stripe_subscription_id: typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id,
           observed_currency: invoice.currency?.toLowerCase(),
           observed_amount: invoice.amount_paid,
           observed_quantity: lineItem?.quantity || 1,
