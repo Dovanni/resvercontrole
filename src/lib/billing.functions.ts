@@ -51,6 +51,56 @@ export const getCompanySubscriptionContext = createServerFn({ method: "GET" })
     } | null;
   });
 
+export const createStripeCheckoutSession = createServerFn({ method: "POST" })
+  .inputValidator((data) => z.object({ empresaId: z.string().uuid() }).strict().parse(data))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const req = getRequest();
+    const authHeader = req?.headers.get("Authorization");
+    const token = authHeader?.replace("Bearer ", "");
+
+    if (!token) throw new Error("Unauthorized");
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    if (authError || !user) throw new Error("Unauthorized");
+
+    // Validar se o usuário é admin da empresa
+    const { data: membership, error: memberError } = await supabaseAdmin
+      .from("user_company_access")
+      .select("role")
+      .eq("empresa_id", data.empresaId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (memberError || !membership || membership.role !== 'admin') {
+      throw new Error("Forbidden: Admin access required");
+    }
+
+    const STRIPE_RESTRICTED_KEY = process.env['STRIPE_RESTRICTED_KEY'];
+    const STRIPE_WEBHOOK_SECRET = process.env['STRIPE_WEBHOOK_SECRET'];
+    const STRIPE_PRICE_ENTERPRISE_MONTHLY = process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY'];
+
+    // Fail-closed: se as chaves não estiverem configuradas, não prossegue
+    if (!STRIPE_RESTRICTED_KEY || !STRIPE_WEBHOOK_SECRET || !STRIPE_PRICE_ENTERPRISE_MONTHLY) {
+      console.warn("Stripe configuration pending (Missing secrets)");
+      return { status: 'configuration_pending' };
+    }
+
+    // Feature Flag Guard
+    const ENABLE_STRIPE = process.env['VITE_ENABLE_STRIPE_CHECKOUT'] === 'true';
+    const isPreview = req.headers.get('host')?.includes('lovable.app');
+    
+    if (!ENABLE_STRIPE && !isPreview) {
+      return { status: 'checkout_disabled' };
+    }
+
+    // Fase 2A: NÃO chamar Stripe. Apenas retornar status de preparação.
+    return { 
+      status: 'ready_for_test',
+      message: 'Infrastructure ready. Stripe call bypassed in Phase 2A.'
+    };
+  });
+
 export const canInviteMember = createServerFn({ method: "GET" })
   .inputValidator((data) => z.object({ empresaId: z.string().uuid() }).parse(data))
   .handler(async ({ data }) => {
@@ -70,3 +120,4 @@ export const canInviteMember = createServerFn({ method: "GET" })
       message: string;
     };
   });
+
