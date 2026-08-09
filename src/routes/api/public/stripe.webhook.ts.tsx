@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/api/public/stripe/webhook')({
+export const Route = createFileRoute('/api/public/stripe/webhook/ts')({
   server: {
     handlers: {
       GET: async () => {
