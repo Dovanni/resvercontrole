@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import { getRequest } from "@tanstack/react-start/server";
 
 export const getCompanySubscriptionContext = createServerFn({ method: "GET" })
   .inputValidator((data) => z.object({ empresaId: z.string().uuid() }).strict().parse(data))

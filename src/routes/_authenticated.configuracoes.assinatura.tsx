@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Check, CreditCard, Users, Clock, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { createStripeCheckoutSession } from "@/lib/billing.functions";
 
 export const Route = createFileRoute("/_authenticated/configuracoes/assinatura")({
   head: () => ({ meta: [{ title: "Assinatura e Planos — Vejamais" }] }),
