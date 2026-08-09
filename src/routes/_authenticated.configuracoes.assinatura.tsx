@@ -115,12 +115,13 @@ function SubscriptionSettingsPage() {
                 </p>
                 <div className="space-y-2">
                   <Button disabled className="bg-muted text-muted-foreground cursor-not-allowed border shadow-none">
-                    Plano Empresarial — R$ 35,90/mês
+                    Assinar Plano Empresarial — R$ 35,90/mês
                   </Button>
-                  <p className="text-[10px] text-muted-foreground italic font-medium">
-                    Contratação online disponível em breve.
+                  <p className="text-[10px] text-muted-foreground italic font-medium leading-relaxed">
+                    Checkout em modo de teste aguardando autorização para validação controlada.
                   </p>
                 </div>
+
               </div>
             )}
           </CardContent>

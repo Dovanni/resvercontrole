@@ -64,7 +64,7 @@ export const createStripeCheckoutSession = createServerFn({ method: "POST" })
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     if (authError || !user) throw new Error("Unauthorized");
 
-    // Validar se o usuário é admin da empresa
+    // Validar membership admin na empresa
     const { data: membership, error: memberError } = await supabaseAdmin
       .from("user_company_access")
       .select("role")
@@ -76,30 +76,66 @@ export const createStripeCheckoutSession = createServerFn({ method: "POST" })
       throw new Error("Forbidden: Admin access required");
     }
 
+    // Hostname/Origin Guard - Strict validation
+    const host = req.headers.get('host');
+    const origin = req.headers.get('origin');
+    const AUTHORIZED_HOSTNAME = 'id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
+    
+    if (host !== AUTHORIZED_HOSTNAME) {
+      console.warn(`Unauthorized host blocked: ${host}`);
+      return { status: 'checkout_disabled', message: 'Production checkout is disabled' };
+    }
+
     const STRIPE_RESTRICTED_KEY = process.env['STRIPE_RESTRICTED_KEY'];
-    const STRIPE_WEBHOOK_SECRET = process.env['STRIPE_WEBHOOK_SECRET'];
     const STRIPE_PRICE_ENTERPRISE_MONTHLY = process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY'];
 
-    // Fail-closed: se as chaves não estiverem configuradas, não prossegue
-    if (!STRIPE_RESTRICTED_KEY || !STRIPE_WEBHOOK_SECRET || !STRIPE_PRICE_ENTERPRISE_MONTHLY) {
+    if (!STRIPE_RESTRICTED_KEY || !STRIPE_PRICE_ENTERPRISE_MONTHLY) {
       console.warn("Stripe configuration pending (Missing secrets)");
       return { status: 'configuration_pending' };
     }
 
-    // Feature Flag Guard
-    const ENABLE_STRIPE = process.env['VITE_ENABLE_STRIPE_CHECKOUT'] === 'true';
-    const isPreview = req.headers.get('host')?.includes('lovable.app');
-    
-    if (!ENABLE_STRIPE && !isPreview) {
-      return { status: 'checkout_disabled' };
+    // Resolve subscription and reserve checkout attempt
+    const { data: sub, error: subError } = await supabaseAdmin
+      .from('subscriptions')
+      .select('id, plan_id, stripe_customer_id, plans(code)')
+      .eq('empresa_id', data.empresaId)
+      .neq('status', 'canceled')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (subError || !sub) {
+      throw new Error("Subscription not found");
     }
 
-    // Fase 2A: NÃO chamar Stripe. Apenas retornar status de preparação.
+    // Atomic reservation
+    const { data: attempt, error: reserveError } = await supabaseAdmin.rpc('reserve_checkout_attempt', {
+      p_empresa_id: data.empresaId,
+      p_subscription_id: sub.id,
+      p_user_id: user.id
+    });
+
+    if (reserveError || !attempt) {
+      console.error("Failed to reserve checkout attempt:", reserveError);
+      throw new Error("Checkout session busy or failed to initialize");
+    }
+
+    // Preparation for Stripe Call (Mocked in Phase 2B as per protocol)
+    // The actual call will be enabled after human authorization.
+    // We reuse the attempt's idempotency_key for Stripe session creation.
+    
+    const successUrl = `${origin || `https://${host}`}/configuracoes/assinatura?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${origin || `https://${host}`}/configuracoes/assinatura`;
+
     return { 
-      status: 'ready_for_test',
-      message: 'Infrastructure ready. Stripe call bypassed in Phase 2A.'
+      status: 'ready_for_authorization',
+      message: 'Checkout infrastructure prepared and attempt reserved.',
+      attemptId: attempt.id,
+      idempotencyKey: attempt.idempotency_key,
+      mockSessionUrl: successUrl.replace('{CHECKOUT_SESSION_ID}', 'mock_session_id')
     };
   });
+
 
 export const canInviteMember = createServerFn({ method: "GET" })
   .inputValidator((data) => z.object({ empresaId: z.string().uuid() }).parse(data))
