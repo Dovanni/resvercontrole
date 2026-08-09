@@ -6,9 +6,10 @@ import Stripe from 'npm:stripe@22.4.0'
  */
 
 const stripe = new Stripe(Deno.env.get('STRIPE_RESTRICTED_KEY') || '', {
-  // apiVersion removida para usar a nativa do SDK conforme solicitado
-  httpClient: Stripe.createFetchHttpClient(),
+  // @ts-ignore: compatibility for test mocks in Node/Vitest
+  httpClient: Stripe.createFetchHttpClient ? Stripe.createFetchHttpClient() : ({} as any),
 })
+
 
 const endpointSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') || ''
 
