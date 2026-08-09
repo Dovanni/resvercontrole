@@ -206,7 +206,8 @@ export const createStripeCheckoutSessionHandler = async ({ data }: { data: { emp
       throw new Error('CHECKOUT_PERSISTENCE_FAILED');
     }
 
-    if (!finalizeData?.persisted) {
+    const finalizeResult = finalizeData as { persisted?: boolean } | null;
+    if (!finalizeResult?.persisted) {
       throw new Error('CHECKOUT_PERSISTENCE_NOT_CONFIRMED');
     }
 
