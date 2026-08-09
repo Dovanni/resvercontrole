@@ -193,7 +193,6 @@ export const createStripeCheckoutSessionHandler = async ({ data }: { data: { emp
       idempotencyKey: attempt.idempotency_key
     });
 
-    // ETAPA 2.7: Chamar finalize_checkout_attempt_v2 e TRATAR ERROS
     const { data: finalizeData, error: finalizeError } = await supabaseAdmin.rpc('finalize_checkout_attempt_v2', {
       p_attempt_id: attempt.id,
       p_provider: 'stripe',
