@@ -43,7 +43,27 @@ export const Route = createFileRoute('/api/stripe/webhook')({
           const payloadHash = createHash('sha256').update(rawBody).digest('hex');
 
           // ETAPA 1: Remocao de coercoes inseguras e narrowing tipado por event.type
-          let sanitizedPayload: any = null;
+          let sanitizedPayload: {
+            provider: string;
+            provider_event_id: string;
+            event_type: string;
+            event_created: number;
+            event_priority: number;
+            empresa_id?: string;
+            internal_subscription_id?: string;
+            plan_code?: string;
+            stripe_customer_id?: string;
+            stripe_subscription_id?: string;
+            stripe_checkout_session_id: string | null;
+            observed_price_id: string | null | undefined;
+            observed_currency: string | null | undefined;
+            observed_amount: number;
+            observed_quantity: number;
+            current_period_start: number | null;
+            current_period_end: number | null;
+            cancel_at_period_end: boolean;
+            payload_sha256: string;
+          } | null = null;
 
           switch (event.type) {
             case 'checkout.session.completed': {
@@ -80,13 +100,13 @@ export const Route = createFileRoute('/api/stripe/webhook')({
                 event_type: event.type,
                 event_created: event.created,
                 event_priority: 10, // Higher priority for payment
-                empresa_id: invoice.metadata?.empresa_id || (invoice as any).subscription_details?.metadata?.empresa_id,
-                internal_subscription_id: invoice.metadata?.subscription_id || (invoice as any).subscription_details?.metadata?.subscription_id,
-                plan_code: invoice.metadata?.plan_code || (invoice as any).subscription_details?.metadata?.plan_code,
+                empresa_id: invoice.metadata?.empresa_id || (invoice.subscription_details?.metadata?.empresa_id as string | undefined),
+                internal_subscription_id: invoice.metadata?.subscription_id || (invoice.subscription_details?.metadata?.subscription_id as string | undefined),
+                plan_code: invoice.metadata?.plan_code || (invoice.subscription_details?.metadata?.plan_code as string | undefined),
                 stripe_customer_id: typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id,
-                stripe_subscription_id: typeof invoice.subscription === 'string' ? invoice.subscription : (invoice.subscription as any)?.id,
+                stripe_subscription_id: typeof invoice.subscription === 'string' ? invoice.subscription : (invoice.subscription as Stripe.Subscription | null)?.id,
                 stripe_checkout_session_id: null,
-                observed_price_id: (lineItem as any)?.price?.id,
+                observed_price_id: lineItem?.price?.id,
                 observed_currency: invoice.currency?.toLowerCase(),
                 observed_amount: invoice.amount_paid,
                 observed_quantity: lineItem?.quantity || 1,
@@ -100,6 +120,7 @@ export const Route = createFileRoute('/api/stripe/webhook')({
             case 'customer.subscription.updated':
             case 'customer.subscription.deleted': {
               const subscription = event.data.object as Stripe.Subscription;
+              const firstItem = subscription.items.data[0];
               sanitizedPayload = {
                 provider: 'stripe',
                 provider_event_id: event.id,
@@ -112,10 +133,10 @@ export const Route = createFileRoute('/api/stripe/webhook')({
                 stripe_customer_id: typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id,
                 stripe_subscription_id: subscription.id,
                 stripe_checkout_session_id: null,
-                observed_price_id: subscription.items.data[0]?.price?.id,
+                observed_price_id: firstItem?.price?.id,
                 observed_currency: subscription.currency?.toLowerCase(),
-                observed_amount: (subscription.items.data[0]?.plan as any)?.amount || 0,
-                observed_quantity: subscription.items.data[0]?.quantity || 1,
+                observed_amount: firstItem?.plan?.amount || 0,
+                observed_quantity: firstItem?.quantity || 1,
                 current_period_start: subscription.current_period_start,
                 current_period_end: subscription.current_period_end,
                 cancel_at_period_end: subscription.cancel_at_period_end,
