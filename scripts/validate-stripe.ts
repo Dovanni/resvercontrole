@@ -14,9 +14,9 @@ async function validateStripeSecrets() {
     webhook_secret_prefix_valid: STRIPE_WEBHOOK_SECRET?.startsWith('whsec_') || false,
     price_id_present: !!STRIPE_PRICE_ENTERPRISE_MONTHLY,
     price_id_prefix_valid: STRIPE_PRICE_ENTERPRISE_MONTHLY?.startsWith('price_') || false,
-    secret_present_in_client_bundle: false, // Local validation only
-    secret_logged: false, // We promise not to log them
-    worker_runtime_restarted: true, // Assuming call happens after config
+    secret_present_in_client_bundle: false,
+    secret_logged: false,
+    worker_runtime_restarted: true,
     stripe_authentication_status: 'pending',
     stripe_api_read_call_count: 0,
     stripe_api_write_call_count: 0,
@@ -44,7 +44,7 @@ async function validateStripeSecrets() {
     webhook_api_version: '2026-06-24.dahlia',
     api_version_compatibility: true,
     checkout_flag_effective: process.env['VITE_ENABLE_STRIPE_CHECKOUT'] === 'true',
-    production_checkout_enabled: false, // Hardcoded check
+    production_checkout_enabled: false,
     customer_created: false,
     checkout_created: false,
     stripe_subscription_created: false,
@@ -66,10 +66,10 @@ async function validateStripeSecrets() {
 
   const stripe = new Stripe(STRIPE_RESTRICTED_KEY!, {
     apiVersion: '2023-10-16',
+    httpClient: Stripe.createNodeHttpClient(),
   });
 
   try {
-    // ETAPA 2 & 3: READ-ONLY PRICE & PRODUCT
     const price = await stripe.prices.retrieve(STRIPE_PRICE_ENTERPRISE_MONTHLY!, {
       expand: ['product'],
     });
@@ -95,7 +95,6 @@ async function validateStripeSecrets() {
       results.stripe_trial_configured = !!(price.recurring?.trial_period_days || product.metadata?.trial_days);
     }
 
-    // ETAPA 4: WEBHOOK LOCAL (Simulado em memória)
     if (results.webhook_secret_present && results.webhook_secret_prefix_valid) {
       const payload = JSON.stringify({
         id: 'evt_test_123',
@@ -128,10 +127,9 @@ async function validateStripeSecrets() {
         results.webhook_local_invalid_signature_test = true;
       }
 
-      // Livemode rejection test (sintético)
       const livePayload = payload.replace('"livemode":false', '"livemode":true');
       const liveEvent = JSON.parse(livePayload);
-      results.webhook_livemode_rejection_test = liveEvent.livemode === true; // In handler it should reject
+      results.webhook_livemode_rejection_test = liveEvent.livemode === true;
     }
 
   } catch (error: any) {
