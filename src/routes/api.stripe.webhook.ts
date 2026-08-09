@@ -144,13 +144,6 @@ export const Route = createFileRoute('/api/stripe/webhook')({
               };
               break;
             }
-                current_period_start: subscription.current_period_start,
-                current_period_end: subscription.current_period_end,
-                cancel_at_period_end: subscription.cancel_at_period_end,
-                payload_sha256: payloadHash
-              };
-              break;
-            }
             default:
               console.log(`Unhandled event type: ${event.type}`);
               return new Response(JSON.stringify({ received: true, ignored: true }), { status: 200 });
