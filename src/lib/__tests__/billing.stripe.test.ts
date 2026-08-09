@@ -63,7 +63,8 @@ describe('createStripeCheckoutSession - Security Corrective Suite', () => {
     
     mockStripe.checkout.sessions.create.mockResolvedValue({
       id: 'sess_1',
-      url: 'https://checkout.stripe.com/pay/mock'
+      url: 'https://checkout.stripe.com/pay/mock',
+      expires_at: Math.floor(Date.now() / 1000) + 3600
     });
   });
 
