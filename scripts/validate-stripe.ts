@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import crypto from 'crypto';
 
 async function validateStripeSecrets() {
   const STRIPE_RESTRICTED_KEY = process.env['STRIPE_RESTRICTED_KEY'];
@@ -111,15 +112,17 @@ async function validateStripeSecrets() {
         secret: STRIPE_WEBHOOK_SECRET!,
       });
 
+      const cryptoProvider = Stripe.createNodeCryptoProvider();
+
       try {
-        await stripe.webhooks.constructEventAsync(payload, header, STRIPE_WEBHOOK_SECRET!);
+        await stripe.webhooks.constructEventAsync(payload, header, STRIPE_WEBHOOK_SECRET!, undefined, cryptoProvider);
         results.webhook_local_valid_signature_test = true;
       } catch (e) {
         results.webhook_local_valid_signature_test = false;
       }
 
       try {
-        await stripe.webhooks.constructEventAsync(payload, 'invalid_header', STRIPE_WEBHOOK_SECRET!);
+        await stripe.webhooks.constructEventAsync(payload, 'invalid_header', STRIPE_WEBHOOK_SECRET!, undefined, cryptoProvider);
         results.webhook_local_invalid_signature_test = false;
       } catch (e) {
         results.webhook_local_invalid_signature_test = true;
