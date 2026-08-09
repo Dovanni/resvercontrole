@@ -81,7 +81,8 @@ describe('SubscriptionPage UX Copy Audit', () => {
     // Set hostname and origin in global window before URL overwrite
     Object.defineProperty(window, 'location', {
       value: new URL('https://id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app/configuracoes/assinatura?checkout=cancel'),
-      writable: true
+      writable: true,
+      configurable: true
     });
 
     render(
@@ -105,8 +106,9 @@ describe('SubscriptionPage UX Copy Audit', () => {
     expect(alertBody.textContent).toContain('avaliação gratuita continua normalmente');
 
     // CTA permanece “Retomar checkout seguro — R$ 35,90/mês”
-    // With hostname/origin matched, CTA is enabled and text matches the ternary
-    const cta = screen.getByRole('button', { name: /Retomar checkout seguro — R$ 35,90\/mês/i });
+    // Use findByText to handle any async issues, or just getByText since we check content
+    const cta = screen.getByText('Retomar checkout seguro — R$ 35,90/mês');
     expect(cta).toBeTruthy();
+    expect(cta.tagName).toBe('BUTTON');
   });
 });
