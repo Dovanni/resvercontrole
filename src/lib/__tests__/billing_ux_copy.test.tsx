@@ -82,7 +82,7 @@ describe('SubscriptionPage UX Copy Audit', () => {
 
     // The module exports SubscriptionSettingsPage directly? Let's check.
     // Based on previous code--view, it's defined inside SubscriptionSettingsPage function which is the component for Route.
-    const Component = (AssinaturaModule as any).Route.options.component;
+    const Component = AssinaturaModule.SubscriptionSettingsPage;
 
     render(
       <QueryClientProvider client={queryClient}>
