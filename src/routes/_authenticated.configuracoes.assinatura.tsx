@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/app-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, CreditCard, Users, Clock, AlertCircle } from "lucide-react";
+import { Check, CreditCard, Users, Clock, AlertCircle, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { createStripeCheckoutSession } from "@/lib/billing.functions";
@@ -84,10 +84,12 @@ export function SubscriptionSettingsPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <CardTitle className="font-display text-2xl">Plano Atual: {sub.plan_name}</CardTitle>
+                <CardTitle className="font-display text-2xl">
+                  Plano Atual: {sub.plan_code === 'essencial' ? 'Essencial — Avaliação gratuita' : sub.plan_name}
+                </CardTitle>
               </div>
               <Badge className={`${statusColor} capitalize px-3 py-1 font-semibold`}>
-                {statusLabel}
+                {sub.plan_code === 'essencial' ? 'Período de avaliação' : statusLabel}
               </Badge>
             </div>
           </CardHeader>
@@ -98,7 +100,7 @@ export function SubscriptionSettingsPage() {
                 <div>
                   <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Usuários</div>
                   <div className="text-sm font-medium">
-                    {sub.current_user_count} de {sub.max_users} utilizados
+                    {sub.current_user_count} de 5 utilizados
                   </div>
                 </div>
               </div>
@@ -107,13 +109,19 @@ export function SubscriptionSettingsPage() {
                 <Clock className="size-5 text-primary" />
                 <div>
                   <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                    {isTrial ? "Expira em" : "Próximo Vencimento"}
+                    {isTrial ? "Expira em" : "Valor Mensal"}
                   </div>
                   <div className="text-sm font-medium">
-                    {sub.current_period_ends_at ? format(new Date(sub.current_period_ends_at), "dd/MM/yyyy", { locale: ptBR }) : 'N/A'}
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      ({sub.days_remaining} {sub.days_remaining === 1 ? 'dia' : 'dias'})
-                    </span>
+                    {isTrial ? (
+                      <>
+                        {sub.current_period_ends_at ? format(new Date(sub.current_period_ends_at), "dd/MM/yyyy", { locale: ptBR }) : 'N/A'}
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          ({sub.days_remaining} {sub.days_remaining === 1 ? 'dia' : 'dias'} restantes)
+                        </span>
+                      </>
+                    ) : (
+                      "R$ 35,90 / mês"
+                    )}
                   </div>
                 </div>
               </div>
@@ -122,11 +130,11 @@ export function SubscriptionSettingsPage() {
             {isTrial && (
               <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20">
                 <h4 className="font-semibold text-primary flex items-center gap-2 mb-2">
-                  <CreditCard className="size-4" />
-                  Aproveite o Vejamais ao máximo
+                  <Sparkles className="size-4" />
+                  Aproveite o VEJAMAIS ao máximo
                 </h4>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Sua avaliação gratuita termina em breve. Adicione um método de pagamento para garantir a continuidade do seu acesso e desbloquear todos os recursos sem interrupções.
+                  Seu período gratuito oferece acesso a todos os recursos durante 30 dias. Assine o Plano Empresarial para continuar utilizando o VEJAMAIS após o término da avaliação.
                 </p>
                 <div className="space-y-2">
                   {(() => {
@@ -205,8 +213,8 @@ export function SubscriptionSettingsPage() {
                 "Multiempresa Ativo",
                 "Gestão Comercial Completa",
                 "Controle Financeiro & DRE",
-                `${sub.max_users} Usuários inclusos`,
-                sub.priority_suggestions ? "Sugestões Prioritárias" : "Suporte Padrão",
+                "Até 5 Usuários inclusos",
+                "Suporte Prioritário",
                 "Importação via Excel",
                 "Proteção e isolamento dos dados"
               ].map((feature, i) => (
