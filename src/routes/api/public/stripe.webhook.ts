@@ -38,3 +38,24 @@ export const Route = createFileRoute('/api/public/stripe/webhook')({
           );
           
           console.log('[WEBHOOK] Event constructed:', event.type);
+
+          if (event.livemode) {
+            console.error('[WEBHOOK] Livemode event rejected in test phase');
+            return new Response('Forbidden', { status: 403 });
+          }
+
+          const { handleStripeWebhook } = await import('@/lib/stripe.server');
+          await handleStripeWebhook(event);
+
+          return new Response(JSON.stringify({ received: true }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        } catch (err: any) {
+          console.error('[WEBHOOK] Error processing webhook:', err.message);
+          return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+        }
+      }
+    }
+  }
+});
