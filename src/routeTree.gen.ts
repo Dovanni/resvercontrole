@@ -46,7 +46,7 @@ import { Route as ApiPublicRpcTestRouteImport } from './routes/api/public/rpc-te
 import { Route as ApiPublicAcceptInvitationRouteImport } from './routes/api/public/accept-invitation'
 import { Route as AuthenticatedConfiguracoesCategoriasRouteImport } from './routes/_authenticated.configuracoes.categorias'
 import { Route as AuthenticatedConfiguracoesAssinaturaRouteImport } from './routes/_authenticated.configuracoes.assinatura'
-import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api.public.stripe.webhook'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe.webhook'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
