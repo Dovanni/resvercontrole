@@ -114,7 +114,7 @@ export function TrialBanner() {
         <div className="flex items-center gap-2 text-primary font-medium" aria-live="polite">
           <AlertCircle className="size-4 shrink-0" />
           <span>
-            Você está no período de avaliação do <strong>{sub.plan_name}</strong>. 
+            Você está no período de avaliação do <strong>Essencial</strong>. 
             {displayRemainingDays === 0 
               ? " Sua avaliação terminou." 
               : ` Restam ${displayRemainingDays} ${displayRemainingDays === 1 ? 'dia' : 'dias'}.`}
