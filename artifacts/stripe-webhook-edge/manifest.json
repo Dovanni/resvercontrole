@@ -1,7 +1,7 @@
 {
   "name": "stripe-webhook",
-  "version": "1.0.0",
-  "protocol": "VEJAMAIS_STRIPE_EDGE_FUNCTION_V1",
+  "version": "1.1.0",
+  "protocol": "VEJAMAIS_STRIPE_EDGE_FUNCTION_V2",
   "env": "deno",
   "auth": {
     "verify_jwt": false
@@ -19,5 +19,6 @@
     "POST_UNSUPPORTED": 200,
     "POST_OK": 200,
     "POST_RETRY": 503
-  }
+  },
+  "aggregate_sha256": "03481d9a58b57d2b0ca9c01ac5132e7a388caeda6a7f0c88422ebcb5fe5e9da9"
 }
