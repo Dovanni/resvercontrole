@@ -26,10 +26,16 @@ vi.mock('lucide-react', () => ({
   Clock: () => <span>Clock</span>,
   AlertCircle: () => <span>AlertCircle</span>,
 }));
-vi.mock('@tanstack/react-router', () => ({
-  createFileRoute: () => () => ({}),
-  Link: ({ children }: any) => <a>{children}</a>
-}));
+
+// Partial mock for @tanstack/react-router to include lazyRouteComponent
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    createFileRoute: () => () => ({}),
+    Link: ({ children }: any) => <a>{children}</a>
+  };
+});
 
 // Mock hooks
 vi.mock('@/hooks/use-subscription-context', () => ({
@@ -58,7 +64,7 @@ vi.mock('@/lib/billing.functions', () => ({
   getCompanySubscriptionContext: vi.fn()
 }));
 
-// Import component directly (bypassing route definition issues)
+// Import component directly
 import { Route } from '../../routes/_authenticated.configuracoes.assinatura';
 
 const queryClient = new QueryClient();
