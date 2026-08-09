@@ -101,19 +101,19 @@ export const Route = createFileRoute('/api/stripe/webhook')({
               break;
             }
             case 'invoice.paid': {
-              const invoice = event.data.object as Stripe.Invoice;
-              const lineItem = invoice.lines.data[0];
+              const invoice = event.data.object as any;
+              const lineItem = invoice.lines?.data?.[0];
               sanitizedPayload = {
                 provider: 'stripe',
                 provider_event_id: event.id,
                 event_type: event.type,
                 event_created: event.created,
                 event_priority: 10,
-                empresa_id: invoice.metadata?.empresa_id || (invoice as any).subscription_details?.metadata?.empresa_id as string | undefined,
-                internal_subscription_id: invoice.metadata?.subscription_id || (invoice as any).subscription_details?.metadata?.subscription_id as string | undefined,
-                plan_code: invoice.metadata?.plan_code || (invoice as any).subscription_details?.metadata?.plan_code as string | undefined,
+                empresa_id: invoice.metadata?.empresa_id || invoice.subscription_details?.metadata?.empresa_id,
+                internal_subscription_id: invoice.metadata?.subscription_id || invoice.subscription_details?.metadata?.subscription_id,
+                plan_code: invoice.metadata?.plan_code || invoice.subscription_details?.metadata?.plan_code,
                 stripe_customer_id: typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id,
-                stripe_subscription_id: typeof invoice.subscription === 'string' ? invoice.subscription : (invoice.subscription as any)?.id,
+                stripe_subscription_id: typeof invoice.subscription === 'string' ? invoice.subscription : invoice.subscription?.id,
                 stripe_checkout_session_id: null,
                 observed_price_id: lineItem?.price?.id,
                 observed_currency: invoice.currency?.toLowerCase(),
@@ -128,8 +128,8 @@ export const Route = createFileRoute('/api/stripe/webhook')({
             }
             case 'customer.subscription.updated':
             case 'customer.subscription.deleted': {
-              const subscription = event.data.object as Stripe.Subscription;
-              const firstItem = subscription.items.data[0];
+              const subscription = event.data.object as any;
+              const firstItem = subscription.items?.data?.[0];
               sanitizedPayload = {
                 provider: 'stripe',
                 provider_event_id: event.id,
@@ -144,7 +144,7 @@ export const Route = createFileRoute('/api/stripe/webhook')({
                 stripe_checkout_session_id: null,
                 observed_price_id: firstItem?.price?.id,
                 observed_currency: subscription.currency?.toLowerCase(),
-                observed_amount: (firstItem?.plan as any)?.amount || 0,
+                observed_amount: firstItem?.plan?.amount || 0,
                 observed_quantity: firstItem?.quantity || 1,
                 current_period_start: subscription.current_period_start || null,
                 current_period_end: subscription.current_period_end || null,
