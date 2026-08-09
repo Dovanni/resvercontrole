@@ -114,37 +114,66 @@ function SubscriptionSettingsPage() {
                   Sua avaliação gratuita termina em breve. Adicione um método de pagamento para garantir a continuidade do seu acesso e desbloquear todos os recursos sem interrupções.
                 </p>
                 <div className="space-y-2">
-                  <Button 
-                    onClick={async (e) => {
-                      const btn = e.currentTarget;
-                      btn.disabled = true;
-                      const originalText = btn.innerText;
-                      btn.innerText = "Preparando checkout seguro...";
-                      
-                      try {
-                        const { createStripeCheckoutSession } = await import("@/lib/billing.functions");
-                        const result = await createStripeCheckoutSession({ data: { empresaId } });
-                        
-                        if (result.status === 'session_created' && result.checkoutUrl) {
-                          window.location.href = result.checkoutUrl;
-                        } else {
-                          console.error("Checkout session failed:", result);
-                          btn.disabled = false;
-                          btn.innerText = originalText;
-                        }
-                      } catch (err) {
-                        console.error("Checkout error:", err);
-                        btn.disabled = false;
-                        btn.innerText = originalText;
-                      }
-                    }}
-                    className="bg-primary text-primary-foreground hover:bg-primary/90 border shadow-sm transition-all active:scale-[0.98]"
-                  >
-                    Assinar Plano Empresarial — R$ 35,90/mês
-                  </Button>
-                  <p className="text-[10px] text-muted-foreground italic font-medium leading-relaxed">
-                    Clique humano necessário. Redirecionamento seguro para Stripe Sandbox.
-                  </p>
+                  {(() => {
+                    const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+                    const origin = typeof window !== "undefined" ? window.location.origin : "";
+                    const ALLOWED_PREVIEW_HOST = 'id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
+                    const ALLOWED_PREVIEW_ORIGIN = 'https://id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
+                    const isF958 = empresaId === 'f958365e-3951-46e6-8595-e4f111115a90';
+                    const isTrialing = sub.status === 'trialing';
+                    
+                    // Condição estrita de habilitação conforme protocolo
+                    const isCtaEnabled = 
+                      hostname === ALLOWED_PREVIEW_HOST && 
+                      origin === ALLOWED_PREVIEW_ORIGIN && 
+                      isF958 && 
+                      isTrialing;
+
+                    return (
+                      <>
+                        <Button 
+                          disabled={!isCtaEnabled}
+                          onClick={async (e) => {
+                            const btn = e.currentTarget;
+                            btn.disabled = true;
+                            const originalText = btn.innerText;
+                            btn.innerText = "Preparando checkout seguro...";
+                            
+                            try {
+                              const { createStripeCheckoutSession } = await import("@/lib/billing.functions");
+                              const result = await createStripeCheckoutSession({ data: { empresaId } });
+                              
+                              if (result.status === 'session_created' && result.checkoutUrl) {
+                                window.location.href = result.checkoutUrl;
+                              } else {
+                                console.error("Checkout session failed:", result);
+                                btn.disabled = false;
+                                btn.innerText = originalText;
+                              }
+                            } catch (err) {
+                              console.error("Checkout error:", err);
+                              btn.disabled = false;
+                              btn.innerText = originalText;
+                            }
+                          }}
+                          className="bg-primary text-primary-foreground hover:bg-primary/90 border shadow-sm transition-all active:scale-[0.98]"
+                        >
+                          Assinar Plano Empresarial — R$ 35,90/mês
+                        </Button>
+                        {!isCtaEnabled && (
+                          <p className="text-[10px] text-amber-600 font-medium leading-relaxed bg-amber-50 p-2 rounded border border-amber-100 flex items-center gap-1.5">
+                            <AlertCircle className="size-3" />
+                            Checkout em modo de teste aguardando autorização para validação controlada.
+                          </p>
+                        )}
+                        {isCtaEnabled && (
+                          <p className="text-[10px] text-muted-foreground italic font-medium leading-relaxed">
+                            Clique humano necessário. Redirecionamento seguro para Stripe Sandbox.
+                          </p>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
 
               </div>
