@@ -71,7 +71,7 @@ export const validateCompanyAccess = createServerFn({ method: "GET" })
       .from("user_company_access")
       .select("empresa_id, role, status")
       .eq("user_id", userId)
-      .eq("empresa_id", empresaId)
+      .eq("empresa_id", empresaId as string)
       .eq("status", "active")
       .maybeSingle();
 
@@ -112,7 +112,7 @@ export const listCompanyMembers = createServerFn({ method: "GET" })
     const start = Date.now();
     try {
       const { data, error } = await authenticatedClient.rpc("list_my_company_members", {
-        p_empresa_id: empresaId
+        p_empresa_id: empresaId as string
       });
       
       const duration = Date.now() - start;
@@ -148,7 +148,7 @@ export const listCompanyInvitations = createServerFn({ method: "GET" })
       const { data, error } = await authenticatedClient
         .from("company_invitations")
         .select("*")
-        .eq("empresa_id", empresaId)
+        .eq("empresa_id", empresaId as string)
         .eq("status", "pending");
         
       const duration = Date.now() - start;
