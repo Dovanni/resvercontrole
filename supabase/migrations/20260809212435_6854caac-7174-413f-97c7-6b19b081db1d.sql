@@ -1,0 +1,1 @@
+SELECT 1; -- The RPC public.process_stripe_webhook_event is already defined in 20260809050000_stripe_contract_harden.sql
