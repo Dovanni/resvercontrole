@@ -20,6 +20,18 @@ vi.mock('@/integrations/supabase/client.server', () => ({
   supabaseAdmin: mockSupabaseAdmin,
 }));
 
+const mockStripe = {
+  checkout: {
+    sessions: {
+      create: vi.fn(),
+    },
+  },
+};
+
+vi.mock('@/lib/stripe.server', () => ({
+  getStripeClient: vi.fn(() => mockStripe),
+}));
+
 const mockHeaders = new Map();
 vi.mock('@tanstack/react-start/server', () => ({
   getRequest: vi.fn(() => ({
@@ -46,6 +58,11 @@ describe('createStripeCheckoutSession - Security Corrective Suite', () => {
     mockHeaders.set('origin', ALLOWED_ORIGIN);
     process.env['STRIPE_RESTRICTED_KEY'] = 'rk_test_mock';
     process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY'] = 'price_mock';
+    
+    mockStripe.checkout.sessions.create.mockResolvedValue({
+      id: 'sess_1',
+      url: 'https://checkout.stripe.com/pay/mock'
+    });
   });
 
   const invokeHandler = (args: { data: { empresaId: string } }) => billingFunctions.createStripeCheckoutSessionHandler(args);
