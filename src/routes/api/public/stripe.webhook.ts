@@ -4,10 +4,12 @@ import type Stripe from 'stripe';
 export const Route = createFileRoute('/api/public/stripe/webhook')({
   server: {
     handlers: {
+      GET: async () => new Response('Method Not Allowed', { status: 405 }),
       POST: async ({ request }) => {
         const STRIPE_WEBHOOK_SECRET = process.env['STRIPE_WEBHOOK_SECRET'];
         
         if (!STRIPE_WEBHOOK_SECRET) {
+          console.error('STRIPE_WEBHOOK_SECRET is not defined');
           return new Response('Stripe configuration missing', { status: 500 });
         }
 
@@ -17,7 +19,6 @@ export const Route = createFileRoute('/api/public/stripe/webhook')({
         }
 
         try {
-          // Bun/TanStack Start environment: request.text() provides the raw body string
           const rawBody = await request.text();
           const { getStripeClient } = await import('@/lib/stripe.server');
           const stripe = getStripeClient();
@@ -34,7 +35,7 @@ export const Route = createFileRoute('/api/public/stripe/webhook')({
 
           if (event.livemode) {
             console.error('Livemode event rejected in test phase');
-            return new Response('Livemode not allowed', { status: 403 });
+            return new Response('Forbidden', { status: 403 });
           }
 
           const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
