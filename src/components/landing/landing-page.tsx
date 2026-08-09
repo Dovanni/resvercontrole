@@ -471,16 +471,16 @@ function Plans() {
   return (
     <Section
       id="planos"
-      eyebrow="Planos"
-      title="Escolha o plano que acompanha o momento da sua empresa."
-      subtitle="Valores em definição comercial. Ao criar sua conta você conhece os detalhes atualizados."
+      eyebrow={HERO.eyebrow}
+      title={HERO.title}
+      subtitle={HERO.subheadline}
     >
-      <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid gap-6 md:grid-cols-2 max-w-4xl">
         {PLANS.map((p) => (
           <PlanCard key={p.id} plan={p} />
         ))}
       </div>
-      <p className="mt-6 text-center text-xs text-muted-foreground">
+      <p className="mt-8 text-center text-xs text-muted-foreground">
         Estrutura comercial em preparação. Nenhum pagamento é processado nesta página.
       </p>
     </Section>
@@ -492,33 +492,40 @@ function PlanCard({ plan }: { plan: Plan }) {
   return (
     <div
       className={[
-        "relative flex flex-col rounded-2xl border p-6 transition-colors",
+        "relative flex flex-col rounded-2xl border p-8 transition-all duration-300",
         highlight
-          ? "border-primary bg-card shadow-glow"
+          ? "border-primary bg-card shadow-glow ring-1 ring-primary/20 scale-[1.02]"
           : "border-border bg-card hover:border-primary/40",
       ].join(" ")}
     >
-      {highlight && (
-        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary-foreground">
-          Plano recomendado
+      {plan.badge && (
+        <span className={[
+          "absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wide",
+          highlight ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground border border-border"
+        ].join(" ")}>
+          {plan.badge}
         </span>
       )}
-      <div>
+      <div className="text-center md:text-left">
         <h3 className="font-display text-2xl text-foreground">{plan.name}</h3>
-        <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
+        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{plan.description}</p>
       </div>
-      <div className="mt-5">
-        <div className="text-xs uppercase tracking-wide text-muted-foreground">Mensal</div>
-        <div className="mt-1 font-display text-3xl text-foreground">{plan.priceMonthly}</div>
-        {plan.priceYearly && (
-          <div className="mt-1 text-xs text-muted-foreground">Anual: {plan.priceYearly}</div>
+      <div className="mt-6 text-center md:text-left">
+        <div className="font-display text-3xl text-foreground">
+          {plan.priceDisplay}
+          {plan.pricePeriod && (
+            <span className="ml-1 text-sm font-normal text-muted-foreground">{plan.pricePeriod}</span>
+          )}
+        </div>
+        {plan.complement && (
+          <div className="mt-1 text-xs text-muted-foreground">{plan.complement}</div>
         )}
       </div>
-      <ul className="mt-5 space-y-2 text-sm">
-        <li className="flex items-center gap-2 text-foreground">
+      <ul className="mt-6 space-y-3 text-sm flex-grow">
+        <li className="flex items-center gap-2 text-foreground font-medium">
           <Users className="size-4 text-primary" /> {plan.users}
         </li>
-        <li className="flex items-center gap-2 text-foreground">
+        <li className="flex items-center gap-2 text-foreground font-medium">
           <ShieldCheck className="size-4 text-primary" /> {plan.companies}
         </li>
         {plan.features.map((f) => (
@@ -531,24 +538,26 @@ function PlanCard({ plan }: { plan: Plan }) {
           <Sparkles className="size-4" /> {plan.support}
         </li>
       </ul>
-      <div className="mt-6">
+      <div className="mt-8">
         {plan.ctaTarget === "/cadastro" ? (
           <Link to="/cadastro">
-            <Button className="w-full" variant={highlight ? "default" : "outline"} disabled={!plan.available}>
+            <Button className="w-full h-11" variant={highlight ? "default" : "outline"} disabled={!plan.available}>
               {plan.cta}
             </Button>
           </Link>
         ) : (
-          <a href="#cta-final">
-            <Button className="w-full" variant={highlight ? "default" : "outline"}>
+          <div className="space-y-3">
+            <Button 
+              className="w-full h-11" 
+              variant={highlight ? "default" : "outline"} 
+              disabled={true}
+            >
               {plan.cta}
             </Button>
-          </a>
-        )}
-        {!plan.available && (
-          <p className="mt-2 text-center text-[11px] text-muted-foreground">
-            Recurso ainda não homologado.
-          </p>
+            <p className="text-[11px] text-center text-amber-600 font-medium bg-amber-50/50 p-2 rounded-lg border border-amber-100/50">
+              Contratação online disponível em breve.
+            </p>
+          </div>
         )}
       </div>
     </div>
