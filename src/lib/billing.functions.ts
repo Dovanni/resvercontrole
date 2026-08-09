@@ -51,104 +51,106 @@ export const getCompanySubscriptionContext = createServerFn({ method: "GET" })
     } | null;
   });
 
+export const createStripeCheckoutSessionHandler = async ({ data }: { data: { empresaId: string } }) => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { getRequest } = await import("@tanstack/react-start/server");
+  const req = getRequest();
+  const authHeader = req?.headers.get("Authorization");
+  const token = authHeader?.replace("Bearer ", "");
+
+  if (!token) throw new Error("Unauthorized");
+  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+  if (authError || !user) throw new Error("Unauthorized");
+
+  // Validar membership admin na empresa
+  const { data: membership, error: memberError } = await supabaseAdmin
+    .from("user_company_access")
+    .select("role")
+    .eq("empresa_id", data.empresaId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (memberError || !membership || membership.role !== 'admin') {
+    throw new Error("Forbidden: Admin access required");
+  }
+
+  // Hostname/Origin Guard - Strict validation
+  const host = req.headers.get('host');
+  const origin = req.headers.get('origin');
+  const AUTHORIZED_HOSTNAME = 'id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
+  
+  if (host !== AUTHORIZED_HOSTNAME) {
+    console.warn(`Unauthorized host blocked: ${host}`);
+    return { status: 'checkout_disabled', message: 'Production checkout is disabled' };
+  }
+
+  const STRIPE_RESTRICTED_KEY = process.env['STRIPE_RESTRICTED_KEY'];
+  const STRIPE_PRICE_ENTERPRISE_MONTHLY = process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY'];
+
+  if (!STRIPE_RESTRICTED_KEY || !STRIPE_PRICE_ENTERPRISE_MONTHLY) {
+    console.warn("Stripe configuration pending (Missing secrets)");
+    return { status: 'configuration_pending' };
+  }
+
+  // Resolve subscription and reserve checkout attempt
+  const { data: sub, error: subError } = await supabaseAdmin
+    .from('subscriptions')
+    .select('id, plan_id, stripe_customer_id, plans(code)')
+    .eq('empresa_id', data.empresaId)
+    .neq('status', 'canceled')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (subError || !sub) {
+    throw new Error("Subscription not found");
+  }
+
+  // Atomic reservation
+  const { data: attempt, error: reserveError } = await supabaseAdmin.rpc('reserve_checkout_attempt', {
+    p_empresa_id: data.empresaId,
+    p_subscription_id: sub.id,
+    p_verified_user_id: user.id
+  });
+
+  if (reserveError || !attempt) {
+    console.error("Failed to reserve checkout attempt:", reserveError);
+    throw new Error("Checkout session busy or failed to initialize");
+  }
+
+  // Preparation for Stripe Call (Mocked in Phase 2B as per protocol)
+  // The actual call will be enabled after human authorization.
+  // ETAPA 1.A: Strictly validate single item and quantity=1
+  
+  // In a real implementation this would be:
+  /*
+  const session = await stripe.checkout.sessions.create({
+    line_items: [{
+      price: STRIPE_PRICE_ENTERPRISE_MONTHLY,
+      quantity: 1, // MANDATORY EXACTLY 1
+    }],
+    mode: 'subscription',
+    // ...
+  });
+  */
+  
+  const successUrl = `${origin || `https://${host}`}/configuracoes/assinatura?session_id={CHECKOUT_SESSION_ID}`;
+  const cancelUrl = `${origin || `https://${host}`}/configuracoes/assinatura`;
+
+  return { 
+    status: 'ready_for_authorization',
+    message: 'Checkout infrastructure prepared and attempt reserved.',
+    attemptId: attempt.id,
+    idempotencyKey: attempt.idempotency_key,
+    mockSessionUrl: successUrl.replace('{CHECKOUT_SESSION_ID}', 'mock_session_id'),
+    canonical_quantity: 1, // Evidence of contract enforcement
+    item_count: 1
+  };
+};
+
 export const createStripeCheckoutSession = createServerFn({ method: "POST" })
   .inputValidator((data) => z.object({ empresaId: z.string().uuid() }).strict().parse(data))
-  .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { getRequest } = await import("@tanstack/react-start/server");
-    const req = getRequest();
-    const authHeader = req?.headers.get("Authorization");
-    const token = authHeader?.replace("Bearer ", "");
-
-    if (!token) throw new Error("Unauthorized");
-    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
-    if (authError || !user) throw new Error("Unauthorized");
-
-    // Validar membership admin na empresa
-    const { data: membership, error: memberError } = await supabaseAdmin
-      .from("user_company_access")
-      .select("role")
-      .eq("empresa_id", data.empresaId)
-      .eq("user_id", user.id)
-      .single();
-
-    if (memberError || !membership || membership.role !== 'admin') {
-      throw new Error("Forbidden: Admin access required");
-    }
-
-    // Hostname/Origin Guard - Strict validation
-    const host = req.headers.get('host');
-    const origin = req.headers.get('origin');
-    const AUTHORIZED_HOSTNAME = 'id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
-    
-    if (host !== AUTHORIZED_HOSTNAME) {
-      console.warn(`Unauthorized host blocked: ${host}`);
-      return { status: 'checkout_disabled', message: 'Production checkout is disabled' };
-    }
-
-    const STRIPE_RESTRICTED_KEY = process.env['STRIPE_RESTRICTED_KEY'];
-    const STRIPE_PRICE_ENTERPRISE_MONTHLY = process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY'];
-
-    if (!STRIPE_RESTRICTED_KEY || !STRIPE_PRICE_ENTERPRISE_MONTHLY) {
-      console.warn("Stripe configuration pending (Missing secrets)");
-      return { status: 'configuration_pending' };
-    }
-
-    // Resolve subscription and reserve checkout attempt
-    const { data: sub, error: subError } = await supabaseAdmin
-      .from('subscriptions')
-      .select('id, plan_id, stripe_customer_id, plans(code)')
-      .eq('empresa_id', data.empresaId)
-      .neq('status', 'canceled')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (subError || !sub) {
-      throw new Error("Subscription not found");
-    }
-
-    // Atomic reservation
-    const { data: attempt, error: reserveError } = await supabaseAdmin.rpc('reserve_checkout_attempt', {
-      p_empresa_id: data.empresaId,
-      p_subscription_id: sub.id,
-      p_verified_user_id: user.id
-    });
-
-    if (reserveError || !attempt) {
-      console.error("Failed to reserve checkout attempt:", reserveError);
-      throw new Error("Checkout session busy or failed to initialize");
-    }
-
-    // Preparation for Stripe Call (Mocked in Phase 2B as per protocol)
-    // The actual call will be enabled after human authorization.
-    // ETAPA 1.A: Strictly validate single item and quantity=1
-    
-    // In a real implementation this would be:
-    /*
-    const session = await stripe.checkout.sessions.create({
-      line_items: [{
-        price: STRIPE_PRICE_ENTERPRISE_MONTHLY,
-        quantity: 1, // MANDATORY EXACTLY 1
-      }],
-      mode: 'subscription',
-      // ...
-    });
-    */
-    
-    const successUrl = `${origin || `https://${host}`}/configuracoes/assinatura?session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${origin || `https://${host}`}/configuracoes/assinatura`;
-
-    return { 
-      status: 'ready_for_authorization',
-      message: 'Checkout infrastructure prepared and attempt reserved.',
-      attemptId: attempt.id,
-      idempotencyKey: attempt.idempotency_key,
-      mockSessionUrl: successUrl.replace('{CHECKOUT_SESSION_ID}', 'mock_session_id'),
-      canonical_quantity: 1, // Evidence of contract enforcement
-      item_count: 1
-    };
-  });
+  .handler(async ({ data }) => createStripeCheckoutSessionHandler({ data }));
 
 
 export const canInviteMember = createServerFn({ method: "GET" })

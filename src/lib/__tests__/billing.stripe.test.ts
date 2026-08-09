@@ -48,8 +48,8 @@ describe('createStripeCheckoutSession - Quantity and Security', () => {
     process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY'] = 'price_mock';
   });
 
-  // Helper para invocar o handler diretamente, ignorando o wrapper do TanStack Start
-  const invokeHandler = (args: any) => (billingFunctions.createStripeCheckoutSession as any).handler(args);
+  // Helper para invocar o handler diretamente
+  const invokeHandler = (args: any) => billingFunctions.createStripeCheckoutSessionHandler(args);
 
   it('should reserve attempt with canonical quantity=1 evidence', async () => {
     mockSupabaseAdmin.auth.getUser.mockResolvedValue({ data: { user: { id: mockUserId } }, error: null });
