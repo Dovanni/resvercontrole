@@ -17,7 +17,7 @@ export const getStripeClient = () => {
   }
 
   return new Stripe(STRIPE_RESTRICTED_KEY, {
-    apiVersion: '2023-10-16' as any, // Stable version
+    apiVersion: '2026-07-29.dahlia',
     typescript: true,
   });
 };
