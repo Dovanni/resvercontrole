@@ -7,22 +7,20 @@ const errorMiddleware = createMiddleware().server(async ({ next }) => {
   try {
     return await next();
   } catch (error: any) {
-    if (error != null && typeof error === "object" && "statusCode" in error) {
+    // Don't swallow redirect or known status throws
+    if (error != null && typeof error === "object" && ("statusCode" in error || "redirect" in error)) {
       throw error;
     }
     
-    // API routes should return JSON errors. 
-    // In TanStack Start v1, we can detect the route type or use request context if available.
-    // For now, we'll log and use a generic guard.
-    console.error('[Middleware Error]', error);
+    // In TanStack Start v1 dev mode, we can't reliably detect the path here without extra context
+    // but we can at least log what happened before re-throwing or wrapping.
+    console.error('[Middleware Error Catch]', error);
     
     // If the error is already a Response, return it
     if (error instanceof Response) return error;
 
-    return new Response(renderErrorPage(), {
-      status: 500,
-      headers: { "content-type": "text/html; charset=utf-8" },
-    });
+    // Rethrow to let server.ts handle the final response format based on path
+    throw error;
   }
 });
 

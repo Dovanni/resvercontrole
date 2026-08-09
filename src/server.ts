@@ -19,15 +19,31 @@ async function getServerEntry(): Promise<ServerEntry> {
 
 /**
  * Normalizes catastrophic SSR responses from the h3/vinxi layer.
- * In TanStack Start v1, API routes should return their original response
- * even if it's an error, while page routes should show the friendly error page.
+ * API routes should return their original response or a JSON error.
  */
 async function normalizeCatastrophicSsrResponse(request: Request, response: Response): Promise<Response> {
+  const url = new URL(request.url);
+  const isApi = url.pathname.startsWith('/api/');
+
   if (response.status < 500) return response;
   
-  const url = new URL(request.url);
-  // API routes should bypass HTML error pages to maintain contract compatibility (e.g. webhooks)
-  if (url.pathname.startsWith('/api/')) {
+  if (isApi) {
+    // Return original response if it's already structured, or wrap if it's the h3 error
+    const contentType = response.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      const cloned = response.clone();
+      const body = await cloned.text();
+      if (body.includes('"unhandled":true')) {
+        return new Response(JSON.stringify({
+          error: "Internal Server Error (API)",
+          path: url.pathname,
+          original: JSON.parse(body)
+        }), {
+          status: 500,
+          headers: { "content-type": "application/json" }
+        });
+      }
+    }
     return response;
   }
 
