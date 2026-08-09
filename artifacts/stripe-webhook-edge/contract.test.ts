@@ -25,19 +25,23 @@ globalThis.Deno = {
 } as any
 
 // Mock do SDK Stripe
-const mockConstructEventAsync = vi.fn()
-vi.mock('npm:stripe@22.4.0', () => {
-  return {
-    default: vi.fn().mockImplementation(() => ({
-      webhooks: {
-        constructEventAsync: mockConstructEventAsync
-      },
-      httpClient: {}
-    })),
-    createFetchHttpClient: vi.fn(),
-    createSubtleCryptoProvider: vi.fn()
-  }
-})
+const mockStripeInstance = {
+  webhooks: {
+    constructEventAsync: mockConstructEventAsync
+  },
+  httpClient: {}
+};
+
+const mockStripeNamespace = vi.fn().mockImplementation(() => mockStripeInstance);
+Object.assign(mockStripeNamespace, {
+  createFetchHttpClient: vi.fn(),
+  createSubtleCryptoProvider: vi.fn()
+});
+
+vi.mock('npm:stripe@22.4.0', () => ({
+  default: mockStripeNamespace
+}))
+
 
 // Utilitário para rodar o handler que foi registrado no Deno.serve
 async function runHandler(request: Request) {
