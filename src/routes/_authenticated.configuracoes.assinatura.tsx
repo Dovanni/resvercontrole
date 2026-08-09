@@ -140,7 +140,6 @@ function SubscriptionSettingsPage() {
                             btn.innerText = "Preparando checkout seguro...";
                             
                             try {
-                              const { createStripeCheckoutSession } = await import("@/lib/billing.functions");
                               const result = await createStripeCheckoutSession({ data: { empresaId } });
                               
                               if (result.status === 'session_created' && result.checkoutUrl) {
