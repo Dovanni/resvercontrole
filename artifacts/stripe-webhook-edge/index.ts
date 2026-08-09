@@ -27,14 +27,6 @@ interface WebhookRpcPayload {
   p_canonical_amount: number
 }
 
-const restrictedKey = Deno.env.get('STRIPE_RESTRICTED_KEY')
-const endpointSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') || ''
-
-// Inicialização segura do SDK
-const stripe = new Stripe(restrictedKey || '', {
-  httpClient: Stripe.createFetchHttpClient(),
-})
-
 Deno.serve(async (req: Request) => {
   const { method } = req
   
@@ -50,11 +42,19 @@ Deno.serve(async (req: Request) => {
     return new Response('Missing signature', { status: 400 })
   }
 
+  const restrictedKey = Deno.env.get('STRIPE_RESTRICTED_KEY')
+  const endpointSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET') || ''
+
   // Verificação de configuração crítica
   if (!restrictedKey) {
     console.error('[Configuration Error] Missing STRIPE_RESTRICTED_KEY')
     return new Response('Internal Server Error', { status: 500 })
   }
+
+  // Inicialização do SDK dentro do handler para garantir leitura do Deno.env atualizado
+  const stripe = new Stripe(restrictedKey, {
+    httpClient: Stripe.createFetchHttpClient(),
+  })
 
   let event: Stripe.Event
   try {
