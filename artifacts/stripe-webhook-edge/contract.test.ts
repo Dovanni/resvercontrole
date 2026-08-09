@@ -1,10 +1,37 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
 
 /**
- * PROTOCOLO: VEJAMAIS_STRIPE_EDGE_FUNCTION_CONTRACT_TEST_V2
+ * PROTOCOLO: VEJAMAIS_STRIPE_EDGE_FUNCTION_CONTRACT_TEST_V3
  * Objetivo: Validar o contrato HTTP e as invariantes de segurança do handler Edge.
  * Importamos a lógica real para garantir fidelidade ao pacote manual.
  */
+
+// Mocks hoisted para evitar ReferenceError no escopo do vi.mock
+const mockConstructEventAsync = vi.fn()
+const mockCreateFetchHttpClient = vi.fn()
+const mockCreateSubtleCryptoProvider = vi.fn()
+
+// Mock do SDK Stripe antes de importar o index.ts
+vi.mock('npm:stripe@22.4.0', () => {
+  const StripeMock = vi.fn().mockImplementation(() => ({
+    webhooks: {
+      constructEventAsync: mockConstructEventAsync
+    },
+    httpClient: {}
+  }))
+  
+  // Anexar métodos estáticos
+  Object.assign(StripeMock, {
+    createFetchHttpClient: mockCreateFetchHttpClient,
+    createSubtleCryptoProvider: mockCreateSubtleCryptoProvider
+  })
+
+  return {
+    default: StripeMock,
+    createFetchHttpClient: mockCreateFetchHttpClient,
+    createSubtleCryptoProvider: mockCreateSubtleCryptoProvider
+  }
+})
 
 // Mock do runtime Deno para os testes
 const mockDenoServe = vi.fn()
@@ -24,27 +51,11 @@ globalThis.Deno = {
   serve: mockDenoServe
 } as any
 
-// Mock do SDK Stripe
-const mockStripeInstance = {
-  webhooks: {
-    constructEventAsync: mockConstructEventAsync
-  },
-  httpClient: {}
-};
-
-const mockStripeNamespace = vi.fn().mockImplementation(() => mockStripeInstance);
-Object.assign(mockStripeNamespace, {
-  createFetchHttpClient: vi.fn(),
-  createSubtleCryptoProvider: vi.fn()
-});
-
-vi.mock('npm:stripe@22.4.0', () => ({
-  default: mockStripeNamespace
-}))
-
-
 // Utilitário para rodar o handler que foi registrado no Deno.serve
 async function runHandler(request: Request) {
+  if (mockDenoServe.mock.calls.length === 0) {
+    throw new Error('Deno.serve was not called. Make sure index.ts is imported.')
+  }
   const handler = mockDenoServe.mock.calls[0][0]
   return await handler(request)
 }
@@ -53,7 +64,6 @@ describe('Stripe Edge Function Contract Integrity', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     // Forçar carregamento do index.ts para registrar o handler
-    // Usamos um timestamp para evitar cache de módulo se necessário, mas Vitest lida bem
     await import('./index.ts?' + Date.now())
   })
 
@@ -102,7 +112,6 @@ describe('Stripe Edge Function Contract Integrity', () => {
       body: '{}'
     })
     
-    // Mock global fetch para verificar se a RPC foi chamada
     const spyFetch = vi.spyOn(globalThis, 'fetch')
     
     const res = await runHandler(req)
@@ -134,11 +143,10 @@ describe('Stripe Edge Function Contract Integrity', () => {
     expect(res.status).toBe(200)
     expect(spyFetch).toHaveBeenCalledTimes(1)
     
-    // Verifica se não passou o payload bruto diretamente para a RPC (Narrowing check)
     const callArgs = spyFetch.mock.calls[0]
     const body = JSON.parse(callArgs[1]?.body as string)
-    expect(body.p_event_data.raw).toBeUndefined()
     expect(body.p_event_type).toBe('checkout.session.expired')
+    expect(body.p_event_data.raw).toBeUndefined()
   })
 
   test('10. Raw body é lido exatamente uma vez', async () => {
