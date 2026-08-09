@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+import type Stripe from 'stripe';
 
 export const Route = createFileRoute('/api/stripe/webhook')({
   server: {
