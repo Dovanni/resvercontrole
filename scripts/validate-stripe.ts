@@ -1,5 +1,4 @@
 import Stripe from 'stripe';
-import crypto from 'crypto';
 
 async function validateStripeSecrets() {
   const STRIPE_RESTRICTED_KEY = process.env['STRIPE_RESTRICTED_KEY'];
@@ -66,7 +65,7 @@ async function validateStripeSecrets() {
 
   const stripe = new Stripe(STRIPE_RESTRICTED_KEY!, {
     apiVersion: '2023-10-16',
-    httpClient: Stripe.createNodeHttpClient(),
+    httpClient: Stripe.createFetchHttpClient(),
   });
 
   try {
@@ -106,22 +105,20 @@ async function validateStripeSecrets() {
         data: { object: { id: 'ch_test_123', amount: 3590 } },
       });
 
-      const header = stripe.webhooks.generateTestHeaderString({
+      const header = await stripe.webhooks.generateTestHeaderString({
         payload,
         secret: STRIPE_WEBHOOK_SECRET!,
       });
 
-      const cryptoProvider = Stripe.createNodeCryptoProvider();
-
       try {
-        await stripe.webhooks.constructEventAsync(payload, header, STRIPE_WEBHOOK_SECRET!, undefined, cryptoProvider);
+        await stripe.webhooks.constructEventAsync(payload, header, STRIPE_WEBHOOK_SECRET!);
         results.webhook_local_valid_signature_test = true;
       } catch (e) {
         results.webhook_local_valid_signature_test = false;
       }
 
       try {
-        await stripe.webhooks.constructEventAsync(payload, 'invalid_header', STRIPE_WEBHOOK_SECRET!, undefined, cryptoProvider);
+        await stripe.webhooks.constructEventAsync(payload, 'invalid_header', STRIPE_WEBHOOK_SECRET!);
         results.webhook_local_invalid_signature_test = false;
       } catch (e) {
         results.webhook_local_invalid_signature_test = true;
@@ -139,4 +136,4 @@ async function validateStripeSecrets() {
   console.log(JSON.stringify(results, null, 2));
 }
 
-validateStripeSecrets();
+validateStripeSecrets().catch(console.error);
