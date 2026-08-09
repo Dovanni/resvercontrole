@@ -28,9 +28,7 @@ const mockStripe = {
   },
 };
 
-vi.mock('@/lib/stripe.server', () => ({
-  getStripeClient: vi.fn(() => mockStripe),
-}));
+(globalThis as any).__STRIPE_MOCK__ = mockStripe;
 
 const mockHeaders = new Map();
 vi.mock('@tanstack/react-start/server', () => ({
