@@ -108,7 +108,7 @@ export const Route = createFileRoute('/api/stripe/webhook')({
                 provider_event_id: event.id,
                 event_type: event.type,
                 event_created: event.created,
-                event_priority: 10, // Higher priority for payment
+                event_priority: 10,
                 empresa_id: invoice.metadata?.empresa_id || (invoice as any).subscription_details?.metadata?.empresa_id as string | undefined,
                 internal_subscription_id: invoice.metadata?.subscription_id || (invoice as any).subscription_details?.metadata?.subscription_id as string | undefined,
                 plan_code: invoice.metadata?.plan_code || (invoice as any).subscription_details?.metadata?.plan_code as string | undefined,
@@ -119,8 +119,8 @@ export const Route = createFileRoute('/api/stripe/webhook')({
                 observed_currency: invoice.currency?.toLowerCase(),
                 observed_amount: invoice.amount_paid,
                 observed_quantity: lineItem?.quantity || 1,
-                current_period_start: invoice.period_start,
-                current_period_end: invoice.period_end,
+                current_period_start: invoice.period_start || null,
+                current_period_end: invoice.period_end || null,
                 cancel_at_period_end: false,
                 payload_sha256: payloadHash
               };
@@ -144,10 +144,10 @@ export const Route = createFileRoute('/api/stripe/webhook')({
                 stripe_checkout_session_id: null,
                 observed_price_id: firstItem?.price?.id,
                 observed_currency: subscription.currency?.toLowerCase(),
-                observed_amount: firstItem?.plan?.amount || 0,
+                observed_amount: (firstItem?.plan as any)?.amount || 0,
                 observed_quantity: firstItem?.quantity || 1,
-                current_period_start: subscription.current_period_start,
-                current_period_end: subscription.current_period_end,
+                current_period_start: subscription.current_period_start || null,
+                current_period_end: subscription.current_period_end || null,
                 cancel_at_period_end: subscription.cancel_at_period_end,
                 payload_sha256: payloadHash
               };
