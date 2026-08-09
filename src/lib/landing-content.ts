@@ -5,10 +5,10 @@ export const METRIXHR_URL = "https://metrixhr.com.br";
 export const VEJAMAIS_DOMAIN = "https://vejamais.com.br";
 
 export const HERO = {
-  eyebrow: "Gestão comercial e financeira para e-commerce e comércio",
-  title: "A VEJAMAIS reinventou a gestão comercial e financeira.",
+  eyebrow: "Planos",
+  title: "Comece gratuitamente e continue crescendo com o VEJAMAIS.",
   subheadline:
-    "Para fazer seu comércio, seus negócios e seu e-commerce crescerem com mais controle e rentabilidade.",
+    "Tenha acesso completo por 30 dias. Depois, continue com o Plano Empresarial por R$ 35,90 ao mês.",
   subtitle:
     "Centralize pedidos, vendas, produtos, estoque, taxas, fretes, contas, margens e lucros em um só lugar — com clareza para decidir e segurança para crescer.",
   primaryCta: "Começar agora",
@@ -65,7 +65,7 @@ export const BENEFITS = [
   { title: "Menos dependência de planilhas", desc: "Rotinas mais consistentes e menos retrabalho." },
   { title: "Acesso responsivo", desc: "Desktop, tablet e celular." },
   { title: "Segurança e rastreabilidade", desc: "Ações registradas e acesso controlado." },
-  { title: "Evolução futura multiempresa", desc: "Arquitetura preparada para novos cenários." },
+  { title: "Multiempresa ativo", desc: "Arquitetura preparada para evolução multiempresa." },
 ];
 
 export const HOW_IT_WORKS = [
@@ -89,95 +89,65 @@ export const FEATURED_RESOURCES = [
 
 export type Plan = {
   id: string;
+  badge?: string;
   name: string;
   description: string;
-  priceMonthly: string; // placeholder controlado — nunca inventar valor comercial
-  priceYearly?: string;
+  priceDisplay: string;
+  priceMonthly?: number;
+  pricePeriod?: string;
+  complement?: string;
   users: string;
   companies: string;
   features: string[];
   support: string;
   cta: string;
-  ctaTarget: "/cadastro" | "contato";
+  ctaTarget: "/cadastro" | "checkout";
   recommended?: boolean;
   available: boolean;
 };
 
-// Placeholders administrativos claramente identificados — não publicar valores fictícios.
-const PRICE_TBD = "A definir";
-
 export const PLANS: Plan[] = [
   {
     id: "essencial",
+    badge: "30 DIAS GRÁTIS",
     name: "Essencial",
-    description: "Para quem precisa organizar a operação comercial e financeira.",
-    priceMonthly: PRICE_TBD,
-    users: "A definir",
-    companies: "1 empresa",
+    description: "Experimente todos os recursos do VEJAMAIS para organizar e acompanhar sua gestão comercial e financeira.",
+    priceDisplay: "Grátis por 30 dias",
+    complement: "Sem cartão para começar",
+    users: "Até 5 usuários",
+    companies: "Multiempresa ativo",
     features: [
-      "Vendas, compras e produtos",
-      "Clientes e fornecedores",
-      "Contas a pagar e receber",
-      "Fluxo de caixa básico",
-    ],
-    support: "Suporte por e-mail",
-    cta: "Começar agora",
-    ctaTarget: "/cadastro",
-    available: true,
-  },
-  {
-    id: "profissional",
-    name: "Profissional",
-    description: "Para empresas que precisam de mais controle, relatórios e usuários.",
-    priceMonthly: PRICE_TBD,
-    users: "A definir",
-    companies: "1 empresa",
-    features: [
-      "Tudo do Essencial",
-      "Relatórios avançados",
-      "Curva ABC e controle de vendas",
-      "Balancete e despesas anuais",
+      "Todos os recursos",
+      "Gestão comercial e financeira",
+      "Relatórios avançados, BI e DRE",
+      "Auditoria de lucro",
     ],
     support: "Suporte prioritário",
-    cta: "Começar agora",
+    cta: "Começar avaliação gratuita",
     ctaTarget: "/cadastro",
-    recommended: true,
     available: true,
   },
   {
     id: "empresarial",
+    badge: "CONTINUIDADE COMPLETA",
     name: "Empresarial",
-    description: "Para operações mais completas e equipes em crescimento.",
-    priceMonthly: PRICE_TBD,
-    users: "A definir",
-    companies: "1 empresa",
+    description: "Continue utilizando todos os recursos do VEJAMAIS após o período de avaliação.",
+    priceDisplay: "R$ 35,90",
+    pricePeriod: "por mês",
+    users: "Até 5 usuários",
+    companies: "Multiempresa ativo",
     features: [
-      "Tudo do Profissional",
-      "Business Intelligence",
+      "Todos os recursos",
+      "Gestão comercial e financeira",
+      "Relatórios avançados, BI e DRE",
       "Auditoria de lucro",
-      "Cartões e contas bancárias",
+      "Continuidade sem interrupção",
     ],
-    support: "Suporte dedicado",
-    cta: "Falar com o time",
-    ctaTarget: "contato",
+    support: "Suporte prioritário",
+    cta: "Assinar Plano Empresarial",
+    ctaTarget: "checkout",
+    recommended: true,
     available: true,
-  },
-  {
-    id: "multiempresa",
-    name: "Multiempresa",
-    description: "Para administração futura de mais de uma empresa.",
-    priceMonthly: PRICE_TBD,
-    users: "A definir",
-    companies: "Múltiplas empresas",
-    features: [
-      "Arquitetura preparada para evolução multiempresa",
-      "Recurso não disponível nesta versão",
-      "Liberação sujeita à homologação técnica",
-    ],
-    support: "Sob consulta",
-    cta: "Tenho interesse",
-    ctaTarget: "contato",
-    available: false,
   },
 ];
 
