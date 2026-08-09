@@ -1,9 +1,9 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest'
 
 /**
- * PROTOCOLO: VEJAMAIS_STRIPE_EDGE_FUNCTION_CONTRACT_TEST_V4
+ * PROTOCOLO: VEJAMAIS_STRIPE_EDGE_FUNCTION_CONTRACT_TEST_V5
  * Objetivo: Validar o contrato HTTP e as invariantes de segurança do handler Edge.
- * Usamos vi.hoisted para garantir que os mocks existam no escopo do vi.mock.
+ * Usamos vi.hoisted e uma classe real para satisfazer as restrições do Vitest.
  */
 
 const mocks = vi.hoisted(() => ({
@@ -13,19 +13,19 @@ const mocks = vi.hoisted(() => ({
   mockDenoServe: vi.fn()
 }))
 
-// Mock do SDK Stripe
+// Mock do SDK Stripe usando uma classe real
 vi.mock('npm:stripe@22.4.0', () => {
-  const StripeMock = vi.fn().mockImplementation(() => ({
-    webhooks: {
+  class StripeMock {
+    static createFetchHttpClient = mocks.mockCreateFetchHttpClient;
+    static createSubtleCryptoProvider = mocks.mockCreateSubtleCryptoProvider;
+    
+    webhooks = {
       constructEventAsync: mocks.mockConstructEventAsync
-    },
-    httpClient: {}
-  }))
-  
-  Object.assign(StripeMock, {
-    createFetchHttpClient: mocks.mockCreateFetchHttpClient,
-    createSubtleCryptoProvider: mocks.mockCreateSubtleCryptoProvider
-  })
+    };
+    httpClient = {};
+    
+    constructor() {}
+  }
 
   return {
     default: StripeMock,
