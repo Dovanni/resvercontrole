@@ -43,6 +43,15 @@ export const Route = createFileRoute('/api/stripe/webhook')({
           const payloadHash = createHash('sha256').update(rawBody).digest('hex');
 
           // ETAPA 1: Remocao de coercoes inseguras e narrowing tipado por event.type
+          // VALIDATION: Reject multiple invoice lines
+          if (event.type === 'invoice.paid' || event.type === 'invoice.payment_failed') {
+            const invoice = event.data.object as Stripe.Invoice;
+            if (invoice.lines.data.length !== 1) {
+              console.error(`Rejected webhook [${event.id}]: Multi-line invoice detected. Length: ${invoice.lines.data.length}`);
+              return new Response('Multi-line invoice rejected', { status: 400 });
+            }
+          }
+
           let sanitizedPayload: {
             provider: string;
             provider_event_id: string;
