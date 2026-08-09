@@ -101,8 +101,7 @@ describe('Stripe Edge Function Contract Integrity', () => {
     expect(await res.text()).toContain('Webhook Error')
   })
 
-  test('5. Secret ausente retorna fail-closed (Webhook Error via constructEventAsync)', async () => {
-    // Se endpointSecret for vazio, o constructEventAsync do mock/real falha
+  test('5. Secret ausente retorna fail-closed (400 via catch)', async () => {
     mocks.mockConstructEventAsync.mockRejectedValue(new Error('No secret'))
     const req = new Request('https://edge.func', { 
       method: 'POST', 
@@ -115,7 +114,7 @@ describe('Stripe Edge Function Contract Integrity', () => {
 
   test('6. Restricted key ausente retorna fail-closed (500)', async () => {
     mocks.env['STRIPE_RESTRICTED_KEY'] = undefined
-    await import('./index.ts?' + Date.now()) // Re-import para ler novo env
+    await import('./index.ts?' + Date.now())
     const req = new Request('https://edge.func', { 
       method: 'POST', 
       headers: { 'stripe-signature': 'valid' },
@@ -279,7 +278,7 @@ describe('Stripe Edge Function Contract Integrity', () => {
     await runHandler(req)
     const callBody = JSON.parse(spyFetch.mock.calls[0][1]?.body as string)
     expect(callBody.p_event_data.object).toBeDefined()
-    expect(callBody.full).toBeUndefined() // Não enviou o body do Request original
+    expect(callBody.full).toBeUndefined()
   })
 
   test('15. Falha permanente da RPC retorna 500', async () => {
@@ -302,7 +301,6 @@ describe('Stripe Edge Function Contract Integrity', () => {
   })
 
   test('16. Nenhuma chamada Stripe API (apenas local constructEventAsync)', async () => {
-     // A verificação é que fetch só foi chamado para a RPC do Supabase
      mocks.mockConstructEventAsync.mockResolvedValue({ 
       livemode: false, 
       type: 'invoice.paid', 
@@ -323,7 +321,6 @@ describe('Stripe Edge Function Contract Integrity', () => {
   })
 
   test('17. Nenhum DML operacional direto (apenas chamada RPC)', async () => {
-    // Mesma lógica do teste 16: valida que a comunicação externa é restrita à RPC
     expect(true).toBe(true) 
   })
 })
