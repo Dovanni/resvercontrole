@@ -192,7 +192,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                         ].join(" ")}
                       >
                         <n.icon className="size-4" />
-                        {n.label}
+                        <span>{n.label}</span>
                       </Link>
                     );
                   })}
