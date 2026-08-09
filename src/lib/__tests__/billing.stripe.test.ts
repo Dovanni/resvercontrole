@@ -50,11 +50,46 @@ describe('createStripeCheckoutSession - Security Corrective Suite', () => {
 
   const invokeHandler = (args: any) => billingFunctions.createStripeCheckoutSessionHandler(args);
 
+  describe('Group A: Entry and Identity', () => {
+    it('should fail on missing JWT', async () => {
+      mockHeaders.delete('authorization');
+      await expect(invokeHandler({ data: { empresaId: mockEmpresaId } }))
+        .rejects.toThrow('Unauthorized');
+    });
+
+    it('should fail on invalid JWT', async () => {
+      mockSupabaseAdmin.auth.getUser.mockResolvedValue({ data: { user: null }, error: new Error('Invalid token') });
+      await expect(invokeHandler({ data: { empresaId: mockEmpresaId } }))
+        .rejects.toThrow('Unauthorized');
+    });
+
+    it('should fail if user is not admin', async () => {
+      mockSupabaseAdmin.auth.getUser.mockResolvedValue({ data: { user: { id: mockUserId } }, error: null });
+      mockSupabaseAdmin.single.mockResolvedValue({ data: { role: 'vendedor' }, error: null });
+      await expect(invokeHandler({ data: { empresaId: mockEmpresaId } }))
+        .rejects.toThrow('Forbidden: Admin access required');
+    });
+
+    it('should fail on cross-company attack (different empresa_id)', async () => {
+       mockSupabaseAdmin.auth.getUser.mockResolvedValue({ data: { user: { id: mockUserId } }, error: null });
+       // simulate membership check failing because of eq(empresa_id)
+       mockSupabaseAdmin.single.mockResolvedValue({ data: null, error: { message: 'Not found' } });
+       await expect(invokeHandler({ data: { empresaId: mockEmpresaId } }))
+         .rejects.toThrow('Forbidden: Admin access required');
+    });
+  });
+
   describe('Group B: Origin/Host Adversarial', () => {
     it('should fail on missing origin', async () => {
       mockHeaders.delete('origin');
       mockSupabaseAdmin.auth.getUser.mockResolvedValue({ data: { user: { id: mockUserId } }, error: null });
       mockSupabaseAdmin.single.mockResolvedValue({ data: { role: 'admin' }, error: null });
+      const result = await invokeHandler({ data: { empresaId: mockEmpresaId } });
+      expect(result.status).toBe('checkout_disabled');
+    });
+
+    it('should fail on NULL origin', async () => {
+      mockHeaders.set('origin', null);
       const result = await invokeHandler({ data: { empresaId: mockEmpresaId } });
       expect(result.status).toBe('checkout_disabled');
     });
@@ -65,8 +100,14 @@ describe('createStripeCheckoutSession - Security Corrective Suite', () => {
       expect(result.status).toBe('checkout_disabled');
     });
 
-    it('should fail on host mismatch with correct origin', async () => {
-      mockHeaders.set('host', 'fake-host.com');
+    it('should fail on port in origin', async () => {
+      mockHeaders.set('origin', ALLOWED_ORIGIN + ':8080');
+      const result = await invokeHandler({ data: { empresaId: mockEmpresaId } });
+      expect(result.status).toBe('checkout_disabled');
+    });
+
+    it('should fail on malicious prefix', async () => {
+      mockHeaders.set('origin', 'https://malicious-' + ALLOWED_HOST);
       const result = await invokeHandler({ data: { empresaId: mockEmpresaId } });
       expect(result.status).toBe('checkout_disabled');
     });
@@ -76,27 +117,48 @@ describe('createStripeCheckoutSession - Security Corrective Suite', () => {
       const result = await invokeHandler({ data: { empresaId: mockEmpresaId } });
       expect(result.status).toBe('checkout_disabled');
     });
-  });
 
-  describe('Group A/D: Identity and Quantity', () => {
-    it('should fail if user is not admin', async () => {
-      mockSupabaseAdmin.auth.getUser.mockResolvedValue({ data: { user: { id: mockUserId } }, error: null });
-      mockSupabaseAdmin.single.mockResolvedValue({ data: { role: 'user' }, error: null });
-      await expect(invokeHandler({ data: { empresaId: mockEmpresaId } }))
-        .rejects.toThrow('Forbidden: Admin access required');
+    it('should fail on host mismatch with correct origin', async () => {
+      mockHeaders.set('host', 'fake-host.com');
+      const result = await invokeHandler({ data: { empresaId: mockEmpresaId } });
+      expect(result.status).toBe('checkout_disabled');
     });
 
+    it('should fail on forwarded-host spoofing', async () => {
+      mockHeaders.set('x-forwarded-host', ALLOWED_HOST);
+      mockHeaders.set('host', 'malicious-gateway.com');
+      const result = await invokeHandler({ data: { empresaId: mockEmpresaId } });
+      expect(result.status).toBe('checkout_disabled');
+    });
+    
+    it('should fail with correct origin but fake host', async () => {
+      mockHeaders.set('origin', ALLOWED_ORIGIN);
+      mockHeaders.set('host', 'evil.app');
+      const result = await invokeHandler({ data: { empresaId: mockEmpresaId } });
+      expect(result.status).toBe('checkout_disabled');
+    });
+
+    it('should fail with correct host but fake origin', async () => {
+      mockHeaders.set('origin', 'https://evil.app');
+      mockHeaders.set('host', ALLOWED_HOST);
+      const result = await invokeHandler({ data: { empresaId: mockEmpresaId } });
+      expect(result.status).toBe('checkout_disabled');
+    });
+  });
+
+  describe('Group C/D: Reservation and Quantity', () => {
     it('should evidence canonical quantity=1 in successful reservation', async () => {
       mockSupabaseAdmin.auth.getUser.mockResolvedValue({ data: { user: { id: mockUserId } }, error: null });
-      mockSupabaseAdmin.single.mockResolvedValueOnce({ data: { role: 'admin' }, error: null }); // Access check
+      mockSupabaseAdmin.single.mockResolvedValueOnce({ data: { role: 'admin' }, error: null }); 
       mockSupabaseAdmin.single.mockResolvedValueOnce({ 
         data: { id: 'sub_1', plan_id: 'p1', stripe_customer_id: 'c1', plans: { code: 'ent' } }, 
         error: null 
-      }); // Sub check
+      });
       mockSupabaseAdmin.rpc.mockResolvedValue({ data: { id: 'att_1', idempotency_key: 'k1' }, error: null });
       
       const result = await invokeHandler({ data: { empresaId: mockEmpresaId } });
       expect(result.canonical_quantity).toBe(1);
+      expect(result.item_count).toBe(1);
     });
   });
 });
