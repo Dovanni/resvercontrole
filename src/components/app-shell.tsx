@@ -33,6 +33,7 @@ const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
   { to: "/dre", label: "DRE", icon: Scale, perm: "view:reports" },
   { to: "/relatorios", label: "Relatórios", icon: FileText, perm: "view:reports" },
   { to: "/configuracoes", label: "Configurações", icon: Settings, perm: "view:settings" },
+  { to: "/configuracoes/assinatura", label: "Assinatura e Plano", icon: CreditCard, perm: "view:settings" },
   { to: "/minha-empresa", label: "Minha Empresa", icon: Building2, perm: "view:dashboard" },
 ];
 
