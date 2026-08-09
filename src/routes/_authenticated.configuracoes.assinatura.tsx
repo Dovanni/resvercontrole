@@ -84,10 +84,12 @@ export function SubscriptionSettingsPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <CardTitle className="font-display text-2xl">Plano Atual: {sub.plan_name}</CardTitle>
+                <CardTitle className="font-display text-2xl">
+                  Plano Atual: {sub.plan_code === 'essencial' ? 'Essencial — Avaliação gratuita' : sub.plan_name}
+                </CardTitle>
               </div>
               <Badge className={`${statusColor} capitalize px-3 py-1 font-semibold`}>
-                {statusLabel}
+                {sub.plan_code === 'essencial' ? 'Período de avaliação' : statusLabel}
               </Badge>
             </div>
           </CardHeader>
@@ -98,7 +100,7 @@ export function SubscriptionSettingsPage() {
                 <div>
                   <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Usuários</div>
                   <div className="text-sm font-medium">
-                    {sub.current_user_count} de {sub.max_users} utilizados
+                    {sub.current_user_count} de 5 utilizados
                   </div>
                 </div>
               </div>
@@ -107,13 +109,19 @@ export function SubscriptionSettingsPage() {
                 <Clock className="size-5 text-primary" />
                 <div>
                   <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                    {isTrial ? "Expira em" : "Próximo Vencimento"}
+                    {isTrial ? "Expira em" : "Valor Mensal"}
                   </div>
                   <div className="text-sm font-medium">
-                    {sub.current_period_ends_at ? format(new Date(sub.current_period_ends_at), "dd/MM/yyyy", { locale: ptBR }) : 'N/A'}
-                    <span className="ml-2 text-xs text-muted-foreground">
-                      ({sub.days_remaining} {sub.days_remaining === 1 ? 'dia' : 'dias'})
-                    </span>
+                    {isTrial ? (
+                      <>
+                        {sub.current_period_ends_at ? format(new Date(sub.current_period_ends_at), "dd/MM/yyyy", { locale: ptBR }) : 'N/A'}
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          ({sub.days_remaining} {sub.days_remaining === 1 ? 'dia' : 'dias'} restantes)
+                        </span>
+                      </>
+                    ) : (
+                      "R$ 35,90 / mês"
+                    )}
                   </div>
                 </div>
               </div>
