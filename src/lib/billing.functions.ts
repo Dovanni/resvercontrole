@@ -3,8 +3,8 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 
 export const getCompanySubscriptionContext = createServerFn({ method: "GET" })
-  .inputValidator((data) => z.object({ empresaId: z.string().uuid() }).strict().parse(data))
-  .handler(async ({ data }) => {
+  .inputValidator((data: unknown) => z.object({ empresaId: z.string().uuid() }).strict().parse(data))
+  .handler(async ({ data }: { data: { empresaId: string } }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { getRequest } = await import("@tanstack/react-start/server");
     const req = getRequest();
@@ -230,8 +230,8 @@ export const createStripeCheckoutSession = createServerFn({ method: "POST" })
 
 
 export const canInviteMember = createServerFn({ method: "GET" })
-  .inputValidator((data) => z.object({ empresaId: z.string().uuid() }).parse(data))
-  .handler(async ({ data }) => {
+  .inputValidator((data: unknown) => z.object({ empresaId: z.string().uuid() }).parse(data))
+  .handler(async ({ data }: { data: { empresaId: string } }) => {
     const { data: result, error } = await supabase.rpc("can_company_invite_member", {
       p_empresa_id: data.empresaId,
     });
