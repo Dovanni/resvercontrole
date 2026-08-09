@@ -112,7 +112,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Type guard para extrair o objeto do evento de forma segura
-    const eventData = event.data.object as Record<string, unknown>
+    const eventData = event.data.object as unknown as Record<string, unknown>
     const metadata = (eventData.metadata as Record<string, string | undefined>) || {}
     
     const payload: WebhookRpcPayload = {
