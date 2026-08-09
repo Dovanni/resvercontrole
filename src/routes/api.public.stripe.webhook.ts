@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import type Stripe from 'stripe';
 
-export const Route = createFileRoute('/api/stripe/webhook')({
+export const Route = createFileRoute('/api/public/stripe/webhook')({
   server: {
     handlers: {
       POST: async ({ request }) => {
