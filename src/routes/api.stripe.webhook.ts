@@ -47,7 +47,7 @@ export const Route = createFileRoute('/api/stripe/webhook')({
             p_event_type: event.type,
             p_payload_sha256: payloadHash,
             p_livemode: false,
-            p_event_data: event.data as any,
+            p_event_data: event.data as unknown as import('@/integrations/supabase/types').Json,
             p_event_created: event.created,
             p_canonical_plan_code: 'enterprise_monthly',
             p_canonical_currency: 'brl',
@@ -59,7 +59,7 @@ export const Route = createFileRoute('/api/stripe/webhook')({
             return new Response('Error processing event', { status: 500 });
           }
 
-          const resultData = result as any;
+          const resultData = result as { status?: string; reason?: string };
           const status = resultData?.status;
           
           if (status === 'failed_retryable') {
@@ -77,8 +77,9 @@ export const Route = createFileRoute('/api/stripe/webhook')({
             headers: { 'Content-Type': 'application/json' },
           });
 
-        } catch (err: any) {
-          console.error(`Webhook processing failed: ${err.message}`);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Unknown error';
+          console.error(`Webhook processing failed: ${message}`);
           return new Response(`Webhook Error`, { status: 400 });
         }
 
