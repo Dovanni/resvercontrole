@@ -2098,6 +2098,36 @@ export type Database = {
         Args: { _empresa_id: string; _user_id: string }
         Returns: undefined
       }
+      finalize_checkout_attempt: {
+        Args: {
+          p_attempt_id: string
+          p_empresa_id: string
+          p_expires_at: string
+          p_provider_session_id: string
+          p_subscription_id: string
+        }
+        Returns: {
+          created_at: string
+          created_by_user_id: string
+          empresa_id: string
+          expires_at: string | null
+          id: string
+          idempotency_key: string
+          last_error_code: string | null
+          provider: string
+          provider_checkout_session_id: string | null
+          provider_customer_id: string | null
+          status: string
+          subscription_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "checkout_attempts"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       finalize_user_onboarding:
         | { Args: { p_auth_user_id: string }; Returns: Json }
         | {

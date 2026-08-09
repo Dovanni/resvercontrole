@@ -163,12 +163,26 @@ export const createStripeCheckoutSessionHandler = async ({ data }: { data: { emp
       idempotencyKey: attempt.idempotency_key
     });
 
+    // Atomic transition to 'open' state
+    const { error: finalizeError } = await supabaseAdmin.rpc('finalize_checkout_attempt', {
+      p_empresa_id: data.empresaId,
+      p_subscription_id: sub.id,
+      p_attempt_id: attempt.id,
+      p_provider_session_id: session.id,
+      p_expires_at: new Date(session.expires_at * 1000).toISOString()
+    });
+
+    if (finalizeError) {
+      console.error("Failed to finalize checkout attempt:", finalizeError);
+      // We don't throw here to avoid user losing the checkout URL, but it's a critical sync failure
+    }
+
     return { 
       status: 'session_created',
       checkoutUrl: session.url,
       sessionId: session.id,
-      canonical_quantity: 1, // Fix TS2339 in tests
-      item_count: 1 // Fix TS2339 in tests
+      canonical_quantity: 1,
+      item_count: 1
     };
   } catch (stripeError) {
     console.error("Stripe Session Creation Error:", stripeError);
