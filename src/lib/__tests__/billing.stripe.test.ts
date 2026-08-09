@@ -24,11 +24,15 @@ const mockStripe = {
   checkout: {
     sessions: {
       create: vi.fn(),
+      retrieve: vi.fn(),
     },
   },
 };
 
-(globalThis as any).__STRIPE_MOCK__ = mockStripe;
+// Ensure the real application code uses our mock instead of real Stripe SDK
+vi.mock('@/lib/stripe.server', () => ({
+  getStripeClient: vi.fn(() => mockStripe),
+}));
 
 const mockHeaders = new Map();
 vi.mock('@tanstack/react-start/server', () => ({
