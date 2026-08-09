@@ -130,11 +130,11 @@ export function SubscriptionSettingsPage() {
             {isTrial && (
               <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20">
                 <h4 className="font-semibold text-primary flex items-center gap-2 mb-2">
-                  <CreditCard className="size-4" />
-                  Aproveite o Vejamais ao máximo
+                  <Sparkles className="size-4" />
+                  Aproveite o VEJAMAIS ao máximo
                 </h4>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Sua avaliação gratuita termina em breve. Adicione um método de pagamento para garantir a continuidade do seu acesso e desbloquear todos os recursos sem interrupções.
+                  Seu período gratuito oferece acesso a todos os recursos durante 30 dias. Assine o Plano Empresarial para continuar utilizando o VEJAMAIS após o término da avaliação.
                 </p>
                 <div className="space-y-2">
                   {(() => {
@@ -213,8 +213,8 @@ export function SubscriptionSettingsPage() {
                 "Multiempresa Ativo",
                 "Gestão Comercial Completa",
                 "Controle Financeiro & DRE",
-                `${sub.max_users} Usuários inclusos`,
-                sub.priority_suggestions ? "Sugestões Prioritárias" : "Suporte Padrão",
+                "Até 5 Usuários inclusos",
+                "Suporte Prioritário",
                 "Importação via Excel",
                 "Proteção e isolamento dos dados"
               ].map((feature, i) => (
