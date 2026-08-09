@@ -1,5 +1,4 @@
 import "./lib/error-capture";
-
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 
@@ -18,10 +17,20 @@ async function getServerEntry(): Promise<ServerEntry> {
   return serverEntryPromise;
 }
 
-// h3 swallows in-handler throws into a normal 500 Response with body
-// {"unhandled":true,"message":"HTTPError"} — try/catch alone never fires for those.
-async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
+/**
+ * Normalizes catastrophic SSR responses from the h3/vinxi layer.
+ * In TanStack Start v1, API routes should return their original response
+ * even if it's an error, while page routes should show the friendly error page.
+ */
+async function normalizeCatastrophicSsrResponse(request: Request, response: Response): Promise<Response> {
   if (response.status < 500) return response;
+  
+  const url = new URL(request.url);
+  // API routes should bypass HTML error pages to maintain contract compatibility (e.g. webhooks)
+  if (url.pathname.startsWith('/api/')) {
+    return response;
+  }
+
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) return response;
 
@@ -39,12 +48,24 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const url = new URL(request.url);
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return await normalizeCatastrophicSsrResponse(request, response);
     } catch (error) {
-      console.error(error);
+      console.error('[SSR Fetch Error]', url.pathname, error);
+      
+      if (url.pathname.startsWith('/api/')) {
+        return new Response(JSON.stringify({ 
+          error: error instanceof Error ? error.message : 'Internal Server Error',
+          path: url.pathname
+        }), {
+          status: 500,
+          headers: { "content-type": "application/json" },
+        });
+      }
+
       return new Response(renderErrorPage(), {
         status: 500,
         headers: { "content-type": "text/html; charset=utf-8" },
