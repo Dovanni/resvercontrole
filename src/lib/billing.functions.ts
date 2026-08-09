@@ -112,7 +112,7 @@ export const createStripeCheckoutSession = createServerFn({ method: "POST" })
     const { data: attempt, error: reserveError } = await supabaseAdmin.rpc('reserve_checkout_attempt', {
       p_empresa_id: data.empresaId,
       p_subscription_id: sub.id,
-      p_user_id: user.id
+      p_verified_user_id: user.id
     });
 
     if (reserveError || !attempt) {

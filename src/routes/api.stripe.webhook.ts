@@ -41,13 +41,17 @@ export const Route = createFileRoute('/api/stripe/webhook')({
           
           const payloadHash = createHash('sha256').update(rawBody).digest('hex');
 
-          // Process the event using the transactional RPC
+          // Process the event using the transactional RPC with strict validation
           const { data: result, error: rpcError } = await supabaseAdmin.rpc('process_stripe_webhook_event', {
             p_provider_event_id: event.id,
             p_event_type: event.type,
             p_payload_sha256: payloadHash,
             p_livemode: false,
-            p_event_data: event.data as any
+            p_event_data: event.data as any,
+            p_event_created: event.created,
+            p_canonical_plan_code: 'enterprise_monthly',
+            p_canonical_currency: 'brl',
+            p_canonical_amount: 3590
           });
 
           if (rpcError) {
