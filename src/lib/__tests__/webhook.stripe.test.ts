@@ -32,7 +32,7 @@ describe('Stripe Webhook Contract - Corrective Type Safety and Ordering', () => 
           provider_event_id: event.id,
           event_type: event.type,
           event_created: event.created,
-          empresa_id: invoice.metadata?.empresa_id || (invoice as any).subscription_details?.metadata?.empresa_id,
+          empresa_id: invoice.metadata?.empresa_id || (invoice as any).subscription_details?.metadata?.empresa_id as string | undefined,
           stripe_subscription_id: typeof invoice.subscription === 'string' ? invoice.subscription : (invoice.subscription as any)?.id,
           observed_currency: invoice.currency?.toLowerCase(),
           observed_amount: invoice.amount_paid,
