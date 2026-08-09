@@ -73,7 +73,6 @@ export const createStripeCheckoutSessionHandler = async ({ data }: { data: { emp
     throw new Error("Forbidden: Admin access required");
   }
 
-  // ETAPA 2: Hostname e Origin exatos - Strict comparison
   const host = req.headers.get('host');
   const origin = req.headers.get('origin');
   
@@ -123,7 +122,6 @@ export const createStripeCheckoutSessionHandler = async ({ data }: { data: { emp
     throw new Error("Checkout session busy or failed to initialize");
   }
 
-  // ETAPA 2: Ativação da chamada real Stripe
   const { getStripeClient } = await import("@/lib/stripe.server");
   const stripe = getStripeClient();
 
@@ -132,7 +130,39 @@ export const createStripeCheckoutSessionHandler = async ({ data }: { data: { emp
     throw new Error("Payment service unavailable");
   }
 
-  // ETAPA 3: URLs Fixas do Preview
+  // ETAPA 3: Retomada ou Nova Sessão
+  if (attempt.status === 'open' && attempt.provider_checkout_session_id) {
+    try {
+      const existingSession = await stripe.checkout.sessions.retrieve(attempt.provider_checkout_session_id);
+      
+      // Invariantes Sandbox
+      if (existingSession.livemode) throw new Error("LIVEMODE_REJECTION");
+      if (existingSession.status !== 'open') throw new Error("SESSION_EXPIRED_OR_COMPLETED");
+      if (existingSession.payment_status !== 'unpaid') throw new Error("PAYMENT_ALREADY_PROCESSED");
+
+      // Invariantes Financeiros e Metadados
+      const sessionMetadata = existingSession.metadata || {};
+      if (sessionMetadata.empresa_id !== data.empresaId || sessionMetadata.subscription_id !== sub.id) {
+        throw new Error("SESSION_METADATA_MISMATCH");
+      }
+
+      return {
+        status: 'session_created',
+        checkoutUrl: existingSession.url,
+        sessionId: existingSession.id,
+        canonical_quantity: 1,
+        item_count: 1
+      };
+    } catch (e) {
+      console.error("Failed to resume session:", e);
+      throw new Error("CHECKOUT_RESUME_FAILED");
+    }
+  }
+
+  if (attempt.status === 'open' && !attempt.provider_checkout_session_id) {
+    throw new Error("CHECKOUT_RECONCILIATION_REQUIRED");
+  }
+
   const successUrl = `https://${ALLOWED_PREVIEW_HOST}/configuracoes/assinatura?checkout=success`;
   const cancelUrl = `https://${ALLOWED_PREVIEW_HOST}/configuracoes/assinatura?checkout=cancel`;
 
@@ -140,7 +170,7 @@ export const createStripeCheckoutSessionHandler = async ({ data }: { data: { emp
     const session = await stripe.checkout.sessions.create({
       line_items: [{
         price: STRIPE_PRICE_ENTERPRISE_MONTHLY,
-        quantity: 1, // MANDATORY EXACTLY 1
+        quantity: 1,
       }],
       mode: 'subscription',
       success_url: successUrl,
@@ -163,18 +193,22 @@ export const createStripeCheckoutSessionHandler = async ({ data }: { data: { emp
       idempotencyKey: attempt.idempotency_key
     });
 
-    // Atomic transition to 'open' state
-    const { error: finalizeError } = await supabaseAdmin.rpc('finalize_checkout_attempt', {
-      p_empresa_id: data.empresaId,
-      p_subscription_id: sub.id,
+    // ETAPA 2.7: Chamar finalize_checkout_attempt_v2 e TRATAR ERROS
+    const { data: finalizeData, error: finalizeError } = await supabaseAdmin.rpc('finalize_checkout_attempt_v2', {
       p_attempt_id: attempt.id,
-      p_provider_session_id: session.id,
+      p_provider: 'stripe',
+      p_provider_checkout_session_id: session.id,
       p_expires_at: new Date(session.expires_at * 1000).toISOString()
     });
 
     if (finalizeError) {
-      console.error("Failed to finalize checkout attempt:", finalizeError);
-      // We don't throw here to avoid user losing the checkout URL, but it's a critical sync failure
+      console.error("RPC Error in finalize_checkout_attempt_v2:", finalizeError);
+      throw new Error('CHECKOUT_PERSISTENCE_FAILED');
+    }
+
+    const finalizeResult = finalizeData as { persisted?: boolean } | null;
+    if (!finalizeResult?.persisted) {
+      throw new Error('CHECKOUT_PERSISTENCE_NOT_CONFIRMED');
     }
 
     return { 
