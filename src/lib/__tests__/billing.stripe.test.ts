@@ -24,11 +24,15 @@ const mockStripe = {
   checkout: {
     sessions: {
       create: vi.fn(),
+      retrieve: vi.fn(),
     },
   },
 };
 
-(globalThis as any).__STRIPE_MOCK__ = mockStripe;
+// Ensure the real application code uses our mock instead of real Stripe SDK
+vi.mock('@/lib/stripe.server', () => ({
+  getStripeClient: vi.fn(() => mockStripe),
+}));
 
 const mockHeaders = new Map();
 vi.mock('@tanstack/react-start/server', () => ({
@@ -59,7 +63,8 @@ describe('createStripeCheckoutSession - Security Corrective Suite', () => {
     
     mockStripe.checkout.sessions.create.mockResolvedValue({
       id: 'sess_1',
-      url: 'https://checkout.stripe.com/pay/mock'
+      url: 'https://checkout.stripe.com/pay/mock',
+      expires_at: Math.floor(Date.now() / 1000) + 3600
     });
   });
 
@@ -169,7 +174,8 @@ describe('createStripeCheckoutSession - Security Corrective Suite', () => {
         data: { id: 'sub_1', plan_id: 'p1', stripe_customer_id: 'c1', plans: { code: 'ent' } }, 
         error: null 
       });
-      mockSupabaseAdmin.rpc.mockResolvedValue({ data: { id: 'att_1', idempotency_key: 'k1' }, error: null });
+      mockSupabaseAdmin.rpc.mockResolvedValueOnce({ data: { id: 'att_1', idempotency_key: 'k1' }, error: null });
+      mockSupabaseAdmin.rpc.mockResolvedValueOnce({ data: { persisted: true }, error: null });
       
       const result = await invokeHandler({ data: { empresaId: mockEmpresaId } });
       expect(result.canonical_quantity).toBe(1);
