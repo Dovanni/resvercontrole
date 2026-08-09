@@ -36,8 +36,7 @@ vi.mock('@tanstack/react-start/server', () => ({
 }));
 
 // 4. Import do código REAL (o handler da server function)
-// Nota: Importamos o objeto bruto para evitar o wrapper proxy do TanStack Start que causa erro no Vitest
-import { createStripeCheckoutSession } from '../billing.functions';
+import * as billingFunctions from '../billing.functions';
 
 describe('createStripeCheckoutSession - Quantity and Security', () => {
   const mockEmpresaId = '00000000-0000-0000-0000-000000000000';
@@ -49,8 +48,8 @@ describe('createStripeCheckoutSession - Quantity and Security', () => {
     process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY'] = 'price_mock';
   });
 
-  // Helper para invocar o handler diretamente, ignorando o wrapper do TanStack Start que falha em testes unitários
-  const invokeHandler = (args: any) => (createStripeCheckoutSession as any).handler(args);
+  // Helper para invocar o handler diretamente, ignorando o wrapper do TanStack Start
+  const invokeHandler = (args: any) => (billingFunctions.createStripeCheckoutSession as any).handler(args);
 
   it('should reserve attempt with canonical quantity=1 evidence', async () => {
     mockSupabaseAdmin.auth.getUser.mockResolvedValue({ data: { user: { id: mockUserId } }, error: null });
