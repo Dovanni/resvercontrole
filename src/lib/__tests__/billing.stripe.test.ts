@@ -48,7 +48,7 @@ describe('createStripeCheckoutSession - Security Corrective Suite', () => {
     process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY'] = 'price_mock';
   });
 
-  const invokeHandler = (args: any) => billingFunctions.createStripeCheckoutSessionHandler(args);
+  const invokeHandler = (args: { data: { empresaId: string } }) => billingFunctions.createStripeCheckoutSessionHandler(args);
 
   describe('Group A: Entry and Identity', () => {
     it('should fail on missing JWT', async () => {
