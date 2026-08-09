@@ -1,0 +1,23 @@
+{
+  "name": "stripe-webhook",
+  "version": "1.0.0",
+  "protocol": "VEJAMAIS_STRIPE_EDGE_FUNCTION_V1",
+  "env": "deno",
+  "auth": {
+    "verify_jwt": false
+  },
+  "secrets": [
+    "STRIPE_RESTRICTED_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    "STRIPE_PRICE_ENTERPRISE_MONTHLY"
+  ],
+  "contract": {
+    "GET": 405,
+    "POST_NO_SIG": 400,
+    "POST_INVALID_SIG": 400,
+    "POST_LIVEMODE": 400,
+    "POST_UNSUPPORTED": 200,
+    "POST_OK": 200,
+    "POST_RETRY": 503
+  }
+}
