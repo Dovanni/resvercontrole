@@ -47,7 +47,7 @@ export const Route = createFileRoute('/api/stripe/webhook')({
             p_event_type: event.type,
             p_payload_sha256: payloadHash,
             p_livemode: false,
-            p_event_data: event.data
+            p_event_data: event.data as any
           });
 
           if (rpcError) {
@@ -55,12 +55,14 @@ export const Route = createFileRoute('/api/stripe/webhook')({
             return new Response('Error processing event', { status: 500 });
           }
 
-          console.log(`Stripe webhook processed: ${event.type} [${event.id}] - Status: ${result?.status}`);
+          const status = (result as any)?.status;
+          console.log(`Stripe webhook processed: ${event.type} [${event.id}] - Status: ${status}`);
 
-          return new Response(JSON.stringify({ received: true, status: result?.status }), {
+          return new Response(JSON.stringify({ received: true, status }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
           });
+
         } catch (err: any) {
           console.error(`Webhook processing failed: ${err.message}`);
           return new Response(`Webhook Error`, { status: 400 });
