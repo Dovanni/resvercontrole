@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/app-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, CreditCard, Users, Clock, AlertCircle } from "lucide-react";
+import { Check, CreditCard, Users, Clock, AlertCircle, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { createStripeCheckoutSession } from "@/lib/billing.functions";
