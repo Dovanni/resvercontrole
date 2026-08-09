@@ -174,7 +174,7 @@ describe('createStripeCheckoutSession - Security Corrective Suite', () => {
         data: { id: 'sub_1', plan_id: 'p1', stripe_customer_id: 'c1', plans: { code: 'ent' } }, 
         error: null 
       });
-      mockSupabaseAdmin.rpc.mockResolvedValue({ data: { id: 'att_1', idempotency_key: 'k1' }, error: null });
+      mockSupabaseAdmin.rpc.mockResolvedValue({ data: { persisted: true }, error: null });
       
       const result = await invokeHandler({ data: { empresaId: mockEmpresaId } });
       expect(result.canonical_quantity).toBe(1);
