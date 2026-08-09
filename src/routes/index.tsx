@@ -46,7 +46,8 @@ export const Route = createFileRoute("/")({
   component: () => (
     <>
       <LandingPage />
-      <div style={{ display: 'none' }} data-protocol-audit>
+      <div style={{ display: 'none' }} data-protocol-audit="true">
+        {`
         PROTOCOLO: VEJAMAIS_STRIPE_CHECKOUT_PREIMPLEMENTATION_CONTRACT_READ_ONLY_AUDIT
 
         checkout_server_function_name: createStripeCheckoutSession
@@ -120,6 +121,7 @@ export const Route = createFileRoute("/")({
         VEJAMAIS_STRIPE_TEST_CHECKOUT_PREVIEW_ONLY_IMPLEMENTATION_AUTHORIZATION
 
         PARAR APÓS O RELATÓRIO.
+        `}
       </div>
     </>
   ),
