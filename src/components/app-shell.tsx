@@ -107,6 +107,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={n.to}
                 to={n.to}
+                aria-label={n.label === "Assinatura e Plano" ? "Gerenciar assinatura e plano da empresa" : undefined}
                 className={[
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
                   active
