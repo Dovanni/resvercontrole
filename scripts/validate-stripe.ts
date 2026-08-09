@@ -65,7 +65,7 @@ async function validateStripeSecrets() {
 
   const stripe = new Stripe(STRIPE_RESTRICTED_KEY!, {
     apiVersion: '2023-10-16',
-    httpClient: Stripe.createFetchHttpClient(),
+    httpClient: Stripe.createFetchHttpClient(globalThis.fetch),
   });
 
   try {
