@@ -36,21 +36,38 @@ export const Route = createFileRoute('/api/stripe/webhook')({
             return new Response('Livemode not allowed', { status: 403 });
           }
 
-          // Preparation for idempotency and event handling
-          // provider + event_id uniqueness will be enforced at DB level in Phase 2B
-          console.log(`Stripe webhook received: ${event.type} [${event.id}]`);
+          const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+          const { createHash } = await import('crypto');
+          
+          const payloadHash = createHash('sha256').update(rawBody).digest('hex');
 
-          // Event types prepared for sync:
-          // checkout.session.completed, customer.subscription.created/updated/deleted, invoice.paid/payment_failed
+          // Process the event using the transactional RPC
+          const { data: result, error: rpcError } = await supabaseAdmin.rpc('process_stripe_webhook_event', {
+            p_provider_event_id: event.id,
+            p_event_type: event.type,
+            p_payload_sha256: payloadHash,
+            p_livemode: false,
+            p_event_data: event.data as any
+          });
 
-          return new Response(JSON.stringify({ received: true }), {
+          if (rpcError) {
+            console.error(`RPC error processing webhook [${event.id}]:`, rpcError);
+            return new Response('Error processing event', { status: 500 });
+          }
+
+          const status = (result as any)?.status;
+          console.log(`Stripe webhook processed: ${event.type} [${event.id}] - Status: ${status}`);
+
+          return new Response(JSON.stringify({ received: true, status }), {
             status: 200,
             headers: { 'Content-Type': 'application/json' },
           });
+
         } catch (err: any) {
-          console.error(`Webhook signature verification failed: ${err.message}`);
+          console.error(`Webhook processing failed: ${err.message}`);
           return new Response(`Webhook Error`, { status: 400 });
         }
+
       },
     },
   },
