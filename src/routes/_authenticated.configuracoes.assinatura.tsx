@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/configuracoes/assinatura")
   component: SubscriptionSettingsPage,
 });
 
-function SubscriptionSettingsPage() {
+export function SubscriptionSettingsPage() {
   const { empresaId } = useMultiempresa();
   const { data: sub, isLoading } = useSubscriptionContext(empresaId);
   const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
