@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
     }
 
     // Sanitização e formatação do payload para a RPC
-    const object: any = event.data.object
+    const object = event.data.object as Record<string, any>
     const payload = {
       p_provider_event_id: event.id,
       p_event_type: event.type,
@@ -100,6 +100,7 @@ Deno.serve(async (req) => {
       p_canonical_currency: 'brl',
       p_canonical_amount: 3590 // R$ 35,90
     }
+
 
     // Chamada exclusiva à RPC via cliente administrativo interno (service_role)
     const response = await fetch(`${supabaseUrl}/rest/v1/rpc/process_stripe_webhook_event`, {
