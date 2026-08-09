@@ -42,6 +42,7 @@ import { Route as AuthenticatedBiRouteImport } from './routes/_authenticated.bi'
 import { Route as AuthenticatedBalanceteRouteImport } from './routes/_authenticated.balancete'
 import { Route as AuthCallbackIndexRouteImport } from './routes/auth/callback/index'
 import { Route as AuthCallbackRecoveryRouteImport } from './routes/auth/callback/recovery'
+import { Route as ApiPublicSimpleTestRouteImport } from './routes/api/public/simple-test'
 import { Route as ApiPublicRpcTestRouteImport } from './routes/api/public/rpc-test'
 import { Route as ApiPublicAcceptInvitationRouteImport } from './routes/api/public/accept-invitation'
 import { Route as AuthenticatedConfiguracoesCategoriasRouteImport } from './routes/_authenticated.configuracoes.categorias'
@@ -221,6 +222,11 @@ const AuthCallbackRecoveryRoute = AuthCallbackRecoveryRouteImport.update({
   path: '/callback/recovery',
   getParentRoute: () => AuthRoute,
 } as any)
+const ApiPublicSimpleTestRoute = ApiPublicSimpleTestRouteImport.update({
+  id: '/api/public/simple-test',
+  path: '/api/public/simple-test',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicRpcTestRoute = ApiPublicRpcTestRouteImport.update({
   id: '/api/public/rpc-test',
   path: '/api/public/rpc-test',
@@ -285,6 +291,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
   '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
+  '/api/public/simple-test': typeof ApiPublicSimpleTestRoute
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
   '/auth/callback/': typeof AuthCallbackIndexRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
@@ -324,6 +331,7 @@ export interface FileRoutesByTo {
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
   '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
+  '/api/public/simple-test': typeof ApiPublicSimpleTestRoute
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
   '/auth/callback': typeof AuthCallbackIndexRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
@@ -365,6 +373,7 @@ export interface FileRoutesById {
   '/_authenticated/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
   '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
+  '/api/public/simple-test': typeof ApiPublicSimpleTestRoute
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
   '/auth/callback/': typeof AuthCallbackIndexRoute
   '/api/public/stripe/webhook': typeof ApiPublicStripeWebhookRoute
@@ -406,6 +415,7 @@ export interface FileRouteTypes {
     | '/configuracoes/categorias'
     | '/api/public/accept-invitation'
     | '/api/public/rpc-test'
+    | '/api/public/simple-test'
     | '/auth/callback/recovery'
     | '/auth/callback/'
     | '/api/public/stripe/webhook'
@@ -445,6 +455,7 @@ export interface FileRouteTypes {
     | '/configuracoes/categorias'
     | '/api/public/accept-invitation'
     | '/api/public/rpc-test'
+    | '/api/public/simple-test'
     | '/auth/callback/recovery'
     | '/auth/callback'
     | '/api/public/stripe/webhook'
@@ -485,6 +496,7 @@ export interface FileRouteTypes {
     | '/_authenticated/configuracoes/categorias'
     | '/api/public/accept-invitation'
     | '/api/public/rpc-test'
+    | '/api/public/simple-test'
     | '/auth/callback/recovery'
     | '/auth/callback/'
     | '/api/public/stripe/webhook'
@@ -501,6 +513,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicAcceptInvitationRoute: typeof ApiPublicAcceptInvitationRoute
   ApiPublicRpcTestRoute: typeof ApiPublicRpcTestRoute
+  ApiPublicSimpleTestRoute: typeof ApiPublicSimpleTestRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
@@ -737,6 +750,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRecoveryRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/api/public/simple-test': {
+      id: '/api/public/simple-test'
+      path: '/api/public/simple-test'
+      fullPath: '/api/public/simple-test'
+      preLoaderRoute: typeof ApiPublicSimpleTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/rpc-test': {
       id: '/api/public/rpc-test'
       path: '/api/public/rpc-test'
@@ -872,8 +892,19 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicAcceptInvitationRoute: ApiPublicAcceptInvitationRoute,
   ApiPublicRpcTestRoute: ApiPublicRpcTestRoute,
+  ApiPublicSimpleTestRoute: ApiPublicSimpleTestRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
