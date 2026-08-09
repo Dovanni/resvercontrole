@@ -59,7 +59,7 @@ vi.mock('@/lib/billing.functions', () => ({
 }));
 
 // Import component directly (bypassing route definition issues)
-import { Route } from '../_authenticated.configuracoes.assinatura';
+import { Route } from '../../routes/_authenticated.configuracoes.assinatura';
 
 const queryClient = new QueryClient();
 
