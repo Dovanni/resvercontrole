@@ -105,7 +105,7 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
             return new Response('Invalid event object', { status: 400 });
           }
 
-          // Narrowing por type predicate para remover a dupla asserção (as unknown as ...)
+          // Narrowing por type predicate para remover a asserção insegura
           function isObject(val: unknown): val is Record<string, unknown> {
             return typeof val === 'object' && val !== null && !Array.isArray(val);
           }
