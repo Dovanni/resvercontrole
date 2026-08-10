@@ -13,13 +13,12 @@ vi.mock('stripe', () => {
     },
   };
 
-  class StripeMock {
-    static createFetchHttpClient = vi.fn();
-    static createSubtleCryptoProvider = vi.fn();
-    constructor() {
-      return mockStripeInstance;
-    }
-  }
+  const StripeMock = function(this: any) {
+    return mockStripeInstance;
+  } as any;
+  
+  StripeMock.createFetchHttpClient = vi.fn();
+  StripeMock.createSubtleCryptoProvider = vi.fn();
 
   return {
     default: StripeMock,
