@@ -6,14 +6,18 @@ import { Route } from '../../routes/api/public/stripe-webhook';
 // Mocking Stripe
 const mockConstructEventAsync = vi.fn();
 vi.mock('stripe', () => {
+  const StripeMock = vi.fn().mockImplementation(() => ({
+    webhooks: {
+      constructEventAsync: mockConstructEventAsync,
+    },
+  }));
+  
+  // Add static methods to the constructor mock
+  (StripeMock as any).createFetchHttpClient = vi.fn();
+  (StripeMock as any).createSubtleCryptoProvider = vi.fn();
+  
   return {
-    default: vi.fn().mockImplementation(() => ({
-      webhooks: {
-        constructEventAsync: mockConstructEventAsync,
-      },
-    })),
-    createFetchHttpClient: vi.fn(),
-    createSubtleCryptoProvider: vi.fn(),
+    default: StripeMock,
   };
 });
 
