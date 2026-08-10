@@ -1,10 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router';
 import Stripe from 'stripe';
 
 /**
- * PROTOCOLO: VEJAMAIS_STRIPE_WEBHOOK_TANSTACK_SERVER_ROUTE
- * Descrição: Implementação gerenciada do Stripe Webhook via TanStack Server Route.
- * Substitui a Edge Function devido a restrições de criação no TanStack Start v1.
+ * PROTOCOLO: VEJAMAIS_STRIPE_WEBHOOK_TANSTACK_SERVER_ROUTE_V2
+ * Descrição: Handler gerenciado do Stripe Webhook via TanStack Server Route.
+ * Implementa byte-identicamente a lógica do pacote artifacts/stripe-webhook-edge/index.ts.
  */
 
 interface WebhookRpcPayload {
@@ -28,16 +27,14 @@ interface WebhookRpcPayload {
   p_canonical_amount: number;
 }
 
+import { createFileRoute } from '@tanstack/react-router';
+
 export const Route = createFileRoute('/api/public/stripe-webhook')({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        // 1. Contrato HTTP 405 para métodos não-POST é garantido pelo roteador, 
-        // mas reforçamos a lógica do handler POST.
-
         const signature = request.headers.get('stripe-signature');
         
-        // 2. Contrato HTTP 400 para assinatura ausente
         if (!signature) {
           return new Response('Missing signature', { status: 400 });
         }
@@ -45,23 +42,19 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
         const restrictedKey = process.env['STRIPE_RESTRICTED_KEY'];
         const endpointSecret = process.env['STRIPE_WEBHOOK_SECRET'] || '';
 
-        // Verificação de configuração crítica
         if (!restrictedKey) {
           console.error('[Configuration Error] Missing STRIPE_RESTRICTED_KEY');
           return new Response('Internal Server Error', { status: 500 });
         }
 
-        // Inicialização do SDK dentro do handler
         const stripe = new Stripe(restrictedKey, {
-          apiVersion: '2026-07-29.dahlia' as any, // Mantendo compatibilidade com schema do billing.server
-          typescript: true,
+          httpClient: Stripe.createFetchHttpClient(),
         });
 
         let event: Stripe.Event;
         try {
           const body = await request.text();
           
-          // Validação da assinatura usando o provedor SubtleCrypto (padrão em Workers/Deno)
           event = await stripe.webhooks.constructEventAsync(
             body,
             signature,
@@ -75,13 +68,11 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
           return new Response(`Webhook Error: ${message}`, { status: 400 });
         }
 
-        // 3. Rejeição de livemode em ambiente Sandbox/Preview
         if (event.livemode) {
           console.error('[Security] Livemode event rejected in sandbox environment');
           return new Response('Livemode not supported', { status: 400 });
         }
 
-        // Narrowing dos sete eventos suportados
         const supportedEvents = [
           'checkout.session.completed',
           'checkout.session.expired',
@@ -92,13 +83,11 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
           'invoice.payment_failed'
         ];
 
-        // 4. Contrato HTTP 200 para eventos não suportados (silencioso, sem processamento)
         if (!supportedEvents.includes(event.type)) {
           return new Response('Event type not supported', { status: 200 });
         }
 
         try {
-          // No TanStack Start, SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY são injetados pelo Lovable Cloud
           const supabaseUrl = process.env['VITE_SUPABASE_URL'];
           const supabaseServiceRoleKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
           const priceEnterpriseMonthly = process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY'];
@@ -113,8 +102,7 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
             return new Response('Internal Server Error', { status: 500 });
           }
 
-          // Type guard para extrair o objeto do evento de forma segura
-          const eventData = event.data.object as unknown as Record<string, unknown>;
+          const eventData = event.data.object as any;
           const metadata = (eventData.metadata as Record<string, string | undefined>) || {};
           
           const payload: WebhookRpcPayload = {
@@ -127,7 +115,7 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
               object: eventData,
               customer: eventData.customer,
               subscription: eventData.subscription,
-              status: eventData.status as string,
+              status: eventData.status,
               metadata: metadata,
               plan_code: metadata.plan_code || 'enterprise_monthly'
             },
@@ -138,7 +126,6 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
             p_canonical_amount: 3590 // R$ 35,90
           };
 
-          // Chamada exclusiva à RPC via cliente administrativo interno (service_role)
           const response = await fetch(`${supabaseUrl}/rest/v1/rpc/process_stripe_webhook_event`, {
             method: 'POST',
             headers: {
@@ -153,7 +140,6 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
             const errorText = await response.text();
             console.error(`[RPC Execution Error] ${response.status}: ${errorText}`);
             
-            // Contrato HTTP 503 para erros retryable
             if (errorText.includes('UNLINKED') || response.status === 503) {
               return new Response('Temporarily unlinked or service unavailable', { status: 503 });
             }
@@ -162,12 +148,10 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
 
           const result = (await response.json()) as { status?: string };
           
-          // Tratamento de status específico da RPC
           if (result.status === 'failed_retryable') {
              return new Response('Event resolution pending', { status: 503 });
           }
 
-          // Contrato HTTP 200 para sucesso ou duplicados
           return new Response('OK', { status: 200 });
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Unknown processing error';
@@ -175,11 +159,7 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
           return new Response('Internal Server Error', { status: 500 });
         }
       },
-      // Bloqueio explícito de outros métodos conforme contrato
       GET: async () => new Response('Method Not Allowed', { status: 405 }),
-      PUT: async () => new Response('Method Not Allowed', { status: 405 }),
-      DELETE: async () => new Response('Method Not Allowed', { status: 405 }),
-      PATCH: async () => new Response('Method Not Allowed', { status: 405 }),
     },
   },
 });
