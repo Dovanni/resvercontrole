@@ -238,8 +238,16 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
 
           stage = 'RPC_RESPONSE_RECEIVED';
           if (!rpcResponse.ok) {
-            const errorText = await rpcResponse.text();
-            if (errorText.includes('UNLINKED') || rpcResponse.status === 503) {
+            let errorDetail = '';
+            try {
+              errorDetail = await rpcResponse.text();
+            } catch (e) {
+              errorDetail = 'COULD_NOT_READ_ERROR_BODY';
+            }
+            
+            console.error(`[${traceId}] RPC Error ${rpcResponse.status}: ${errorDetail}`);
+            
+            if (errorDetail.includes('UNLINKED') || rpcResponse.status === 503) {
               return createSanitizedResponse(503, traceId, stage, 'RPC_REJECTED_RETRYABLE');
             }
             // Falha não-retryable do banco ou erro inesperado
