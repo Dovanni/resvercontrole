@@ -2239,7 +2239,6 @@ export type Database = {
       }
       log_stripe_webhook_diagnostic: {
         Args: {
-          p_error_payload?: Json
           p_event_id_hash: string
           p_event_type: string
           p_http_status?: number
@@ -2263,6 +2262,10 @@ export type Database = {
           p_provider_event_id: string
         }
         Returns: Json
+      }
+      purge_expired_stripe_webhook_runtime_diagnostics: {
+        Args: never
+        Returns: undefined
       }
       reconcile_and_finalize_onboarding: { Args: never; Returns: Json }
       record_auth_failure: {
