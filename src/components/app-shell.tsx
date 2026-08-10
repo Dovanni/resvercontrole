@@ -33,6 +33,7 @@ const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
   { to: "/dre", label: "DRE", icon: Scale, perm: "view:reports" },
   { to: "/relatorios", label: "Relatórios", icon: FileText, perm: "view:reports" },
   { to: "/configuracoes", label: "Configurações", icon: Settings, perm: "view:settings" },
+  { to: "/configuracoes/assinatura", label: "Assinatura e Plano", icon: CreditCard, perm: "view:settings" },
   { to: "/minha-empresa", label: "Minha Empresa", icon: Building2, perm: "view:dashboard" },
 ];
 
@@ -106,6 +107,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 key={n.to}
                 to={n.to}
+                aria-label={n.label === "Assinatura e Plano" ? "Gerenciar assinatura e plano da empresa" : undefined}
                 className={[
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors",
                   active
@@ -114,7 +116,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 ].join(" ")}
               >
                 <n.icon className="size-4" />
-                {n.label}
+                <span>{n.label}</span>
               </Link>
             );
           })}
@@ -180,6 +182,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       <Link
                         key={n.to}
                         to={n.to}
+                        aria-label={n.label === "Assinatura e Plano" ? "Gerenciar assinatura e plano da empresa" : undefined}
                         onClick={() => {
                           setMobileOpen(false);
                         }}
@@ -191,7 +194,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                         ].join(" ")}
                       >
                         <n.icon className="size-4" />
-                        {n.label}
+                        <span>{n.label}</span>
                       </Link>
                     );
                   })}
