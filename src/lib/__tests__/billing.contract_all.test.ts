@@ -139,8 +139,8 @@ describe('VEJAMAIS_STRIPE_LEGACY_COMPATIBILITY_FULL_CONTRACT_VALIDATION', () => 
 
     const resp = await getHandler()(createRequest({}));
     expect(resp.status).toBe(400);
-    const body = await resp.text();
-    expect(body).toContain('Metadata conflict');
+    const body = await resp.json();
+    expect(body.reason_code).toBe('PAYLOAD_CONTRACT_FAILED');
   });
 
   it('5. both_keys_missing_test: should proceed if no subscription ID is present', async () => {
@@ -170,7 +170,8 @@ describe('VEJAMAIS_STRIPE_LEGACY_COMPATIBILITY_FULL_CONTRACT_VALIDATION', () => 
 
     const resp = await getHandler()(createRequest({}));
     expect(resp.status).toBe(400);
-    expect(await resp.text()).toContain('Invalid UUID');
+    const body = await resp.json();
+    expect(body.reason_code).toBe('PAYLOAD_CONTRACT_FAILED');
   });
 
   it('7. cross_company_test: should pass empresa_id to RPC for tenant isolation', async () => {
@@ -206,7 +207,8 @@ describe('VEJAMAIS_STRIPE_LEGACY_COMPATIBILITY_FULL_CONTRACT_VALIDATION', () => 
     getMockConstructEventAsync().mockRejectedValue(new Error('No matching signature found'));
     const resp = await getHandler()(createRequest({}, 'invalid_sig'));
     expect(resp.status).toBe(400);
-    expect(await resp.text()).toContain('Webhook Error');
+    const body = await resp.json();
+    expect(body.reason_code).toBe('SIGNATURE_INVALID');
   });
 
   it('10. existing_expired_event_test: should process checkout.session.expired with normalized metadata', async () => {
@@ -251,7 +253,8 @@ describe('VEJAMAIS_STRIPE_LEGACY_COMPATIBILITY_FULL_CONTRACT_VALIDATION', () => 
 
     const resp = await getHandler()(createRequest({}));
     expect(resp.status).toBe(400);
-    expect(await resp.text()).toContain('Livemode not supported');
+    const body = await resp.json();
+    expect(body.reason_code).toBe('LIVEMODE_REJECTED');
   });
 
   it('13. invalid_signature_400_test: should return 400 when signature header is missing', async () => {
@@ -262,7 +265,8 @@ describe('VEJAMAIS_STRIPE_LEGACY_COMPATIBILITY_FULL_CONTRACT_VALIDATION', () => 
       },
     });
     expect(resp.status).toBe(400);
-    expect(await resp.text()).toBe('Missing signature');
+    const body = await resp.json();
+    expect(body.reason_code).toBe('SIGNATURE_INVALID');
   });
 
   it('14. failed_retryable_503_test: should return 503 if RPC returns failed_retryable', async () => {
@@ -277,7 +281,8 @@ describe('VEJAMAIS_STRIPE_LEGACY_COMPATIBILITY_FULL_CONTRACT_VALIDATION', () => 
 
     const resp = await getHandler()(createRequest({}));
     expect(resp.status).toBe(503);
-    expect(await resp.text()).toContain('Event resolution pending');
+    const body = await resp.json();
+    expect(body.reason_code).toBe('RPC_REJECTED_RETRYABLE');
   });
 
   it('15. processed_200_test: should return 200 on successful processing', async () => {
