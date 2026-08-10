@@ -108,7 +108,7 @@ export async function createStripeCheckoutSessionImpl(empresaId: string) {
   // Atomic reservation
   const { data: attempt, error: reserveError } = await supabaseAdmin.rpc('reserve_checkout_attempt', {
     p_empresa_id: empresaId,
-    p_internal_subscription_id: sub.id,
+    p_subscription_id: sub.id,
     p_verified_user_id: user.id
   });
 
