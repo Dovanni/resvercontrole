@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 describe('Stripe Webhook Contract - No Redirect', () => {
-  const WEBHOOK_URL = 'http://localhost:8080/api/public/stripe/webhook';
+  const WEBHOOK_URL = 'http://localhost:8080/api/public/stripe-webhook';
 
   it('should return 400 instead of 302 for unsigned POST', async () => {
     const response = await fetch(WEBHOOK_URL, {
