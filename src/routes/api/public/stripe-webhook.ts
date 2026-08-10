@@ -100,8 +100,12 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
             console.error(`[Configuration Error] Missing environment variables: ${missing.join(', ')}`);
             return new Response('Internal Server Error', { status: 500 });
           }
+          const eventObject = event.data.object;
+          if (!eventObject || typeof eventObject !== 'object') {
+            return new Response('Invalid event object', { status: 400 });
+          }
 
-          const eventData = event.data.object as any;
+          const eventData = eventObject as unknown as Record<string, unknown>;
           const metadata = (eventData.metadata as Record<string, string | undefined>) || {};
           
           // Rule: VEJAMAIS_STRIPE_LEGACY_METADATA_COMPATIBILITY_TARGETED_CORRECTION
