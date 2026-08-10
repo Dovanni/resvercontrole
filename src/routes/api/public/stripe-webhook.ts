@@ -2,10 +2,37 @@ import Stripe from 'stripe';
 import { createFileRoute } from '@tanstack/react-router';
 
 /**
- * PROTOCOLO: VEJAMAIS_STRIPE_WEBHOOK_TANSTACK_SERVER_ROUTE_V2
- * Descrição: Handler gerenciado do Stripe Webhook via TanStack Server Route.
- * Implementa byte-identicamente a lógica do pacote artifacts/stripe-webhook-edge/index.ts.
+ * PROTOCOLO: VEJAMAIS_STRIPE_PRODUCTION_RUNTIME_SANITIZED_OBSERVABILITY_MINIMAL_IMPLEMENTATION
+ * Descrição: Handler resiliente com observabilidade sanitizada e boundary de segurança.
  */
+
+// --- Tipagem e Constantes (ETAPA 1) ---
+
+type AllowedStage =
+  | 'REQUEST_RECEIVED'
+  | 'RAW_BODY_READ'
+  | 'SIGNATURE_VALIDATED'
+  | 'EVENT_PARSED'
+  | 'LIVEMODE_VALIDATED'
+  | 'EVENT_SUPPORTED'
+  | 'PAYLOAD_SANITIZED'
+  | 'RPC_CALL_STARTED'
+  | 'RPC_RESPONSE_RECEIVED'
+  | 'RPC_RESULT_CLASSIFIED'
+  | 'HTTP_RESPONSE_CREATED';
+
+type AllowedReasonCode =
+  | 'RAW_BODY_READ_FAILED'
+  | 'SIGNATURE_INVALID'
+  | 'EVENT_PARSE_FAILED'
+  | 'LIVEMODE_REJECTED'
+  | 'UNSUPPORTED_EVENT'
+  | 'PAYLOAD_CONTRACT_FAILED'
+  | 'RPC_TRANSPORT_FAILED'
+  | 'RPC_REJECTED_RETRYABLE'
+  | 'RPC_REJECTED_PERMANENT'
+  | 'RPC_RESPONSE_INVALID'
+  | 'UNEXPECTED_HANDLER_FAILURE';
 
 interface WebhookRpcPayload {
   p_provider_event_id: string;
@@ -28,118 +55,144 @@ interface WebhookRpcPayload {
   p_canonical_amount: number;
 }
 
+// --- Helpers (ETAPA 3) ---
+
+function createSanitizedResponse(
+  status: number,
+  trace_id: string,
+  stage: AllowedStage,
+  reason_code?: AllowedReasonCode
+): Response {
+  const body = {
+    error: status >= 400 ? 'WEBHOOK_PROCESSING_FAILED' : undefined,
+    trace_id,
+    stage,
+    reason_code,
+  };
+
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+    },
+  });
+}
+
+function isObject(val: unknown): val is Record<string, unknown> {
+  return typeof val === 'object' && val !== null && !Array.isArray(val);
+}
+
+// --- Handler (ETAPA 2) ---
+
 export const Route = createFileRoute('/api/public/stripe-webhook')({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const signature = request.headers.get('stripe-signature');
-        
-        if (!signature) {
-          return new Response('Missing signature', { status: 400 });
-        }
-
-        const restrictedKey = process.env['STRIPE_RESTRICTED_KEY'];
-        const endpointSecret = process.env['STRIPE_WEBHOOK_SECRET'] || '';
-
-        if (!restrictedKey) {
-          console.error('[Configuration Error] Missing STRIPE_RESTRICTED_KEY');
-          return new Response('Internal Server Error', { status: 500 });
-        }
-
-        const stripe = new Stripe(restrictedKey, {
-          httpClient: Stripe.createFetchHttpClient(),
-        });
-
-        let event: Stripe.Event;
-        try {
-          const body = await request.text();
-          
-          event = await stripe.webhooks.constructEventAsync(
-            body,
-            signature,
-            endpointSecret,
-            undefined,
-            Stripe.createSubtleCryptoProvider()
-          );
-        } catch (err) {
-          const message = err instanceof Error ? err.message : 'Unknown error';
-          console.error(`[Webhook Security Error] ${message}`);
-          return new Response(`Webhook Error: ${message}`, { status: 400 });
-        }
-
-        if (event.livemode) {
-          console.error('[Security] Livemode event rejected in sandbox environment');
-          return new Response('Livemode not supported', { status: 400 });
-        }
-
-        const supportedEvents = [
-          'checkout.session.completed',
-          'checkout.session.expired',
-          'customer.subscription.created',
-          'customer.subscription.updated',
-          'customer.subscription.deleted',
-          'invoice.paid',
-          'invoice.payment_failed'
-        ];
-
-        if (!supportedEvents.includes(event.type)) {
-          return new Response('Event type not supported', { status: 200 });
-        }
+        const startedAt = Date.now();
+        const traceId = crypto.randomUUID();
+        let stage: AllowedStage = 'REQUEST_RECEIVED';
 
         try {
+          const signature = request.headers.get('stripe-signature');
+          if (!signature) {
+            return createSanitizedResponse(400, traceId, 'REQUEST_RECEIVED', 'SIGNATURE_INVALID');
+          }
+
+          const restrictedKey = process.env['STRIPE_RESTRICTED_KEY'];
+          const endpointSecret = process.env['STRIPE_WEBHOOK_SECRET'] || '';
+
+          if (!restrictedKey) {
+            console.error(`[${traceId}] Configuration Error: Missing STRIPE_RESTRICTED_KEY`);
+            return createSanitizedResponse(500, traceId, 'REQUEST_RECEIVED', 'UNEXPECTED_HANDLER_FAILURE');
+          }
+
+          const stripe = new Stripe(restrictedKey, {
+            httpClient: Stripe.createFetchHttpClient(),
+          });
+
+          // ETAPA 2: Boundary - request.text()
+          stage = 'RAW_BODY_READ';
+          let bodyText: string;
+          try {
+            bodyText = await request.text();
+          } catch (err) {
+            return createSanitizedResponse(400, traceId, stage, 'RAW_BODY_READ_FAILED');
+          }
+
+          // ETAPA 2: Boundary - constructEventAsync
+          stage = 'SIGNATURE_VALIDATED';
+          let event: Stripe.Event;
+          try {
+            event = await stripe.webhooks.constructEventAsync(
+              bodyText,
+              signature,
+              endpointSecret,
+              undefined,
+              Stripe.createSubtleCryptoProvider()
+            );
+          } catch (err) {
+            return createSanitizedResponse(400, traceId, stage, 'SIGNATURE_INVALID');
+          }
+
+          // ETAPA 2: Boundary - narrowing do evento
+          stage = 'EVENT_PARSED';
+          if (!event || !event.type || !event.data) {
+            return createSanitizedResponse(400, traceId, stage, 'EVENT_PARSE_FAILED');
+          }
+
+          // ETAPA 4: Status HTTP - livemode
+          stage = 'LIVEMODE_VALIDATED';
+          if (event.livemode) {
+            return createSanitizedResponse(400, traceId, stage, 'LIVEMODE_REJECTED');
+          }
+
+          // ETAPA 4: Status HTTP - evento não suportado
+          stage = 'EVENT_SUPPORTED';
+          const supportedEvents = [
+            'checkout.session.completed',
+            'checkout.session.expired',
+            'customer.subscription.created',
+            'customer.subscription.updated',
+            'customer.subscription.deleted',
+            'invoice.paid',
+            'invoice.payment_failed'
+          ];
+
+          if (!supportedEvents.includes(event.type)) {
+            return createSanitizedResponse(200, traceId, stage, 'UNSUPPORTED_EVENT');
+          }
+
+          // ETAPA 2: Boundary - sanitização
+          stage = 'PAYLOAD_SANITIZED';
+          const eventObject = event.data.object;
+          if (!isObject(eventObject)) {
+            return createSanitizedResponse(400, traceId, stage, 'PAYLOAD_CONTRACT_FAILED');
+          }
+
           const supabaseUrl = process.env['VITE_SUPABASE_URL'];
           const supabaseServiceRoleKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
           const priceEnterpriseMonthly = process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY'];
           
           if (!supabaseUrl || !supabaseServiceRoleKey || !priceEnterpriseMonthly) {
-            const missing = [
-              !supabaseUrl && 'VITE_SUPABASE_URL',
-              !supabaseServiceRoleKey && 'SUPABASE_SERVICE_ROLE_KEY',
-              !priceEnterpriseMonthly && 'STRIPE_PRICE_ENTERPRISE_MONTHLY'
-            ].filter(Boolean);
-            console.error(`[Configuration Error] Missing environment variables: ${missing.join(', ')}`);
-            return new Response('Internal Server Error', { status: 500 });
-          }
-          const eventObject = event.data.object;
-          if (!eventObject || typeof eventObject !== 'object') {
-            return new Response('Invalid event object', { status: 400 });
+            console.error(`[${traceId}] Configuration Error: Missing Supabase/Stripe env vars`);
+            return createSanitizedResponse(500, traceId, stage, 'UNEXPECTED_HANDLER_FAILURE');
           }
 
-          // Narrowing por type predicate para remover a asserção insegura
-          function isObject(val: unknown): val is Record<string, unknown> {
-            return typeof val === 'object' && val !== null && !Array.isArray(val);
-          }
-
-          if (!isObject(eventObject)) {
-            return new Response('Invalid event object structure', { status: 400 });
-          }
-
-          const eventData = eventObject;
-          const metadata = (eventData.metadata as Record<string, string | undefined>) || {};
-          
-          // Rule: VEJAMAIS_STRIPE_LEGACY_METADATA_COMPATIBILITY_TARGETED_CORRECTION
-          // Normalize legacy subscription_id to internal_subscription_id if canonical is missing.
+          const metadata = (eventObject.metadata as Record<string, string | undefined>) || {};
           let internalSubscriptionId = metadata.internal_subscription_id;
           const legacySubscriptionId = metadata.subscription_id;
 
           if (!internalSubscriptionId && legacySubscriptionId) {
-            // Normalize: legacy exists, canonical missing
             internalSubscriptionId = legacySubscriptionId;
-          } else if (internalSubscriptionId && legacySubscriptionId) {
-            // Conflict check
-            if (internalSubscriptionId !== legacySubscriptionId) {
-              console.error('[Security] Metadata conflict: internal_subscription_id and subscription_id mismatch');
-              return new Response('Metadata conflict', { status: 400 });
-            }
+          } else if (internalSubscriptionId && legacySubscriptionId && internalSubscriptionId !== legacySubscriptionId) {
+            return createSanitizedResponse(400, traceId, stage, 'PAYLOAD_CONTRACT_FAILED');
           }
 
-          // Strict UUID validation if ID present
           if (internalSubscriptionId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(internalSubscriptionId)) {
-            console.error('[Security] Invalid UUID format in subscription metadata');
-            return new Response('Invalid UUID format', { status: 400 });
+            return createSanitizedResponse(400, traceId, stage, 'PAYLOAD_CONTRACT_FAILED');
           }
 
-          // Build effective metadata for the RPC (do not mutate the event object)
           const effectiveMetadata = { 
             ...metadata,
             internal_subscription_id: internalSubscriptionId 
@@ -151,11 +204,11 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
             p_payload_sha256: null,
             p_livemode: false,
             p_event_data: {
-              id: String(eventData.id || ''),
-              object: eventData,
-              customer: eventData.customer,
-              subscription: eventData.subscription,
-              status: eventData.status,
+              id: String(eventObject.id || ''),
+              object: eventObject,
+              customer: eventObject.customer,
+              subscription: eventObject.subscription,
+              status: eventObject.status,
               metadata: effectiveMetadata,
               plan_code: metadata.plan_code || 'enterprise_monthly'
             },
@@ -163,40 +216,66 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
             p_canonical_plan_code: metadata.plan_code || 'enterprise_monthly',
             p_canonical_price_id: priceEnterpriseMonthly,
             p_canonical_currency: 'brl',
-            p_canonical_amount: 3590 // R$ 35,90
+            p_canonical_amount: 3590
           };
 
-          const response = await fetch(`${supabaseUrl}/rest/v1/rpc/process_stripe_webhook_event`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${supabaseServiceRoleKey}`,
-              'apikey': supabaseServiceRoleKey
-            },
-            body: JSON.stringify(payload)
-          });
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`[RPC Execution Error] ${response.status}: ${errorText}`);
-            
-            if (errorText.includes('UNLINKED') || response.status === 503) {
-              return new Response('Temporarily unlinked or service unavailable', { status: 503 });
-            }
-            return new Response('Internal Server Error', { status: 500 });
+          // ETAPA 2: Boundary - chamada RPC
+          stage = 'RPC_CALL_STARTED';
+          let rpcResponse: Response;
+          try {
+            rpcResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/process_stripe_webhook_event`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${supabaseServiceRoleKey}`,
+                'apikey': supabaseServiceRoleKey
+              },
+              body: JSON.stringify(payload)
+            });
+          } catch (err) {
+            return createSanitizedResponse(503, traceId, stage, 'RPC_TRANSPORT_FAILED');
           }
 
-          const result = (await response.json()) as { status?: string };
+          stage = 'RPC_RESPONSE_RECEIVED';
+          if (!rpcResponse.ok) {
+            const errorText = await rpcResponse.text();
+            if (errorText.includes('UNLINKED') || rpcResponse.status === 503) {
+              return createSanitizedResponse(503, traceId, stage, 'RPC_REJECTED_RETRYABLE');
+            }
+            // Falha não-retryable do banco ou erro inesperado
+            return createSanitizedResponse(500, traceId, stage, 'RPC_RESPONSE_INVALID');
+          }
+
+          // ETAPA 2: Boundary - classificação do resultado
+          stage = 'RPC_RESULT_CLASSIFIED';
+          const result = (await rpcResponse.json()) as { status?: string };
           
           if (result.status === 'failed_retryable') {
-             return new Response('Event resolution pending', { status: 503 });
+             return createSanitizedResponse(503, traceId, stage, 'RPC_REJECTED_RETRYABLE');
           }
 
-          return new Response('OK', { status: 200 });
+          if (result.status === 'rejected_permanent') {
+            // Rejeição permanente validada e registrada deve retornar 200 conforme Etapa 4
+            return createSanitizedResponse(200, traceId, stage, 'RPC_REJECTED_PERMANENT');
+          }
+
+          // ETAPA 5: Log Sanitizado
+          const elapsed = Date.now() - startedAt;
+          console.info(JSON.stringify({
+            trace_id: traceId,
+            stage: 'HTTP_RESPONSE_CREATED',
+            event_type: event.type,
+            livemode: event.livemode,
+            http_status: 200,
+            elapsed_ms: elapsed
+          }));
+
+          return createSanitizedResponse(200, traceId, 'HTTP_RESPONSE_CREATED');
+
         } catch (err) {
-          const message = err instanceof Error ? err.message : 'Unknown processing error';
-          console.error(`[Internal Processing Error] ${message}`);
-          return new Response('Internal Server Error', { status: 500 });
+          // ETAPA 2: Boundary externo global
+          console.error(`[${traceId}] Unexpected Handler Failure: Sanitized boundary active.`);
+          return createSanitizedResponse(500, traceId, stage, 'UNEXPECTED_HANDLER_FAILURE');
         }
       },
       GET: async () => new Response('Method Not Allowed', { status: 405 }),
