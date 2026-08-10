@@ -1854,6 +1854,42 @@ export type Database = {
           },
         ]
       }
+      stripe_webhook_runtime_diagnostics: {
+        Row: {
+          created_at: string
+          error_payload: Json | null
+          event_id_hash: string
+          event_type: string
+          http_status: number | null
+          id: string
+          reason_code: string | null
+          stage: string
+          trace_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_payload?: Json | null
+          event_id_hash: string
+          event_type: string
+          http_status?: number | null
+          id?: string
+          reason_code?: string | null
+          stage: string
+          trace_id: string
+        }
+        Update: {
+          created_at?: string
+          error_payload?: Json | null
+          event_id_hash?: string
+          event_type?: string
+          http_status?: number | null
+          id?: string
+          reason_code?: string | null
+          stage?: string
+          trace_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean
@@ -2200,6 +2236,18 @@ export type Database = {
           status: string
           user_id: string
         }[]
+      }
+      log_stripe_webhook_diagnostic: {
+        Args: {
+          p_error_payload?: Json
+          p_event_id_hash: string
+          p_event_type: string
+          p_http_status?: number
+          p_reason_code?: string
+          p_stage: string
+          p_trace_id: string
+        }
+        Returns: undefined
       }
       process_stripe_webhook_event: {
         Args: {
