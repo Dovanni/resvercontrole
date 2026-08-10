@@ -105,7 +105,7 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
             return new Response('Invalid event object', { status: 400 });
           }
 
-          const eventData = eventObject as Record<string, unknown>;
+          const eventData = eventObject as unknown as Record<string, unknown>;
           const metadata = (eventData.metadata as Record<string, string | undefined>) || {};
           
           // Rule: VEJAMAIS_STRIPE_LEGACY_METADATA_COMPATIBILITY_TARGETED_CORRECTION
