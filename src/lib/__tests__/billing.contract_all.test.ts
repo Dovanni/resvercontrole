@@ -3,10 +3,8 @@ import { Route } from '../../routes/api/public/stripe-webhook';
 
 // --- Mocks ---
 
-// Mocking Stripe
-const mockConstructEventAsync = vi.fn();
-
 vi.mock('stripe', () => {
+  const mockConstructEventAsync = vi.fn();
   const mockStripeInstance = {
     webhooks: {
       constructEventAsync: mockConstructEventAsync,
@@ -22,8 +20,13 @@ vi.mock('stripe', () => {
 
   return {
     default: StripeMock,
+    // Export the mock function so we can retrieve it in tests via import
+    _mockConstructEventAsync: mockConstructEventAsync,
   };
 });
+
+import { _mockConstructEventAsync as mockConstructEventAsync } from 'stripe';
+
 
 // Mock Global Fetch (for Supabase RPC)
 const mockFetch = vi.fn();
