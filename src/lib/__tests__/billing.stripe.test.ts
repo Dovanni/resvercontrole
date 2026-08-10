@@ -1,24 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// 1. Definição do Mock da supabaseAdmin
-const mockSupabaseAdmin = {
-  auth: {
-    getUser: vi.fn(),
-  },
-  from: vi.fn().mockReturnThis(),
-  select: vi.fn().mockReturnThis(),
-  eq: vi.fn().mockReturnThis(),
-  neq: vi.fn().mockReturnThis(),
-  order: vi.fn().mockReturnThis(),
-  limit: vi.fn().mockReturnThis(),
-  single: vi.fn(),
-  rpc: vi.fn(),
-};
-
-// 2. Mocking dos módulos
-vi.mock('@/integrations/supabase/client.server', () => ({
-  supabaseAdmin: mockSupabaseAdmin,
-}));
+// Mocks hoisted via factory
+vi.mock('@/integrations/supabase/client.server', () => {
+  const mock = {
+    auth: { getUser: vi.fn() },
+    from: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    neq: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    single: vi.fn(),
+    rpc: vi.fn(),
+  };
+  return { supabaseAdmin: mock };
+});
 
 const mockStripe = {
   checkout: {
@@ -44,13 +40,16 @@ vi.mock('@tanstack/react-start/server', () => ({
 }));
 
 // 3. Import do código REAL
-import * as billingFunctions from '../billing.functions';
+import * as billingServer from '../billing.server';
+import { supabaseAdmin } from '@/integrations/supabase/client.server';
 
 describe('createStripeCheckoutSession - Security Corrective Suite', () => {
   const mockEmpresaId = '00000000-0000-0000-0000-000000000000';
   const mockUserId = '11111111-1111-1111-1111-111111111111';
   const ALLOWED_HOST = 'id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
   const ALLOWED_ORIGIN = 'https://id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
+
+  const mockSupabaseAdmin = supabaseAdmin as any;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -68,7 +67,7 @@ describe('createStripeCheckoutSession - Security Corrective Suite', () => {
     });
   });
 
-  const invokeHandler = (args: { data: { empresaId: string } }) => billingFunctions.createStripeCheckoutSessionHandler(args);
+  const invokeHandler = (args: { data: { empresaId: string } }) => billingServer.createStripeCheckoutSessionImpl(args.data.empresaId);
 
   describe('Group A: Entry and Identity', () => {
     it('should fail on missing JWT', async () => {
