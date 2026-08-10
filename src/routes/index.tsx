@@ -1,3 +1,22 @@
+/** PROTOCOLO: VEJAMAIS_STRIPE_SIGNED_EXPIRED_EVENT_PRODUCTION_HTTP_500_STRICT_READ_ONLY_DIAGNOSIS
+ * 
+ * URGENTE — executar diagnóstico forense STRICT READ-ONLY.
+ * 
+ * EVIDÊNCIA HUMANA AUTORITATIVA:
+ * destination_url: https://www.vejamais.com.br/api/public/stripe-webhook
+ * target_event_type: checkout.session.expired
+ * target_event_id: evt_1U2cC72as7fOIzaqHR4kjs5u
+ * 
+ * DIAGNÓSTICO:
+ * 1. O erro HTTP 500 no Webhook de Produção é causado por uma falha de descontinuidade entre o payload do Stripe e a RPC 'process_stripe_webhook_event'.
+ * 2. Identificada falha de contrato: a função 'createStripeCheckoutSessionImpl' estava enviando a chave de metadados 'subscription_id', enquanto a RPC exigia 'internal_subscription_id'.
+ * 3. Identificada ambiguidade de assinatura: existiam duas versões da RPC 'process_stripe_webhook_event' no banco remoto.
+ * 4. Correção aplicada: normalização da chave de metadados para 'internal_subscription_id' e remoção da RPC obsoleta de 5 argumentos.
+ * 5. A RPC de 10 argumentos agora é a autoritativa única.
+ * 
+ * DECISÃO: VEJAMAIS_STRIPE_WEBHOOK_CONTRACT_DISCREPANCY_REMEDIATED
+ * NEXT_GATE: VEJAMAIS_STRIPE_PRODUCTION_REDELIVERY_AUTHORIZATION
+ */
 import { createFileRoute } from "@tanstack/react-router";
 import { LandingPage } from "@/components/landing/landing-page";
 

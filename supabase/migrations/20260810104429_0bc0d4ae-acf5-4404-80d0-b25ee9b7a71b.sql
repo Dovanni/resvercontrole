@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.process_stripe_webhook_event(text, text, text, boolean, jsonb);

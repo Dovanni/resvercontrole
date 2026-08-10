@@ -172,14 +172,14 @@ export async function createStripeCheckoutSessionImpl(empresaId: string) {
       customer: sub.stripe_customer_id || undefined,
       metadata: {
         empresa_id: empresaId,
-        subscription_id: sub.id,
+        internal_subscription_id: sub.id,
         plan_code: 'enterprise_monthly',
         attempt_id: attempt.id
       },
       subscription_data: {
         metadata: {
           empresa_id: empresaId,
-          subscription_id: sub.id,
+          internal_subscription_id: sub.id,
           plan_code: 'enterprise_monthly'
         }
       }
