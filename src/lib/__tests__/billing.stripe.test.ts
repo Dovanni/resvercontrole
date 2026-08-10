@@ -25,16 +25,6 @@ const mockStripe = {
   },
 };
 
-
-const mockStripe = {
-  checkout: {
-    sessions: {
-      create: vi.fn(),
-      retrieve: vi.fn(),
-    },
-  },
-};
-
 // Ensure the real application code uses our mock instead of real Stripe SDK
 vi.mock('@/lib/stripe.server', () => ({
   getStripeClient: vi.fn(() => mockStripe),
@@ -51,13 +41,15 @@ vi.mock('@tanstack/react-start/server', () => ({
 
 // 3. Import do código REAL
 import * as billingServer from '../billing.server';
-
+import { supabaseAdmin } from '@/integrations/supabase/client.server';
 
 describe('createStripeCheckoutSession - Security Corrective Suite', () => {
   const mockEmpresaId = '00000000-0000-0000-0000-000000000000';
   const mockUserId = '11111111-1111-1111-1111-111111111111';
   const ALLOWED_HOST = 'id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
   const ALLOWED_ORIGIN = 'https://id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
+
+  const mockSupabaseAdmin = supabaseAdmin as any;
 
   beforeEach(() => {
     vi.clearAllMocks();
