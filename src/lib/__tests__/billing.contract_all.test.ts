@@ -20,12 +20,13 @@ vi.mock('stripe', () => {
 
   return {
     default: StripeMock,
-    // Export the mock function so we can retrieve it in tests via import
-    _mockConstructEventAsync: mockConstructEventAsync,
+    createFetchHttpClient: StripeMock.createFetchHttpClient,
+    createSubtleCryptoProvider: StripeMock.createSubtleCryptoProvider,
   };
 });
 
-import { _mockConstructEventAsync as mockConstructEventAsync } from 'stripe';
+import Stripe from 'stripe';
+
 
 
 // Mock Global Fetch (for Supabase RPC)
@@ -44,14 +45,18 @@ const mockEnv = {
 // --- Test Suite ---
 
 describe('VEJAMAIS_STRIPE_LEGACY_COMPATIBILITY_FULL_CONTRACT_VALIDATION', () => {
-  const handler = (Route.options.server as any).handlers.POST;
+  const getMockConstructEventAsync = () => {
+    const stripe = new Stripe('key');
+    return stripe.webhooks.constructEventAsync as any;
+  };
+
   const mockUuid = '550e8400-e29b-41d4-a716-446655440000';
   const otherUuid = '660e8400-e29b-41d4-a716-446655440001';
 
   beforeEach(() => {
     vi.clearAllMocks();
     // Inject env inside handler scope simulation
-    process.env = { ...process.env, ...mockEnv };
+    const handler = (Route.options.server as any).handlers.POST;
   });
 
   const createRequest = (body: any, signature: string = 'valid_sig') => {
@@ -66,8 +71,9 @@ describe('VEJAMAIS_STRIPE_LEGACY_COMPATIBILITY_FULL_CONTRACT_VALIDATION', () => 
   };
 
   const setupStripeEvent = (event: any) => {
-    mockConstructEventAsync.mockResolvedValue(event);
+    getMockConstructEventAsync().mockResolvedValue(event);
   };
+
 
   const setupRpcResponse = (status: number, body: any = { status: 'success' }) => {
     mockFetch.mockResolvedValue({
