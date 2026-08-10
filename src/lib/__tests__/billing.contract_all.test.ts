@@ -3,7 +3,7 @@ import { Route } from '../../routes/api/public/stripe-webhook';
 
 // --- Mocks ---
 
-// Mock Stripe
+// Mocking Stripe
 const mockConstructEventAsync = vi.fn();
 vi.mock('stripe', () => {
   return {
@@ -12,6 +12,8 @@ vi.mock('stripe', () => {
         constructEventAsync: mockConstructEventAsync,
       },
     })),
+    createFetchHttpClient: vi.fn(),
+    createSubtleCryptoProvider: vi.fn(),
   };
 });
 
