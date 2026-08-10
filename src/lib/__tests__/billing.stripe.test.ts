@@ -1,24 +1,30 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// 1. Definição do Mock da supabaseAdmin
-const mockSupabaseAdmin = {
-  auth: {
-    getUser: vi.fn(),
+// Mocks hoisted via factory
+vi.mock('@/integrations/supabase/client.server', () => {
+  const mock = {
+    auth: { getUser: vi.fn() },
+    from: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    neq: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    single: vi.fn(),
+    rpc: vi.fn(),
+  };
+  return { supabaseAdmin: mock };
+});
+
+const mockStripe = {
+  checkout: {
+    sessions: {
+      create: vi.fn(),
+      retrieve: vi.fn(),
+    },
   },
-  from: vi.fn().mockReturnThis(),
-  select: vi.fn().mockReturnThis(),
-  eq: vi.fn().mockReturnThis(),
-  neq: vi.fn().mockReturnThis(),
-  order: vi.fn().mockReturnThis(),
-  limit: vi.fn().mockReturnThis(),
-  single: vi.fn(),
-  rpc: vi.fn(),
 };
 
-// 2. Mocking dos módulos
-vi.mock('@/integrations/supabase/client.server', () => ({
-  supabaseAdmin: mockSupabaseAdmin,
-}));
 
 const mockStripe = {
   checkout: {
