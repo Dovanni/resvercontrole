@@ -23,7 +23,23 @@ export const Route = createFileRoute("/")({
       {
         name: "twitter:description",
         content:
-          "Plataforma de gestão comercial e financeira para e-commerce e comércio: pedidos, vendas, produtos, estoque, fretes, taxas, contas, margens e lucros.",
+          "Pedidos, vendas, produtos, estoque, fretes, taxas, contas e lucros em uma única plataforma.",
+      },
+    ],
+    links: [{ rel: "canonical", href: "https://vejamais.com.br/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "Vejamais",
+          applicationCategory: "BusinessApplication",
+          operatingSystem: "Web",
+          url: "https://vejamais.com.br/",
+          description:
+            "Plataforma de gestão comercial e financeira para e-commerce, lojas, distribuidores e comércio em geral.",
+        }),
       },
     ],
   }),
