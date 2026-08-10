@@ -104,6 +104,34 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
           const eventData = event.data.object as any;
           const metadata = (eventData.metadata as Record<string, string | undefined>) || {};
           
+          // Rule: VEJAMAIS_STRIPE_LEGACY_METADATA_COMPATIBILITY_TARGETED_CORRECTION
+          // Normalize legacy subscription_id to internal_subscription_id if canonical is missing.
+          let internalSubscriptionId = metadata.internal_subscription_id;
+          const legacySubscriptionId = metadata.subscription_id;
+
+          if (!internalSubscriptionId && legacySubscriptionId) {
+            // Normalize: legacy exists, canonical missing
+            internalSubscriptionId = legacySubscriptionId;
+          } else if (internalSubscriptionId && legacySubscriptionId) {
+            // Conflict check
+            if (internalSubscriptionId !== legacySubscriptionId) {
+              console.error('[Security] Metadata conflict: internal_subscription_id and subscription_id mismatch');
+              return new Response('Metadata conflict', { status: 400 });
+            }
+          }
+
+          // Strict UUID validation if ID present
+          if (internalSubscriptionId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(internalSubscriptionId)) {
+            console.error('[Security] Invalid UUID format in subscription metadata');
+            return new Response('Invalid UUID format', { status: 400 });
+          }
+
+          // Build effective metadata for the RPC (do not mutate the event object)
+          const effectiveMetadata = { 
+            ...metadata,
+            internal_subscription_id: internalSubscriptionId 
+          };
+          
           const payload: WebhookRpcPayload = {
             p_provider_event_id: event.id,
             p_event_type: event.type,
@@ -115,7 +143,7 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
               customer: eventData.customer,
               subscription: eventData.subscription,
               status: eventData.status,
-              metadata: metadata,
+              metadata: effectiveMetadata,
               plan_code: metadata.plan_code || 'enterprise_monthly'
             },
             p_event_created: event.created,
