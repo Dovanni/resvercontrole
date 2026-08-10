@@ -2,24 +2,18 @@ import Stripe from 'stripe';
 import { createFileRoute } from '@tanstack/react-router';
 
 /**
- * PROTOCOLO: VEJAMAIS_STRIPE_PRODUCTION_RUNTIME_SANITIZED_OBSERVABILITY_MINIMAL_IMPLEMENTATION
- * Descrição: Handler resiliente com observabilidade sanitizada e boundary de segurança.
+ * PROTOCOLO: VEJAMAIS_STRIPE_DURABLE_DIAGNOSTICS_TARGETED_CORRECTION
+ * Descrição: Handler resiliente com observabilidade persistente e boundary de segurança.
  */
 
-// --- Tipagem e Constantes (ETAPA 1) ---
+// --- Tipagem e Constantes ---
 
 type AllowedStage =
-  | 'REQUEST_RECEIVED'
-  | 'RAW_BODY_READ'
   | 'SIGNATURE_VALIDATED'
-  | 'EVENT_PARSED'
-  | 'LIVEMODE_VALIDATED'
-  | 'EVENT_SUPPORTED'
   | 'PAYLOAD_SANITIZED'
   | 'RPC_CALL_STARTED'
   | 'RPC_RESPONSE_RECEIVED'
-  | 'RPC_RESULT_CLASSIFIED'
-  | 'HTTP_RESPONSE_CREATED';
+  | 'HTTP_RESPONSE_READY';
 
 type AllowedReasonCode =
   | 'RAW_BODY_READ_FAILED'
@@ -55,17 +49,20 @@ interface WebhookRpcPayload {
   p_canonical_amount: number;
 }
 
-// --- Helpers (ETAPA 3) ---
+// Circuit Breaker State
+let diagnosticsFailed = false;
 
-async function logDiagnostic(
+// Helper para Log Persistente (Checkpoints)
+async function safeLogDiagnostic(
   trace_id: string,
   event_id: string | undefined,
   event_type: string,
   stage: AllowedStage,
   reason_code?: AllowedReasonCode,
-  status?: number,
-  error_payload?: unknown
+  status: number = 200
 ) {
+  if (diagnosticsFailed) return;
+
   const supabaseUrl = process.env['VITE_SUPABASE_URL'];
   const supabaseServiceRoleKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
   const diagnosticsEnabled = process.env['STRIPE_WEBHOOK_DIAGNOSTICS_ENABLED'] === 'true';
@@ -73,8 +70,8 @@ async function logDiagnostic(
   if (!diagnosticsEnabled || !supabaseUrl || !supabaseServiceRoleKey) return;
 
   try {
-    // Hash do event_id para cumprir regra de higienização de PII
-    let eventHash = 'NONE';
+    // 1. Sanitização do Event ID (PII)
+    let eventHash = '0000000000000000000000000000000000000000000000000000000000000000';
     if (event_id) {
       const msgUint8 = new TextEncoder().encode(event_id);
       const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
@@ -82,7 +79,11 @@ async function logDiagnostic(
       eventHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
-    await fetch(`${supabaseUrl}/rest/v1/rpc/log_stripe_webhook_diagnostic`, {
+    // 2. AbortController para Timeout de 300ms
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 300);
+
+    const response = await fetch(`${supabaseUrl}/rest/v1/rpc/log_stripe_webhook_diagnostic`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -95,13 +96,20 @@ async function logDiagnostic(
         p_event_type: event_type,
         p_stage: stage,
         p_reason_code: reason_code,
-        p_http_status: status,
-        p_error_payload: error_payload ? (typeof error_payload === 'string' ? { message: error_payload } : error_payload) : null
-      })
+        p_http_status: status
+      }),
+      signal: controller.signal
     });
+
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+        throw new Error(`Diagnostic RPC failed with status ${response.status}`);
+    }
   } catch (err) {
-    // Fail-safe: erro no log persistente não deve derrubar o handler principal
-    console.error(`[${trace_id}] Persistent Diagnostic Logging Failed`, err);
+    // Fail-open: Não derruba o handler principal
+    diagnosticsFailed = true; // Circuit Breaker acionado
+    console.error(`[${trace_id}] Persistent Diagnostic Failed - Circuit Breaker ON`, err);
   }
 }
 
@@ -111,11 +119,10 @@ async function createSanitizedResponse(
   stage: AllowedStage,
   reason_code?: AllowedReasonCode,
   event_id?: string,
-  event_type: string = 'UNKNOWN',
-  error_detail?: unknown
+  event_type: string = 'UNKNOWN'
 ): Promise<Response> {
-  // Disparar log persistente em paralelo (Fase 4)
-  await logDiagnostic(trace_id, event_id, event_type, stage, reason_code, status, error_detail);
+  // O log de saída é o último checkpoint permitido (HTTP_RESPONSE_READY)
+  await safeLogDiagnostic(trace_id, event_id, event_type, stage, reason_code, status);
 
   const body = {
     error: status >= 400 ? 'WEBHOOK_PROCESSING_FAILED' : undefined,
@@ -137,20 +144,22 @@ function isObject(val: unknown): val is Record<string, unknown> {
   return typeof val === 'object' && val !== null && !Array.isArray(val);
 }
 
-// --- Handler (ETAPA 2) ---
+// --- Handler ---
 
 export const Route = createFileRoute('/api/public/stripe-webhook')({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const startedAt = Date.now();
         const traceId = crypto.randomUUID();
-        let stage: AllowedStage = 'REQUEST_RECEIVED';
+        let currentStage: AllowedStage = 'SIGNATURE_VALIDATED'; // O primeiro checkpoint persistente só após validação
+        let eventId: string | undefined;
+        let eventType: string = 'UNKNOWN';
 
         try {
           const signature = request.headers.get('stripe-signature');
           if (!signature) {
-            return await createSanitizedResponse(400, traceId, 'REQUEST_RECEIVED', 'SIGNATURE_INVALID');
+             // Sem escrita diagnóstica antes da assinatura
+            return new Response(JSON.stringify({ error: 'UNAUTHORIZED', trace_id: traceId }), { status: 401 });
           }
 
           const restrictedKey = process.env['STRIPE_RESTRICTED_KEY'];
@@ -158,24 +167,22 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
 
           if (!restrictedKey) {
             console.error(`[${traceId}] Configuration Error: Missing STRIPE_RESTRICTED_KEY`);
-            return await createSanitizedResponse(500, traceId, 'REQUEST_RECEIVED', 'UNEXPECTED_HANDLER_FAILURE');
+            return new Response(JSON.stringify({ error: 'INTERNAL_ERROR', trace_id: traceId }), { status: 500 });
           }
 
           const stripe = new Stripe(restrictedKey, {
             httpClient: Stripe.createFetchHttpClient(),
           });
 
-          // ETAPA 2: Boundary - request.text()
-          stage = 'RAW_BODY_READ';
+          // 1. Leitura do Corpo (Raw)
           let bodyText: string;
           try {
             bodyText = await request.text();
           } catch (err) {
-            return await createSanitizedResponse(400, traceId, stage, 'RAW_BODY_READ_FAILED');
+            return new Response(JSON.stringify({ error: 'BAD_REQUEST', trace_id: traceId }), { status: 400 });
           }
 
-          // ETAPA 2: Boundary - constructEventAsync
-          stage = 'SIGNATURE_VALIDATED';
+          // 2. Validação da Assinatura
           let event: Stripe.Event;
           try {
             event = await stripe.webhooks.constructEventAsync(
@@ -186,23 +193,17 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
               Stripe.createSubtleCryptoProvider()
             );
           } catch (err) {
-            return await createSanitizedResponse(400, traceId, stage, 'SIGNATURE_INVALID');
+            return new Response(JSON.stringify({ error: 'INVALID_SIGNATURE', trace_id: traceId }), { status: 400 });
           }
 
-          // ETAPA 2: Boundary - narrowing do evento
-          stage = 'EVENT_PARSED';
-          if (!event || !event.type || !event.data) {
-            return await createSanitizedResponse(400, traceId, stage, 'EVENT_PARSE_FAILED');
-          }
+          eventId = event.id;
+          eventType = event.type;
 
-          // ETAPA 4: Status HTTP - livemode
-          stage = 'LIVEMODE_VALIDATED';
+          // ETAPA 7: Nenhuma persistência antes de livemode=false e event.type permitido
           if (event.livemode) {
-            return await createSanitizedResponse(400, traceId, stage, 'LIVEMODE_REJECTED', event.id, event.type);
+             return new Response(JSON.stringify({ error: 'LIVEMODE_REJECTED', trace_id: traceId }), { status: 400 });
           }
 
-          // ETAPA 4: Status HTTP - evento não suportado
-          stage = 'EVENT_SUPPORTED';
           const supportedEvents = [
             'checkout.session.completed',
             'checkout.session.expired',
@@ -214,15 +215,22 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
           ];
 
           if (!supportedEvents.includes(event.type)) {
-            return await createSanitizedResponse(200, traceId, stage, 'UNSUPPORTED_EVENT', event.id, event.type);
+            return new Response(JSON.stringify({ error: 'UNSUPPORTED_EVENT', trace_id: traceId }), { status: 200 });
           }
 
-          // ETAPA 2: Boundary - sanitização
-          stage = 'PAYLOAD_SANITIZED';
+          // CHECKPOINT 1: SIGNATURE_VALIDATED (Somente após livemode e type check)
+          currentStage = 'SIGNATURE_VALIDATED';
+          await safeLogDiagnostic(traceId, eventId, eventType, currentStage);
+
+          // 3. Sanitização e Contrato do Payload
           const eventObject = event.data.object;
           if (!isObject(eventObject)) {
-            return await createSanitizedResponse(400, traceId, stage, 'PAYLOAD_CONTRACT_FAILED', event.id, event.type);
+            return await createSanitizedResponse(400, traceId, currentStage, 'PAYLOAD_CONTRACT_FAILED', eventId, eventType);
           }
+
+          // CHECKPOINT 2: PAYLOAD_SANITIZED
+          currentStage = 'PAYLOAD_SANITIZED';
+          await safeLogDiagnostic(traceId, eventId, eventType, currentStage);
 
           const supabaseUrl = process.env['VITE_SUPABASE_URL'];
           const supabaseServiceRoleKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
@@ -230,7 +238,7 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
           
           if (!supabaseUrl || !supabaseServiceRoleKey || !priceEnterpriseMonthly) {
             console.error(`[${traceId}] Configuration Error: Missing Supabase/Stripe env vars`);
-            return await createSanitizedResponse(500, traceId, stage, 'UNEXPECTED_HANDLER_FAILURE', event.id, event.type);
+            return await createSanitizedResponse(500, traceId, currentStage, 'UNEXPECTED_HANDLER_FAILURE', eventId, eventType);
           }
 
           const metadata = (eventObject.metadata as Record<string, string | undefined>) || {};
@@ -239,12 +247,6 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
 
           if (!internalSubscriptionId && legacySubscriptionId) {
             internalSubscriptionId = legacySubscriptionId;
-          } else if (internalSubscriptionId && legacySubscriptionId && internalSubscriptionId !== legacySubscriptionId) {
-            return await createSanitizedResponse(400, traceId, stage, 'PAYLOAD_CONTRACT_FAILED', event.id, event.type);
-          }
-
-          if (internalSubscriptionId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(internalSubscriptionId)) {
-            return await createSanitizedResponse(400, traceId, stage, 'PAYLOAD_CONTRACT_FAILED', event.id, event.type);
           }
 
           const effectiveMetadata = { 
@@ -273,8 +275,10 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
             p_canonical_amount: 3590
           };
 
-          // ETAPA 2: Boundary - chamada RPC
-          stage = 'RPC_CALL_STARTED';
+          // CHECKPOINT 3: RPC_CALL_STARTED
+          currentStage = 'RPC_CALL_STARTED';
+          await safeLogDiagnostic(traceId, eventId, eventType, currentStage);
+
           let rpcResponse: Response;
           try {
             rpcResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/process_stripe_webhook_event`, {
@@ -287,10 +291,13 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
               body: JSON.stringify(payload)
             });
           } catch (err) {
-            return await createSanitizedResponse(503, traceId, stage, 'RPC_TRANSPORT_FAILED', event.id, event.type, err);
+            return await createSanitizedResponse(503, traceId, currentStage, 'RPC_TRANSPORT_FAILED', eventId, eventType);
           }
 
-          stage = 'RPC_RESPONSE_RECEIVED';
+          // CHECKPOINT 4: RPC_RESPONSE_RECEIVED
+          currentStage = 'RPC_RESPONSE_RECEIVED';
+          await safeLogDiagnostic(traceId, eventId, eventType, currentStage);
+
           if (!rpcResponse.ok) {
             let errorDetail = '';
             try {
@@ -299,45 +306,28 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
               errorDetail = 'COULD_NOT_READ_ERROR_BODY';
             }
             
-            console.error(`[${traceId}] RPC Error ${rpcResponse.status}: ${errorDetail}`);
-            
             if (errorDetail.includes('UNLINKED') || rpcResponse.status === 503) {
-              return await createSanitizedResponse(503, traceId, stage, 'RPC_REJECTED_RETRYABLE', event.id, event.type, errorDetail);
+              return await createSanitizedResponse(503, traceId, currentStage, 'RPC_REJECTED_RETRYABLE', eventId, eventType);
             }
-            // Falha não-retryable do banco ou erro inesperado
-            return await createSanitizedResponse(500, traceId, stage, 'RPC_RESPONSE_INVALID', event.id, event.type, errorDetail);
+            return await createSanitizedResponse(500, traceId, currentStage, 'RPC_RESPONSE_INVALID', eventId, eventType);
           }
 
-          // ETAPA 2: Boundary - classificação do resultado
-          stage = 'RPC_RESULT_CLASSIFIED';
           const result = (await rpcResponse.json()) as { status?: string };
           
           if (result.status === 'failed_retryable') {
-             return await createSanitizedResponse(503, traceId, stage, 'RPC_REJECTED_RETRYABLE', event.id, event.type, result);
+             return await createSanitizedResponse(503, traceId, currentStage, 'RPC_REJECTED_RETRYABLE', eventId, eventType);
           }
           
           if (result.status === 'rejected_permanent') {
-            // Rejeição permanente validada e registrada deve retornar 200 conforme Etapa 4
-            return await createSanitizedResponse(200, traceId, stage, 'RPC_REJECTED_PERMANENT', event.id, event.type, result);
+            return await createSanitizedResponse(200, traceId, currentStage, 'RPC_REJECTED_PERMANENT', eventId, eventType);
           }
 
-          // ETAPA 5: Log Sanitizado
-          const elapsed = Date.now() - startedAt;
-          console.info(JSON.stringify({
-            trace_id: traceId,
-            stage: 'HTTP_RESPONSE_CREATED',
-            event_type: event.type,
-            livemode: event.livemode,
-            http_status: 200,
-            elapsed_ms: elapsed
-          }));
-
-          return await createSanitizedResponse(200, traceId, 'HTTP_RESPONSE_CREATED', undefined, event.id, event.type);
+          // CHECKPOINT 5: HTTP_RESPONSE_READY (Final)
+          return await createSanitizedResponse(200, traceId, 'HTTP_RESPONSE_READY', undefined, eventId, eventType);
           
         } catch (err) {
-          // ETAPA 2: Boundary externo global
-          console.error(`[${traceId}] Unexpected Handler Failure: Sanitized boundary active.`);
-          return await createSanitizedResponse(500, traceId, stage, 'UNEXPECTED_HANDLER_FAILURE', undefined, 'UNKNOWN', err);
+          console.error(`[${traceId}] Unexpected Handler Failure`, err);
+          return await createSanitizedResponse(500, traceId, currentStage, 'UNEXPECTED_HANDLER_FAILURE', eventId, eventType);
         }
       },
       GET: async () => new Response('Method Not Allowed', { status: 405 }),
