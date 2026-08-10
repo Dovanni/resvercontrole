@@ -44,7 +44,8 @@ vi.mock('@tanstack/react-start/server', () => ({
 }));
 
 // 3. Import do código REAL
-import * as billingFunctions from '../billing.functions';
+import * as billingServer from '../billing.server';
+
 
 describe('createStripeCheckoutSession - Security Corrective Suite', () => {
   const mockEmpresaId = '00000000-0000-0000-0000-000000000000';
@@ -68,7 +69,7 @@ describe('createStripeCheckoutSession - Security Corrective Suite', () => {
     });
   });
 
-  const invokeHandler = (args: { data: { empresaId: string } }) => billingFunctions.createStripeCheckoutSessionHandler(args);
+  const invokeHandler = (args: { data: { empresaId: string } }) => billingServer.createStripeCheckoutSessionImpl(args.data.empresaId);
 
   describe('Group A: Entry and Identity', () => {
     it('should fail on missing JWT', async () => {
