@@ -31,7 +31,7 @@ const mockEnv = {
 // --- Test Suite ---
 
 describe('VEJAMAIS_STRIPE_LEGACY_COMPATIBILITY_FULL_CONTRACT_VALIDATION', () => {
-  const handler = (Route.server as any).handlers.POST;
+  const handler = (Route.options.server as any).handlers.POST;
   const mockUuid = '550e8400-e29b-41d4-a716-446655440000';
   const otherUuid = '660e8400-e29b-41d4-a716-446655440001';
 
@@ -253,7 +253,7 @@ describe('VEJAMAIS_STRIPE_LEGACY_COMPATIBILITY_FULL_CONTRACT_VALIDATION', () => 
 
   // 13. invalid_signature_400
   it('13. invalid_signature_400_test: should return 400 when signature header is missing', async () => {
-    const resp = await (Route.server as any).handlers.POST({
+    const resp = await (Route.options.server as any).handlers.POST({
       request: {
         headers: { get: () => null },
         text: async () => '{}',
