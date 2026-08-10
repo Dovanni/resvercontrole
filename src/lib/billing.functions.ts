@@ -1,18 +1,20 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  getCompanySubscriptionContextImpl,
+  createStripeCheckoutSessionImpl,
+} from "./billing.server";
 
 export const getCompanySubscriptionContext = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) => z.object({ empresaId: z.string().uuid() }).strict().parse(data))
   .handler(async ({ data }) => {
-    const { getCompanySubscriptionContextImpl } = await import("./billing.server");
     return getCompanySubscriptionContextImpl(data.empresaId);
   });
 
 export const createStripeCheckoutSession = createServerFn({ method: "POST" })
   .inputValidator((data) => z.object({ empresaId: z.string().uuid() }).strict().parse(data))
   .handler(async ({ data }) => {
-    const { createStripeCheckoutSessionImpl } = await import("./billing.server");
     return createStripeCheckoutSessionImpl(data.empresaId);
   });
 
