@@ -43,7 +43,6 @@ import { Route as AuthenticatedBalanceteRouteImport } from './routes/_authentica
 import { Route as AuthCallbackIndexRouteImport } from './routes/auth/callback/index'
 import { Route as AuthCallbackRecoveryRouteImport } from './routes/auth/callback/recovery'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
-import { Route as ApiPublicRpcTestRouteImport } from './routes/api/public/rpc-test'
 import { Route as ApiPublicAcceptInvitationRouteImport } from './routes/api/public/accept-invitation'
 import { Route as AuthenticatedConfiguracoesCategoriasRouteImport } from './routes/_authenticated.configuracoes.categorias'
 import { Route as AuthenticatedConfiguracoesAssinaturaRouteImport } from './routes/_authenticated.configuracoes.assinatura'
@@ -226,11 +225,6 @@ const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   path: '/api/public/stripe-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicRpcTestRoute = ApiPublicRpcTestRouteImport.update({
-  id: '/api/public/rpc-test',
-  path: '/api/public/rpc-test',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicAcceptInvitationRoute =
   ApiPublicAcceptInvitationRouteImport.update({
     id: '/api/public/accept-invitation',
@@ -284,7 +278,6 @@ export interface FileRoutesByFullPath {
   '/configuracoes/assinatura': typeof AuthenticatedConfiguracoesAssinaturaRoute
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
-  '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
   '/auth/callback/': typeof AuthCallbackIndexRoute
@@ -323,7 +316,6 @@ export interface FileRoutesByTo {
   '/configuracoes/assinatura': typeof AuthenticatedConfiguracoesAssinaturaRoute
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
-  '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
   '/auth/callback': typeof AuthCallbackIndexRoute
@@ -364,7 +356,6 @@ export interface FileRoutesById {
   '/_authenticated/configuracoes/assinatura': typeof AuthenticatedConfiguracoesAssinaturaRoute
   '/_authenticated/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
-  '/api/public/rpc-test': typeof ApiPublicRpcTestRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
   '/auth/callback/': typeof AuthCallbackIndexRoute
@@ -405,7 +396,6 @@ export interface FileRouteTypes {
     | '/configuracoes/assinatura'
     | '/configuracoes/categorias'
     | '/api/public/accept-invitation'
-    | '/api/public/rpc-test'
     | '/api/public/stripe-webhook'
     | '/auth/callback/recovery'
     | '/auth/callback/'
@@ -444,7 +434,6 @@ export interface FileRouteTypes {
     | '/configuracoes/assinatura'
     | '/configuracoes/categorias'
     | '/api/public/accept-invitation'
-    | '/api/public/rpc-test'
     | '/api/public/stripe-webhook'
     | '/auth/callback/recovery'
     | '/auth/callback'
@@ -484,7 +473,6 @@ export interface FileRouteTypes {
     | '/_authenticated/configuracoes/assinatura'
     | '/_authenticated/configuracoes/categorias'
     | '/api/public/accept-invitation'
-    | '/api/public/rpc-test'
     | '/api/public/stripe-webhook'
     | '/auth/callback/recovery'
     | '/auth/callback/'
@@ -500,7 +488,6 @@ export interface RootRouteChildren {
   RecuperarSenhaRoute: typeof RecuperarSenhaRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicAcceptInvitationRoute: typeof ApiPublicAcceptInvitationRoute
-  ApiPublicRpcTestRoute: typeof ApiPublicRpcTestRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
@@ -744,13 +731,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/rpc-test': {
-      id: '/api/public/rpc-test'
-      path: '/api/public/rpc-test'
-      fullPath: '/api/public/rpc-test'
-      preLoaderRoute: typeof ApiPublicRpcTestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/accept-invitation': {
       id: '/api/public/accept-invitation'
       path: '/api/public/accept-invitation'
@@ -871,19 +851,8 @@ const rootRouteChildren: RootRouteChildren = {
   RecuperarSenhaRoute: RecuperarSenhaRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicAcceptInvitationRoute: ApiPublicAcceptInvitationRoute,
-  ApiPublicRpcTestRoute: ApiPublicRpcTestRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

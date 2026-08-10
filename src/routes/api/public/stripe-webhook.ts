@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import { createFileRoute } from '@tanstack/react-router';
 
 /**
  * PROTOCOLO: VEJAMAIS_STRIPE_WEBHOOK_TANSTACK_SERVER_ROUTE_V2
@@ -26,8 +27,6 @@ interface WebhookRpcPayload {
   p_canonical_currency: string;
   p_canonical_amount: number;
 }
-
-import { createFileRoute } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/api/public/stripe-webhook')({
   server: {
