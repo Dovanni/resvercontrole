@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Stripe from 'stripe';
+import { resetDiagnostics } from "../../routes/api/public/stripe-webhook";
 import { Route } from '../../routes/api/public/stripe-webhook';
 
 /**
@@ -50,6 +51,7 @@ describe('VEJAMAIS_STRIPE_DURABLE_DIAGNOSTICS_SUITE', () => {
   };
 
   beforeEach(() => {
+    resetDiagnostics();
     vi.clearAllMocks();
     process.env = { ...process.env, ...mockEnv };
     // Reset global circuit breaker state if necessary, but it's a module level let.

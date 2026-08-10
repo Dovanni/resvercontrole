@@ -50,7 +50,8 @@ interface WebhookRpcPayload {
 }
 
 // Circuit Breaker State
-let diagnosticsFailed = false;
+export let diagnosticsFailed = false;
+export const resetDiagnostics = () => { diagnosticsFailed = false; };
 
 // Helper para Log Persistente (Checkpoints)
 async function safeLogDiagnostic(
