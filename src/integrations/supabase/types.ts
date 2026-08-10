@@ -2201,32 +2201,21 @@ export type Database = {
           user_id: string
         }[]
       }
-      process_stripe_webhook_event:
-        | {
-            Args: {
-              p_event_data: Json
-              p_event_type: string
-              p_livemode: boolean
-              p_payload_sha256: string
-              p_provider_event_id: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_canonical_amount?: number
-              p_canonical_currency?: string
-              p_canonical_plan_code?: string
-              p_canonical_price_id?: string
-              p_event_created: number
-              p_event_data: Json
-              p_event_type: string
-              p_livemode: boolean
-              p_payload_sha256: string
-              p_provider_event_id: string
-            }
-            Returns: Json
-          }
+      process_stripe_webhook_event: {
+        Args: {
+          p_canonical_amount?: number
+          p_canonical_currency?: string
+          p_canonical_plan_code?: string
+          p_canonical_price_id?: string
+          p_event_created: number
+          p_event_data: Json
+          p_event_type: string
+          p_livemode: boolean
+          p_payload_sha256: string
+          p_provider_event_id: string
+        }
+        Returns: Json
+      }
       reconcile_and_finalize_onboarding: { Args: never; Returns: Json }
       record_auth_failure: {
         Args: {
