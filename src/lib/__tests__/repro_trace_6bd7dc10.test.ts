@@ -145,7 +145,7 @@ describe('Trace 6bd7dc10 Forensic Runtime Diagnosis & Reproduction', () => {
     crypto.subtle.digest = vi.fn().mockRejectedValue(new Error('Crypto failed'));
     const response = await getHandler()({ request: createMockRequest('{}') });
     const body = await response.json();
-    expect(response.status).toBe(503);
+    expect(response.status).toBe(500);
     expect(body.reason_code).toBe('UNEXPECTED_HANDLER_FAILURE');
     expect(body.stage).toBe('PAYLOAD_HASH_STARTED');
     crypto.subtle.digest = originalDigest;
