@@ -46,6 +46,7 @@ import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/
 import { Route as ApiPublicAcceptInvitationRouteImport } from './routes/api/public/accept-invitation'
 import { Route as AuthenticatedConfiguracoesCategoriasRouteImport } from './routes/_authenticated.configuracoes.categorias'
 import { Route as AuthenticatedConfiguracoesAssinaturaRouteImport } from './routes/_authenticated.configuracoes.assinatura'
+import { Route as ApiPublicStripeWebhookLiveRouteImport } from './routes/api/public/stripe-webhook/live'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -243,6 +244,12 @@ const AuthenticatedConfiguracoesAssinaturaRoute =
     path: '/assinatura',
     getParentRoute: () => AuthenticatedConfiguracoesRoute,
   } as any)
+const ApiPublicStripeWebhookLiveRoute =
+  ApiPublicStripeWebhookLiveRouteImport.update({
+    id: '/live',
+    path: '/live',
+    getParentRoute: () => ApiPublicStripeWebhookRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -278,9 +285,10 @@ export interface FileRoutesByFullPath {
   '/configuracoes/assinatura': typeof AuthenticatedConfiguracoesAssinaturaRoute
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
-  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRouteWithChildren
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
   '/auth/callback/': typeof AuthCallbackIndexRoute
+  '/api/public/stripe-webhook/live': typeof ApiPublicStripeWebhookLiveRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -316,9 +324,10 @@ export interface FileRoutesByTo {
   '/configuracoes/assinatura': typeof AuthenticatedConfiguracoesAssinaturaRoute
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
-  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRouteWithChildren
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
   '/auth/callback': typeof AuthCallbackIndexRoute
+  '/api/public/stripe-webhook/live': typeof ApiPublicStripeWebhookLiveRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -356,9 +365,10 @@ export interface FileRoutesById {
   '/_authenticated/configuracoes/assinatura': typeof AuthenticatedConfiguracoesAssinaturaRoute
   '/_authenticated/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
-  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
+  '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRouteWithChildren
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
   '/auth/callback/': typeof AuthCallbackIndexRoute
+  '/api/public/stripe-webhook/live': typeof ApiPublicStripeWebhookLiveRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -399,6 +409,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/auth/callback/recovery'
     | '/auth/callback/'
+    | '/api/public/stripe-webhook/live'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -437,6 +448,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/auth/callback/recovery'
     | '/auth/callback'
+    | '/api/public/stripe-webhook/live'
   id:
     | '__root__'
     | '/'
@@ -476,6 +488,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/auth/callback/recovery'
     | '/auth/callback/'
+    | '/api/public/stripe-webhook/live'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -488,7 +501,7 @@ export interface RootRouteChildren {
   RecuperarSenhaRoute: typeof RecuperarSenhaRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiPublicAcceptInvitationRoute: typeof ApiPublicAcceptInvitationRoute
-  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
+  ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -752,6 +765,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesAssinaturaRouteImport
       parentRoute: typeof AuthenticatedConfiguracoesRoute
     }
+    '/api/public/stripe-webhook/live': {
+      id: '/api/public/stripe-webhook/live'
+      path: '/live'
+      fullPath: '/api/public/stripe-webhook/live'
+      preLoaderRoute: typeof ApiPublicStripeWebhookLiveRouteImport
+      parentRoute: typeof ApiPublicStripeWebhookRoute
+    }
   }
 }
 
@@ -841,6 +861,20 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
+interface ApiPublicStripeWebhookRouteChildren {
+  ApiPublicStripeWebhookLiveRoute: typeof ApiPublicStripeWebhookLiveRoute
+}
+
+const ApiPublicStripeWebhookRouteChildren: ApiPublicStripeWebhookRouteChildren =
+  {
+    ApiPublicStripeWebhookLiveRoute: ApiPublicStripeWebhookLiveRoute,
+  }
+
+const ApiPublicStripeWebhookRouteWithChildren =
+  ApiPublicStripeWebhookRoute._addFileChildren(
+    ApiPublicStripeWebhookRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
@@ -851,7 +885,7 @@ const rootRouteChildren: RootRouteChildren = {
   RecuperarSenhaRoute: RecuperarSenhaRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ApiPublicAcceptInvitationRoute: ApiPublicAcceptInvitationRoute,
-  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
+  ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
