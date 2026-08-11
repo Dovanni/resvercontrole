@@ -119,7 +119,7 @@ describe('VEJAMAIS_STRIPE_SANITIZED_OBSERVABILITY_TEST_SUITE', () => {
     const resp = await getHandler()(createRequest('{}'));
     const body = await resp.json();
     expect(resp.status).toBe(400); 
-    expect(body.reason_code).toBe('EVENT_PARSE_FAILED');
+    expect(body.error).toBe('INVALID_SIGNATURE');
   });
 
   it('5. livemode=true: should return 400 LIVEMODE_REJECTED', async () => {

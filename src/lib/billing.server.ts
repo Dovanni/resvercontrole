@@ -58,10 +58,10 @@ export async function createStripeCheckoutSessionImpl(empresaId: string) {
 
   // Validar membership admin na empresa
   const { data: membership, error: memberError } = await supabaseAdmin
-    .from("user_company_access")
+    .from("membros")
     .select("role")
     .eq("empresa_id", empresaId)
-    .eq("user_id", user.id)
+    .eq("usuario_id", user.id)
     .single();
 
   if (memberError || !membership || membership.role !== 'admin') {
