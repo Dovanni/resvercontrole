@@ -1,22 +1,25 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// 1. Mock do fetch ANTES de qualquer import que possa usá-lo
+// 1. Mock do fetch
 global.fetch = vi.fn();
 
-// 2. Mock do Stripe ANTES de importar a Route
+// 2. Mock do Stripe usando função clássica para suportar 'new'
 vi.mock('stripe', () => {
-  const mockStripe = vi.fn().mockImplementation(() => ({
-    webhooks: {
+  function MockStripe(key: string) {
+    this.key = key;
+    this.webhooks = {
       constructEventAsync: vi.fn(),
-    },
-    httpClient: {},
-  }));
-  (mockStripe as any).createFetchHttpClient = vi.fn();
-  (mockStripe as any).createSubtleCryptoProvider = vi.fn();
+    };
+    this.httpClient = {};
+  }
+  (MockStripe as any).createFetchHttpClient = vi.fn();
+  (MockStripe as any).createSubtleCryptoProvider = vi.fn();
+  (MockStripe as any).createFetchHttpClient.mockReturnValue({});
+  
   return {
-    default: mockStripe,
-    createFetchHttpClient: (mockStripe as any).createFetchHttpClient,
-    createSubtleCryptoProvider: (mockStripe as any).createSubtleCryptoProvider,
+    default: MockStripe,
+    createFetchHttpClient: (MockStripe as any).createFetchHttpClient,
+    createSubtleCryptoProvider: (MockStripe as any).createSubtleCryptoProvider,
   };
 });
 
