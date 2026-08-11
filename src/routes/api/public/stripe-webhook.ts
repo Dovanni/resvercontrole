@@ -162,7 +162,7 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
     handlers: {
       POST: async ({ request }) => {
         const traceId = crypto.randomUUID();
-        let currentStage: AllowedStage = 'FAST_PATH_ENTERED'; // Start stage for reporting before any async work
+        let currentStage: AllowedStage = 'SIGNATURE_VALIDATED'; // O primeiro checkpoint persistente só após validação
         let eventId: string | undefined;
         let eventType: string = 'UNKNOWN';
 
