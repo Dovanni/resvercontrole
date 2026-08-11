@@ -14,8 +14,20 @@ vi.mock('stripe', () => {
   (MockStripe as any).createFetchHttpClient = vi.fn().mockReturnValue({});
   (MockStripe as any).createSubtleCryptoProvider = vi.fn().mockReturnValue({});
   
+  // Garantir que a instância mockada seja retornada como um objeto compatível com Stripe
+  const mockStripeInstance = {
+    webhooks: {
+      constructEventAsync: vi.fn(),
+    },
+    httpClient: {},
+  };
+
+  const MockStripeConstructor = vi.fn().mockImplementation(() => mockStripeInstance);
+  (MockStripeConstructor as any).createFetchHttpClient = (MockStripe as any).createFetchHttpClient;
+  (MockStripeConstructor as any).createSubtleCryptoProvider = (MockStripe as any).createSubtleCryptoProvider;
+
   return {
-    default: MockStripe,
+    default: MockStripeConstructor,
     createFetchHttpClient: (MockStripe as any).createFetchHttpClient,
     createSubtleCryptoProvider: (MockStripe as any).createSubtleCryptoProvider,
   };
