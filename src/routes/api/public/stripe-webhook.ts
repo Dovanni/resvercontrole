@@ -237,7 +237,7 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
               payloadHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
               currentStage = 'PAYLOAD_HASH_CREATED';
             } catch (err) {
-              return await createSanitizedResponse(500, traceId, currentStage, 'UNEXPECTED_HANDLER_FAILURE', eventId, eventType);
+              return await createSanitizedResponse(500, traceId, currentStage, 'PAYLOAD_HASH_FAILED', eventId, eventType);
             }
 
             // --- SERVER_CONFIGURATION_VALIDATED ---
@@ -267,6 +267,14 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
             // Chamada RPC dedicada
             let rpcResponse: Response;
             try {
+              const rpcPayload = JSON.stringify({
+                p_provider_event_id: event.id,
+                p_provider_session_id: sessionId,
+                p_event_created: event.created,
+                p_payload_sha256: payloadHash,
+                p_livemode: false
+              });
+
               currentStage = 'RPC_CALL_STARTED';
               rpcResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/process_stripe_checkout_session_expired`, {
                 method: 'POST',
@@ -275,16 +283,22 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
                   'Authorization': `Bearer ${supabaseServiceRoleKey}`,
                   'apikey': supabaseServiceRoleKey
                 },
-                body: JSON.stringify({
-                  p_provider_event_id: event.id,
-                  p_provider_session_id: sessionId,
-                  p_event_created: event.created,
-                  p_payload_sha256: payloadHash,
-                  p_livemode: false
-                })
+                body: rpcPayload
               });
             } catch (err) {
-              return await createSanitizedResponse(503, traceId, currentStage, 'RPC_TRANSPORT_RETRYABLE', eventId, eventType);
+              if (err instanceof Error && err.name === 'AbortError') {
+                 return await createSanitizedResponse(503, traceId, currentStage, 'RPC_TRANSPORT_RETRYABLE', eventId, eventType);
+              }
+              // Se falhou antes do fetch (ex: JSON.stringify), ou falha de rede
+              const isSerializationError = currentStage === 'RPC_REQUEST_PREPARED';
+              return await createSanitizedResponse(
+                isSerializationError ? 500 : 503,
+                traceId,
+                currentStage,
+                isSerializationError ? 'RPC_REQUEST_SERIALIZATION_FAILED' : 'RPC_TRANSPORT_RETRYABLE',
+                eventId,
+                eventType
+              );
             }
 
             currentStage = 'RPC_RESPONSE_RECEIVED';
