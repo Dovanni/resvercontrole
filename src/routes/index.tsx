@@ -43,9 +43,5 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  component: () => (
-    <>
-      <LandingPage />
-    </>
-  ),
+  component: LandingPage,
 });
