@@ -25,10 +25,9 @@ vi.mock('stripe', () => {
   };
 });
 
-import Stripe from 'stripe';
 import { Route } from '../../routes/api/public/stripe-webhook';
 
-describe('Stripe Checkout Expired Fast Path - Contract Resilience', () => {
+describe('Stripe Checkout Expired Fast Path - Strict Scalar Parser', () => {
   const mockTraceId = 'test-trace-id';
   
   beforeEach(() => {
@@ -61,105 +60,177 @@ describe('Stripe Checkout Expired Fast Path - Contract Resilience', () => {
     });
   };
 
-  it('postgrest_processed_shape_200_test: should handle raw string "processed"', async () => {
+  it('json_scalar_processed_200_test', async () => {
     setupMockEvent();
     (global.fetch as any).mockResolvedValue({
       ok: true,
       status: 200,
-      json: async () => 'processed'
+      text: async () => '"processed"'
     });
     const response = await getHandler()({ request: createMockRequest('{}') });
     expect(response.status).toBe(200);
   });
 
-  it('postgrest_array_shape_200_test: should handle PostgREST array wrapped object', async () => {
+  it('json_scalar_duplicate_200_test', async () => {
     setupMockEvent();
     (global.fetch as any).mockResolvedValue({
       ok: true,
       status: 200,
-      json: async () => [{ process_stripe_checkout_session_expired: 'processed' }]
+      text: async () => '"duplicate"'
     });
     const response = await getHandler()({ request: createMockRequest('{}') });
     expect(response.status).toBe(200);
   });
 
-  it('postgrest_duplicate_shape_200_test: should handle "duplicate"', async () => {
+  it('json_scalar_already_expired_200_test', async () => {
     setupMockEvent();
     (global.fetch as any).mockResolvedValue({
       ok: true,
       status: 200,
-      json: async () => 'duplicate'
+      text: async () => '"already_expired"'
     });
     const response = await getHandler()({ request: createMockRequest('{}') });
     expect(response.status).toBe(200);
   });
 
-  it('postgrest_already_expired_shape_200_test', async () => {
+  it('json_scalar_ignored_terminal_200_test', async () => {
     setupMockEvent();
-    (global.fetch as any).mockResolvedValue({ ok: true, status: 200, json: async () => 'already_expired' });
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => '"ignored_terminal"'
+    });
     const response = await getHandler()({ request: createMockRequest('{}') });
     expect(response.status).toBe(200);
   });
 
-  it('postgrest_ignored_terminal_shape_200_test', async () => {
+  it('json_scalar_failed_retryable_503_test', async () => {
     setupMockEvent();
-    (global.fetch as any).mockResolvedValue({ ok: true, status: 200, json: async () => 'ignored_terminal' });
-    const response = await getHandler()({ request: createMockRequest('{}') });
-    expect(response.status).toBe(200);
-  });
-
-  it('postgrest_failed_retryable_shape_503_test', async () => {
-    setupMockEvent();
-    (global.fetch as any).mockResolvedValue({ ok: true, status: 200, json: async () => 'failed_retryable' });
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => '"failed_retryable"'
+    });
     const response = await getHandler()({ request: createMockRequest('{}') });
     expect(response.status).toBe(503);
   });
 
-  it('postgrest_empty_array_contract_test: should return 500', async () => {
+  it('plain_text_duplicate_200_test', async () => {
     setupMockEvent();
     (global.fetch as any).mockResolvedValue({
       ok: true,
       status: 200,
-      json: async () => []
-    });
-    const response = await getHandler()({ request: createMockRequest('{}') });
-    expect(response.status).toBe(500);
-  });
-
-  it('postgrest_malformed_body_contract_test: should handle JSON parse error with 500', async () => {
-    setupMockEvent();
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => { throw new Error('JSON Error'); }
-    });
-    const response = await getHandler()({ request: createMockRequest('{}') });
-    expect(response.status).toBe(500);
-    const body = await response.json();
-    expect(body.reason_code).toBe('RPC_RESPONSE_INVALID');
-  });
-
-  it('postgrest_204_contract_test_if_applicable: should handle success void as processed', async () => {
-    setupMockEvent();
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      status: 204,
-      json: async () => ({})
+      text: async () => 'duplicate'
     });
     const response = await getHandler()({ request: createMockRequest('{}') });
     expect(response.status).toBe(200);
   });
 
-  it('rpc_non_2xx_sanitized_test: should return 500 and not leak', async () => {
+  it('empty_body_500_test', async () => {
     setupMockEvent();
     (global.fetch as any).mockResolvedValue({
-      ok: false,
-      status: 400,
-      text: async () => 'Database Error: Secret leaked!'
+      ok: true,
+      status: 200,
+      text: async () => ''
     });
     const response = await getHandler()({ request: createMockRequest('{}') });
     expect(response.status).toBe(500);
     const body = await response.json();
     expect(body.reason_code).toBe('RPC_RESPONSE_INVALID');
+  });
+
+  it('http_204_500_test', async () => {
+    setupMockEvent();
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 204,
+      text: async () => ''
+    });
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(body.reason_code).toBe('RPC_RESPONSE_INVALID');
+  });
+
+  it('array_body_500_test', async () => {
+    setupMockEvent();
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => '["processed"]'
+    });
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    expect(response.status).toBe(500);
+  });
+
+  it('multiple_item_array_500_test', async () => {
+    setupMockEvent();
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => '["processed", "duplicate"]'
+    });
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    expect(response.status).toBe(500);
+  });
+
+  it('object_body_500_test', async () => {
+    setupMockEvent();
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => '{"status": "processed"}'
+    });
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    expect(response.status).toBe(500);
+  });
+
+  it('unknown_string_500_test', async () => {
+    setupMockEvent();
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => '"unknown_status"'
+    });
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    expect(response.status).toBe(500);
+  });
+
+  it('non_2xx_sanitized_test', async () => {
+    setupMockEvent();
+    (global.fetch as any).mockResolvedValue({
+      ok: false,
+      status: 400,
+      text: async () => 'Bad Request'
+    });
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(body.reason_code).toBe('RPC_RESPONSE_INVALID');
+  });
+
+  it('stage_rpc_response_received_test', async () => {
+    setupMockEvent();
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => '"processed"'
+    });
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    expect(response.status).toBe(200);
+  });
+
+  it('generic_rpc_never_called_test', async () => {
+    setupMockEvent();
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => '"processed"'
+    });
+    await getHandler()({ request: createMockRequest('{}') });
+    // Verifica que a URL chamada contém a RPC do Fast Path
+    const calls = (global.fetch as any).mock.calls;
+    const hasGenericRpcCall = calls.some((call: any) => call[0].includes('process_stripe_webhook_event'));
+    expect(hasGenericRpcCall).toBe(false);
   });
 });
