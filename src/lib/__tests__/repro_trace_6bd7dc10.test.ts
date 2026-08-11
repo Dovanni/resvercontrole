@@ -46,7 +46,12 @@ describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
 
   const createMockRequest = (body: string) => {
     return {
-      headers: { get: (name: string) => (name === 'stripe-signature' ? 'valid_sig' : null) },
+      headers: { 
+        get: (name: string) => {
+          if (name === 'stripe-signature') return 'valid_sig';
+          return null;
+        } 
+      },
       text: async () => body
     } as any;
   };
@@ -72,9 +77,21 @@ describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
     });
     const response = await getHandler()({ request: createMockRequest('{}') });
     const body = await response.json();
-    console.log('valid_event_scalar_duplicate_200 result:', { status: response.status, body });
     expect(response.status).toBe(200);
-    expect(body.stage).toBe('HTTP_RESPONSE_READY');
+    expect(body.stage).toBe('HTTP_RESPONSE_CREATED');
+  });
+
+  it('payload_hash_success', async () => {
+    setupMockEvent();
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => '"processed"'
+    });
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(body.stage).toBe('HTTP_RESPONSE_CREATED');
   });
 
   it('missing_supabase_url_sanitized', async () => {
@@ -82,10 +99,10 @@ describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
     delete process.env['VITE_SUPABASE_URL'];
     const response = await getHandler()({ request: createMockRequest('{}') });
     const body = await response.json();
-    console.log('missing_supabase_url_sanitized result:', { status: response.status, body });
     expect(response.status).toBe(500);
     expect(body.reason_code).toBe('UNEXPECTED_HANDLER_FAILURE');
-    expect(body.stage).toBe('SIGNATURE_VALIDATED');
+    // Em F4 corrigido, o stage deve refletir até onde chegou
+    expect(body.stage).toBe('PAYLOAD_HASH_CREATED');
   });
 
   it('fetch_network_rejection_503', async () => {
@@ -93,9 +110,18 @@ describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
     (global.fetch as any).mockRejectedValue(new Error('Network failure'));
     const response = await getHandler()({ request: createMockRequest('{}') });
     const body = await response.json();
-    console.log('fetch_network_rejection_503 result:', { status: response.status, body });
     expect(response.status).toBe(503);
-    expect(body.reason_code).toBe('RPC_TRANSPORT_FAILED');
+    expect(body.reason_code).toBe('RPC_TRANSPORT_RETRYABLE');
+    expect(body.stage).toBe('RPC_CALL_STARTED');
+  });
+
+  it('fetch_timeout_503', async () => {
+    setupMockEvent();
+    (global.fetch as any).mockRejectedValue(new Error('Timeout'));
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    const body = await response.json();
+    expect(response.status).toBe(503);
+    expect(body.reason_code).toBe('RPC_TRANSPORT_RETRYABLE');
     expect(body.stage).toBe('RPC_CALL_STARTED');
   });
 
@@ -108,9 +134,46 @@ describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
     });
     const response = await getHandler()({ request: createMockRequest('{}') });
     const body = await response.json();
-    console.log('rpc_http_non_2xx_503 result:', { status: response.status, body });
     expect(response.status).toBe(503);
     expect(body.reason_code).toBe('RPC_TRANSPORT_RETRYABLE');
     expect(body.stage).toBe('RPC_RESPONSE_RECEIVED');
+  });
+
+  it('rpc_scalar_ack_200', async () => {
+    setupMockEvent();
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => 'processed'
+    });
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(body.stage).toBe('HTTP_RESPONSE_CREATED');
+  });
+  
+  it('CRITICAL_PRODUCTION_SIMULATION_F958', async () => {
+    setupMockEvent();
+    const fetchSpy = vi.spyOn(global, 'fetch');
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => '"duplicate"'
+    });
+    
+    const response = await getHandler()({ request: createMockRequest('{"id":"evt_123"}') });
+    const body = await response.json();
+    
+    expect(response.status).toBe(200);
+    expect(body.stage).toBe('HTTP_RESPONSE_CREATED');
+    expect(body.reason_code).toBeUndefined();
+    
+    // Validar que apenas a Fast Path RPC foi chamada
+    const calls = fetchSpy.mock.calls;
+    const fastPathCalls = calls.filter(c => c[0].toString().includes('process_stripe_checkout_session_expired'));
+    const genericPathCalls = calls.filter(c => c[0].toString().includes('process_stripe_webhook_event'));
+    
+    expect(fastPathCalls.length).toBe(1);
+    expect(genericPathCalls.length).toBe(0);
   });
 });
