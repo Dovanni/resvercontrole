@@ -233,4 +233,26 @@ describe('Stripe Checkout Expired Fast Path - Strict Scalar Parser', () => {
     const hasGenericRpcCall = calls.some((call: any) => call[0].includes('process_stripe_webhook_event'));
     expect(hasGenericRpcCall).toBe(false);
   });
+
+  it('rpc_non_2xx_503_test', async () => {
+    setupMockEvent();
+    (global.fetch as any).mockResolvedValue({
+      ok: false,
+      status: 502,
+      text: async () => 'Bad Gateway'
+    });
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    expect(response.status).toBe(500); // Conforme handler: status 500 para !ok
+    const body = await response.json();
+    expect(body.reason_code).toBe('RPC_RESPONSE_INVALID');
+  });
+
+  it('rpc_timeout_503_test', async () => {
+    setupMockEvent();
+    (global.fetch as any).mockRejectedValue(new Error('Fetch timeout'));
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    expect(response.status).toBe(503); // Conforme handler: catch -> 503
+    const body = await response.json();
+    expect(body.reason_code).toBe('RPC_TRANSPORT_FAILED');
+  });
 });
