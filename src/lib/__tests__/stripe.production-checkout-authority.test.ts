@@ -25,7 +25,11 @@ vi.mock('../stripe.server', () => ({
   getStripeClient: vi.fn().mockReturnValue({
     checkout: {
       sessions: {
-        create: vi.fn().mockResolvedValue({ id: 'cs_live_new', url: 'https://stripe.com/pay', expires_at: 1723406400 }),
+        create: vi.fn().mockResolvedValue({ 
+          id: 'cs_live_new', 
+          url: 'https://stripe.com/pay',
+          expires_at: Math.floor(Date.now() / 1000) + 3600
+        }),
         retrieve: vi.fn()
       }
     }
@@ -42,8 +46,38 @@ describe('VEJAMAIS_STRIPE_PRODUCTION_CHECKOUT_AUTHORITY_SUITE', () => {
     process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY_LIVE'] = 'price_live_enterprise';
     
     (supabaseAdmin.auth.getUser as any).mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
-    (supabaseAdmin.single as any).mockResolvedValue({ data: { role: 'admin', id: 'sub1', plans: { code: 'enterprise' } }, error: null });
-    (supabaseAdmin.rpc as any).mockResolvedValue({ data: { id: 'att1', idempotency_key: 'i1', status: 'pending' }, error: null });
+    
+    // Mock for subscriptions table
+    (supabaseAdmin.from as any).mockImplementation((table: string) => {
+      if (table === 'subscriptions') {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          neq: vi.fn().mockReturnThis(),
+          order: vi.fn().mockReturnThis(),
+          limit: vi.fn().mockReturnThis(),
+          single: vi.fn().mockResolvedValue({ data: { id: 'sub1', plan_id: 'p1', plans: { code: 'enterprise' } }, error: null })
+        };
+      }
+      if (table === 'user_company_access') {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          single: vi.fn().mockResolvedValue({ data: { role: 'admin' }, error: null })
+        };
+      }
+      return supabaseAdmin;
+    });
+
+    (supabaseAdmin.rpc as any).mockImplementation((rpc: string) => {
+      if (rpc === 'reserve_checkout_attempt') {
+        return { data: { id: 'att1', idempotency_key: 'i1', status: 'pending' }, error: null };
+      }
+      if (rpc === 'finalize_checkout_attempt_v2') {
+        return { data: { persisted: true }, error: null };
+      }
+      return { data: null, error: null };
+    });
   });
 
   it('should ENABLE checkout on production domain when LIVE_BILLING is true', async () => {
@@ -60,6 +94,7 @@ describe('VEJAMAIS_STRIPE_PRODUCTION_CHECKOUT_AUTHORITY_SUITE', () => {
 
     const result = await createStripeCheckoutSessionImpl(empresaId);
     expect(result.status).toBe('session_created');
+    expect(result.sessionId).toBe('cs_live_new');
   });
 
   it('should DISABLE checkout on unknown domain', async () => {
