@@ -1,28 +1,38 @@
-import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  getCompanySubscriptionContextImpl,
-  createStripeCheckoutSessionImpl,
-} from "./billing.server";
 
-// getCompanySubscriptionContext is kept for internal use but not for checkout flow
-export const getCompanySubscriptionContext = createServerFn({ method: "GET" })
-  .inputValidator((data: unknown) => z.object({ empresaId: z.string().uuid() }).strict().parse(data))
-  .handler(async ({ data }) => {
-    return getCompanySubscriptionContextImpl(data.empresaId);
-  });
+export const getBillingContextTransport = async (empresaId: string) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
 
-export const getCheckoutStatusTransport = async (empresaId: string) => {
-  const response = await fetch(`/api/public/billing/checkout-status?empresaId=${empresaId}`, {
+  const response = await fetch(`/api/public/billing/context?empresaId=${empresaId}`, {
     method: 'GET',
-    headers: { 'Accept': 'application/json' }
+    headers: { 
+      'Accept': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    }
   });
+
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || 'Failed to fetch status');
+    throw new Error(error.error || 'BILLING_CONTEXT_FAILED');
   }
-  return response.json();
+
+  return response.json() as Promise<{
+    subscription: {
+      status: 'trialing' | 'active' | 'past_due' | 'grace_read_only' | 'restricted' | 'none';
+      plan_code: string;
+      plan_name: string;
+      current_user_count: number;
+      current_period_ends_at: string | null;
+      days_remaining: number;
+    };
+    checkout: {
+      enabled: boolean;
+      environment: 'live' | 'sandbox';
+      reason_code: string;
+    };
+  }>;
 };
 
 export const createStripeCheckoutSession = async (empresaId: string) => {
@@ -45,22 +55,21 @@ export const createStripeCheckoutSession = async (empresaId: string) => {
   return response.json();
 };
 
-export const canInviteMember = createServerFn({ method: "GET" })
-  .inputValidator((data: unknown) => z.object({ empresaId: z.string().uuid() }).parse(data))
-  .handler(async ({ data }: { data: { empresaId: string } }) => {
-    const { data: result, error } = await supabase.rpc("can_company_invite_member", {
-      p_empresa_id: data.empresaId,
-    });
-
-    if (error) {
-      console.error("Error checking invite permission:", error);
-      throw new Error("Failed to check invite permission");
-    }
-
-    return result as {
-      allowed: boolean;
-      current?: number;
-      limit?: number;
-      message: string;
-    };
+export const canInviteMemberTransport = async (empresaId: string) => {
+  const { data: result, error } = await supabase.rpc("can_company_invite_member", {
+    p_empresa_id: empresaId,
   });
+
+  if (error) {
+    console.error("Error checking invite permission:", error);
+    throw new Error("Failed to check invite permission");
+  }
+
+  return result as {
+    allowed: boolean;
+    current?: number;
+    limit?: number;
+    message: string;
+  };
+};
+

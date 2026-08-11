@@ -1,16 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSubscriptionContext } from "@/hooks/use-subscription-context";
+import { useBillingContext } from "@/hooks/use-subscription-context";
 import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { PageHeader } from "@/components/app-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, CreditCard, Users, Clock, AlertCircle, Sparkles } from "lucide-react";
+import { Check, CreditCard, Users, Clock, AlertCircle, Sparkles, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { createStripeCheckoutSession } from "@/lib/billing.functions";
-import { useCheckoutStatus } from "@/hooks/use-checkout-status";
-import { ShieldCheck } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/configuracoes/assinatura")({
   head: () => ({ meta: [{ title: "Assinatura e Planos — Vejamais" }] }),
@@ -19,30 +18,53 @@ export const Route = createFileRoute("/_authenticated/configuracoes/assinatura")
 
 export function SubscriptionSettingsPage() {
   const { empresaId } = useMultiempresa();
-  const { data: sub, isLoading } = useSubscriptionContext(empresaId);
-  const { data: status } = useCheckoutStatus(empresaId);
+  const { data: context, isLoading, error, refetch } = useBillingContext(empresaId);
   const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
-  const checkoutStatus = searchParams.get("checkout");
+  const checkoutStatusParam = searchParams.get("checkout");
 
   if (isLoading) return <div className="p-8 text-muted-foreground">Carregando informações da assinatura...</div>;
 
-  if (!sub) {
+  const billingError = error as Error | null;
+
+  if (billingError || !context) {
+    const isNotFoundError = billingError?.message === 'SUBSCRIPTION_NOT_FOUND';
+    const isAuthError = billingError?.message === 'UNAUTHENTICATED';
+    const isForbiddenError = billingError?.message === 'COMPANY_ACCESS_DENIED';
+
     return (
       <div className="p-6 md:p-8 max-w-4xl mx-auto">
         <PageHeader title="Assinatura" subtitle="Gerencie seu plano e pagamentos" />
         <Card>
           <CardContent className="p-12 text-center">
             <AlertCircle className="size-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium">Assinatura não encontrada</h3>
-            <p className="text-muted-foreground mb-6">Não foi possível carregar os dados da sua assinatura.</p>
-            <Button asChild>
-              <Link to="/configuracoes">Voltar para Configurações</Link>
-            </Button>
+            <h3 className="text-lg font-medium">
+              {isNotFoundError ? "Assinatura não encontrada" : 
+               isAuthError ? "Sessão expirada" :
+               isForbiddenError ? "Acesso à empresa não autorizado" :
+               "Erro ao carregar faturamento"}
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              {isNotFoundError ? "Não foi possível carregar os dados da sua assinatura." :
+               isAuthError ? "Por favor, realize o login novamente." :
+               isForbiddenError ? "Você não tem permissão para acessar o faturamento desta empresa." :
+               "Não foi possível estabelecer conexão com o serviço de faturamento."}
+            </p>
+            <div className="flex gap-4 justify-center">
+              {billingError && !isNotFoundError && (
+                <Button onClick={() => refetch()}>Tentar novamente</Button>
+              )}
+              <Button variant="outline" asChild>
+                <Link to="/configuracoes">Voltar para Configurações</Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
     );
   }
+
+  const { subscription: sub, checkout: status } = context;
+
 
   const isTrial = sub.status === "trialing";
   const statusColor = {
@@ -70,7 +92,7 @@ export function SubscriptionSettingsPage() {
         subtitle="Controle seu plano, limites e faturamento" 
       />
 
-      {checkoutStatus === 'cancel' && (
+      {checkoutStatusParam === 'cancel' && (
         <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
           <AlertCircle className="size-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
@@ -176,7 +198,7 @@ export function SubscriptionSettingsPage() {
                           }}
                           className="bg-primary text-primary-foreground hover:bg-primary/90 border shadow-sm transition-all active:scale-[0.98]"
                         >
-                          {checkoutStatus === 'cancel' ? "Retomar checkout seguro — R$ 35,90/mês" : "Assinar Plano Empresarial — R$ 35,90/mês"}
+                          {checkoutStatusParam === 'cancel' ? "Retomar checkout seguro — R$ 35,90/mês" : "Assinar Plano Empresarial — R$ 35,90/mês"}
                         </Button>
                         
                         {!isCtaEnabled && (
