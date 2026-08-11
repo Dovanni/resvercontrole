@@ -26,8 +26,10 @@ export const getBillingContextTransport = async (empresaId: string) => {
       current_user_count: number;
       current_period_ends_at: string | null;
       days_remaining: number;
+      trial_ends_at: string | null;
     };
     checkout: {
+
       enabled: boolean;
       environment: 'live' | 'sandbox';
       reason_code: string;

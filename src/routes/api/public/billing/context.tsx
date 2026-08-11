@@ -80,8 +80,10 @@ export const Route = createFileRoute('/api/public/billing/context')({
               plan_name: subContext.plan_name,
               current_user_count: subContext.current_user_count,
               current_period_ends_at: subContext.current_period_ends_at,
-              days_remaining: subContext.days_remaining
+              days_remaining: subContext.days_remaining,
+              trial_ends_at: subContext.trial_ends_at
             },
+
             checkout: {
               enabled: checkoutStatus.checkout_enabled,
               environment: checkoutStatus.billing_environment,
