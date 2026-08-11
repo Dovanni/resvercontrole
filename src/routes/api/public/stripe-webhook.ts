@@ -13,6 +13,7 @@ type AllowedStage =
   | 'FAST_PATH_ENTERED'
   | 'PAYLOAD_HASH_STARTED'
   | 'PAYLOAD_HASH_CREATED'
+  | 'SERVER_CONFIGURATION_VALIDATED'
   | 'RPC_REQUEST_PREPARED'
   | 'RPC_CALL_STARTED'
   | 'RPC_RESPONSE_RECEIVED'
@@ -33,6 +34,8 @@ type AllowedReasonCode =
   | 'RPC_REJECTED_RETRYABLE'
   | 'RPC_REJECTED_PERMANENT'
   | 'RPC_RESPONSE_INVALID'
+  | 'SERVER_CONFIGURATION_MISSING'
+  | 'SERVER_CONFIGURATION_INVALID'
   | 'UNEXPECTED_HANDLER_FAILURE';
 
 interface WebhookRpcPayload {
@@ -237,12 +240,31 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
               return await createSanitizedResponse(500, traceId, currentStage, 'UNEXPECTED_HANDLER_FAILURE', eventId, eventType);
             }
 
+              currentStage = 'PAYLOAD_HASH_CREATED';
+            } catch (err) {
+              return await createSanitizedResponse(500, traceId, currentStage, 'UNEXPECTED_HANDLER_FAILURE', eventId, eventType);
+            }
+
+            // --- SERVER_CONFIGURATION_VALIDATED ---
+            currentStage = 'SERVER_CONFIGURATION_VALIDATED';
             const supabaseUrl = process.env['VITE_SUPABASE_URL'];
             const supabaseServiceRoleKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
 
             if (!supabaseUrl || !supabaseServiceRoleKey) {
               console.error(`[${traceId}] Configuration Error: Missing Supabase env vars for fast path`);
-              return await createSanitizedResponse(500, traceId, currentStage, 'UNEXPECTED_HANDLER_FAILURE', eventId, eventType);
+              return await createSanitizedResponse(500, traceId, currentStage, 'SERVER_CONFIGURATION_MISSING', eventId, eventType);
+            }
+
+            try {
+              new URL(supabaseUrl);
+            } catch (err) {
+              console.error(`[${traceId}] Configuration Error: Invalid Supabase URL`);
+              return await createSanitizedResponse(500, traceId, currentStage, 'SERVER_CONFIGURATION_INVALID', eventId, eventType);
+            }
+
+            if (supabaseServiceRoleKey.trim() === '') {
+              console.error(`[${traceId}] Configuration Error: Empty Supabase service role key`);
+              return await createSanitizedResponse(500, traceId, currentStage, 'SERVER_CONFIGURATION_INVALID', eventId, eventType);
             }
 
             currentStage = 'RPC_REQUEST_PREPARED';
