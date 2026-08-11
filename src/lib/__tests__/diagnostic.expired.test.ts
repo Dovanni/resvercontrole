@@ -95,19 +95,25 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
         } 
       } 
     });
-    setupRpcResponse(200, { status: 'processed' });
+    setupRpcResponse(200, "processed");
     
     const resp = await getHandler()(createRequest('{}'));
     const body = await resp.json();
     
     expect(resp.status).toBe(200);
+    // O Fast Path usa HTTP_RESPONSE_CREATED em vez de HTTP_RESPONSE_READY
     expect(body.stage).toBe('HTTP_RESPONSE_CREATED');
     
     // Verificar se o payload enviado à RPC está correto
     const fetchArgs = mockFetch.mock.calls[0];
     const rpcPayload = JSON.parse(fetchArgs[1].body);
-    expect(rpcPayload.p_event_type).toBe('checkout.session.expired');
-    expect(rpcPayload.p_event_data.id).toBe('cs_test_expired');
+    expect(rpcPayload.p_provider_event_id).toBe('evt_exp_1');
+    expect(rpcPayload.p_provider_session_id).toBe('cs_test_expired');
+    
+    if (resp.status !== 200) {
+      console.log('DIAG-1 FAILURE BODY:', body);
+    }
+
   });
 
   it('DIAG-2: checkout.session.expired with RPC failure (500)', async () => {
@@ -127,14 +133,14 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
         } 
       } 
     });
-    // Simular falha 500 na RPC
+    // Simular falha 500 na RPC (Fast Path retorna 503 RPC_TRANSPORT_RETRYABLE)
     setupRpcResponse(500, { error: 'Internal Database Error during expiration handling' });
     
     const resp = await getHandler()(createRequest('{}'));
     const body = await resp.json();
     
-    expect(resp.status).toBe(500);
-    expect(body.reason_code).toBe('RPC_RESPONSE_INVALID');
+    expect(resp.status).toBe(503);
+    expect(body.reason_code).toBe('RPC_TRANSPORT_RETRYABLE');
   });
 
   it('DIAG-3: checkout.session.expired with missing RPC credentials', async () => {
@@ -143,7 +149,7 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
       type: 'checkout.session.expired', 
       livemode: false, 
       created: 123458, 
-      data: { object: { id: 'cs_1', metadata: {} } } 
+      data: { object: { id: 'cs_test_1', object: 'checkout.session', metadata: {} } } 
     });
     
     // Remover env var essencial
@@ -153,6 +159,6 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
     const body = await resp.json();
     
     expect(resp.status).toBe(500);
-    expect(body.reason_code).toBe('UNEXPECTED_HANDLER_FAILURE');
+    expect(body.reason_code).toBe('SERVER_CONFIGURATION_MISSING');
   });
 });
