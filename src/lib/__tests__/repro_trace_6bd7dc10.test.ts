@@ -146,7 +146,7 @@ describe('Trace 6bd7dc10 Forensic Runtime Diagnosis & Reproduction', () => {
     const response = await getHandler()({ request: createMockRequest('{}') });
     const body = await response.json();
     expect(response.status).toBe(500);
-    expect(body.reason_code).toBe('UNEXPECTED_HANDLER_FAILURE');
+    expect(body.reason_code).toBe('PAYLOAD_HASH_FAILED');
     expect(body.stage).toBe('PAYLOAD_HASH_STARTED');
     crypto.subtle.digest = originalDigest;
   });
@@ -193,8 +193,8 @@ describe('Trace 6bd7dc10 Forensic Runtime Diagnosis & Reproduction', () => {
   it('json_stringify_failure_500_test', async () => {
     setupMockEvent();
     const originalStringify = JSON.stringify;
-    // We target only the JSON.stringify in the handler context if possible, but here we mock global
     JSON.stringify = vi.fn().mockImplementation((val) => {
+      // O handler agora usa JSON.stringify no RPC_REQUEST_PREPARED
       if (val && (val as any).p_provider_session_id === 'cs_test_abc123') {
         throw new Error('Stringify failed');
       }
@@ -203,9 +203,9 @@ describe('Trace 6bd7dc10 Forensic Runtime Diagnosis & Reproduction', () => {
     
     const response = await getHandler()({ request: createMockRequest('{}') });
     const body = await response.json();
-    expect(response.status).toBe(503);
-    expect(body.reason_code).toBe('RPC_TRANSPORT_RETRYABLE');
-    expect(body.stage).toBe('RPC_CALL_STARTED');
+    expect(response.status).toBe(500);
+    expect(body.reason_code).toBe('RPC_REQUEST_SERIALIZATION_FAILED');
+    expect(body.stage).toBe('RPC_REQUEST_PREPARED');
     JSON.stringify = originalStringify;
   });
 });
