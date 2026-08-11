@@ -9,6 +9,8 @@ import { Check, CreditCard, Users, Clock, AlertCircle, Sparkles } from "lucide-r
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { createStripeCheckoutSession } from "@/lib/billing.functions";
+import { useCheckoutStatus } from "@/hooks/use-checkout-status";
+import { ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/configuracoes/assinatura")({
   head: () => ({ meta: [{ title: "Assinatura e Planos — Vejamais" }] }),
@@ -18,6 +20,7 @@ export const Route = createFileRoute("/_authenticated/configuracoes/assinatura")
 export function SubscriptionSettingsPage() {
   const { empresaId } = useMultiempresa();
   const { data: sub, isLoading } = useSubscriptionContext(empresaId);
+  const { data: status } = useCheckoutStatus(empresaId);
   const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
   const checkoutStatus = searchParams.get("checkout");
 
@@ -138,19 +141,11 @@ export function SubscriptionSettingsPage() {
                 </p>
                 <div className="space-y-2">
                   {(() => {
-                    const hostname = typeof window !== "undefined" ? window.location.hostname : "";
-                    const origin = typeof window !== "undefined" ? window.location.origin : "";
-                    const ALLOWED_PREVIEW_HOST = 'id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
-                    const ALLOWED_PREVIEW_ORIGIN = 'https://id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
-                    const isF958 = empresaId === 'f958365e-3951-46e6-8595-e4f111115a90';
                     const isTrialing = sub.status === 'trialing';
                     
-                    // Condição estrita de habilitação conforme protocolo
-                    const isCtaEnabled = 
-                      hostname === ALLOWED_PREVIEW_HOST && 
-                      origin === ALLOWED_PREVIEW_ORIGIN && 
-                      isF958 && 
-                      isTrialing;
+                    // Condição estrita vinda do servidor + trialing
+                    const isCtaEnabled = !!status?.checkout_enabled && isTrialing;
+                    const isLive = status?.billing_environment === 'live';
 
                     return (
                       <>
@@ -158,9 +153,10 @@ export function SubscriptionSettingsPage() {
                           disabled={!isCtaEnabled}
                           onClick={async (e) => {
                             const btn = e.currentTarget;
+                            if (btn.disabled) return;
                             btn.disabled = true;
                             const originalText = btn.innerText;
-                            btn.innerText = "Preparando checkout seguro...";
+                            btn.innerText = "Redirecionando para pagamento seguro...";
                             
                             try {
                               const result = await createStripeCheckoutSession({ data: { empresaId } });
@@ -182,16 +178,26 @@ export function SubscriptionSettingsPage() {
                         >
                           {checkoutStatus === 'cancel' ? "Retomar checkout seguro — R$ 35,90/mês" : "Assinar Plano Empresarial — R$ 35,90/mês"}
                         </Button>
+                        
                         {!isCtaEnabled && (
                           <p className="text-[10px] text-amber-600 font-medium leading-relaxed bg-amber-50 p-2 rounded border border-amber-100 flex items-center gap-1.5">
                             <AlertCircle className="size-3" />
-                            Checkout em modo de teste aguardando autorização para validação controlada.
+                            {status?.exact_disable_reason || "Checkout em modo de teste aguardando autorização para validação controlada."}
                           </p>
                         )}
+                        
                         {isCtaEnabled && (
-                          <p className="text-[10px] text-muted-foreground italic font-medium leading-relaxed">
-                            Clique humano necessário. Redirecionamento seguro para Stripe Sandbox.
-                          </p>
+                          <div className="space-y-1.5">
+                            <p className="text-[10px] text-muted-foreground italic font-medium leading-relaxed flex items-center gap-1">
+                              <ShieldCheck className="size-3 text-green-500" />
+                              Pagamento seguro processado pela Stripe
+                            </p>
+                            {!isLive && (
+                              <p className="text-[10px] text-amber-600 font-bold bg-amber-50 p-1 px-2 rounded border border-amber-200 w-fit">
+                                MODO SANDBOX / TESTE
+                              </p>
+                            )}
+                          </div>
                         )}
                       </>
                     );
