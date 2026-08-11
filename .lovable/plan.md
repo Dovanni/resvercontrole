@@ -1,34 +1,30 @@
-## Módulo Contas Bancárias
+# Plano de Implementação: Monetização Definitiva VEJAMAIS (Fases 1-7)
 
-Vou implementar em 4 etapas, na ordem:
+## Objetivo
+Implementar a infraestrutura de monetização recorrente em produção (Live) separada do Sandbox, garantindo segurança, idempotência e conformidade com o Protocolo VEJAMAIS_STRIPE_DEFINITIVE_MONETIZATION_IMPLEMENTATION.
 
-### 1. Banco de dados (migration)
-- `bank_accounts` (nome, banco, tipo, agência, conta, saldo_inicial, cor, status)
-- `bank_movements` (conta_id, data, tipo entrada|saida|transferencia, categoria, descricao, valor, conta_destino_id, origem manual|receivable|payable, referencia_id, observacoes)
-- Adicionar `bank_account_id` em `payables` e `receivables`
-- RLS scoped to `auth.uid()` + GRANTs (authenticated/service_role)
-- Triggers: ao marcar `payables.status='pago'` ou aumentar `receivables.received_amount`, inserir automaticamente em `bank_movements` se `bank_account_id` informado (origem=payable/receivable)
-- View ou função para saldo atual = saldo_inicial + Σ entradas − Σ saídas (+ transferências in − out)
+## Etapas Técnicas
 
-### 2. Página `/contas-bancarias`
-- Rota `_authenticated.contas-bancarias.tsx`
-- Cards por conta ativa (com cor, banco, saldo atual). Click → drawer/modal de extrato
-- CRUD modal de contas (criar/editar/inativar)
-- Extrato: filtros (período/categoria/tipo), tabela com saldo acumulado, botão "Nova movimentação" (form com tipo, categoria condicional, conta_destino quando transferência)
-- Transferência cria 2 movimentos vinculados (saída origem + entrada destino)
+### 1. Infraestrutura de Webhooks (Fase 1 e 4)
+- **Criação da Rota Live**: Implementar `/api/public/stripe-webhook/live` com lógica compartilhada de `stripe-webhook.ts`.
+- **Separação de Segredos**: Mapear `STRIPE_WEBHOOK_SECRET_LIVE` e `STRIPE_RESTRICTED_KEY_LIVE`.
+- **Validação de Modo**: Rota original rejeita `livemode=true`; Rota Live rejeita `livemode=false`.
+- **Processamento Atômico**: Integrar com RPCs Supabase para processamento idempotente baseado em `provider_event_id` e `livemode`.
 
-### 3. Integração contas a pagar/receber
-- Adicionar select "Conta bancária" no fluxo "marcar como pago" em `contas-pagar.tsx`
-- Adicionar select "Conta bancária" no fluxo "marcar como recebido" em `contas-receber.tsx`
-- Persistir `bank_account_id` no registro; trigger DB cria a movimentação
+### 2. Checkout Canônico por Ambiente (Fase 3)
+- **Autoridade Server-Side**: `createStripeCheckoutSessionImpl` em `src/lib/billing.server.ts` passará a derivar o Price ID e o ambiente (Test/Live) exclusivamente de variáveis de ambiente e do hostname de produção.
+- **Remoção de Bloqueios de Preview**: Permitir checkout em `vejamais.com.br` quando `STRIPE_LIVE_BILLING_ENABLED=true`.
+- **Persistência Obrigatória**: Garantir que o `session_id` seja persistido antes do redirecionamento.
 
-### 4. Fluxo de caixa + Relatórios + Menu
-- Atualizar `fluxo-caixa.tsx`: filtro por conta, saldo total consolidado, série temporal por conta
-- Aba "Bancário" em `relatorios.tsx`: posição por conta, total consolidado, movimentações por categoria, export Excel
-- Adicionar item no menu lateral entre Financeiro e Relatórios, ícone `Landmark` (lucide — substituto de `ti-building-bank`)
+### 3. Gerenciamento de Segredos (Fase 2)
+- Normalizar o acesso a segredos no servidor, garantindo que nenhum segredo `VITE_` seja exposto ou vazado para o bundle do cliente.
 
-### Detalhes técnicos
-- Stack já existente: TanStack Start + Supabase + shadcn + xlsx
-- Cores das contas: paleta fixa de 8 opções (rosa, roxo, azul, verde, âmbar, ciano, índigo, fúcsia) — mantém harmonia com tema Rosé
-- Saldo calculado client-side via query agregada (sum por tipo), evitando view materializada
-- Entradas verde / saídas vermelho / transferências azul, saldo negativo destacado
+### 4. Política de Acesso e Gate (Fase 5)
+- Implementar verificação de status da assinatura (trialing, active, past_due, etc.) sem ativar o hard gate global imediatamente.
+
+### 5. Validação e Testes (Fase 6)
+- Executar suíte de 110 testes + novos testes de separação Test/Live.
+- Validar builds de produção e integridade da Homepage.
+
+## Detalhes para o Usuário
+O sistema agora terá dois "ouvidos" para a Stripe: um para testes e outro para pagamentos reais. O browser não terá controle sobre preços ou modos, garantindo que ninguém possa alterar o valor da assinatura. Nenhuma cobrança real será feita sem que você configure o segredo Live na próxima etapa manual.
