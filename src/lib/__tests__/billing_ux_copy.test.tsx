@@ -6,6 +6,25 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+// Mock lucide-react first
+vi.mock('lucide-react', async () => {
+  return {
+    Check: (props: any) => <span {...props}>Check</span>,
+    CreditCard: (props: any) => <span {...props}>CreditCard</span>,
+    Users: (props: any) => <span {...props}>Users</span>,
+    Clock: (props: any) => <span {...props}>Clock</span>,
+    AlertCircle: (props: any) => <span {...props}>AlertCircle</span>,
+    Sparkles: (props: any) => <span {...props}>Sparkles</span>,
+    ShieldCheck: (props: any) => <span {...props} />,
+    CheckCircle2: (props: any) => <span {...props} />,
+    Calendar: (props: any) => <span {...props} />,
+    Zap: (props: any) => <span {...props} />,
+    Star: (props: any) => <span {...props} />,
+    ArrowRight: (props: any) => <span {...props} />,
+    ChevronRight: (props: any) => <span {...props} />,
+  };
+});
+
 // Mock components to avoid deep tree issues
 vi.mock('@/components/app-shell', () => ({
   PageHeader: ({ title, subtitle }: any) => (
@@ -27,25 +46,6 @@ vi.mock('@/components/ui/button', () => ({
 vi.mock('@/components/ui/badge', () => ({
   Badge: ({ children }: { children: React.ReactNode }) => <span>{children}</span>
 }));
-vi.mock('lucide-react', async (importOriginal) => {
-  const actual: any = await importOriginal();
-  return {
-    ...actual,
-    Sparkles: (props: any) => <span {...props} data-testid="sparkles" />,
-    ShieldCheck: (props: any) => <span {...props} />,
-    CreditCard: (props: any) => <span {...props} />,
-    CheckCircle2: (props: any) => <span {...props} />,
-    Calendar: (props: any) => <span {...props} />,
-    Clock: (props: any) => <span {...props} />,
-    AlertCircle: (props: any) => <span {...props} />,
-    ArrowRight: (props: any) => <span {...props} />,
-    ChevronRight: (props: any) => <span {...props} />,
-    Zap: (props: any) => <span {...props} />,
-    Star: (props: any) => <span {...props} />,
-    Check: (props: any) => <span {...props} />,
-  };
-});
-
 
 // Partial mock for @tanstack/react-router
 vi.mock('@tanstack/react-router', async (importOriginal) => {
