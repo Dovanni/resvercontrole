@@ -23,6 +23,7 @@ type AllowedReasonCode =
   | 'UNSUPPORTED_EVENT'
   | 'PAYLOAD_CONTRACT_FAILED'
   | 'RPC_TRANSPORT_FAILED'
+  | 'RPC_TRANSPORT_RETRYABLE'
   | 'RPC_REJECTED_RETRYABLE'
   | 'RPC_REJECTED_PERMANENT'
   | 'RPC_RESPONSE_INVALID'
@@ -253,7 +254,7 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
             }
 
             if (!rpcResponse.ok) {
-              return await createSanitizedResponse(500, traceId, 'RPC_RESPONSE_RECEIVED', 'RPC_RESPONSE_INVALID', eventId, eventType);
+              return await createSanitizedResponse(503, traceId, 'RPC_RESPONSE_RECEIVED', 'RPC_TRANSPORT_RETRYABLE', eventId, eventType);
             }
 
             // --- RECONCILIATION OF RESPONSE CONTRACT ---
