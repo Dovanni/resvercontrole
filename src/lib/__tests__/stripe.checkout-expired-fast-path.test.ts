@@ -27,7 +27,7 @@ vi.mock('stripe', () => {
 
 import { Route } from '../../routes/api/public/stripe-webhook';
 
-describe('Stripe Checkout Expired Fast Path - Strict Scalar Parser', () => {
+describe('Stripe Checkout Expired Fast Path - Full Simulation', () => {
   const mockTraceId = 'test-trace-id';
   
   beforeEach(() => {

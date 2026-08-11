@@ -10,10 +10,16 @@ import { createFileRoute } from '@tanstack/react-router';
 
 type AllowedStage =
   | 'SIGNATURE_VALIDATED'
-  | 'PAYLOAD_SANITIZED'
+  | 'FAST_PATH_ENTERED'
+  | 'PAYLOAD_HASH_STARTED'
+  | 'PAYLOAD_HASH_CREATED'
+  | 'RPC_REQUEST_PREPARED'
   | 'RPC_CALL_STARTED'
   | 'RPC_RESPONSE_RECEIVED'
-  | 'HTTP_RESPONSE_READY';
+  | 'RPC_ACK_PARSED'
+  | 'HTTP_RESPONSE_READY'
+  | 'PAYLOAD_SANITIZED'
+  | 'HTTP_RESPONSE_CREATED';
 
 type AllowedReasonCode =
   | 'RAW_BODY_READ_FAILED'
@@ -214,26 +220,37 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
               return await createSanitizedResponse(400, traceId, 'SIGNATURE_VALIDATED', 'PAYLOAD_CONTRACT_FAILED', eventId, eventType);
             }
 
-            // Checkpoint 1: SIGNATURE_VALIDATED
-            await safeLogDiagnostic(traceId, eventId, eventType, 'SIGNATURE_VALIDATED');
+            // Checkpoint: FAST_PATH_ENTERED
+            currentStage = 'FAST_PATH_ENTERED';
+            await safeLogDiagnostic(traceId, eventId, eventType, currentStage);
 
             // Preparar payload SHA256 (sanitizado, sem PII)
-            const msgUint8 = new TextEncoder().encode(bodyText);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const payloadHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            currentStage = 'PAYLOAD_HASH_STARTED';
+            let payloadHash: string;
+            try {
+              const msgUint8 = new TextEncoder().encode(bodyText);
+              const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+              const hashArray = Array.from(new Uint8Array(hashBuffer));
+              payloadHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+              currentStage = 'PAYLOAD_HASH_CREATED';
+            } catch (err) {
+              return await createSanitizedResponse(500, traceId, currentStage, 'UNEXPECTED_HANDLER_FAILURE', eventId, eventType);
+            }
 
             const supabaseUrl = process.env['VITE_SUPABASE_URL'];
             const supabaseServiceRoleKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
 
             if (!supabaseUrl || !supabaseServiceRoleKey) {
               console.error(`[${traceId}] Configuration Error: Missing Supabase env vars for fast path`);
-              return await createSanitizedResponse(500, traceId, 'SIGNATURE_VALIDATED', 'UNEXPECTED_HANDLER_FAILURE', eventId, eventType);
+              return await createSanitizedResponse(500, traceId, currentStage, 'UNEXPECTED_HANDLER_FAILURE', eventId, eventType);
             }
+
+            currentStage = 'RPC_REQUEST_PREPARED';
 
             // Chamada RPC dedicada
             let rpcResponse: Response;
             try {
+              currentStage = 'RPC_CALL_STARTED';
               rpcResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/process_stripe_checkout_session_expired`, {
                 method: 'POST',
                 headers: {
@@ -250,26 +267,24 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
                 })
               });
             } catch (err) {
-              return await createSanitizedResponse(503, traceId, 'RPC_CALL_STARTED', 'RPC_TRANSPORT_FAILED', eventId, eventType);
+              return await createSanitizedResponse(503, traceId, currentStage, 'RPC_TRANSPORT_RETRYABLE', eventId, eventType);
             }
 
+            currentStage = 'RPC_RESPONSE_RECEIVED';
             if (!rpcResponse.ok) {
-              return await createSanitizedResponse(503, traceId, 'RPC_RESPONSE_RECEIVED', 'RPC_TRANSPORT_RETRYABLE', eventId, eventType);
+              return await createSanitizedResponse(503, traceId, currentStage, 'RPC_TRANSPORT_RETRYABLE', eventId, eventType);
             }
 
             // --- RECONCILIATION OF RESPONSE CONTRACT ---
-            // RPC_RESPONSE_RECEIVED stage update before parsing
-            currentStage = 'RPC_RESPONSE_RECEIVED';
-
             let resultText: string;
             try {
               resultText = await rpcResponse.text();
             } catch (err) {
-              return await createSanitizedResponse(500, traceId, 'RPC_RESPONSE_RECEIVED', 'RPC_RESPONSE_INVALID', eventId, eventType);
+              return await createSanitizedResponse(500, traceId, currentStage, 'RPC_RESPONSE_INVALID', eventId, eventType);
             }
 
             if (rpcResponse.status === 204 || !resultText) {
-              return await createSanitizedResponse(500, traceId, 'RPC_RESPONSE_RECEIVED', 'RPC_RESPONSE_INVALID', eventId, eventType);
+              return await createSanitizedResponse(500, traceId, currentStage, 'RPC_RESPONSE_INVALID', eventId, eventType);
             }
 
             let statusValue: unknown;
@@ -281,24 +296,22 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
               if (typeof parsed === 'string') {
                 statusValue = parsed;
               } else {
-                // Rejeitar arrays e objetos conforme protocolo
-                return await createSanitizedResponse(500, traceId, 'RPC_RESPONSE_RECEIVED', 'RPC_RESPONSE_INVALID', eventId, eventType);
+                return await createSanitizedResponse(500, traceId, currentStage, 'RPC_RESPONSE_INVALID', eventId, eventType);
               }
             } catch (err) {
-              // Se JSON.parse falhar, aceitar texto bruto somente se corresponder exatamente à allowlist
               statusValue = resultText.trim();
             }
 
+            currentStage = 'RPC_ACK_PARSED';
             if (typeof statusValue !== 'string' || !ALLOWED_STATUSES.includes(statusValue as AllowedStatus)) {
-              return await createSanitizedResponse(500, traceId, 'RPC_RESPONSE_RECEIVED', 'RPC_RESPONSE_INVALID', eventId, eventType);
+              return await createSanitizedResponse(500, traceId, currentStage, 'RPC_RESPONSE_INVALID', eventId, eventType);
             }
 
             if (statusValue === 'failed_retryable') {
-              return await createSanitizedResponse(503, traceId, 'RPC_RESPONSE_RECEIVED', 'RPC_REJECTED_RETRYABLE', eventId, eventType);
+              return await createSanitizedResponse(503, traceId, currentStage, 'RPC_REJECTED_RETRYABLE', eventId, eventType);
             }
 
-            // 'processed', 'duplicate', 'already_expired', 'ignored_terminal' -> 200
-            return await createSanitizedResponse(200, traceId, 'HTTP_RESPONSE_READY', undefined, eventId, eventType);
+            return await createSanitizedResponse(200, traceId, 'HTTP_RESPONSE_CREATED', undefined, eventId, eventType);
           }
           // --- END FAST PATH ---
 
