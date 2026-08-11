@@ -219,9 +219,9 @@ describe('VEJAMAIS_STRIPE_LEGACY_COMPATIBILITY_FULL_CONTRACT_VALIDATION', () => 
       type: 'checkout.session.expired',
       livemode: false,
       created: 12345,
-      data: { object: { id: 'cs_1', object: 'checkout.session', metadata: { internal_subscription_id: mockUuid } } },
+      data: { object: { id: 'cs_test_123', object: 'checkout.session', metadata: { internal_subscription_id: mockUuid } } },
     });
-    setupRpcResponse(200, "processed"); // Fast path espera texto puro ou JSON
+    setupRpcResponse(200, "processed"); 
 
     const resp = await getHandler()(createRequest({}));
     expect(resp.status).toBe(200);
