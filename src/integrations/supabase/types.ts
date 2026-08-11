@@ -2248,6 +2248,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      process_stripe_checkout_session_expired: {
+        Args: {
+          p_event_created: number
+          p_livemode: boolean
+          p_payload_sha256: string
+          p_provider_event_id: string
+          p_provider_session_id: string
+        }
+        Returns: string
+      }
       process_stripe_webhook_event: {
         Args: {
           p_canonical_amount?: number
