@@ -22,7 +22,7 @@ describe('FORENSIC_DIAGNOSIS_ASYNC_BOUNDARY', () => {
 
     const resp = await getHandler()({ request: mockRequest });
     const body = await resp.json();
-    expect(body.error).toBe('UNEXPECTED_HANDLER_FAILURE');
+    expect(body.error).toBe('WEBHOOK_PROCESSING_FAILED');
     expect(resp.status).toBe(500);
   });
 

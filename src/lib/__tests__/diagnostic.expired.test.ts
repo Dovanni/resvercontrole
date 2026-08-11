@@ -103,6 +103,7 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
     const body = await resp.json();
     
     expect(resp.status).toBe(200);
+    // O Fast Path usa HTTP_RESPONSE_CREATED em vez de HTTP_RESPONSE_READY
     expect(body.stage).toBe('HTTP_RESPONSE_CREATED');
     
     // Verificar se o payload enviado à RPC está correto
