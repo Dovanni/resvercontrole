@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { createFileRoute } from '@tanstack/react-router';
+import { validateCheckoutSessionContract } from '@/lib/stripe-guards.server';
 
 /**
  * PROTOCOLO: VEJAMAIS_STRIPE_DURABLE_DIAGNOSTICS_TARGETED_CORRECTION
@@ -218,15 +219,19 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
 
           // --- FAST PATH: checkout.session.expired ---
           if (event.type === 'checkout.session.expired') {
-            const eventObject = event.data.object as Stripe.Checkout.Session;
-            const sessionId = eventObject.id;
+            // Checkpoint: FAST_PATH_ENTERED (Definido antes de qualquer acesso ao objeto)
+            currentStage = 'FAST_PATH_ENTERED';
 
-            if (!sessionId) {
-              return await createSanitizedResponse(400, traceId, 'SIGNATURE_VALIDATED', 'PAYLOAD_CONTRACT_FAILED', eventId, eventType);
+            const rawObject: unknown = event.data.object;
+            
+            // Validar contrato sem asserção insegura
+            if (!validateCheckoutSessionContract(rawObject)) {
+              return await createSanitizedResponse(400, traceId, currentStage, 'PAYLOAD_CONTRACT_FAILED', eventId, eventType);
             }
 
-            // Checkpoint: FAST_PATH_ENTERED
-            currentStage = 'FAST_PATH_ENTERED';
+            // Atribuição segura após validação
+            const sessionId = rawObject.id;
+
             await safeLogDiagnostic(traceId, eventId, eventType, currentStage);
 
             // Preparar payload SHA256 (sanitizado, sem PII)
