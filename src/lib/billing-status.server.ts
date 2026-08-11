@@ -20,7 +20,7 @@ function isValidOrigin(origin: string | null): boolean {
     const url = new URL(origin);
     // Protocolo HTTPS obrigatório em produção
     if (url.protocol !== 'https:') {
-      // Permitir http apenas se for localhost em desenvolvimento (não aplicável aqui, mas boa prática)
+      // Permitir http apenas se for localhost em desenvolvimento
       if (url.hostname !== 'localhost') return false;
     }
 
