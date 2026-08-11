@@ -28,7 +28,7 @@ vi.mock('stripe', () => {
 });
 
 // Import the handler
-import { Route } from '../routes/api/public/stripe-webhook';
+import { Route } from '../../routes/api/public/stripe-webhook';
 
 describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
   const mockTraceId = '6bd7dc10-2940-4f4f-9adf-27aecd04236d';
