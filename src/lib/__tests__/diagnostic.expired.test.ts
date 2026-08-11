@@ -88,8 +88,6 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
         object: { 
           id: 'cs_test_expired', 
           object: 'checkout.session',
-
-
           customer: 'cus_123',
           subscription: null,
           status: 'expired',
@@ -97,7 +95,7 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
         } 
       } 
     });
-    setupRpcResponse(200, { status: 'processed' });
+    setupRpcResponse(200, "processed");
     
     const resp = await getHandler()(createRequest('{}'));
     const body = await resp.json();
@@ -109,8 +107,8 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
     // Verificar se o payload enviado à RPC está correto
     const fetchArgs = mockFetch.mock.calls[0];
     const rpcPayload = JSON.parse(fetchArgs[1].body);
-    expect(rpcPayload.p_event_type).toBe('checkout.session.expired');
-    expect(rpcPayload.p_event_data.id).toBe('cs_test_expired');
+    expect(rpcPayload.p_provider_event_id).toBe('evt_exp_1');
+    expect(rpcPayload.p_provider_session_id).toBe('cs_test_expired');
   });
 
   it('DIAG-2: checkout.session.expired with RPC failure (500)', async () => {
@@ -123,8 +121,6 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
         object: { 
           id: 'cs_test_expired_fail', 
           object: 'checkout.session',
-
-
           customer: 'cus_123',
           subscription: null,
           status: 'expired',
@@ -132,7 +128,7 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
         } 
       } 
     });
-    // Simular falha 500 na RPC
+    // Simular falha 500 na RPC (Fast Path retorna 503 RPC_TRANSPORT_RETRYABLE)
     setupRpcResponse(500, { error: 'Internal Database Error during expiration handling' });
     
     const resp = await getHandler()(createRequest('{}'));
