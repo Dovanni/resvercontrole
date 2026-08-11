@@ -203,7 +203,7 @@ describe('Trace 6bd7dc10 Forensic Runtime Diagnosis & Reproduction', () => {
     
     const response = await getHandler()({ request: createMockRequest('{}') });
     const body = await response.json();
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(503);
     expect(body.reason_code).toBe('UNEXPECTED_HANDLER_FAILURE');
     expect(body.stage).toBe('RPC_CALL_STARTED');
     JSON.stringify = originalStringify;
