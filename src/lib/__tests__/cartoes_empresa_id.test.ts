@@ -21,8 +21,8 @@ describe('Proteção Atômica de empresa_id em Cartões', () => {
     // Obter um cartão válido para o usuário
     const { data: cartoes } = await supabase.from('cartoes_credito' as any).select('id, empresa_id').limit(1);
     if (cartoes && cartoes.length > 0) {
-      cartaoId = cartoes[0].id;
-      empresaId = cartoes[0].empresa_id;
+      cartaoId = (cartoes[0] as any).id;
+      empresaId = (cartoes[0] as any).empresa_id;
     }
   });
 
@@ -47,10 +47,10 @@ describe('Proteção Atômica de empresa_id em Cartões', () => {
     const { data, error } = await supabase.from('cartoes_lancamentos' as any).insert(payload).select();
     
     expect(error).toBeNull();
-    expect(data![0].empresa_id).toBe(empresaId);
+    expect((data![0] as any).empresa_id).toBe(empresaId);
     
     // Cleanup
-    await supabase.from('cartoes_lancamentos' as any).delete().eq('id', data![0].id);
+    await supabase.from('cartoes_lancamentos' as any).delete().eq('id', (data![0] as any).id);
   });
 
   it('2. Deve rejeitar se empresa_id enviado for diferente do cartão (IDOR/Cross-tenant)', async () => {
