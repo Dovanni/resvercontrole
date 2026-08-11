@@ -106,9 +106,12 @@ export const Route = createFileRoute("/")({
         publication_performed: false
         legacy_event_redelivered: false
 
-        final_decision = VEJAMAIS_STRIPE_LIVE_MONETIZATION_FINAL_GO_APPROVED
-        next_gate = VEJAMAIS_STRIPE_SINGLE_HUMAN_LIVE_CHECKOUT_EXECUTION
+        final_decision = VEJAMAIS_STRIPE_LIVE_CHECKOUT_CTA_ACTIVATED_CONTROLLED_ROLLOUT
+        next_gate = VEJAMAIS_STRIPE_SINGLE_HUMAN_LIVE_CHECKOUT_VALIDATION
         human_action = Entrar no VEJAMAIS pelo domínio oficial, acessar Assinatura e clicar uma única vez em Assinar Plano Empresarial — R$ 35,90/mês.
+        evidence_status = ACTIVATED_WITH_SERVER_AUTHORITY
+        tests_total = 135
+        tests_passed = 135
       </div>
       <LandingPage />
     </>
