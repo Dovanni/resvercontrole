@@ -68,13 +68,18 @@ describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
     });
   };
 
+  const mockResponse = (ok: boolean, status: number, body: string): any => ({
+    ok,
+    status,
+    text: async () => body,
+    json: async () => JSON.parse(body),
+    headers: new Headers(),
+    statusText: ok ? 'OK' : 'Error'
+  });
+
   it('valid_event_scalar_duplicate_200', async () => {
     setupMockEvent();
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => '"duplicate"'
-    });
+    (global.fetch as any).mockResolvedValue(mockResponse(true, 200, '"duplicate"'));
     const response = await getHandler()({ request: createMockRequest('{}') });
     const body = await response.json();
     expect(response.status).toBe(200);
@@ -83,11 +88,7 @@ describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
 
   it('payload_hash_success', async () => {
     setupMockEvent();
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => '"processed"'
-    });
+    (global.fetch as any).mockResolvedValue(mockResponse(true, 200, '"processed"'));
     const response = await getHandler()({ request: createMockRequest('{}') });
     const body = await response.json();
     expect(response.status).toBe(200);
@@ -101,7 +102,6 @@ describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
     const body = await response.json();
     expect(response.status).toBe(500);
     expect(body.reason_code).toBe('UNEXPECTED_HANDLER_FAILURE');
-    // Em F4 corrigido, o stage deve refletir até onde chegou
     expect(body.stage).toBe('PAYLOAD_HASH_CREATED');
   });
 
@@ -127,11 +127,7 @@ describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
 
   it('rpc_http_non_2xx_503', async () => {
     setupMockEvent();
-    (global.fetch as any).mockResolvedValue({
-      ok: false,
-      status: 502,
-      text: async () => 'Bad Gateway'
-    });
+    (global.fetch as any).mockResolvedValue(mockResponse(false, 502, 'Bad Gateway'));
     const response = await getHandler()({ request: createMockRequest('{}') });
     const body = await response.json();
     expect(response.status).toBe(503);
@@ -141,11 +137,7 @@ describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
 
   it('rpc_scalar_ack_200', async () => {
     setupMockEvent();
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => 'processed'
-    });
+    (global.fetch as any).mockResolvedValue(mockResponse(true, 200, 'processed'));
     const response = await getHandler()({ request: createMockRequest('{}') });
     const body = await response.json();
     expect(response.status).toBe(200);
@@ -155,11 +147,7 @@ describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
   it('CRITICAL_PRODUCTION_SIMULATION_F958', async () => {
     setupMockEvent();
     const fetchSpy = vi.spyOn(global, 'fetch');
-    fetchSpy.mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => '"duplicate"'
-    });
+    fetchSpy.mockResolvedValue(mockResponse(true, 200, '"duplicate"'));
     
     const response = await getHandler()({ request: createMockRequest('{"id":"evt_123"}') });
     const body = await response.json();
@@ -168,7 +156,6 @@ describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
     expect(body.stage).toBe('HTTP_RESPONSE_CREATED');
     expect(body.reason_code).toBeUndefined();
     
-    // Validar que apenas a Fast Path RPC foi chamada
     const calls = fetchSpy.mock.calls;
     const fastPathCalls = calls.filter(c => c[0].toString().includes('process_stripe_checkout_session_expired'));
     const genericPathCalls = calls.filter(c => c[0].toString().includes('process_stripe_webhook_event'));
