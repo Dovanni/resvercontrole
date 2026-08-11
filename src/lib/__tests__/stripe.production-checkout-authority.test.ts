@@ -25,7 +25,7 @@ vi.mock('../stripe.server', () => ({
   getStripeClient: vi.fn().mockReturnValue({
     checkout: {
       sessions: {
-        create: vi.fn().mockResolvedValue({ id: 'cs_live_new', url: 'https://stripe.com/pay' }),
+        create: vi.fn().mockResolvedValue({ id: 'cs_live_new', url: 'https://stripe.com/pay', expires_at: 1723406400 }),
         retrieve: vi.fn()
       }
     }
