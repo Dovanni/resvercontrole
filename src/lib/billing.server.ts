@@ -72,15 +72,27 @@ export async function createStripeCheckoutSessionImpl(empresaId: string) {
   const origin = req.headers.get('origin');
   
   const CANONICAL_HOST = 'www.vejamais.com.br';
+  const APEX_HOST = 'vejamais.com.br';
   const ALLOWED_PREVIEW_HOST = 'id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
-  const ALLOWED_PREVIEW_ORIGIN = 'https://id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
-  const CANONICAL_ORIGIN = 'https://www.vejamais.com.br';
   
-  const isProduction = host === CANONICAL_HOST;
-  const isPreview = host === ALLOWED_PREVIEW_HOST;
+  const ALLOWED_PREVIEW_ORIGIN = 'https://id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
+  const CANONICAL_WWW_ORIGIN = 'https://www.vejamais.com.br';
+  const CANONICAL_APEX_ORIGIN = 'https://vejamais.com.br';
+  
+  const normalizedHost = host?.toLowerCase();
+  const isProduction = normalizedHost === CANONICAL_HOST || normalizedHost === APEX_HOST;
+  const isPreview = normalizedHost === ALLOWED_PREVIEW_HOST;
 
   // STRICT ORIGIN CHECK
-  const isAllowedOrigin = origin === ALLOWED_PREVIEW_ORIGIN || origin === CANONICAL_ORIGIN;
+  const isAllowedOrigin = (function validate(o: string | null) {
+    if (!o) return false;
+    try {
+      const u = new URL(o);
+      if (u.protocol !== 'https:' && u.hostname !== 'localhost') return false;
+      const normalized = u.origin.toLowerCase();
+      return [CANONICAL_WWW_ORIGIN, CANONICAL_APEX_ORIGIN, ALLOWED_PREVIEW_ORIGIN].includes(normalized);
+    } catch { return false; }
+  })(origin);
 
   if (!isProduction && !isPreview) {
     console.warn(`Unauthorized host blocked: Host=${host}`);
