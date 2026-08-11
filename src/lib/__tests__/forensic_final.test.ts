@@ -25,10 +25,10 @@ describe('VEJAMAIS_STRIPE_FORENSIC_FINAL', () => {
     const resp = await getHandler()({ request: mockRequest });
     const body = await resp.json();
     
-    // Se o catch capturar, deve retornar 400 (RAW_BODY_READ_FAILED) conforme o código:
-    // try { bodyText = await request.text(); } catch (err) { return createSanitizedResponse(400, traceId, stage, 'RAW_BODY_READ_FAILED'); }
+    // O handler real retorna { error: 'BAD_REQUEST', trace_id: '...' } para falha de request.text()
+    // sem chamar createSanitizedResponse (que incluiria reason_code) porque acontece antes do primeiro checkpoint.
     expect(resp.status).toBe(400);
-    expect(body.reason_code).toBe('RAW_BODY_READ_FAILED');
+    expect(body.error).toBe('BAD_REQUEST');
   });
 
   it('ETAPA 6: Validar escape se houver Promise sem await (Projetado)', async () => {

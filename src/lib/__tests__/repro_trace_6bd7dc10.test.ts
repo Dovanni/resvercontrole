@@ -64,7 +64,7 @@ describe('Trace 6bd7dc10 Forensic Runtime Diagnosis & Reproduction', () => {
       type: 'checkout.session.expired',
       livemode: false,
       created: 123456789,
-      data: { object: { id: 'cs_test_abc123' } }
+      data: { object: { id: 'cs_test_abc123', object: 'checkout.session' } }
     });
   };
 
