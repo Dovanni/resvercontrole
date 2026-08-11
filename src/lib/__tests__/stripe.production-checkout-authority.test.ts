@@ -10,13 +10,7 @@ vi.mock('@tanstack/react-start/server', () => ({
 vi.mock('@/integrations/supabase/client.server', () => ({
   supabaseAdmin: {
     auth: { getUser: vi.fn() },
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    neq: vi.fn().mockReturnThis(),
-    order: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    single: vi.fn().mockReturnThis(),
+    from: vi.fn(),
     rpc: vi.fn(),
   },
 }));
@@ -47,36 +41,33 @@ describe('VEJAMAIS_STRIPE_PRODUCTION_CHECKOUT_AUTHORITY_SUITE', () => {
     
     (supabaseAdmin.auth.getUser as any).mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
     
-    // Mock for subscriptions table
     (supabaseAdmin.from as any).mockImplementation((table: string) => {
+      const mockQuery: any = {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        neq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        limit: vi.fn().mockReturnThis(),
+        single: vi.fn(),
+      };
+
       if (table === 'subscriptions') {
-        return {
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
-          neq: vi.fn().mockReturnThis(),
-          order: vi.fn().mockReturnThis(),
-          limit: vi.fn().mockReturnThis(),
-          single: vi.fn().mockResolvedValue({ data: { id: 'sub1', plan_id: 'p1', plans: { code: 'enterprise' } }, error: null })
-        };
+        mockQuery.single.mockResolvedValue({ data: { id: 'sub1', plan_id: 'p1', plans: { code: 'enterprise' } }, error: null });
+      } else if (table === 'user_company_access') {
+        mockQuery.single.mockResolvedValue({ data: { role: 'admin' }, error: null });
       }
-      if (table === 'user_company_access') {
-        return {
-          select: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
-          single: vi.fn().mockResolvedValue({ data: { role: 'admin' }, error: null })
-        };
-      }
-      return supabaseAdmin;
+      
+      return mockQuery;
     });
 
     (supabaseAdmin.rpc as any).mockImplementation((rpc: string) => {
       if (rpc === 'reserve_checkout_attempt') {
-        return { data: { id: 'att1', idempotency_key: 'i1', status: 'pending' }, error: null };
+        return Promise.resolve({ data: { id: 'att1', idempotency_key: 'i1', status: 'pending' }, error: null });
       }
       if (rpc === 'finalize_checkout_attempt_v2') {
-        return { data: { persisted: true }, error: null };
+        return Promise.resolve({ data: { persisted: true }, error: null });
       }
-      return { data: null, error: null };
+      return Promise.resolve({ data: null, error: null });
     });
   });
 
