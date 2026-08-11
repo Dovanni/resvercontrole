@@ -74,15 +74,25 @@ export async function createStripeCheckoutSessionImpl(empresaId: string) {
   const CANONICAL_HOST = 'www.vejamais.com.br';
   const ALLOWED_PREVIEW_HOST = 'id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
   const ALLOWED_PREVIEW_ORIGIN = 'https://id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
-  const STRIPE_LIVE_BILLING_ENABLED = process.env['STRIPE_LIVE_BILLING_ENABLED'] === 'true';
-
+  const CANONICAL_ORIGIN = 'https://www.vejamais.com.br';
+  
   const isProduction = host === CANONICAL_HOST;
   const isPreview = host === ALLOWED_PREVIEW_HOST;
+
+  // STRICT ORIGIN CHECK
+  const isAllowedOrigin = origin === ALLOWED_PREVIEW_ORIGIN || origin === CANONICAL_ORIGIN;
 
   if (!isProduction && !isPreview) {
     console.warn(`Unauthorized host blocked: Host=${host}`);
     return { status: 'checkout_disabled', message: 'Unauthorized host' };
   }
+
+  if (!isAllowedOrigin) {
+    console.warn(`Unauthorized origin blocked: Origin=${origin}`);
+    return { status: 'checkout_disabled', message: 'Unauthorized origin' };
+  }
+
+  const STRIPE_LIVE_BILLING_ENABLED = process.env['STRIPE_LIVE_BILLING_ENABLED'] === 'true';
 
   if (isProduction && !STRIPE_LIVE_BILLING_ENABLED) {
     console.warn("Production checkout is globally disabled via STRIPE_LIVE_BILLING_ENABLED");
