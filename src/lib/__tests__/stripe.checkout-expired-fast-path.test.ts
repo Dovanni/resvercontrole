@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // 1. Mock do fetch
 global.fetch = vi.fn();
 
-// 2. Mock do Stripe usando função clássica para suportar 'new'
+// 2. Mock do Stripe usando função que retorna um objeto
 const mockStripeInstance = {
   webhooks: {
     constructEventAsync: vi.fn(),
@@ -12,16 +12,19 @@ const mockStripeInstance = {
 };
 
 vi.mock('stripe', () => {
-  const MockStripe = function(this: any) {
-    return mockStripeInstance;
+  // Uma função clássica pode ser usada com 'new'
+  const MockStripe: any = function(this: any) {
+    this.webhooks = mockStripeInstance.webhooks;
+    this.httpClient = mockStripeInstance.httpClient;
   };
-  (MockStripe as any).createFetchHttpClient = vi.fn().mockReturnValue({});
-  (MockStripe as any).createSubtleCryptoProvider = vi.fn().mockReturnValue({});
+  
+  MockStripe.createFetchHttpClient = vi.fn().mockReturnValue({});
+  MockStripe.createSubtleCryptoProvider = vi.fn().mockReturnValue({});
   
   return {
     default: MockStripe,
-    createFetchHttpClient: (MockStripe as any).createFetchHttpClient,
-    createSubtleCryptoProvider: (MockStripe as any).createSubtleCryptoProvider,
+    createFetchHttpClient: MockStripe.createFetchHttpClient,
+    createSubtleCryptoProvider: MockStripe.createSubtleCryptoProvider,
   };
 });
 
