@@ -211,7 +211,7 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
           }
 
           if (!event) {
-            return await createSanitizedResponse(400, traceId, currentStage, 'EVENT_PARSE_FAILED', undefined, eventType);
+            return new Response(JSON.stringify({ error: 'INVALID_SIGNATURE', trace_id: traceId }), { status: 400 });
           }
 
           eventId = event.id;
