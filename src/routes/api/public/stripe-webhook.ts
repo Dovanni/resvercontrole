@@ -240,11 +240,6 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
               return await createSanitizedResponse(500, traceId, currentStage, 'UNEXPECTED_HANDLER_FAILURE', eventId, eventType);
             }
 
-              currentStage = 'PAYLOAD_HASH_CREATED';
-            } catch (err) {
-              return await createSanitizedResponse(500, traceId, currentStage, 'UNEXPECTED_HANDLER_FAILURE', eventId, eventType);
-            }
-
             // --- SERVER_CONFIGURATION_VALIDATED ---
             currentStage = 'SERVER_CONFIGURATION_VALIDATED';
             const supabaseUrl = process.env['VITE_SUPABASE_URL'];
