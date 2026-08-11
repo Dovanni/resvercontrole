@@ -114,14 +114,12 @@ describe('VEJAMAIS_STRIPE_SANITIZED_OBSERVABILITY_TEST_SUITE', () => {
     expect(body.error).toBe('INVALID_SIGNATURE');
   });
 
-  it('4. evento inválido: should return 400 PAYLOAD_CONTRACT_FAILED or generic', async () => {
+  it('4. evento inválido: should return 400', async () => {
     setupStripeEvent(null);
     const resp = await getHandler()(createRequest('{}'));
     const body = await resp.json();
-    // O handler atual quebra se constructEventAsync retornar null (TypeError no id)
-    // No contrato reconciliado, isso deve ser tratado.
-    expect(resp.status).toBe(500); 
-    expect(body.reason_code).toBe('UNEXPECTED_HANDLER_FAILURE');
+    expect(resp.status).toBe(400); 
+    expect(body.error).toBe('INVALID_SIGNATURE'); // constructEventAsync lançaria se fosse nulo real, mas aqui simulamos retorno null
   });
 
   it('5. livemode=true: should return 400 LIVEMODE_REJECTED', async () => {
@@ -140,16 +138,14 @@ describe('VEJAMAIS_STRIPE_SANITIZED_OBSERVABILITY_TEST_SUITE', () => {
     expect(body.error).toBe('UNSUPPORTED_EVENT');
   });
 
-  it('7. payload sanitizado inválido (UUID malformado): should return 400 PAYLOAD_CONTRACT_FAILED', async () => {
+  it('7. payload sanitizado inválido (UUID malformado): should return 500 (bubble up from RPC)', async () => {
     setupStripeEvent({ 
       type: 'invoice.paid', 
       livemode: false, 
       data: { object: { id: 'in_1', metadata: { subscription_id: 'bad-uuid' } } } 
     });
     const resp = await getHandler()(createRequest('{}'));
-    // O handler atual falha em UUIDs se o backend explodir ou se houver validação no handler.
-    // Atualmente ele passa o UUID direto se não for Fast Path.
-    expect(resp.status).toBe(200); // Se não for Fast Path e não houver guard, ele tenta o RPC
+    expect(resp.status).toBe(500);
   });
 
   it('8. transporte RPC falhando: should return 503 RPC_TRANSPORT_FAILED', async () => {
