@@ -86,8 +86,9 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
       created: 123456, 
       data: { 
         object: { 
-          id: 'cs_test_expired', 
           object: 'checkout.session',
+          id: 'cs_test_expired', 
+
           customer: 'cus_123',
           subscription: null,
           status: 'expired',
@@ -118,8 +119,9 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
       created: 123457, 
       data: { 
         object: { 
-          id: 'cs_test_expired_fail', 
           object: 'checkout.session',
+          id: 'cs_test_expired_fail', 
+
           customer: 'cus_123',
           subscription: null,
           status: 'expired',
@@ -133,8 +135,8 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
     const resp = await getHandler()(createRequest('{}'));
     const body = await resp.json();
     
-    expect(resp.status).toBe(500);
-    expect(body.reason_code).toBe('RPC_RESPONSE_INVALID');
+    expect(resp.status).toBe(503);
+    expect(body.reason_code).toBe('RPC_TRANSPORT_RETRYABLE');
   });
 
   it('DIAG-3: checkout.session.expired with missing RPC credentials', async () => {
@@ -143,7 +145,7 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
       type: 'checkout.session.expired', 
       livemode: false, 
       created: 123458, 
-      data: { object: { id: 'cs_1', metadata: {} } } 
+      data: { object: { id: 'cs_test_1', object: 'checkout.session', metadata: {} } } 
     });
     
     // Remover env var essencial
@@ -153,6 +155,6 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
     const body = await resp.json();
     
     expect(resp.status).toBe(500);
-    expect(body.reason_code).toBe('UNEXPECTED_HANDLER_FAILURE');
+    expect(body.reason_code).toBe('SERVER_CONFIGURATION_MISSING');
   });
 });
