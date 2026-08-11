@@ -119,7 +119,7 @@ describe('VEJAMAIS_STRIPE_SANITIZED_OBSERVABILITY_TEST_SUITE', () => {
     const resp = await getHandler()(createRequest('{}'));
     const body = await resp.json();
     expect(resp.status).toBe(400); 
-    expect(body.error).toBe('INVALID_SIGNATURE'); // constructEventAsync lançaria se fosse nulo real, mas aqui simulamos retorno null
+    expect(body.reason_code).toBe('EVENT_PARSE_FAILED');
   });
 
   it('5. livemode=true: should return 400 LIVEMODE_REJECTED', async () => {
@@ -138,14 +138,15 @@ describe('VEJAMAIS_STRIPE_SANITIZED_OBSERVABILITY_TEST_SUITE', () => {
     expect(body.error).toBe('UNSUPPORTED_EVENT');
   });
 
-  it('7. payload sanitizado inválido (UUID malformado): should return 500 (bubble up from RPC)', async () => {
+  it('7. payload sanitizado inválido (UUID malformado): should return 503 (bubble up from RPC)', async () => {
     setupStripeEvent({ 
       type: 'invoice.paid', 
       livemode: false, 
       data: { object: { id: 'in_1', metadata: { subscription_id: 'bad-uuid' } } } 
     });
+    mockFetch.mockRejectedValue(new Error('Fetch failed'));
     const resp = await getHandler()(createRequest('{}'));
-    expect(resp.status).toBe(500);
+    expect(resp.status).toBe(503);
   });
 
   it('8. transporte RPC falhando: should return 503 RPC_TRANSPORT_FAILED', async () => {

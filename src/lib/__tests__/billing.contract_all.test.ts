@@ -219,7 +219,7 @@ describe('VEJAMAIS_STRIPE_LEGACY_COMPATIBILITY_FULL_CONTRACT_VALIDATION', () => 
       type: 'checkout.session.expired',
       livemode: false,
       created: 12345,
-      data: { object: { id: 'cs_1', object: 'checkout.session', metadata: { subscription_id: mockUuid } } },
+      data: { object: { id: 'cs_1', object: 'checkout.session' } },
     });
     setupRpcResponse(200, "processed"); // Fast path espera texto puro ou JSON
 
