@@ -3,18 +3,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // 1. Mock do fetch
 global.fetch = vi.fn();
 
-// 2. Mock do Stripe usando função clássica para suportar 'new'
+// 2. Mock do Stripe
 vi.mock('stripe', () => {
-  function MockStripe(key: string) {
-    this.key = key;
+  const MockStripe = function(this: any) {
     this.webhooks = {
       constructEventAsync: vi.fn(),
     };
     this.httpClient = {};
-  }
-  (MockStripe as any).createFetchHttpClient = vi.fn();
-  (MockStripe as any).createSubtleCryptoProvider = vi.fn();
-  (MockStripe as any).createFetchHttpClient.mockReturnValue({});
+  };
+  (MockStripe as any).createFetchHttpClient = vi.fn().mockReturnValue({});
+  (MockStripe as any).createSubtleCryptoProvider = vi.fn().mockReturnValue({});
   
   return {
     default: MockStripe,
@@ -59,8 +57,8 @@ describe('Stripe Checkout Expired Fast Path', () => {
   };
 
   it('should process checkout.session.expired via fast path and return 200', async () => {
-    const stripe = new Stripe('sk_test_123');
-    (stripe.webhooks.constructEventAsync as any).mockResolvedValue({
+    const stripe = new (Stripe as any)('sk_test_123');
+    stripe.webhooks.constructEventAsync.mockResolvedValue({
       id: 'evt_test_123',
       type: 'checkout.session.expired',
       livemode: false,
@@ -95,8 +93,8 @@ describe('Stripe Checkout Expired Fast Path', () => {
   });
 
   it('should reject livemode=true events with 400', async () => {
-    const stripe = new Stripe('sk_test_123');
-    (stripe.webhooks.constructEventAsync as any).mockResolvedValue({
+    const stripe = new (Stripe as any)('sk_test_123');
+    stripe.webhooks.constructEventAsync.mockResolvedValue({
       id: 'evt_test_124',
       type: 'checkout.session.expired',
       livemode: true,
@@ -113,8 +111,8 @@ describe('Stripe Checkout Expired Fast Path', () => {
   });
 
   it('should return 503 when RPC fails with failed_retryable', async () => {
-    const stripe = new Stripe('sk_test_123');
-    (stripe.webhooks.constructEventAsync as any).mockResolvedValue({
+    const stripe = new (Stripe as any)('sk_test_123');
+    stripe.webhooks.constructEventAsync.mockResolvedValue({
       id: 'evt_test_125',
       type: 'checkout.session.expired',
       livemode: false,
@@ -137,8 +135,8 @@ describe('Stripe Checkout Expired Fast Path', () => {
   });
 
   it('should verify that other events still call the generic RPC', async () => {
-    const stripe = new Stripe('sk_test_123');
-    (stripe.webhooks.constructEventAsync as any).mockResolvedValue({
+    const stripe = new (Stripe as any)('sk_test_123');
+    stripe.webhooks.constructEventAsync.mockResolvedValue({
       id: 'evt_test_completed',
       type: 'checkout.session.completed',
       livemode: false,
