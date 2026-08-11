@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Route } from '../routes/api/public/stripe-webhook';
+import { Route } from '../../routes/api/public/stripe-webhook';
 
 // Mock do global fetch para simular Supabase RPC
 global.fetch = vi.fn();
