@@ -86,8 +86,9 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
       created: 123456, 
       data: { 
         object: { 
-          object: 'checkout.session',
           id: 'cs_test_expired', 
+          object: 'checkout.session',
+
 
           customer: 'cus_123',
           subscription: null,
@@ -119,8 +120,9 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
       created: 123457, 
       data: { 
         object: { 
-          object: 'checkout.session',
           id: 'cs_test_expired_fail', 
+          object: 'checkout.session',
+
 
           customer: 'cus_123',
           subscription: null,

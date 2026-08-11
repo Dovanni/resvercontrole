@@ -27,13 +27,25 @@ vi.mock('@/components/ui/button', () => ({
 vi.mock('@/components/ui/badge', () => ({
   Badge: ({ children }: { children: React.ReactNode }) => <span>{children}</span>
 }));
-vi.mock('lucide-react', () => ({
-  Check: () => <span>Check</span>,
-  CreditCard: () => <span>CreditCard</span>,
-  Users: () => <span>Users</span>,
-  Clock: () => <span>Clock</span>,
-  AlertCircle: () => <span>AlertCircle</span>,
-}));
+vi.mock('lucide-react', async (importOriginal) => {
+  const actual: any = await importOriginal();
+  return {
+    ...actual,
+    Sparkles: (props: any) => <span {...props} data-testid="sparkles" />,
+    ShieldCheck: (props: any) => <span {...props} />,
+    CreditCard: (props: any) => <span {...props} />,
+    CheckCircle2: (props: any) => <span {...props} />,
+    Calendar: (props: any) => <span {...props} />,
+    Clock: (props: any) => <span {...props} />,
+    AlertCircle: (props: any) => <span {...props} />,
+    ArrowRight: (props: any) => <span {...props} />,
+    ChevronRight: (props: any) => <span {...props} />,
+    Zap: (props: any) => <span {...props} />,
+    Star: (props: any) => <span {...props} />,
+    Check: (props: any) => <span {...props} />,
+  };
+});
+
 
 // Partial mock for @tanstack/react-router
 vi.mock('@tanstack/react-router', async (importOriginal) => {
