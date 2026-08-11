@@ -12,11 +12,37 @@ export const getCompanySubscriptionContext = createServerFn({ method: "GET" })
     return getCompanySubscriptionContextImpl(data.empresaId);
   });
 
-export const createStripeCheckoutSession = createServerFn({ method: "POST" })
-  .inputValidator((data) => z.object({ empresaId: z.string().uuid() }).strict().parse(data))
-  .handler(async ({ data }) => {
-    return createStripeCheckoutSessionImpl(data.empresaId);
+export const getCheckoutStatusTransport = async (empresaId: string) => {
+  const response = await fetch(`/api/public/billing/checkout-status?empresaId=${empresaId}`, {
+    method: 'GET',
+    headers: { 'Accept': 'application/json' }
   });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch status');
+  }
+  return response.json();
+};
+
+export const createStripeCheckoutSession = async (empresaId: string) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  
+  const response = await fetch('/api/public/billing/create-checkout', {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    },
+    body: JSON.stringify({ empresaId })
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to create checkout');
+  }
+  return response.json();
+};
 
 export const canInviteMember = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) => z.object({ empresaId: z.string().uuid() }).parse(data))
