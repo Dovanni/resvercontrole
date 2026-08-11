@@ -182,7 +182,7 @@ export function SubscriptionSettingsPage() {
                         {!isCtaEnabled && (
                           <p className="text-[10px] text-amber-600 font-medium leading-relaxed bg-amber-50 p-2 rounded border border-amber-100 flex items-center gap-1.5">
                             <AlertCircle className="size-3" />
-                            {status?.exact_disable_reason || "Checkout em modo de teste aguardando autorização para validação controlada."}
+                            Checkout temporariamente indisponível. Por favor, tente novamente em alguns instantes.
                           </p>
                         )}
                         
