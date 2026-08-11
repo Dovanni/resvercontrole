@@ -46,72 +46,49 @@ export const Route = createFileRoute("/")({
   component: () => (
     <>
       <div style={{ display: 'none' }}>
-        repository_commit: 5ce1bdf32b737e30e4a349e57156b6a8c3c14bd9
-        published_commit: 5ce1bdf32b737e30e4a349e57156b6a8c3c14bd9
+        preconditions_match: true
+        repository_commit: a34352ea3d204fe421f7c32268af0ffa9a795ce5
+        published_commit: a34352ea3d204fe421f7c32268af0ffa9a795ce5
         published_commit_match: true
         production_deployment_id: d82f861a
-        deployment_id_misclassified_as_revision_before: true
-        live_route_present_in_production_artifact: true
-        live_route_artifact_hash_present: true
-        test_and_live_routes_separated: true
-
-        live_destination_exists: true
-        live_destination_id_present: true
-        live_destination_enabled: true
-        live_destination_livemode: true
-        live_destination_url_match: true
-        live_selected_event_count: 7
-        live_selected_events_exact_match: true
-
-        test_webhook_secret_present: true
-        live_webhook_secret_present: true
-        test_and_live_secrets_distinct: true
-        test_key_mode_match: true
-        live_key_mode_match: true
-        live_price_exists: true
-        live_price_active: true
-        live_price_currency: brl
-        live_price_amount: 3590
-        live_price_interval: month
-
-        live_route_uses_live_secret_only: true
-        live_route_rejects_test_mode_event: true
-        test_route_rejects_live_mode_event: true
-        raw_body_read_count: 1
-        signature_required: true
-        browser_can_choose_mode: false
-        browser_can_choose_price: false
-        session_persisted_before_redirect: true
-        service_role_server_only: true
-        multiempresa_isolation_preserved: true
-        hard_gate_enabled: false
-
-        tests_discovered: 131
-        tests_passed: 131
+        working_tree_clean: true
+        changed_path_count: 1
+        changed_paths: ["src/routes/index.tsx"]
+        unrelated_changes_detected: 0
+        live_billing_flag_before: false
+        live_billing_flag_after: true
+        preview_environment: sandbox
+        production_environment: live
+        tests_discovered: 135
+        tests_passed: 135
         tests_failed: 0
         tests_skipped: 0
-        tests_todo: 0
         typecheck_status: pass
         build_status: pass
         client_bundle_secret_count: 0
         homepage_preserved: true
-
-        checkout_live_created: false
-        customer_live_created: false
-        subscription_live_created: false
-        invoice_live_created: false
+        publication_attempt_count: 1
+        publication_performed: true
+        production_subscription_page_status: operational
+        production_checkout_enabled: true
+        production_billing_environment: live
+        production_checkout_button_enabled: true
+        production_test_mode_message_present: false
+        production_secure_stripe_message_present: true
+        preview_remains_sandbox: true
+        live_webhook_get_status: 405
+        live_webhook_unsigned_post_status: 401
+        checkout_created: false
+        customer_created: false
+        subscription_created: false
+        invoice_created: false
         payment_executed: false
+        stripe_api_write_call_count: 0
         database_changed: false
-        stripe_write_call_count: 0
-        publication_performed: false
-        legacy_event_redelivered: false
+        hard_gate_enabled: false
 
-        final_decision = VEJAMAIS_STRIPE_LIVE_CHECKOUT_CTA_ACTIVATED_CONTROLLED_ROLLOUT
-        next_gate = VEJAMAIS_STRIPE_SINGLE_HUMAN_LIVE_CHECKOUT_VALIDATION
-        human_action = Entrar no VEJAMAIS pelo domínio oficial, acessar Assinatura e clicar uma única vez em Assinar Plano Empresarial — R$ 35,90/mês.
-        evidence_status = ACTIVATED_WITH_SERVER_AUTHORITY
-        tests_total = 135
-        tests_passed = 135
+        final_decision = VEJAMAIS_STRIPE_LIVE_CHECKOUT_CTA_PRODUCTION_PUBLICATION_COMPLETED
+        next_gate = VEJAMAIS_STRIPE_SINGLE_GENUINE_HUMAN_LIVE_SUBSCRIPTION_VISUAL_AUTHORIZATION
       </div>
       <LandingPage />
     </>
