@@ -200,10 +200,76 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
           eventId = event.id;
           eventType = event.type;
 
-          // ETAPA 7: Nenhuma persistência antes de livemode=false e event.type permitido
           if (event.livemode) {
              return new Response(JSON.stringify({ error: 'LIVEMODE_REJECTED', trace_id: traceId }), { status: 400 });
           }
+
+          // --- FAST PATH: checkout.session.expired ---
+          if (event.type === 'checkout.session.expired') {
+            const eventObject = event.data.object as Stripe.Checkout.Session;
+            const sessionId = eventObject.id;
+
+            if (!sessionId) {
+              return await createSanitizedResponse(400, traceId, 'SIGNATURE_VALIDATED', 'PAYLOAD_CONTRACT_FAILED', eventId, eventType);
+            }
+
+            // Checkpoint 1: SIGNATURE_VALIDATED
+            await safeLogDiagnostic(traceId, eventId, eventType, 'SIGNATURE_VALIDATED');
+
+            // Preparar payload SHA256 (sanitizado, sem PII)
+            const msgUint8 = new TextEncoder().encode(bodyText);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const payloadHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+            const supabaseUrl = process.env['VITE_SUPABASE_URL'];
+            const supabaseServiceRoleKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
+
+            if (!supabaseUrl || !supabaseServiceRoleKey) {
+              console.error(`[${traceId}] Configuration Error: Missing Supabase env vars for fast path`);
+              return await createSanitizedResponse(500, traceId, 'SIGNATURE_VALIDATED', 'UNEXPECTED_HANDLER_FAILURE', eventId, eventType);
+            }
+
+            // Chamada RPC dedicada
+            let rpcResponse: Response;
+            try {
+              rpcResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/process_stripe_checkout_session_expired`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${supabaseServiceRoleKey}`,
+                  'apikey': supabaseServiceRoleKey
+                },
+                body: JSON.stringify({
+                  p_provider_event_id: event.id,
+                  p_provider_session_id: sessionId,
+                  p_event_created: event.created,
+                  p_payload_sha256: payloadHash,
+                  p_livemode: false
+                })
+              });
+            } catch (err) {
+              return await createSanitizedResponse(503, traceId, 'RPC_CALL_STARTED', 'RPC_TRANSPORT_FAILED', eventId, eventType);
+            }
+
+            if (!rpcResponse.ok) {
+              return await createSanitizedResponse(500, traceId, 'RPC_RESPONSE_RECEIVED', 'RPC_RESPONSE_INVALID', eventId, eventType);
+            }
+
+            const result = (await rpcResponse.json()) as string;
+            
+            if (result === 'processed' || result === 'duplicate' || result === 'already_expired' || result === 'ignored_terminal') {
+              return await createSanitizedResponse(200, traceId, 'HTTP_RESPONSE_READY', undefined, eventId, eventType);
+            }
+            
+            if (result === 'failed_retryable') {
+              return await createSanitizedResponse(503, traceId, 'RPC_RESPONSE_RECEIVED', 'RPC_REJECTED_RETRYABLE', eventId, eventType);
+            }
+
+            return await createSanitizedResponse(400, traceId, 'RPC_RESPONSE_RECEIVED', 'PAYLOAD_CONTRACT_FAILED', eventId, eventType);
+          }
+          // --- END FAST PATH ---
+
 
           const supportedEvents = [
             'checkout.session.completed',
