@@ -109,6 +109,11 @@ describe('VEJAMAIS_STRIPE_EXPIRED_EVENT_DIAGNOSTIC_SUITE', () => {
     const rpcPayload = JSON.parse(fetchArgs[1].body);
     expect(rpcPayload.p_provider_event_id).toBe('evt_exp_1');
     expect(rpcPayload.p_provider_session_id).toBe('cs_test_expired');
+    
+    if (resp.status !== 200) {
+      console.log('DIAG-1 FAILURE BODY:', body);
+    }
+
   });
 
   it('DIAG-2: checkout.session.expired with RPC failure (500)', async () => {
