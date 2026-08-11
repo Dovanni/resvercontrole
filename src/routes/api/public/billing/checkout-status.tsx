@@ -18,11 +18,16 @@ export const Route = createFileRoute('/api/public/billing/checkout-status')({
         }
 
         const host = request.headers.get('host')
-        const origin = request.headers.get('origin')
+        // GET can omit Origin; using request.url for environment validation
+        const status = await getCheckoutStatusImpl(empresaId, host, null)
         
-        const status = await getCheckoutStatusImpl(empresaId, host, origin)
-        
-        return new Response(JSON.stringify(status), {
+        // Strict production contract compliance
+        const body = {
+          checkout_enabled: status.checkout_enabled,
+          billing_environment: status.billing_environment
+        }
+
+        return new Response(JSON.stringify(body), {
           status: 200,
           headers: {
             'Content-Type': 'application/json',

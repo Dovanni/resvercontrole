@@ -6,6 +6,7 @@ import {
   createStripeCheckoutSessionImpl,
 } from "./billing.server";
 
+// getCompanySubscriptionContext is kept for internal use but not for checkout flow
 export const getCompanySubscriptionContext = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) => z.object({ empresaId: z.string().uuid() }).strict().parse(data))
   .handler(async ({ data }) => {

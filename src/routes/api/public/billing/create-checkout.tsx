@@ -10,11 +10,20 @@ export const Route = createFileRoute('/api/public/billing/create-checkout')({
         const host = request.headers.get('host')
         const origin = request.headers.get('origin')
 
-        // Validação rigorosa de origem antes de qualquer lógica
+        // CSRF validation via strict Origin check
         if (!isValidOrigin(origin) || !isAuthorizedHost(host)) {
-          console.warn(`[API/create-checkout] Unauthorized request: host=${host}, origin=${origin}`)
+          console.warn(`[API/create-checkout] Unauthorized origin/host: host=${host}, origin=${origin}`)
           return new Response(JSON.stringify({ error: 'Unauthorized origin' }), { 
             status: 403,
+            headers: { 'Content-Type': 'application/json' }
+          })
+        }
+
+        // Bearer authentication requirement
+        const authHeader = request.headers.get('authorization')
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
             headers: { 'Content-Type': 'application/json' }
           })
         }
