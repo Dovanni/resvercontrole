@@ -768,13 +768,13 @@ function LancDialog({ cartoes, lancamentos, faturas, userId, onDone }: { cartoes
       const rows: any[] = [];
       const valorPorParcela = valorNum / parcelas;
       const baseFat = computeFatura(f.data, cartao.dia_fechamento);
-      console.log("[cartao-lancamento] cartao_id:", cartao.id, "data:", f.data, "fatura:", `${String(baseFat.mes).padStart(2,"0")}/${baseFat.ano}`, "parcelas:", parcelas);
       for (let i = 0; i < parcelas; i++) {
         let mes = baseFat.mes + i, ano = baseFat.ano;
         while (mes > 12) { mes -= 12; ano += 1; }
         rows.push({
           user_id: userId,
           cartao_id: cartao.id,
+          empresa_id: (cartao as any).empresa_id, // Fornece para evitar o erro inicial, mas o trigger garante
           data: f.data,
           descricao: parcelas > 1 ? `${f.descricao} (${i + 1}/${parcelas})` : f.descricao,
           categoria: f.categoria,
