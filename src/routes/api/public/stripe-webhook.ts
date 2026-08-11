@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { createFileRoute } from '@tanstack/react-router';
+import { validateCheckoutSessionContract } from '@/lib/stripe-guards.server';
 
 /**
  * PROTOCOLO: VEJAMAIS_STRIPE_DURABLE_DIAGNOSTICS_TARGETED_CORRECTION
