@@ -56,7 +56,7 @@ describe('Stripe Checkout Expired Fast Path - Full Simulation', () => {
       type: 'checkout.session.expired',
       livemode: false,
       created: 123456789,
-      data: { object: { id: 'cs_test_abc123' } }
+      data: { object: { id: 'cs_test_abc123', object: 'checkout.session' } }
     });
   };
 

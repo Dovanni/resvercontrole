@@ -210,6 +210,10 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
             return new Response(JSON.stringify({ error: 'INVALID_SIGNATURE', trace_id: traceId }), { status: 400 });
           }
 
+          if (!event) {
+            return new Response(JSON.stringify({ error: 'INVALID_SIGNATURE', trace_id: traceId }), { status: 400 });
+          }
+
           eventId = event.id;
           eventType = event.type;
 
