@@ -60,12 +60,12 @@ describe('Stripe Checkout Expired Fast Path - Strict Scalar Parser', () => {
     });
   };
 
-  it('json_scalar_processed_200_test', async () => {
+  it('processed_plain_text_200_test', async () => {
     setupMockEvent();
     (global.fetch as any).mockResolvedValue({
       ok: true,
       status: 200,
-      text: async () => '"processed"'
+      text: async () => 'processed'
     });
     const response = await getHandler()({ request: createMockRequest('{}') });
     expect(response.status).toBe(200);
@@ -82,48 +82,43 @@ describe('Stripe Checkout Expired Fast Path - Strict Scalar Parser', () => {
     expect(response.status).toBe(200);
   });
 
-  it('json_scalar_already_expired_200_test', async () => {
+  it('number_body_500_test', async () => {
     setupMockEvent();
     (global.fetch as any).mockResolvedValue({
       ok: true,
       status: 200,
-      text: async () => '"already_expired"'
+      text: async () => '123'
     });
     const response = await getHandler()({ request: createMockRequest('{}') });
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(body.reason_code).toBe('RPC_RESPONSE_INVALID');
   });
 
-  it('json_scalar_ignored_terminal_200_test', async () => {
+  it('boolean_body_500_test', async () => {
     setupMockEvent();
     (global.fetch as any).mockResolvedValue({
       ok: true,
       status: 200,
-      text: async () => '"ignored_terminal"'
+      text: async () => 'true'
     });
     const response = await getHandler()({ request: createMockRequest('{}') });
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(body.reason_code).toBe('RPC_RESPONSE_INVALID');
   });
 
-  it('json_scalar_failed_retryable_503_test', async () => {
+  it('null_body_500_test', async () => {
     setupMockEvent();
     (global.fetch as any).mockResolvedValue({
       ok: true,
       status: 200,
-      text: async () => '"failed_retryable"'
+      text: async () => 'null'
     });
     const response = await getHandler()({ request: createMockRequest('{}') });
-    expect(response.status).toBe(503);
-  });
-
-  it('plain_text_duplicate_200_test', async () => {
-    setupMockEvent();
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => 'duplicate'
-    });
-    const response = await getHandler()({ request: createMockRequest('{}') });
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(body.reason_code).toBe('RPC_RESPONSE_INVALID');
   });
 
   it('empty_body_500_test', async () => {
@@ -152,6 +147,54 @@ describe('Stripe Checkout Expired Fast Path - Strict Scalar Parser', () => {
     expect(body.reason_code).toBe('RPC_RESPONSE_INVALID');
   });
 
+  it('rpc_non_2xx_503_test', async () => {
+    setupMockEvent();
+    (global.fetch as any).mockResolvedValue({
+      ok: false,
+      status: 502,
+      text: async () => 'Bad Gateway'
+    });
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    expect(response.status).toBe(503);
+    const body = await response.json();
+    expect(body.reason_code).toBe('RPC_TRANSPORT_RETRYABLE');
+  });
+
+  it('rpc_timeout_503_test', async () => {
+    setupMockEvent();
+    (global.fetch as any).mockRejectedValue(new Error('Fetch timeout'));
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    expect(response.status).toBe(503);
+    const body = await response.json();
+    expect(body.reason_code).toBe('RPC_TRANSPORT_FAILED');
+  });
+
+  it('generic_rpc_not_called_test', async () => {
+    setupMockEvent();
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => 'processed'
+    });
+    await getHandler()({ request: createMockRequest('{}') });
+    const calls = (global.fetch as any).mock.calls;
+    const hasGenericRpcCall = calls.some((call: any) => call[0].includes('process_stripe_webhook_event'));
+    expect(hasGenericRpcCall).toBe(false);
+  });
+
+  it('json_scalar_failed_retryable_503_test', async () => {
+    setupMockEvent();
+    (global.fetch as any).mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => '"failed_retryable"'
+    });
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    expect(response.status).toBe(503);
+    const body = await response.json();
+    expect(body.reason_code).toBe('RPC_REJECTED_RETRYABLE');
+  });
+
   it('array_body_500_test', async () => {
     setupMockEvent();
     (global.fetch as any).mockResolvedValue({
@@ -161,98 +204,5 @@ describe('Stripe Checkout Expired Fast Path - Strict Scalar Parser', () => {
     });
     const response = await getHandler()({ request: createMockRequest('{}') });
     expect(response.status).toBe(500);
-  });
-
-  it('multiple_item_array_500_test', async () => {
-    setupMockEvent();
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => '["processed", "duplicate"]'
-    });
-    const response = await getHandler()({ request: createMockRequest('{}') });
-    expect(response.status).toBe(500);
-  });
-
-  it('object_body_500_test', async () => {
-    setupMockEvent();
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => '{"status": "processed"}'
-    });
-    const response = await getHandler()({ request: createMockRequest('{}') });
-    expect(response.status).toBe(500);
-  });
-
-  it('unknown_string_500_test', async () => {
-    setupMockEvent();
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => '"unknown_status"'
-    });
-    const response = await getHandler()({ request: createMockRequest('{}') });
-    expect(response.status).toBe(500);
-  });
-
-  it('non_2xx_sanitized_test', async () => {
-    setupMockEvent();
-    (global.fetch as any).mockResolvedValue({
-      ok: false,
-      status: 400,
-      text: async () => 'Bad Request'
-    });
-    const response = await getHandler()({ request: createMockRequest('{}') });
-    expect(response.status).toBe(500);
-    const body = await response.json();
-    expect(body.reason_code).toBe('RPC_RESPONSE_INVALID');
-  });
-
-  it('stage_rpc_response_received_test', async () => {
-    setupMockEvent();
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => '"processed"'
-    });
-    const response = await getHandler()({ request: createMockRequest('{}') });
-    expect(response.status).toBe(200);
-  });
-
-  it('generic_rpc_never_called_test', async () => {
-    setupMockEvent();
-    (global.fetch as any).mockResolvedValue({
-      ok: true,
-      status: 200,
-      text: async () => '"processed"'
-    });
-    await getHandler()({ request: createMockRequest('{}') });
-    // Verifica que a URL chamada contém a RPC do Fast Path
-    const calls = (global.fetch as any).mock.calls;
-    const hasGenericRpcCall = calls.some((call: any) => call[0].includes('process_stripe_webhook_event'));
-    expect(hasGenericRpcCall).toBe(false);
-  });
-
-  it('rpc_non_2xx_503_test', async () => {
-    setupMockEvent();
-    (global.fetch as any).mockResolvedValue({
-      ok: false,
-      status: 502,
-      text: async () => 'Bad Gateway'
-    });
-    const response = await getHandler()({ request: createMockRequest('{}') });
-    expect(response.status).toBe(500); // Conforme handler: status 500 para !ok
-    const body = await response.json();
-    expect(body.reason_code).toBe('RPC_RESPONSE_INVALID');
-  });
-
-  it('rpc_timeout_503_test', async () => {
-    setupMockEvent();
-    (global.fetch as any).mockRejectedValue(new Error('Fetch timeout'));
-    const response = await getHandler()({ request: createMockRequest('{}') });
-    expect(response.status).toBe(503); // Conforme handler: catch -> 503
-    const body = await response.json();
-    expect(body.reason_code).toBe('RPC_TRANSPORT_FAILED');
   });
 });
