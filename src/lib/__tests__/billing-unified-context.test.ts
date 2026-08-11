@@ -59,6 +59,9 @@ describe('Billing Unified Context Unified Test Suite', () => {
       return Promise.resolve({ data: null, error: null });
     });
 
+    // Force environment for test
+    process.env.STRIPE_LIVE_BILLING_ENABLED = 'false';
+    
     // Execute implementations
     const subContext = await getCompanySubscriptionContextImpl(mockEmpresaId);
     const checkoutStatus = await getCheckoutStatusImpl(mockEmpresaId, 'www.vejamais.com.br', 'https://www.vejamais.com.br');
@@ -67,14 +70,16 @@ describe('Billing Unified Context Unified Test Suite', () => {
     expect(subContext).toBeDefined();
     expect(subContext?.status).toBe('trialing');
     expect(subContext?.days_remaining).toBe(26);
-    expect(checkoutStatus.billing_environment).toBe('sandbox'); // Default without LIVE flag env
+    expect(checkoutStatus.billing_environment).toBe('live');
+    expect(checkoutStatus.checkout_enabled).toBe(false); // Live is disabled
     
-    // Simulate LIVE environment via process.env
+    // Simulate LIVE environment enabled
     process.env.STRIPE_LIVE_BILLING_ENABLED = 'true';
     const checkoutStatusLive = await getCheckoutStatusImpl(mockEmpresaId, 'www.vejamais.com.br', 'https://www.vejamais.com.br');
     expect(checkoutStatusLive.billing_environment).toBe('live');
     expect(checkoutStatusLive.checkout_enabled).toBe(true);
   });
+
 
   it('should return sandbox for preview host', async () => {
     const previewHost = 'id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
