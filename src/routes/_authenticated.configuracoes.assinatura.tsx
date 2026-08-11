@@ -159,7 +159,7 @@ export function SubscriptionSettingsPage() {
                             btn.innerText = "Redirecionando para pagamento seguro...";
                             
                             try {
-                              const result = await createStripeCheckoutSession({ data: { empresaId } });
+                              const result = await createStripeCheckoutSession(empresaId);
                               
                               if (result.status === 'session_created' && result.checkoutUrl) {
                                 window.location.href = result.checkoutUrl;
