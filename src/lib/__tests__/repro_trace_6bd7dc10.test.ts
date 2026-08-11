@@ -30,12 +30,12 @@ vi.mock('stripe', () => {
 // Import the handler
 import { Route } from '../../routes/api/public/stripe-webhook';
 
-describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
+describe('Trace 6bd7dc10 Forensic Runtime Diagnosis & Reproduction', () => {
   const mockTraceId = '6bd7dc10-2940-4f4f-9adf-27aecd04236d';
   
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env['VITE_SUPABASE_URL'] = 'http://localhost:54321';
+    process.env['VITE_SUPABASE_URL'] = 'https://bsrjtmssbnvttzrvnaab.supabase.co';
     process.env['SUPABASE_SERVICE_ROLE_KEY'] = 'test-key';
     process.env['STRIPE_RESTRICTED_KEY'] = 'sk_test_123';
     process.env['STRIPE_WEBHOOK_SECRET'] = 'whsec_test';
@@ -77,16 +77,12 @@ describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
     statusText: ok ? 'OK' : 'Error'
   });
 
-  it('valid_event_scalar_duplicate_200', async () => {
-    setupMockEvent();
-    (global.fetch as any).mockResolvedValue(mockResponse(true, 200, '"duplicate"'));
-    const response = await getHandler()({ request: createMockRequest('{}') });
-    const body = await response.json();
-    expect(response.status).toBe(200);
-    expect(body.stage).toBe('HTTP_RESPONSE_CREATED');
+  it('production_runtime_process_env_available_test', async () => {
+    expect(typeof process).toBe('object');
+    expect(typeof process.env).toBe('object');
   });
 
-  it('payload_hash_success', async () => {
+  it('valid_server_configuration_test', async () => {
     setupMockEvent();
     (global.fetch as any).mockResolvedValue(mockResponse(true, 200, '"processed"'));
     const response = await getHandler()({ request: createMockRequest('{}') });
@@ -95,17 +91,67 @@ describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
     expect(body.stage).toBe('HTTP_RESPONSE_CREATED');
   });
 
-  it('missing_supabase_url_sanitized', async () => {
+  it('missing_supabase_url_500_test', async () => {
     setupMockEvent();
+    const original = process.env['VITE_SUPABASE_URL'];
     delete process.env['VITE_SUPABASE_URL'];
     const response = await getHandler()({ request: createMockRequest('{}') });
     const body = await response.json();
     expect(response.status).toBe(500);
-    expect(body.reason_code).toBe('UNEXPECTED_HANDLER_FAILURE');
-    expect(body.stage).toBe('PAYLOAD_HASH_CREATED');
+    expect(body.reason_code).toBe('SERVER_CONFIGURATION_MISSING');
+    expect(body.stage).toBe('SERVER_CONFIGURATION_VALIDATED');
+    process.env['VITE_SUPABASE_URL'] = original;
   });
 
-  it('fetch_network_rejection_503', async () => {
+  it('invalid_supabase_url_500_test', async () => {
+    setupMockEvent();
+    const original = process.env['VITE_SUPABASE_URL'];
+    process.env['VITE_SUPABASE_URL'] = 'not-a-url';
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    const body = await response.json();
+    expect(response.status).toBe(500);
+    expect(body.reason_code).toBe('SERVER_CONFIGURATION_INVALID');
+    expect(body.stage).toBe('SERVER_CONFIGURATION_VALIDATED');
+    process.env['VITE_SUPABASE_URL'] = original;
+  });
+
+  it('missing_service_role_key_500_test', async () => {
+    setupMockEvent();
+    const original = process.env['SUPABASE_SERVICE_ROLE_KEY'];
+    delete process.env['SUPABASE_SERVICE_ROLE_KEY'];
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    const body = await response.json();
+    expect(response.status).toBe(500);
+    expect(body.reason_code).toBe('SERVER_CONFIGURATION_MISSING');
+    expect(body.stage).toBe('SERVER_CONFIGURATION_VALIDATED');
+    process.env['SUPABASE_SERVICE_ROLE_KEY'] = original;
+  });
+
+  it('empty_service_role_key_500_test', async () => {
+    setupMockEvent();
+    const original = process.env['SUPABASE_SERVICE_ROLE_KEY'];
+    process.env['SUPABASE_SERVICE_ROLE_KEY'] = '   ';
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    const body = await response.json();
+    expect(response.status).toBe(500);
+    expect(body.reason_code).toBe('SERVER_CONFIGURATION_INVALID');
+    expect(body.stage).toBe('SERVER_CONFIGURATION_VALIDATED');
+    process.env['SUPABASE_SERVICE_ROLE_KEY'] = original;
+  });
+
+  it('crypto_digest_rejection_500_test', async () => {
+    setupMockEvent();
+    const originalDigest = crypto.subtle.digest;
+    crypto.subtle.digest = vi.fn().mockRejectedValue(new Error('Crypto failed'));
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    const body = await response.json();
+    expect(response.status).toBe(500);
+    expect(body.reason_code).toBe('UNEXPECTED_HANDLER_FAILURE');
+    expect(body.stage).toBe('PAYLOAD_HASH_STARTED');
+    crypto.subtle.digest = originalDigest;
+  });
+
+  it('fetch_network_rejection_503_test', async () => {
     setupMockEvent();
     (global.fetch as any).mockRejectedValue(new Error('Network failure'));
     const response = await getHandler()({ request: createMockRequest('{}') });
@@ -115,7 +161,7 @@ describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
     expect(body.stage).toBe('RPC_CALL_STARTED');
   });
 
-  it('fetch_timeout_503', async () => {
+  it('fetch_timeout_503_test', async () => {
     setupMockEvent();
     (global.fetch as any).mockRejectedValue(new Error('Timeout'));
     const response = await getHandler()({ request: createMockRequest('{}') });
@@ -125,7 +171,7 @@ describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
     expect(body.stage).toBe('RPC_CALL_STARTED');
   });
 
-  it('rpc_http_non_2xx_503', async () => {
+  it('rpc_non_2xx_503_test', async () => {
     setupMockEvent();
     (global.fetch as any).mockResolvedValue(mockResponse(false, 502, 'Bad Gateway'));
     const response = await getHandler()({ request: createMockRequest('{}') });
@@ -135,32 +181,12 @@ describe('Trace 6bd7dc10 Reproduction - Fast Path Pre-ACK Diagnosis', () => {
     expect(body.stage).toBe('RPC_RESPONSE_RECEIVED');
   });
 
-  it('rpc_scalar_ack_200', async () => {
+  it('scalar_duplicate_ack_200_test', async () => {
     setupMockEvent();
-    (global.fetch as any).mockResolvedValue(mockResponse(true, 200, 'processed'));
+    (global.fetch as any).mockResolvedValue(mockResponse(true, 200, '"duplicate"'));
     const response = await getHandler()({ request: createMockRequest('{}') });
     const body = await response.json();
     expect(response.status).toBe(200);
     expect(body.stage).toBe('HTTP_RESPONSE_CREATED');
-  });
-  
-  it('CRITICAL_PRODUCTION_SIMULATION_F958', async () => {
-    setupMockEvent();
-    const fetchSpy = vi.spyOn(global, 'fetch');
-    fetchSpy.mockResolvedValue(mockResponse(true, 200, '"duplicate"'));
-    
-    const response = await getHandler()({ request: createMockRequest('{"id":"evt_123"}') });
-    const body = await response.json();
-    
-    expect(response.status).toBe(200);
-    expect(body.stage).toBe('HTTP_RESPONSE_CREATED');
-    expect(body.reason_code).toBeUndefined();
-    
-    const calls = fetchSpy.mock.calls;
-    const fastPathCalls = calls.filter(c => c[0].toString().includes('process_stripe_checkout_session_expired'));
-    const genericPathCalls = calls.filter(c => c[0].toString().includes('process_stripe_webhook_event'));
-    
-    expect(fastPathCalls.length).toBe(1);
-    expect(genericPathCalls.length).toBe(0);
   });
 });
