@@ -176,11 +176,11 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
             return new Response(JSON.stringify({ error: 'UNAUTHORIZED', trace_id: traceId }), { status: 401 });
           }
 
-          const restrictedKey = process.env['STRIPE_RESTRICTED_KEY'];
-          const endpointSecret = process.env['STRIPE_WEBHOOK_SECRET'] || '';
+          const restrictedKey = process.env['STRIPE_RESTRICTED_KEY_TEST'] || process.env['STRIPE_RESTRICTED_KEY'];
+          const endpointSecret = process.env['STRIPE_WEBHOOK_SECRET_TEST'] || process.env['STRIPE_WEBHOOK_SECRET'] || '';
 
           if (!restrictedKey) {
-            console.error(`[${traceId}] Configuration Error: Missing STRIPE_RESTRICTED_KEY`);
+            console.error(`[${traceId}] Configuration Error: Missing STRIPE_RESTRICTED_KEY_TEST`);
             return new Response(JSON.stringify({ error: 'INTERNAL_ERROR', trace_id: traceId }), { status: 500 });
           }
 
@@ -388,7 +388,7 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
 
           const supabaseUrl = process.env['VITE_SUPABASE_URL'];
           const supabaseServiceRoleKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
-          const priceEnterpriseMonthly = process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY'];
+          const priceEnterpriseMonthly = process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY_TEST'] || process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY'];
           
           if (!supabaseUrl || !supabaseServiceRoleKey || !priceEnterpriseMonthly) {
             console.error(`[${traceId}] Configuration Error: Missing Supabase/Stripe env vars`);
