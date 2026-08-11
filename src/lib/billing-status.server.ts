@@ -13,7 +13,7 @@ const CANONICAL_APEX_ORIGIN = 'https://vejamais.com.br';
  * @param origin Header 'origin' ou 'referer' processado.
  * @returns boolean indicando se a origem é permitida.
  */
-function isValidOrigin(origin: string | null): boolean {
+export function isValidOrigin(origin: string | null): boolean {
   if (!origin) return false;
   
   try {
@@ -37,6 +37,26 @@ function isValidOrigin(origin: string | null): boolean {
   } catch (e) {
     return false;
   }
+}
+
+/**
+ * Verifica se o host é autorizado.
+ */
+export function isAuthorizedHost(host: string | null): boolean {
+  if (!host) return false;
+  const normalizedHost = host.toLowerCase();
+  return normalizedHost === CANONICAL_HOST || 
+         normalizedHost === APEX_HOST || 
+         normalizedHost === ALLOWED_PREVIEW_HOST;
+}
+
+/**
+ * Identifica o ambiente de faturamento baseado no host.
+ */
+export function getBillingEnvironment(host: string | null): 'live' | 'sandbox' {
+  if (!host) return 'sandbox';
+  const normalizedHost = host.toLowerCase();
+  return (normalizedHost === CANONICAL_HOST || normalizedHost === APEX_HOST) ? 'live' : 'sandbox';
 }
 
 export async function getCheckoutStatusImpl(empresaId: string, host: string | null, origin: string | null) {
