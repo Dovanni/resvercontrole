@@ -71,20 +71,31 @@ export async function createStripeCheckoutSessionImpl(empresaId: string) {
   const host = req.headers.get('host');
   const origin = req.headers.get('origin');
   
+  const CANONICAL_HOST = 'www.vejamais.com.br';
   const ALLOWED_PREVIEW_HOST = 'id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
   const ALLOWED_PREVIEW_ORIGIN = 'https://id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app';
-  
-  if (host !== ALLOWED_PREVIEW_HOST || origin !== ALLOWED_PREVIEW_ORIGIN) {
-    console.warn(`Unauthorized host/origin blocked: Host=${host}, Origin=${origin}`);
-    return { 
-      status: 'checkout_disabled', 
-      message: 'Production checkout is disabled',
-      evidence: { host_match: host === ALLOWED_PREVIEW_HOST, origin_match: origin === ALLOWED_PREVIEW_ORIGIN }
-    };
+  const STRIPE_LIVE_BILLING_ENABLED = process.env['STRIPE_LIVE_BILLING_ENABLED'] === 'true';
+
+  const isProduction = host === CANONICAL_HOST;
+  const isPreview = host === ALLOWED_PREVIEW_HOST;
+
+  if (!isProduction && !isPreview) {
+    console.warn(`Unauthorized host blocked: Host=${host}`);
+    return { status: 'checkout_disabled', message: 'Unauthorized host' };
   }
 
-  const STRIPE_RESTRICTED_KEY = process.env['STRIPE_RESTRICTED_KEY'];
-  const STRIPE_PRICE_ENTERPRISE_MONTHLY = process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY'];
+  if (isProduction && !STRIPE_LIVE_BILLING_ENABLED) {
+    console.warn("Production checkout is globally disabled via STRIPE_LIVE_BILLING_ENABLED");
+    return { status: 'checkout_disabled', message: 'Production checkout disabled' };
+  }
+
+  const STRIPE_RESTRICTED_KEY = isProduction 
+    ? process.env['STRIPE_RESTRICTED_KEY_LIVE'] 
+    : (process.env['STRIPE_RESTRICTED_KEY_TEST'] || process.env['STRIPE_RESTRICTED_KEY']);
+
+  const STRIPE_PRICE_ENTERPRISE_MONTHLY = isProduction
+    ? process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY_LIVE']
+    : (process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY_TEST'] || process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY']);
 
   if (!STRIPE_RESTRICTED_KEY || !STRIPE_PRICE_ENTERPRISE_MONTHLY) {
     console.warn("Stripe configuration pending (Missing secrets)");
@@ -157,8 +168,8 @@ export async function createStripeCheckoutSessionImpl(empresaId: string) {
     throw new Error("CHECKOUT_RECONCILIATION_REQUIRED");
   }
 
-  const successUrl = `https://${ALLOWED_PREVIEW_HOST}/configuracoes/assinatura?checkout=success`;
-  const cancelUrl = `https://${ALLOWED_PREVIEW_HOST}/configuracoes/assinatura?checkout=cancel`;
+  const successUrl = `${origin}/configuracoes/assinatura?checkout=success`;
+  const cancelUrl = `${origin}/configuracoes/assinatura?checkout=cancel`;
 
   try {
     const session = await stripe.checkout.sessions.create({
