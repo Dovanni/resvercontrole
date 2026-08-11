@@ -166,7 +166,7 @@ describe('Stripe Checkout Expired Fast Path - Full Simulation', () => {
     const response = await getHandler()({ request: createMockRequest('{}') });
     expect(response.status).toBe(503);
     const body = await response.json();
-    expect(body.reason_code).toBe('RPC_TRANSPORT_FAILED');
+    expect(body.reason_code).toBe('RPC_TRANSPORT_RETRYABLE');
   });
 
   it('generic_rpc_not_called_test', async () => {
