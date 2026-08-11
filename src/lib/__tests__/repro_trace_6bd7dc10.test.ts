@@ -189,4 +189,23 @@ describe('Trace 6bd7dc10 Forensic Runtime Diagnosis & Reproduction', () => {
     expect(response.status).toBe(200);
     expect(body.stage).toBe('HTTP_RESPONSE_CREATED');
   });
+
+  it('json_stringify_failure_500_test', async () => {
+    setupMockEvent();
+    const originalStringify = JSON.stringify;
+    // We target only the JSON.stringify in the handler context if possible, but here we mock global
+    JSON.stringify = vi.fn().mockImplementation((val) => {
+      if (val && (val as any).p_provider_session_id === 'cs_test_abc123') {
+        throw new Error('Stringify failed');
+      }
+      return originalStringify(val);
+    });
+    
+    const response = await getHandler()({ request: createMockRequest('{}') });
+    const body = await response.json();
+    expect(response.status).toBe(500);
+    expect(body.reason_code).toBe('UNEXPECTED_HANDLER_FAILURE');
+    expect(body.stage).toBe('RPC_CALL_STARTED');
+    JSON.stringify = originalStringify;
+  });
 });
