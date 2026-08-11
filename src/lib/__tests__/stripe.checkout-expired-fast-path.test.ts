@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // 1. Mock do fetch
 global.fetch = vi.fn();
 
-// 2. Mock do Stripe
+// 2. Mock do Stripe usando função clássica para suportar 'new'
 const mockStripeInstance = {
   webhooks: {
     constructEventAsync: vi.fn(),
@@ -12,7 +12,9 @@ const mockStripeInstance = {
 };
 
 vi.mock('stripe', () => {
-  const MockStripe = vi.fn().mockImplementation(() => mockStripeInstance);
+  const MockStripe = function(this: any) {
+    return mockStripeInstance;
+  };
   (MockStripe as any).createFetchHttpClient = vi.fn().mockReturnValue({});
   (MockStripe as any).createSubtleCryptoProvider = vi.fn().mockReturnValue({});
   
