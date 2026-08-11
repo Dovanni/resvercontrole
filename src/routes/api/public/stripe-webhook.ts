@@ -260,44 +260,44 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
             // RPC_RESPONSE_RECEIVED stage update before parsing
             currentStage = 'RPC_RESPONSE_RECEIVED';
 
-            let result: unknown;
+            let resultText: string;
             try {
-              // Handle potential empty body (204 No Content)
-              if (rpcResponse.status === 204) {
-                result = 'processed'; // Default for void success
-              } else {
-                result = await rpcResponse.json();
-              }
+              resultText = await rpcResponse.text();
             } catch (err) {
               return await createSanitizedResponse(500, traceId, 'RPC_RESPONSE_RECEIVED', 'RPC_RESPONSE_INVALID', eventId, eventType);
             }
 
-            // Normalization: PostgREST returns arrays for SETOF/TABLE, or raw values for scalars
-            let statusValue: string | null = null;
-            if (typeof result === 'string') {
-              statusValue = result;
-            } else if (Array.isArray(result) && result.length > 0) {
-              // If it returns a row, extract the first column or the field named after the function
-              const firstRow = result[0];
-              if (typeof firstRow === 'string') {
-                statusValue = firstRow;
-              } else if (typeof firstRow === 'object' && firstRow !== null) {
-                // PostgREST often wraps in an object with the function name
-                statusValue = (firstRow as any).process_stripe_checkout_session_expired || (firstRow as any).status || null;
-              }
-            } else if (typeof result === 'object' && result !== null) {
-              statusValue = (result as any).status || (result as any).process_stripe_checkout_session_expired || null;
+            if (rpcResponse.status === 204 || !resultText) {
+              return await createSanitizedResponse(500, traceId, 'RPC_RESPONSE_RECEIVED', 'RPC_RESPONSE_INVALID', eventId, eventType);
             }
 
-            if (statusValue === 'processed' || statusValue === 'duplicate' || statusValue === 'already_expired' || statusValue === 'ignored_terminal') {
-              return await createSanitizedResponse(200, traceId, 'HTTP_RESPONSE_READY', undefined, eventId, eventType);
+            let statusValue: unknown;
+            const ALLOWED_STATUSES = ['processed', 'duplicate', 'already_expired', 'ignored_terminal', 'failed_retryable'] as const;
+            type AllowedStatus = typeof ALLOWED_STATUSES[number];
+
+            try {
+              const parsed = JSON.parse(resultText) as unknown;
+              if (typeof parsed === 'string') {
+                statusValue = parsed;
+              } else {
+                // Rejeitar arrays e objetos conforme protocolo
+                return await createSanitizedResponse(500, traceId, 'RPC_RESPONSE_RECEIVED', 'RPC_RESPONSE_INVALID', eventId, eventType);
+              }
+            } catch (err) {
+              // Se JSON.parse falhar, aceitar texto bruto somente se corresponder exatamente à allowlist
+              statusValue = resultText.trim();
             }
-            
+
+            if (typeof statusValue !== 'string' || !ALLOWED_STATUSES.includes(statusValue as AllowedStatus)) {
+              return await createSanitizedResponse(500, traceId, 'RPC_RESPONSE_RECEIVED', 'RPC_RESPONSE_INVALID', eventId, eventType);
+            }
+
             if (statusValue === 'failed_retryable') {
               return await createSanitizedResponse(503, traceId, 'RPC_RESPONSE_RECEIVED', 'RPC_REJECTED_RETRYABLE', eventId, eventType);
             }
 
-            return await createSanitizedResponse(500, traceId, 'RPC_RESPONSE_RECEIVED', 'RPC_RESPONSE_INVALID', eventId, eventType);
+            // 'processed', 'duplicate', 'already_expired', 'ignored_terminal' -> 200
+            return await createSanitizedResponse(200, traceId, 'HTTP_RESPONSE_READY', undefined, eventId, eventType);
           }
           // --- END FAST PATH ---
 
