@@ -32,12 +32,12 @@ describe('Stripe Checkout Expired Fast Path - Strict Scalar Parser', () => {
   
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.stubEnv('VITE_SUPABASE_URL', 'http://localhost:54321');
-    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'test-key');
-    vi.stubEnv('STRIPE_RESTRICTED_KEY', 'sk_test_123');
-    vi.stubEnv('STRIPE_WEBHOOK_SECRET', 'whsec_test');
-    vi.stubEnv('STRIPE_WEBHOOK_DIAGNOSTICS_ENABLED', 'false');
-    vi.stubEnv('STRIPE_PRICE_ENTERPRISE_MONTHLY', 'price_123');
+    process.env['VITE_SUPABASE_URL'] = 'http://localhost:54321';
+    process.env['SUPABASE_SERVICE_ROLE_KEY'] = 'test-key';
+    process.env['STRIPE_RESTRICTED_KEY'] = 'sk_test_123';
+    process.env['STRIPE_WEBHOOK_SECRET'] = 'whsec_test';
+    process.env['STRIPE_WEBHOOK_DIAGNOSTICS_ENABLED'] = 'false';
+    process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY'] = 'price_123';
     vi.spyOn(crypto, 'randomUUID').mockReturnValue(mockTraceId as any);
   });
 
