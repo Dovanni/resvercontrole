@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useSubscriptionContext } from "@/hooks/use-subscription-context";
+import { useBillingContext } from "@/hooks/use-subscription-context";
 import { AlertCircle, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useMultiempresa } from "@/hooks/use-multiempresa";
@@ -42,7 +42,8 @@ export function TrialBanner() {
   // Proteção segura: desativa se não houver variável ou se for produção
   const billingActive = isBillingEnabled && !isProductionHost && (isPreviewHost || hostname === "");
 
-  const { data: sub, isLoading } = useSubscriptionContext(empresaId);
+  const { data: context, isLoading } = useBillingContext(empresaId);
+  const sub = context?.subscription;
 
   // Simulação visual canônica baseada em URL
   const displayRemainingDays = useMemo(() => {
@@ -56,6 +57,7 @@ export function TrialBanner() {
     }
     return sub?.days_remaining ?? null;
   }, [billingActive, isPreviewHost, sub?.days_remaining]);
+
 
   // Controle de abertura do modal
   useEffect(() => {
