@@ -166,8 +166,8 @@ export function SubscriptionSettingsPage() {
                     const isTrialing = sub.status === 'trialing';
                     
                     // Condição estrita vinda do servidor + trialing
-                    const isCtaEnabled = !!status?.checkout_enabled && isTrialing;
-                    const isLive = status?.billing_environment === 'live';
+                    const isCtaEnabled = !!status?.enabled && isTrialing;
+                    const isLive = status?.environment === 'live';
 
                     return (
                       <>

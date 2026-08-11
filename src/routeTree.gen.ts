@@ -48,6 +48,7 @@ import { Route as AuthenticatedConfiguracoesCategoriasRouteImport } from './rout
 import { Route as AuthenticatedConfiguracoesAssinaturaRouteImport } from './routes/_authenticated.configuracoes.assinatura'
 import { Route as ApiPublicStripeWebhookLiveRouteImport } from './routes/api/public/stripe-webhook/live'
 import { Route as ApiPublicBillingCreateCheckoutRouteImport } from './routes/api/public/billing/create-checkout'
+import { Route as ApiPublicBillingContextRouteImport } from './routes/api/public/billing/context'
 import { Route as ApiPublicBillingCheckoutStatusRouteImport } from './routes/api/public/billing/checkout-status'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -258,6 +259,11 @@ const ApiPublicBillingCreateCheckoutRoute =
     path: '/api/public/billing/create-checkout',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicBillingContextRoute = ApiPublicBillingContextRouteImport.update({
+  id: '/api/public/billing/context',
+  path: '/api/public/billing/context',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicBillingCheckoutStatusRoute =
   ApiPublicBillingCheckoutStatusRouteImport.update({
     id: '/api/public/billing/checkout-status',
@@ -303,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
   '/auth/callback/': typeof AuthCallbackIndexRoute
   '/api/public/billing/checkout-status': typeof ApiPublicBillingCheckoutStatusRoute
+  '/api/public/billing/context': typeof ApiPublicBillingContextRoute
   '/api/public/billing/create-checkout': typeof ApiPublicBillingCreateCheckoutRoute
   '/api/public/stripe-webhook/live': typeof ApiPublicStripeWebhookLiveRoute
 }
@@ -344,6 +351,7 @@ export interface FileRoutesByTo {
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
   '/auth/callback': typeof AuthCallbackIndexRoute
   '/api/public/billing/checkout-status': typeof ApiPublicBillingCheckoutStatusRoute
+  '/api/public/billing/context': typeof ApiPublicBillingContextRoute
   '/api/public/billing/create-checkout': typeof ApiPublicBillingCreateCheckoutRoute
   '/api/public/stripe-webhook/live': typeof ApiPublicStripeWebhookLiveRoute
 }
@@ -387,6 +395,7 @@ export interface FileRoutesById {
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
   '/auth/callback/': typeof AuthCallbackIndexRoute
   '/api/public/billing/checkout-status': typeof ApiPublicBillingCheckoutStatusRoute
+  '/api/public/billing/context': typeof ApiPublicBillingContextRoute
   '/api/public/billing/create-checkout': typeof ApiPublicBillingCreateCheckoutRoute
   '/api/public/stripe-webhook/live': typeof ApiPublicStripeWebhookLiveRoute
 }
@@ -430,6 +439,7 @@ export interface FileRouteTypes {
     | '/auth/callback/recovery'
     | '/auth/callback/'
     | '/api/public/billing/checkout-status'
+    | '/api/public/billing/context'
     | '/api/public/billing/create-checkout'
     | '/api/public/stripe-webhook/live'
   fileRoutesByTo: FileRoutesByTo
@@ -471,6 +481,7 @@ export interface FileRouteTypes {
     | '/auth/callback/recovery'
     | '/auth/callback'
     | '/api/public/billing/checkout-status'
+    | '/api/public/billing/context'
     | '/api/public/billing/create-checkout'
     | '/api/public/stripe-webhook/live'
   id:
@@ -513,6 +524,7 @@ export interface FileRouteTypes {
     | '/auth/callback/recovery'
     | '/auth/callback/'
     | '/api/public/billing/checkout-status'
+    | '/api/public/billing/context'
     | '/api/public/billing/create-checkout'
     | '/api/public/stripe-webhook/live'
   fileRoutesById: FileRoutesById
@@ -529,6 +541,7 @@ export interface RootRouteChildren {
   ApiPublicAcceptInvitationRoute: typeof ApiPublicAcceptInvitationRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRouteWithChildren
   ApiPublicBillingCheckoutStatusRoute: typeof ApiPublicBillingCheckoutStatusRoute
+  ApiPublicBillingContextRoute: typeof ApiPublicBillingContextRoute
   ApiPublicBillingCreateCheckoutRoute: typeof ApiPublicBillingCreateCheckoutRoute
 }
 
@@ -807,6 +820,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBillingCreateCheckoutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/billing/context': {
+      id: '/api/public/billing/context'
+      path: '/api/public/billing/context'
+      fullPath: '/api/public/billing/context'
+      preLoaderRoute: typeof ApiPublicBillingContextRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/billing/checkout-status': {
       id: '/api/public/billing/checkout-status'
       path: '/api/public/billing/checkout-status'
@@ -929,6 +949,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicAcceptInvitationRoute: ApiPublicAcceptInvitationRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRouteWithChildren,
   ApiPublicBillingCheckoutStatusRoute: ApiPublicBillingCheckoutStatusRoute,
+  ApiPublicBillingContextRoute: ApiPublicBillingContextRoute,
   ApiPublicBillingCreateCheckoutRoute: ApiPublicBillingCreateCheckoutRoute,
 }
 export const routeTree = rootRouteImport
