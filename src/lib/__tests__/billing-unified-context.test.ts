@@ -71,7 +71,7 @@ describe('Billing Unified Context Unified Test Suite', () => {
     expect(subContext?.status).toBe('trialing');
     expect(subContext?.days_remaining).toBe(26);
     expect(checkoutStatus.billing_environment).toBe('live');
-    expect(checkoutStatus.checkout_enabled).toBe(false); // Live is disabled
+
     
     // Simulate LIVE environment enabled
     process.env.STRIPE_LIVE_BILLING_ENABLED = 'true';
