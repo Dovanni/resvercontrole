@@ -77,7 +77,7 @@ describe('VEJAMAIS_STRIPE_LEGACY_COMPATIBILITY_FULL_CONTRACT_VALIDATION', () => 
       ok: status >= 200 && status < 300,
       status,
       json: async () => body,
-      text: async () => JSON.stringify(body),
+      text: async () => typeof body === 'string' ? body : JSON.stringify(body),
     });
   };
 
