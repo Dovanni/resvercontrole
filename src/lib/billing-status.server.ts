@@ -65,7 +65,7 @@ export async function getCheckoutStatusImpl(empresaId: string, host: string | nu
   const isProduction = normalizedHost === CANONICAL_HOST || normalizedHost === APEX_HOST;
   const isPreview = normalizedHost === ALLOWED_PREVIEW_HOST;
   
-  const isAllowedOrigin = isValidOrigin(origin);
+  const isAllowedOrigin = origin ? isValidOrigin(origin) : isAuthorizedHost(host);
 
   const STRIPE_LIVE_BILLING_ENABLED = process.env['STRIPE_LIVE_BILLING_ENABLED'] === 'true';
 

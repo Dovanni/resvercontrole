@@ -18,8 +18,9 @@ export const Route = createFileRoute('/api/public/billing/checkout-status')({
         }
 
         const host = request.headers.get('host')
-        // GET can omit Origin; using request.url for environment validation
-        const status = await getCheckoutStatusImpl(empresaId, host, null)
+        const origin = request.headers.get('origin') || request.headers.get('referer')
+        
+        const status = await getCheckoutStatusImpl(empresaId, host, origin)
         
         // Strict production contract compliance
         const body = {
