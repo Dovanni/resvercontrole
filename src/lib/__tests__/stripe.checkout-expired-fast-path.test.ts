@@ -1,30 +1,30 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import Stripe from 'stripe';
 
-// Mock do global fetch para simular Supabase RPC
+// 1. Mock do fetch ANTES de qualquer import que possa usá-lo
 global.fetch = vi.fn();
 
-// Mock do Stripe e utilitários
+// 2. Mock do Stripe ANTES de importar a Route
 vi.mock('stripe', () => {
+  const mockStripe = vi.fn().mockImplementation(() => ({
+    webhooks: {
+      constructEventAsync: vi.fn(),
+    },
+    httpClient: {},
+  }));
+  (mockStripe as any).createFetchHttpClient = vi.fn();
+  (mockStripe as any).createSubtleCryptoProvider = vi.fn();
   return {
-    default: vi.fn().mockImplementation(() => ({
-      webhooks: {
-        constructEventAsync: vi.fn()
-      },
-      httpClient: {}
-    })),
-    createFetchHttpClient: vi.fn(),
-    createSubtleCryptoProvider: vi.fn()
+    default: mockStripe,
+    createFetchHttpClient: (mockStripe as any).createFetchHttpClient,
+    createSubtleCryptoProvider: (mockStripe as any).createSubtleCryptoProvider,
   };
 });
 
-// Importar Route dinamicamente para garantir que o mock do Stripe seja aplicado
-// e usar @/ prefixo se configurado, mas vamos usar caminho relativo correto
+import Stripe from 'stripe';
 import { Route } from '../../routes/api/public/stripe-webhook';
 
 describe('Stripe Checkout Expired Fast Path', () => {
   const mockTraceId = 'test-trace-id';
-  let stripeInstance: any;
   
   beforeEach(() => {
     vi.clearAllMocks();
@@ -35,10 +35,7 @@ describe('Stripe Checkout Expired Fast Path', () => {
     vi.stubEnv('STRIPE_WEBHOOK_DIAGNOSTICS_ENABLED', 'false');
     vi.stubEnv('STRIPE_PRICE_ENTERPRISE_MONTHLY', 'price_123');
     
-    // Mock crypto.randomUUID
     vi.spyOn(crypto, 'randomUUID').mockReturnValue(mockTraceId as any);
-    
-    stripeInstance = new Stripe('sk_test_123');
   });
 
   const createMockRequest = (body: string, signature: string = 'valid_sig') => {
@@ -55,15 +52,12 @@ describe('Stripe Checkout Expired Fast Path', () => {
 
   const getHandler = () => {
     const handlers = Route.options.server?.handlers;
-    if (typeof handlers === 'function') {
-      throw new Error('Handlers is a function, not supported in this test helper');
-    }
     return (handlers as any).POST;
   };
 
   it('should process checkout.session.expired via fast path and return 200', async () => {
-    const stripe = new (Stripe as any)();
-    stripe.webhooks.constructEventAsync.mockResolvedValue({
+    const stripe = new Stripe('sk_test_123');
+    (stripe.webhooks.constructEventAsync as any).mockResolvedValue({
       id: 'evt_test_123',
       type: 'checkout.session.expired',
       livemode: false,
@@ -88,7 +82,6 @@ describe('Stripe Checkout Expired Fast Path', () => {
     const body = await response.json();
     expect(body.trace_id).toBe(mockTraceId);
     
-    // Verificar RPC
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/rest/v1/rpc/process_stripe_checkout_session_expired'),
       expect.objectContaining({
@@ -99,8 +92,8 @@ describe('Stripe Checkout Expired Fast Path', () => {
   });
 
   it('should reject livemode=true events with 400', async () => {
-    const stripe = new (Stripe as any)();
-    stripe.webhooks.constructEventAsync.mockResolvedValue({
+    const stripe = new Stripe('sk_test_123');
+    (stripe.webhooks.constructEventAsync as any).mockResolvedValue({
       id: 'evt_test_124',
       type: 'checkout.session.expired',
       livemode: true,
@@ -117,8 +110,8 @@ describe('Stripe Checkout Expired Fast Path', () => {
   });
 
   it('should return 503 when RPC fails with failed_retryable', async () => {
-    const stripe = new (Stripe as any)();
-    stripe.webhooks.constructEventAsync.mockResolvedValue({
+    const stripe = new Stripe('sk_test_123');
+    (stripe.webhooks.constructEventAsync as any).mockResolvedValue({
       id: 'evt_test_125',
       type: 'checkout.session.expired',
       livemode: false,
@@ -141,8 +134,8 @@ describe('Stripe Checkout Expired Fast Path', () => {
   });
 
   it('should verify that other events still call the generic RPC', async () => {
-    const stripe = new (Stripe as any)();
-    stripe.webhooks.constructEventAsync.mockResolvedValue({
+    const stripe = new Stripe('sk_test_123');
+    (stripe.webhooks.constructEventAsync as any).mockResolvedValue({
       id: 'evt_test_completed',
       type: 'checkout.session.completed',
       livemode: false,
@@ -165,7 +158,6 @@ describe('Stripe Checkout Expired Fast Path', () => {
     const response = await handler({ request: req });
     
     expect(response.status).toBe(200);
-    // Verificar que chamou a RPC GENÉRICA
     expect(global.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/rest/v1/rpc/process_stripe_webhook_event'),
       expect.any(Object)
