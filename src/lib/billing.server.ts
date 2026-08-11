@@ -5,7 +5,49 @@ import { getRequest } from "@tanstack/react-start/server";
 import { isValidOrigin, isAuthorizedHost, getBillingEnvironment } from "./billing-status.server";
 
 export async function getCompanySubscriptionContextImpl(empresaId: string) {
-...
+  const req = getRequest();
+  const authHeader = req.headers.get("Authorization");
+  const token = authHeader?.replace("Bearer ", "");
+
+  let userId: string | null = null;
+  if (token) {
+    const { data: { user } } = await supabaseAdmin.auth.getUser(token);
+    userId = user?.id || null;
+  }
+
+  if (!userId) {
+    console.warn("User not authenticated in getCompanySubscriptionContext");
+    throw new Error("Unauthorized");
+  }
+
+  // Chamar a RPC administrativa estrita
+  const { data: context, error } = await supabaseAdmin.rpc("get_company_subscription_context_admin", {
+    p_empresa_id: empresaId,
+    p_verified_user_id: userId
+  });
+
+  if (error) {
+    console.error("Error fetching subscription context:", error);
+    throw new Error("Failed to fetch subscription context");
+  }
+
+  return context as {
+    plan_code: string;
+    plan_name: string;
+    status: string;
+    trial_started_at: string | null;
+    trial_ends_at: string | null;
+    grace_ends_at: string | null;
+    current_period_ends_at: string | null;
+    days_remaining: number;
+    access_mode: 'full' | 'read_only' | 'billing_export_support_only' | 'billing_only';
+    max_users: number;
+    current_user_count: number;
+    can_invite_member: boolean;
+    priority_suggestions: boolean;
+  } | null;
+}
+
 export async function createStripeCheckoutSessionImpl(empresaId: string) {
   const req = getRequest();
   const authHeader = req.headers.get("Authorization");
