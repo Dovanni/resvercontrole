@@ -546,6 +546,7 @@ export type Database = {
           id: string
           idempotency_key: string
           last_error_code: string | null
+          livemode: boolean
           provider: string
           provider_checkout_session_id: string | null
           provider_customer_id: string | null
@@ -561,6 +562,7 @@ export type Database = {
           id?: string
           idempotency_key: string
           last_error_code?: string | null
+          livemode: boolean
           provider: string
           provider_checkout_session_id?: string | null
           provider_customer_id?: string | null
@@ -576,6 +578,7 @@ export type Database = {
           id?: string
           idempotency_key?: string
           last_error_code?: string | null
+          livemode?: boolean
           provider?: string
           provider_checkout_session_id?: string | null
           provider_customer_id?: string | null
@@ -2150,6 +2153,7 @@ export type Database = {
           id: string
           idempotency_key: string
           last_error_code: string | null
+          livemode: boolean
           provider: string
           provider_checkout_session_id: string | null
           provider_customer_id: string | null
@@ -2293,35 +2297,68 @@ export type Database = {
           retry_after_seconds: number
         }[]
       }
-      reserve_checkout_attempt: {
-        Args: {
-          p_empresa_id: string
-          p_provider?: string
-          p_subscription_id: string
-          p_verified_user_id: string
-        }
-        Returns: {
-          created_at: string
-          created_by_user_id: string
-          empresa_id: string
-          expires_at: string | null
-          id: string
-          idempotency_key: string
-          last_error_code: string | null
-          provider: string
-          provider_checkout_session_id: string | null
-          provider_customer_id: string | null
-          status: string
-          subscription_id: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "checkout_attempts"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
+      reserve_checkout_attempt:
+        | {
+            Args: {
+              p_empresa_id: string
+              p_livemode: boolean
+              p_provider?: string
+              p_subscription_id: string
+              p_verified_user_id: string
+            }
+            Returns: {
+              created_at: string
+              created_by_user_id: string
+              empresa_id: string
+              expires_at: string | null
+              id: string
+              idempotency_key: string
+              last_error_code: string | null
+              livemode: boolean
+              provider: string
+              provider_checkout_session_id: string | null
+              provider_customer_id: string | null
+              status: string
+              subscription_id: string
+              updated_at: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "checkout_attempts"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: {
+              p_empresa_id: string
+              p_provider?: string
+              p_subscription_id: string
+              p_verified_user_id: string
+            }
+            Returns: {
+              created_at: string
+              created_by_user_id: string
+              empresa_id: string
+              expires_at: string | null
+              id: string
+              idempotency_key: string
+              last_error_code: string | null
+              livemode: boolean
+              provider: string
+              provider_checkout_session_id: string | null
+              provider_customer_id: string | null
+              status: string
+              subscription_id: string
+              updated_at: string
+            }
+            SetofOptions: {
+              from: "*"
+              to: "checkout_attempts"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
       reset_auth_rate_limit: {
         Args: {
           p_identity_hash: string
