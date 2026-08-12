@@ -3,27 +3,27 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 
-// Create the mock outside because vi.mock is hoisted
+// Use a simple mock that returns an object, matching how Stripe is usually imported
 const mockConstructEventAsync = vi.fn();
 
 vi.mock('stripe', () => {
-  class StripeMock {
-    static createFetchHttpClient = vi.fn();
-    static createSubtleCryptoProvider = vi.fn();
-    webhooks = {
-      constructEventAsync: mockConstructEventAsync
+  const StripeMock = function() {
+    return {
+      webhooks: {
+        constructEventAsync: mockConstructEventAsync
+      }
     };
-  }
+  };
+  StripeMock.createFetchHttpClient = vi.fn();
+  StripeMock.createSubtleCryptoProvider = vi.fn();
   return { default: StripeMock };
 });
 
-// Import the route AFTER the mock
 import { Route } from '../../routes/api/public/stripe-webhook/live';
 
 describe('Stripe Live Webhook - Event Compliance Audit', () => {
   const handler = (Route.options.server as any).handlers.POST;
 
-  // Mock environment variables
   const mockEnv = {
     STRIPE_RESTRICTED_KEY_LIVE: 'rk_live_mock',
     STRIPE_WEBHOOK_SECRET_LIVE: 'whsec_live_mock',
@@ -66,7 +66,6 @@ describe('Stripe Live Webhook - Event Compliance Audit', () => {
 
   supportedEvents.forEach(eventType => {
     it(`should accept and process ${eventType} in Live mode`, async () => {
-      // Mock global fetch
       vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ status: 'success' })
@@ -96,7 +95,6 @@ describe('Stripe Live Webhook - Event Compliance Audit', () => {
   });
 
   it('should reject test mode (livemode=false) events in the Live route', async () => {
-    // Mock global fetch
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }));
     
     mockConstructEventAsync.mockResolvedValueOnce({
