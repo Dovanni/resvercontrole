@@ -2,23 +2,23 @@
  * @vitest-environment node
  */
 import { describe, it, expect, vi } from 'vitest';
-import { Route } from '../../routes/api/public/stripe-webhook/live';
 
-// Setup shared mocks before imports if needed, but here we use vi.mock
+// Create the mock outside because vi.mock is hoisted
 const mockConstructEventAsync = vi.fn();
 
 vi.mock('stripe', () => {
-  const StripeMock = vi.fn().mockImplementation(() => ({
-    webhooks: {
+  class StripeMock {
+    static createFetchHttpClient = vi.fn();
+    static createSubtleCryptoProvider = vi.fn();
+    webhooks = {
       constructEventAsync: mockConstructEventAsync
-    }
-  }));
-  // @ts-ignore
-  StripeMock.createFetchHttpClient = vi.fn();
-  // @ts-ignore
-  StripeMock.createSubtleCryptoProvider = vi.fn();
+    };
+  }
   return { default: StripeMock };
 });
+
+// Import the route AFTER the mock
+import { Route } from '../../routes/api/public/stripe-webhook/live';
 
 describe('Stripe Live Webhook - Event Compliance Audit', () => {
   const handler = (Route.options.server as any).handlers.POST;
@@ -96,15 +96,15 @@ describe('Stripe Live Webhook - Event Compliance Audit', () => {
   });
 
   it('should reject test mode (livemode=false) events in the Live route', async () => {
+    // Mock global fetch
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }));
+    
     mockConstructEventAsync.mockResolvedValueOnce({
       id: 'evt_test',
       type: 'checkout.session.completed',
       livemode: false,
       data: { object: { id: 'cs_test' } }
     });
-
-    // Mock fetch for diagnostics that happen before rejection
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }));
 
     const response = await handler({ request: createMockRequest('checkout.session.completed') });
     expect(response.status).toBe(400);
