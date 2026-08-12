@@ -15,7 +15,7 @@ export const Route = createFileRoute('/api/public/billing/create-checkout-v2')({
 
         const commonHeaders = {
           ...MARKER_HEADER,
-          'Content-Type': application/json'
+          'Content-Type': 'application/json'
         }
 
         // 1. Validar Origin/Host
