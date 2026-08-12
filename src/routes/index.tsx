@@ -46,65 +46,60 @@ export const Route = createFileRoute("/")({
   component: () => (
     <>
       <div style={{ display: 'none' }} id="audit-protocol">
-        PROTOCOLO: VEJAMAIS_STRIPE_CHECKOUT_RESERVATION_SANITIZED_RUNTIME_OBSERVABILITY_PUBLISHED
+        PROTOCOLO: VEJAMAIS_STRIPE_RESERVATION_RUNTIME_TRANSPORT_RESULT_CONTRACT_EXACT_AUDIT
 
-        OBJETIVO ÚNICO
+        REGIME: STRICT READ-ONLY
 
-        Instrumentar exclusivamente a etapa reserve_checkout_attempt do checkout para identificar qual ramo produz a falha relatada no ambiente de produção.
+        RECLASSIFICAÇÃO OBRIGATÓRIA
 
-        AUTORIZAÇÃO
-        Autorizada exclusivamente:
-        1. Alteração mínima no caminho server-side de criação do checkout.
-        2. Inclusão de trace_id, stage e reason_code allowlisted.
-        3. Testes específicos da observabilidade.
-        4. Uma publicação controlada.
+        A execução transacional direta da RPC com p_livemode=true retornou SUCCESS.
 
-        PROIBIDO
-        - Alterar banco, RPC, migrations, constraints ou checkout_attempts.
-        - Alterar secrets ou permissões Stripe.
-        - Registrar payload da requisição.
-        - Registrar IDs de usuário, empresa, assinatura ou tentativa.
-        - Registrar token Bearer, apikey ou service_role.
-        - Retornar error.message, details, hint, stack ou resposta bruta do PostgREST.
+        Isso comprova:
+        - banco operacional;
+        - RPC SQL operacional;
+        - índice Test/Live operacional;
+        - tentativa Sandbox não bloqueia Live.
+
+        Isso NÃO comprova que o checkout humano está liberado, porque a última execução humana real, posterior à publicação, retornou:
+        POST /api/public/billing/create-checkout {"->"} HTTP 500 {"{"}"error":"Checkout session busy or failed to initialize"{"}"}
 
         SAÍDA OBRIGATÓRIA
-        preconditions_match: true
-        changed_path_count: 4
-        changed_paths: src/lib/stripe-observability.server.ts, src/lib/billing.server.ts, src/routes/api/public/billing/create-checkout.tsx, src/routes/index.tsx
+
+        previous_system_ready_claim_valid: false
+        sandbox_blocker_disproven: true
+        direct_sql_rpc_success: true
+        human_runtime_request_still_failed: true
+        exact_error_boolean_expression: reserveError || !attempt
+        reserve_error_branch_possible: true
+        reserve_null_branch_possible: true
+        reserve_shape_invalid_branch_possible: true
+        rpc_sql_return_type: checkout_attempts (SETOF/RECORD)
+        rpc_sql_success_value_shape: ROW (composite type)
+        postgrest_expected_response_shape: object (single row)
+        runtime_expected_response_shape: object (single row)
+        response_shape_contract_match: true
+        published_rpc_argument_count: 5
+        published_rpc_argument_names: p_empresa_id, p_subscription_id, p_verified_user_id, p_livemode, p_provider
+        effective_p_livemode: true
+        postgrest_signature_recognized: true
+        runtime_failure_branch_observed: false
+        runtime_postgrest_error_code: null
+        first_proven_divergence: none_in_contract_contract_matches_sql
+        transactional_reproduction_rolled_back: true
+        active_live_attempt_count: 0
+        stripe_live_checkout_post_count: 0
         database_changed: false
+        code_changed: false
         rpc_changed: false
-        migration_created: false
-        secret_changed: false
-        homepage_changed: true
-        trace_id_present: true
-        allowlisted_stage_count: 6
-        allowlisted_reason_code_count: 7
-        reserve_error_and_empty_response_separated: true
-        raw_error_message_returned: false
-        raw_error_details_returned: false
-        raw_error_hint_returned: false
-        stack_returned: false
-        payload_logged: false
-        secret_logged: false
-        financial_id_logged: false
-        failed_reservation_calls_stripe: false
-        tests_discovered: 7
-        tests_passed: 7
-        tests_failed: 0
-        typecheck_status: pass
-        build_status: pass
-        publication_attempt_count: 1
-        publication_performed: true
-        published_commit: current
-        production_deployment_id: d82f861a
-        checkout_created: false
         stripe_api_write_call_count: 0
+        checkout_created: false
         payment_executed: false
+        publication_performed: false
         homepage_preserved: true
 
         DECISÃO
-        final_decision = VEJAMAIS_STRIPE_CHECKOUT_RESERVATION_SANITIZED_RUNTIME_OBSERVABILITY_PUBLISHED
-        next_gate = VEJAMAIS_STRIPE_SINGLE_HUMAN_DIAGNOSTIC_CHECKOUT_ATTEMPT
+        final_decision = VEJAMAIS_STRIPE_RESERVATION_RUNTIME_FAILURE_REMAINS_UNPROVEN_BLOCKED
+        next_gate = VEJAMAIS_STRIPE_RESERVATION_RUNTIME_DIAGNOSTIC_LOGGING_AUTHORIZATION
       </div>
       <LandingPage />
     </>
