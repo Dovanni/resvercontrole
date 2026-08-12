@@ -3,6 +3,7 @@ import { getStripeClient } from "./stripe.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getRequest } from "@tanstack/react-start/server";
 import { isValidOrigin, isAuthorizedHost, getBillingEnvironment } from "./billing-status.server";
+import { STAGES, REASON_CODES, classifyError } from "./stripe-observability.server";
 
 export async function getCompanySubscriptionContextImpl(empresaId: string) {
   const req = getRequest();
@@ -48,7 +49,9 @@ export async function getCompanySubscriptionContextImpl(empresaId: string) {
   } | null;
 }
 
-export async function createStripeCheckoutSessionImpl(empresaId: string) {
+export async function createStripeCheckoutSessionImpl(empresaId: string, traceId?: string) {
+  const trace_id = traceId || crypto.randomUUID();
+  let current_stage: keyof typeof STAGES = "REQUEST_VALIDATED";
   const req = getRequest();
   const authHeader = req.headers.get("Authorization");
   const token = authHeader?.replace("Bearer ", "");
@@ -123,17 +126,55 @@ export async function createStripeCheckoutSessionImpl(empresaId: string) {
   }
 
   // Atomic reservation with environment isolation
-  const { data: attempt, error: reserveError } = await supabaseAdmin.rpc('reserve_checkout_attempt', {
+  current_stage = "RESERVATION_RPC_STARTED";
+  const { data: reserveData, error: reserveError } = await supabaseAdmin.rpc('reserve_checkout_attempt', {
     p_empresa_id: empresaId,
     p_subscription_id: sub.id,
     p_verified_user_id: user.id,
     p_livemode: isProduction
   });
+  current_stage = "RESERVATION_RPC_RETURNED";
 
-  if (reserveError || !attempt) {
-    console.error("Failed to reserve checkout attempt:", reserveError);
-    throw new Error("Checkout session busy or failed to initialize");
+  if (reserveError) {
+    const classification = classifyError(reserveError);
+    const sanitizedError = {
+      error: "CHECKOUT_INITIALIZATION_FAILED",
+      trace_id,
+      stage: current_stage,
+      reason_code: classification.reason_code,
+      upstream_code: classification.upstream_code,
+      upstream_http_status: classification.upstream_http_status
+    };
+    throw new Error(JSON.stringify(sanitizedError));
   }
+
+  if (reserveData == null) {
+    const sanitizedError = {
+      error: "CHECKOUT_INITIALIZATION_FAILED",
+      trace_id,
+      stage: current_stage,
+      reason_code: REASON_CODES.RESERVATION_RPC_RESPONSE_EMPTY,
+      upstream_code: null,
+      upstream_http_status: null
+    };
+    throw new Error(JSON.stringify(sanitizedError));
+  }
+
+  // Validar formato do reserveData (deve ser um objeto com as propriedades esperadas)
+  const attempt = reserveData as any;
+  if (!attempt.id || !attempt.status) {
+    const sanitizedError = {
+      error: "CHECKOUT_INITIALIZATION_FAILED",
+      trace_id,
+      stage: current_stage,
+      reason_code: REASON_CODES.RESERVATION_RPC_RESPONSE_INVALID,
+      upstream_code: null,
+      upstream_http_status: null
+    };
+    throw new Error(JSON.stringify(sanitizedError));
+  }
+
+  current_stage = "RESERVATION_RESULT_VALIDATED";
 
   const stripe = getStripeClient();
 
@@ -179,6 +220,7 @@ export async function createStripeCheckoutSessionImpl(empresaId: string) {
   const cancelUrl = `${origin}/configuracoes/assinatura?checkout=cancel`;
 
   try {
+    current_stage = "STRIPE_CHECKOUT_STARTED";
     const session = await stripe.checkout.sessions.create({
       line_items: [{
         price: STRIPE_PRICE_ENTERPRISE_MONTHLY,
@@ -222,8 +264,10 @@ export async function createStripeCheckoutSessionImpl(empresaId: string) {
       throw new Error('CHECKOUT_PERSISTENCE_NOT_CONFIRMED');
     }
 
+    current_stage = "HTTP_RESPONSE_CREATED";
     return { 
-      status: 'session_created',
+      trace_id,
+      stage: current_stage,
       checkoutUrl: session.url,
       sessionId: session.id,
       canonical_quantity: 1,
