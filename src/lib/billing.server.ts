@@ -122,11 +122,12 @@ export async function createStripeCheckoutSessionImpl(empresaId: string) {
     throw new Error("Subscription not found");
   }
 
-  // Atomic reservation
+  // Atomic reservation with environment isolation
   const { data: attempt, error: reserveError } = await supabaseAdmin.rpc('reserve_checkout_attempt', {
     p_empresa_id: empresaId,
     p_subscription_id: sub.id,
-    p_verified_user_id: user.id
+    p_verified_user_id: user.id,
+    p_livemode: isProduction
   });
 
   if (reserveError || !attempt) {
