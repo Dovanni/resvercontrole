@@ -2,7 +2,7 @@
  * @vitest-environment node
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Route } from '../routes/api/public/stripe-webhook/live';
+import { Route } from '../../routes/api/public/stripe-webhook/live';
 
 // Mock process.env
 const mockEnv = {
