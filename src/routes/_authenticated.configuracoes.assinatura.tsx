@@ -6,9 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, CreditCard, Users, Clock, AlertCircle, Sparkles, ShieldCheck } from "lucide-react";
-import { format } from "date-fns";
+import { format, isAfter } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { createStripeCheckoutSession } from "@/lib/billing.functions";
+import { createStripeCheckoutSession, createStripePortalSession } from "@/lib/billing.functions";
 
 
 export const Route = createFileRoute("/_authenticated/configuracoes/assinatura")({

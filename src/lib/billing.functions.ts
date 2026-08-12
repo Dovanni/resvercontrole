@@ -57,6 +57,26 @@ export const createStripeCheckoutSession = async (empresaId: string) => {
   return response.json();
 };
 
+export const createStripePortalSession = async (empresaId: string) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  
+  const response = await fetch('/api/public/billing/create-portal-session', {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    },
+    body: JSON.stringify({ empresaId })
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to create portal session');
+  }
+  return response.json() as Promise<{ url: string }>;
+};
+
 export const canInviteMemberTransport = async (empresaId: string) => {
   const { data: result, error } = await supabase.rpc("can_company_invite_member", {
     p_empresa_id: empresaId,
