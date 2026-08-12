@@ -28,11 +28,11 @@ export const Route = createFileRoute('/api/public/billing/create-checkout')({
           })
         }
 
+        let traceId = crypto.randomUUID();
         try {
           const body = await request.json()
           const { empresaId } = z.object({ empresaId: z.string().uuid() }).parse(body)
           
-          const traceId = crypto.randomUUID();
           const result = await createStripeCheckoutSessionImpl(empresaId, traceId)
           
           return new Response(JSON.stringify(result), {
@@ -56,7 +56,7 @@ export const Route = createFileRoute('/api/public/billing/create-checkout')({
           console.error('[API/create-checkout] Error:', error)
           return new Response(JSON.stringify({ 
             error: 'CHECKOUT_INITIALIZATION_FAILED',
-            trace_id: traceId || null,
+            trace_id: traceId,
             stage: 'REQUEST_VALIDATED',
             reason_code: 'RESERVATION_RPC_UNEXPECTED_FAILURE',
             upstream_code: null,
