@@ -32,15 +32,29 @@ export const Route = createFileRoute('/api/public/billing/create-checkout')({
           const body = await request.json()
           const { empresaId } = z.object({ empresaId: z.string().uuid() }).parse(body)
           
-          const result = await createStripeCheckoutSessionImpl(empresaId)
+          const traceId = crypto.randomUUID();
+          const result = await createStripeCheckoutSessionImpl(empresaId, traceId)
           
           return new Response(JSON.stringify(result), {
             status: 200,
             headers: { 'Content-Type': 'application/json' }
           })
         } catch (error: any) {
+          // Se for um erro JSON (nosso erro sanitizado)
+          try {
+            const parsedError = JSON.parse(error.message);
+            if (parsedError.error === "CHECKOUT_INITIALIZATION_FAILED") {
+              return new Response(JSON.stringify(parsedError), {
+                status: 500,
+                headers: { 'Content-Type': 'application/json' }
+              });
+            }
+          } catch (e) {
+            // Não é um erro JSON nosso
+          }
+
           console.error('[API/create-checkout] Error:', error)
-          return new Response(JSON.stringify({ error: error.message || 'Internal Server Error' }), { 
+          return new Response(JSON.stringify({ error: 'CHECKOUT_INITIALIZATION_FAILED', message: 'Internal Server Error' }), { 
             status: error.message === 'Unauthorized' ? 401 : 500,
             headers: { 'Content-Type': 'application/json' }
           })
