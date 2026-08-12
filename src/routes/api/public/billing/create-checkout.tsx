@@ -54,7 +54,14 @@ export const Route = createFileRoute('/api/public/billing/create-checkout')({
           }
 
           console.error('[API/create-checkout] Error:', error)
-          return new Response(JSON.stringify({ error: 'CHECKOUT_INITIALIZATION_FAILED', message: 'Internal Server Error' }), { 
+          return new Response(JSON.stringify({ 
+            error: 'CHECKOUT_INITIALIZATION_FAILED',
+            trace_id: traceId || null,
+            stage: 'REQUEST_VALIDATED',
+            reason_code: 'RESERVATION_RPC_UNEXPECTED_FAILURE',
+            upstream_code: null,
+            upstream_http_status: null
+          }), { 
             status: error.message === 'Unauthorized' ? 401 : 500,
             headers: { 'Content-Type': 'application/json' }
           })
