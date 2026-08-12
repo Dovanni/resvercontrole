@@ -64,7 +64,7 @@ export const Route = createFileRoute("/")({
         POST /api/public/billing/create-checkout
         HTTP 500
         Body exato:
-        {"error":"Checkout session busy or failed to initialize"}
+        {"{"}"error":"Checkout session busy or failed to initialize"{"}"}
 
         A classificação STALE_PRODUCTION_ROUTE_ARTIFACT ainda não está comprovada porque o emissor real permanece Unknown e nenhum hash específico do artefato de produção foi apresentado.
 
