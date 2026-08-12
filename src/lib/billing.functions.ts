@@ -20,7 +20,7 @@ export const getBillingContextTransport = async (empresaId: string) => {
 
   return response.json() as Promise<{
     subscription: {
-      status: 'trialing' | 'active' | 'past_due' | 'grace_read_only' | 'restricted' | 'none';
+      status: 'trialing' | 'active' | 'past_due' | 'grace_read_only' | 'restricted' | 'none' | 'canceled';
       plan_code: string;
       plan_name: string;
       current_user_count: number;
