@@ -41,7 +41,7 @@ export const createStripeCheckoutSession = async (empresaId: string) => {
   const { data: { session } } = await supabase.auth.getSession();
   const token = session?.access_token;
   
-  const response = await fetch('/api/public/billing/create-checkout', {
+  const response = await fetch('/api/public/billing/create-checkout-v2', {
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',
@@ -50,11 +50,11 @@ export const createStripeCheckoutSession = async (empresaId: string) => {
     body: JSON.stringify({ empresaId })
   });
   
+  const result = await response.json();
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || 'Failed to create checkout');
+    throw new Error(result.error || 'Failed to create checkout');
   }
-  return response.json();
+  return result;
 };
 
 export const createStripePortalSession = async (empresaId: string) => {
