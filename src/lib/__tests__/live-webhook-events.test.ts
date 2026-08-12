@@ -1,7 +1,7 @@
 /**
  * @vitest-environment node
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { Route } from '../../routes/api/public/stripe-webhook/live';
 
 // Mock process.env
@@ -73,14 +73,13 @@ describe('Stripe Live Webhook - Event Compliance Audit', () => {
   ];
 
   it('should have exactly 7 homologated events in the live route', () => {
-    // This is a static analysis check via code inspection or documentation of the 7 events
     expect(supportedEvents.length).toBe(7);
   });
 
   supportedEvents.forEach(eventType => {
     it(`should accept and process ${eventType} in Live mode`, async () => {
       // Mock global fetch for RPC and diagnostics
-      const fetchSpy = vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ status: 'success' })
       }));
