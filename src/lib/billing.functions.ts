@@ -20,7 +20,7 @@ export const getBillingContextTransport = async (empresaId: string) => {
 
   return response.json() as Promise<{
     subscription: {
-      status: 'trialing' | 'active' | 'past_due' | 'grace_read_only' | 'restricted' | 'none';
+      status: 'trialing' | 'active' | 'past_due' | 'grace_read_only' | 'restricted' | 'none' | 'canceled';
       plan_code: string;
       plan_name: string;
       current_user_count: number;
@@ -55,6 +55,26 @@ export const createStripeCheckoutSession = async (empresaId: string) => {
     throw new Error(error.error || 'Failed to create checkout');
   }
   return response.json();
+};
+
+export const createStripePortalSession = async (empresaId: string) => {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  
+  const response = await fetch('/api/public/billing/create-portal-session', {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    },
+    body: JSON.stringify({ empresaId })
+  });
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to create portal session');
+  }
+  return response.json() as Promise<{ url: string }>;
 };
 
 export const canInviteMemberTransport = async (empresaId: string) => {

@@ -6,9 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, CreditCard, Users, Clock, AlertCircle, Sparkles, ShieldCheck } from "lucide-react";
-import { format } from "date-fns";
+import { format, isAfter } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { createStripeCheckoutSession } from "@/lib/billing.functions";
+import { createStripeCheckoutSession, createStripePortalSession } from "@/lib/billing.functions";
 
 
 export const Route = createFileRoute("/_authenticated/configuracoes/assinatura")({
@@ -73,8 +73,9 @@ export function SubscriptionSettingsPage() {
     past_due: "bg-amber-500/10 text-amber-600 border-amber-200",
     grace_read_only: "bg-orange-500/10 text-orange-600 border-orange-200",
     restricted: "bg-destructive/10 text-destructive border-destructive/20",
+    canceled: "bg-muted text-muted-foreground border-muted-foreground/20",
     none: "bg-muted text-muted-foreground",
-  }[sub.status] || "bg-muted text-muted-foreground";
+  }[sub.status as string] || "bg-muted text-muted-foreground";
 
   const statusLabel = {
     active: "Ativa",
@@ -82,8 +83,9 @@ export function SubscriptionSettingsPage() {
     past_due: "Pagamento Pendente",
     grace_read_only: "Aguardando Pagamento",
     restricted: "Restrita",
+    canceled: "Cancelada",
     none: "Sem Assinatura",
-  }[sub.status] || sub.status;
+  }[sub.status as string] || sub.status;
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
@@ -226,6 +228,55 @@ export function SubscriptionSettingsPage() {
                   })()}
                 </div>
 
+              </div>
+            )}
+
+            {!isTrial && (sub.status === 'active' || sub.status === 'past_due' || sub.status === 'canceled') && (
+              <div className="p-4 rounded-xl bg-muted/30 border space-y-4">
+                <div className="flex items-start gap-3">
+                  <CreditCard className="size-5 text-primary shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold">Gestão de Assinatura</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Acesse o portal de autoatendimento para atualizar seu cartão, consultar faturas ou gerenciar seu plano.
+                    </p>
+                  </div>
+                </div>
+
+                {sub.status === 'canceled' && sub.current_period_ends_at && isAfter(new Date(sub.current_period_ends_at), new Date()) && (
+                  <div className="p-3 rounded-lg bg-amber-50 border border-amber-100 flex items-center gap-2">
+                    <AlertCircle className="size-4 text-amber-600" />
+                    <p className="text-xs font-medium text-amber-900">
+                      Cancelamento agendado — acesso disponível até {format(new Date(sub.current_period_ends_at), "dd/MM/yyyy", { locale: ptBR })}
+                    </p>
+                  </div>
+                )}
+
+                <Button 
+                  variant="outline"
+                  onClick={async (e) => {
+                    const btn = e.currentTarget;
+                    if (btn.disabled) return;
+                    btn.disabled = true;
+                    const originalText = btn.innerText;
+                    btn.innerText = "Carregando portal seguro...";
+                    
+                    try {
+                      if (!empresaId) return;
+                      const result = await createStripePortalSession(empresaId);
+                      if (result.url) {
+                        window.location.href = result.url;
+                      }
+                    } catch (err) {
+                      console.error("Portal session error:", err);
+                      btn.disabled = false;
+                      btn.innerText = originalText;
+                    }
+                  }}
+                  className="w-full sm:w-auto"
+                >
+                  Gerenciar assinatura e pagamentos
+                </Button>
               </div>
             )}
           </CardContent>
