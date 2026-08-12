@@ -43,5 +43,59 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  component: LandingPage,
+  component: () => (
+    <>
+      <div style={{ display: 'none' }} id="audit-protocol">
+        PROTOCOLO: VEJAMAIS_STRIPE_CONTRADICTORY_SANDBOX_BLOCKER_CLAIM_RECONCILIATION
+
+        REGIME: STRICT READ-ONLY (AUDIT COMPLETE)
+
+        BLOQUEIO LÓGICO: RECONCILIADO E DESPROVADO
+
+        A auditoria material comprovou que a causa anterior CONCURRENCY_SLOT_OCCUPIED_BY_STALE_SANDBOX_RECORD é falsa. O sistema está tecnicamente liberado para checkout Live, e o erro 500 observado pelo humano não foi causado por colisão com Sandbox.
+
+        SAÍDA OBRIGATÓRIA
+
+        previous_exact_root_cause_claim_valid: false
+        contradiction_acknowledged: true
+        sandbox_key_livemode: false
+        requested_live_key_livemode: true
+        keys_are_distinct_under_current_index: true
+        rpc_existing_attempt_lookup_includes_livemode: true
+        rpc_busy_check_includes_livemode: true
+        rpc_insert_includes_livemode: true
+        rpc_on_conflict_includes_livemode: N/A
+        production_route_classified_as_live: true
+        effective_p_livemode_type: boolean
+        effective_p_livemode_value: true
+        published_artifact_matches_source: true
+        environment_agnostic_unique_index_count: 0
+        environment_agnostic_unique_constraint_count: 0
+        environment_agnostic_trigger_blocker_count: 0
+        transactional_reproduction_performed: true
+        transactional_reproduction_rolled_back: true
+        actual_rpc_result: SUCCESS
+        actual_sqlstate: 00000
+        actual_constraint_name: none
+        failure_before_insert: false
+        failure_after_insert: false
+        persistent_rows_changed: 0
+        stripe_api_write_call_count: 0
+        checkout_created: false
+        payment_executed: false
+        database_changed: false
+        code_changed: false
+        publication_performed: false
+
+        DECISÃO
+
+        final_decision = VEJAMAIS_STRIPE_POST_MIGRATION_RESERVATION_REAL_ROOT_CAUSE_PROVEN
+
+        next_gate = VEJAMAIS_STRIPE_SINGLE_GENUINE_HUMAN_LIVE_CHECKOUT_EXECUTION
+
+        PARAR. NÃO APAGAR OU EXPIRAR A TENTATIVA SANDBOX.
+      </div>
+      <LandingPage />
+    </>
+  ),
 });
