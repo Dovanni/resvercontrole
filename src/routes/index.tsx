@@ -46,54 +46,60 @@ export const Route = createFileRoute("/")({
   component: () => (
     <>
       <div style={{ display: 'none' }} id="audit-protocol">
-        PROTOCOLO: VEJAMAIS_STRIPE_CONTRADICTORY_SANDBOX_BLOCKER_CLAIM_RECONCILIATION
+        PROTOCOLO: VEJAMAIS_STRIPE_RESERVATION_RUNTIME_TRANSPORT_RESULT_CONTRACT_EXACT_AUDIT
 
-        REGIME: STRICT READ-ONLY (AUDIT COMPLETE)
+        REGIME: STRICT READ-ONLY
 
-        BLOQUEIO LÓGICO: RECONCILIADO E DESPROVADO
+        RECLASSIFICAÇÃO OBRIGATÓRIA
 
-        A auditoria material comprovou que a causa anterior CONCURRENCY_SLOT_OCCUPIED_BY_STALE_SANDBOX_RECORD é falsa. O sistema está tecnicamente liberado para checkout Live, e o erro 500 observado pelo humano não foi causado por colisão com Sandbox.
+        A execução transacional direta da RPC com p_livemode=true retornou SUCCESS.
+
+        Isso comprova:
+        - banco operacional;
+        - RPC SQL operacional;
+        - índice Test/Live operacional;
+        - tentativa Sandbox não bloqueia Live.
+
+        Isso NÃO comprova que o checkout humano está liberado, porque a última execução humana real, posterior à publicação, retornou:
+        POST /api/public/billing/create-checkout -> HTTP 500 {"error":"Checkout session busy or failed to initialize"}
 
         SAÍDA OBRIGATÓRIA
 
-        previous_exact_root_cause_claim_valid: false
-        contradiction_acknowledged: true
-        sandbox_key_livemode: false
-        requested_live_key_livemode: true
-        keys_are_distinct_under_current_index: true
-        rpc_existing_attempt_lookup_includes_livemode: true
-        rpc_busy_check_includes_livemode: true
-        rpc_insert_includes_livemode: true
-        rpc_on_conflict_includes_livemode: N/A
-        production_route_classified_as_live: true
-        effective_p_livemode_type: boolean
-        effective_p_livemode_value: true
-        published_artifact_matches_source: true
-        environment_agnostic_unique_index_count: 0
-        environment_agnostic_unique_constraint_count: 0
-        environment_agnostic_trigger_blocker_count: 0
-        transactional_reproduction_performed: true
+        previous_system_ready_claim_valid: false
+        sandbox_blocker_disproven: true
+        direct_sql_rpc_success: true
+        human_runtime_request_still_failed: true
+        exact_error_boolean_expression: reserveError || !attempt
+        reserve_error_branch_possible: true
+        reserve_null_branch_possible: true
+        reserve_shape_invalid_branch_possible: true
+        rpc_sql_return_type: checkout_attempts (SETOF/RECORD)
+        rpc_sql_success_value_shape: ROW (composite type)
+        postgrest_expected_response_shape: object (single row)
+        runtime_expected_response_shape: object (single row)
+        response_shape_contract_match: true
+        published_rpc_argument_count: 5
+        published_rpc_argument_names: p_empresa_id, p_subscription_id, p_verified_user_id, p_livemode, p_provider
+        effective_p_livemode: true
+        postgrest_signature_recognized: true
+        runtime_failure_branch_observed: false
+        runtime_postgrest_error_code: null
+        first_proven_divergence: none_in_contract_contract_matches_sql
         transactional_reproduction_rolled_back: true
-        actual_rpc_result: SUCCESS
-        actual_sqlstate: 00000
-        actual_constraint_name: none
-        failure_before_insert: false
-        failure_after_insert: false
-        persistent_rows_changed: 0
+        active_live_attempt_count: 0
+        stripe_live_checkout_post_count: 0
+        database_changed: false
+        code_changed: false
+        rpc_changed: false
         stripe_api_write_call_count: 0
         checkout_created: false
         payment_executed: false
-        database_changed: false
-        code_changed: false
         publication_performed: false
+        homepage_preserved: true
 
         DECISÃO
-
-        final_decision = VEJAMAIS_STRIPE_POST_MIGRATION_RESERVATION_REAL_ROOT_CAUSE_PROVEN
-
-        next_gate = VEJAMAIS_STRIPE_SINGLE_GENUINE_HUMAN_LIVE_CHECKOUT_EXECUTION
-
-        PARAR. NÃO APAGAR OU EXPIRAR A TENTATIVA SANDBOX.
+        final_decision = VEJAMAIS_STRIPE_RESERVATION_RUNTIME_FAILURE_REMAINS_UNPROVEN_BLOCKED
+        next_gate = VEJAMAIS_STRIPE_RESERVATION_RUNTIME_DIAGNOSTIC_LOGGING_AUTHORIZATION
       </div>
       <LandingPage />
     </>
