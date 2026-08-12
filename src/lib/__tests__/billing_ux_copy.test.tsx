@@ -61,15 +61,22 @@ vi.mock('@tanstack/react-router', async (importOriginal) => {
 
 // Mock hooks
 vi.mock('@/hooks/use-subscription-context', () => ({
-  useSubscriptionContext: vi.fn(() => ({
+  useBillingContext: vi.fn(() => ({
     data: {
-      plan_code: 'essencial',
-      plan_name: 'Plano Essencial',
-      status: 'trialing',
-      days_remaining: 29,
-      current_user_count: 1,
-      max_users: 5,
-      current_period_ends_at: new Date(Date.now() + 29 * 24 * 60 * 60 * 1000).toISOString(),
+      subscription: {
+        plan_code: 'essencial',
+        plan_name: 'Plano Essencial',
+        status: 'trialing',
+        days_remaining: 29,
+        current_user_count: 1,
+        max_users: 5,
+        current_period_ends_at: new Date(Date.now() + 29 * 24 * 60 * 60 * 1000).toISOString(),
+      },
+      checkout: {
+        enabled: true,
+        environment: 'live',
+        reason_code: 'OK'
+      }
     },
     isLoading: false
   }))
