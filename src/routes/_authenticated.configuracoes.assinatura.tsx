@@ -73,8 +73,9 @@ export function SubscriptionSettingsPage() {
     past_due: "bg-amber-500/10 text-amber-600 border-amber-200",
     grace_read_only: "bg-orange-500/10 text-orange-600 border-orange-200",
     restricted: "bg-destructive/10 text-destructive border-destructive/20",
+    canceled: "bg-muted text-muted-foreground border-muted-foreground/20",
     none: "bg-muted text-muted-foreground",
-  }[sub.status] || "bg-muted text-muted-foreground";
+  }[sub.status as string] || "bg-muted text-muted-foreground";
 
   const statusLabel = {
     active: "Ativa",
@@ -82,8 +83,9 @@ export function SubscriptionSettingsPage() {
     past_due: "Pagamento Pendente",
     grace_read_only: "Aguardando Pagamento",
     restricted: "Restrita",
+    canceled: "Cancelada",
     none: "Sem Assinatura",
-  }[sub.status] || sub.status;
+  }[sub.status as string] || sub.status;
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
