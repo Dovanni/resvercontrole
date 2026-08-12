@@ -61,7 +61,7 @@ export const Route = createFileRoute("/")({
         - tentativa Sandbox não bloqueia Live.
 
         Isso NÃO comprova que o checkout humano está liberado, porque a última execução humana real, posterior à publicação, retornou:
-        POST /api/public/billing/create-checkout -> HTTP 500 {"error":"Checkout session busy or failed to initialize"}
+        POST /api/public/billing/create-checkout {"->"} HTTP 500 {"{"}"error":"Checkout session busy or failed to initialize"{"}"}
 
         SAÍDA OBRIGATÓRIA
 
