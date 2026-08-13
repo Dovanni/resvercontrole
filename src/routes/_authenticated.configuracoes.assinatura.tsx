@@ -290,8 +290,24 @@ export function SubscriptionSettingsPage() {
                     btn.innerText = "Carregando portal seguro...";
                     
                     try {
-                      if (!empresaId) return;
-                      const result = await createStripePortalSession(empresaId);
+                      const response = await fetch('/api/public/billing/create-portal-session', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+                        },
+                        body: JSON.stringify({ empresaId })
+                      });
+
+                      if (!response.ok) {
+                        const error = await response.json();
+                        console.error("Portal session failed:", error);
+                        btn.disabled = false;
+                        btn.innerText = originalText;
+                        return;
+                      }
+
+                      const result = await response.json();
                       if (result && typeof result.url === 'string') {
                         const url = new URL(result.url);
                         const isStripeHost = url.hostname === "billing.stripe.com";
@@ -305,11 +321,6 @@ export function SubscriptionSettingsPage() {
                           btn.innerText = originalText;
                         }
                       }
-                    } catch (err) {
-                      console.error("Portal session error:", err);
-                      btn.disabled = false;
-                      btn.innerText = originalText;
-                    }
                   }}
                   className="w-full sm:w-auto"
                 >

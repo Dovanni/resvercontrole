@@ -15,36 +15,52 @@ export async function createStripePortalSessionImpl(empresaId: string, origin: s
     throw new Error('CUSTOMER_NOT_FOUND');
   }
 
-  // 2. Identificar ambiente (Sandbox/Live)
+  // 2. Identificar ambiente (Sandbox/Live) e obter a chave correspondente
   const isProduction = host === 'www.vejamais.com.br' || host === 'vejamais.com.br';
-  
-  // 3. Obter chave correta
   const stripeKey = isProduction 
     ? process.env['STRIPE_RESTRICTED_KEY_LIVE'] 
     : (process.env['STRIPE_RESTRICTED_KEY_TEST'] || process.env['STRIPE_RESTRICTED_KEY']);
 
   if (!stripeKey) {
+    console.error(`[PortalSession] Stripe key missing for production=${isProduction}`);
     throw new Error('STRIPE_CONFIG_MISSING');
   }
 
-  // 4. Inicializar Stripe com a chave específica do ambiente
-  const stripe = new Stripe(stripeKey, {
-    apiVersion: '2025-01-27.acacia' as any, // Versão estável
-    httpClient: Stripe.createFetchHttpClient(),
-  });
-
-  // 5. Criar a sessão do portal
-  const returnUrl = `${origin}/configuracoes/assinatura`;
+  // 3. Transporte REST direto para o Stripe (Bypass SDK para máxima confiabilidade em Workers)
+  const returnUrl = `https://www.vejamais.com.br/configuracoes/assinatura`;
 
   try {
-    const session = await stripe.billingPortal.sessions.create({
-      customer: sub.stripe_customer_id,
-      return_url: returnUrl,
+    const params = new URLSearchParams();
+    params.append('customer', sub.stripe_customer_id);
+    params.append('return_url', returnUrl);
+
+    console.log(`[PortalSession] Creating session for customer ${sub.stripe_customer_id} on ${isProduction ? 'LIVE' : 'TEST'}`);
+
+    const response = await fetch('https://api.stripe.com/v1/billing_portal/sessions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${stripeKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Stripe-Version': '2025-01-27.acacia'
+      },
+      body: params.toString()
     });
 
+    const session = await response.json() as any;
+
+    if (!response.ok) {
+      console.error('[PortalSession] Stripe API Error (REST):', session);
+      throw new Error(session.error?.message || 'STRIPE_PORTAL_ERROR');
+    }
+
+    if (!session.url) {
+      console.error('[PortalSession] Stripe response missing URL:', session);
+      throw new Error('STRIPE_RESPONSE_INVALID');
+    }
+
     return { url: session.url };
-  } catch (err) {
-    console.error('[PortalSession] Stripe API Error:', err);
-    throw new Error('STRIPE_PORTAL_ERROR');
+  } catch (err: any) {
+    console.error('[PortalSession] Failure:', err);
+    throw err;
   }
 }
