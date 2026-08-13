@@ -135,7 +135,7 @@ function SalesPage() {
       <Dialog open={!!editingId} onOpenChange={(o) => !o && setEditingId(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="font-display">Editar venda</DialogTitle></DialogHeader>
-          {editingId && <SaleForm saleId={editingId} onDone={() => { setEditingId(null); invalidate(); }} />}
+          {editingId && <SaleForm saleId={editingId} idempotencyKey={`edit-${editingId}`} onDone={() => { setEditingId(null); invalidate(); }} />}
         </DialogContent>
       </Dialog>
 
