@@ -8,6 +8,7 @@ import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { useServerFn } from "@tanstack/react-start";
 import { completeCompanyOnboarding } from "@/lib/onboarding.functions";
 import { toast } from "sonner";
+import { WhatsAppSupport } from "@/components/WhatsAppSupport";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -89,6 +90,7 @@ function AuthedLayout() {
       <AppShell>
         <Outlet />
       </AppShell>
+      <WhatsAppSupport />
     </ConfirmProvider>
   );
 }
