@@ -289,9 +289,9 @@ export async function createStripeCheckoutSessionImpl(empresaId: string, traceId
     
     // ATOMIC RECOVERY GATE: Pre-transport compensation
     const isPreTransport = 
-      current_stage === "STRIPE_CLIENT_CONSTRUCTION_STARTED" ||
-      current_stage === "STRIPE_CLIENT_CONSTRUCTED" ||
-      current_stage === "STRIPE_REQUEST_PREPARED";
+      (current_stage as string) === "STRIPE_CLIENT_CONSTRUCTION_STARTED" ||
+      (current_stage as string) === "STRIPE_CLIENT_CONSTRUCTED" ||
+      (current_stage as string) === "STRIPE_REQUEST_PREPARED";
 
     if (isPreTransport && classification.reason_code && attempt?.id) {
       try {
