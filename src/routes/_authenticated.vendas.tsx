@@ -556,83 +556,71 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
       if (!user) throw new Error("Não autenticado");
       const selected = customers?.find(c => c.id === customerId);
 
-      if (isAporte) {
-        if (!customerId) throw new Error("Selecione o investidor / origem do aporte");
-        if (!aporteAmount || aporteAmount <= 0) throw new Error("Informe o valor do aporte");
-        if (!bankAccountId) throw new Error("Selecione a conta de destino");
-        const payload = {
-          customer_id: customerId,
-          customer_name: selected?.name ?? null,
-          channel: "recursos_financeiros",
-          status: "entregue",
-          payment_method: "deposito",
-          total: aporteAmount,
-          discount: 0,
-          mercado_pago_fees: 0,
-          bank_account_id: bankAccountId,
-          aporte_type: aporteType,
-          notes: aporteNotes || null,
-          sold_at: new Date(aporteDate + "T12:00:00").toISOString(),
-        };
-        if (editing) {
-          const { error: delErr } = await supabase.from("sale_items").delete().eq("sale_id", saleId!);
-          if (delErr) throw delErr;
-          const { error: updErr } = await supabase.from("sales").update(payload as any).eq("id", saleId!);
-          if (updErr) throw updErr;
-        } else {
-          const { error } = await supabase.from("sales").insert({ 
-            user_id: user.id, 
-            empresa_id: isEnabled ? empresaId : undefined,
-            ...payload 
-          } as any);
-          if (error) throw error;
-        }
-        return;
-      }
-
-      if (items.length === 0) throw new Error("Adicione ao menos um produto");
-      const payload = {
+      const salePayload = {
         customer_id: customerId || null,
         customer_name: selected?.name ?? (walkInName || null),
-        channel, status, payment_method: method, total, discount: discountValue,
-        mercado_pago_fees: Number(mercadoPagoFees) || 0,
-        frete_empresa: Number(freteEmpresa) || 0,
+        channel, 
+        status, 
+        payment_method: method, 
+        total: isAporte ? aporteAmount : total, 
+        discount: isAporte ? 0 : discountValue,
+        mercado_pago_fees: isAporte ? 0 : (Number(mercadoPagoFees) || 0),
+        frete_empresa: isAporte ? 0 : (Number(freteEmpresa) || 0),
         bank_account_id: bankAccountId || null,
+        aporte_type: isAporte ? aporteType : null,
+        notes: isAporte ? (aporteNotes || null) : null,
+        sold_at: isAporte 
+          ? new Date(aporteDate + "T12:00:00").toISOString() 
+          : new Date().toISOString(),
       };
 
+      const itemsPayload = isAporte ? [] : items.map(i => ({
+        product_id: i.product_id,
+        quantity: i.quantity,
+        unit_price: i.unit_price,
+        unit_cost: i.unit_cost,
+      }));
+
       if (editing) {
-        // Replace items: delete (trigger restores stock), then insert (trigger decrements)
-        const { error: delErr } = await supabase.from("sale_items").delete().eq("sale_id", saleId!);
-        if (delErr) throw delErr;
-        const { error: updErr } = await supabase.from("sales").update(payload as any).eq("id", saleId!);
-        if (updErr) throw updErr;
-        const rows = items.map(i => ({
-          sale_id: saleId!, user_id: user.id, product_id: i.product_id,
-          quantity: i.quantity, unit_price: i.unit_price, unit_cost: i.unit_cost,
-        }));
-        const { error: e2 } = await supabase.from("sale_items").insert(rows as any);
-        if (e2) throw e2;
-      } else {
-        const { data: sale, error } = await supabase
-          .from("sales")
-          .insert({ 
+        // Para edição, mantemos o fluxo atual por enquanto ou migramos para uma RPC de update atômico no futuro.
+        // Como o foco do erro foi a criação, corrigimos a criação primeiro.
+        // Mas para manter a consistência multiempresa:
+        if (isAporte) {
+          const { error: delErr } = await supabase.from("sale_items").delete().eq("sale_id", saleId!);
+          if (delErr) throw delErr;
+          const { error: updErr } = await supabase.from("sales").update(salePayload as any).eq("id", saleId!);
+          if (updErr) throw updErr;
+        } else {
+          const { error: delErr } = await supabase.from("sale_items").delete().eq("sale_id", saleId!);
+          if (delErr) throw delErr;
+          const { error: updErr } = await supabase.from("sales").update(salePayload as any).eq("id", saleId!);
+          if (updErr) throw updErr;
+          const rows = items.map(i => ({
+            sale_id: saleId!, 
             user_id: user.id, 
             empresa_id: isEnabled ? empresaId : undefined,
-            ...payload 
-          } as any)
-          .select().single();
-        if (error) throw error;
-        const rows = items.map(i => ({
-          sale_id: sale.id, 
-          user_id: user.id, 
-          empresa_id: isEnabled ? empresaId : undefined,
-          product_id: i.product_id,
-          quantity: i.quantity, 
-          unit_price: i.unit_price, 
-          unit_cost: i.unit_cost,
-        }));
-        const { error: e2 } = await supabase.from("sale_items").insert(rows as any);
-        if (e2) throw e2;
+            product_id: i.product_id,
+            quantity: i.quantity, 
+            unit_price: i.unit_price, 
+            unit_cost: i.unit_cost,
+          }));
+          const { error: e2 } = await supabase.from("sale_items").insert(rows as any);
+          if (e2) throw e2;
+        }
+      } else {
+        // FLUXO ATÔMICO VIA RPC (NOVO)
+        const { data: newSaleId, error } = await supabase.rpc('rpc_registrar_venda', {
+          p_empresa_id: empresaId,
+          p_payload: salePayload,
+          p_items: itemsPayload,
+          p_idempotency_key: crypto.randomUUID()
+        });
+
+        if (error) {
+          console.error("Erro RPC registrar_venda:", error);
+          throw new Error(error.message || "Erro interno ao registrar venda");
+        }
+        return newSaleId;
       }
     },
     onSuccess: () => { toast.success(editing ? "Venda atualizada" : "Venda registrada"); onDone(); },
