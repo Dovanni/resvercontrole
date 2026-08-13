@@ -65,6 +65,7 @@ function SalesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingId, setViewingId] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [idempotencyKey, setIdempotencyKey] = useState<string>(crypto.randomUUID());
 
   useEffect(() => {
     if (search.edit) {
@@ -111,13 +112,19 @@ function SalesPage() {
             <Button variant="ghost" size="sm" onClick={() => setShowHelp(true)}>
               <HelpCircle className="size-4 mr-1" /> Como funciona esta etapa
             </Button>
-            <Dialog open={open} onOpenChange={setOpen}>
+            <Dialog open={open} onOpenChange={(o) => {
+              setOpen(o);
+              if (o) setIdempotencyKey(crypto.randomUUID());
+            }}>
               <DialogTrigger asChild>
                 <Button className="bg-gradient-primary text-primary-foreground"><Plus className="size-4 mr-1" /> Nova venda</Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader><DialogTitle className="font-display">Nova venda</DialogTitle></DialogHeader>
-                <SaleForm onDone={() => { setOpen(false); invalidate(); }} />
+                <SaleForm 
+                  idempotencyKey={idempotencyKey}
+                  onDone={() => { setOpen(false); invalidate(); }} 
+                />
               </DialogContent>
             </Dialog>
           </div>
@@ -344,7 +351,7 @@ function SaleView({ saleId }: { saleId: string }) {
   );
 }
 
-function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
+function SaleForm({ onDone, saleId, idempotencyKey }: { onDone: () => void; saleId?: string; idempotencyKey?: string }) {
   const { empresaId, isEnabled } = useMultiempresa();
   const editing = !!saleId;
 
@@ -613,7 +620,7 @@ function SaleForm({ onDone, saleId }: { onDone: () => void; saleId?: string }) {
           p_empresa_id: empresaId,
           p_payload: salePayload,
           p_items: itemsPayload,
-          p_idempotency_key: crypto.randomUUID()
+          p_idempotency_key: idempotencyKey || crypto.randomUUID()
         });
 
         if (error) {
