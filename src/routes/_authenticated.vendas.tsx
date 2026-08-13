@@ -112,13 +112,19 @@ function SalesPage() {
             <Button variant="ghost" size="sm" onClick={() => setShowHelp(true)}>
               <HelpCircle className="size-4 mr-1" /> Como funciona esta etapa
             </Button>
-            <Dialog open={open} onOpenChange={setOpen}>
+            <Dialog open={open} onOpenChange={(o) => {
+              setOpen(o);
+              if (o) setIdempotencyKey(crypto.randomUUID());
+            }}>
               <DialogTrigger asChild>
                 <Button className="bg-gradient-primary text-primary-foreground"><Plus className="size-4 mr-1" /> Nova venda</Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader><DialogTitle className="font-display">Nova venda</DialogTitle></DialogHeader>
-                <SaleForm onDone={() => { setOpen(false); invalidate(); }} />
+                <SaleForm 
+                  idempotencyKey={idempotencyKey}
+                  onDone={() => { setOpen(false); invalidate(); }} 
+                />
               </DialogContent>
             </Dialog>
           </div>
