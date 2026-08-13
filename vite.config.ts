@@ -12,4 +12,10 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  vite: {
+    test: {
+      globals: true,
+      environment: "jsdom",
+    },
+  },
 });
