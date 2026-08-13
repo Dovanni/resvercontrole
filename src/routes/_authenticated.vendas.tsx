@@ -65,6 +65,7 @@ function SalesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [viewingId, setViewingId] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [idempotencyKey, setIdempotencyKey] = useState<string>(crypto.randomUUID());
 
   useEffect(() => {
     if (search.edit) {
