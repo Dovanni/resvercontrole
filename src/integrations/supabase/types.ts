@@ -2137,6 +2137,17 @@ export type Database = {
         Args: { _empresa_id: string; _user_id: string }
         Returns: undefined
       }
+      fail_checkout_attempt_initialization: {
+        Args: {
+          p_attempt_id: string
+          p_empresa_id: string
+          p_expected_updated_at: string
+          p_livemode: boolean
+          p_reason_code: string
+          p_subscription_id: string
+        }
+        Returns: string
+      }
       finalize_checkout_attempt: {
         Args: {
           p_attempt_id: string
