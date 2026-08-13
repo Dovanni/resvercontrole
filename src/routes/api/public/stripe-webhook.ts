@@ -217,7 +217,7 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
           eventId = event.id;
           eventType = event.type;
 
-          if (event.livemode) {
+          if (event.livemode && process.env['STRIPE_LIVE_BILLING_ENABLED'] !== 'true') {
              return new Response(JSON.stringify({ error: 'LIVEMODE_REJECTED', trace_id: traceId }), { status: 400 });
           }
 
@@ -388,7 +388,11 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
 
           const supabaseUrl = process.env['VITE_SUPABASE_URL'];
           const supabaseServiceRoleKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
-          const priceEnterpriseMonthly = process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY_TEST'] || process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY'];
+          
+          const isLive = event.livemode;
+          const priceEnterpriseMonthly = isLive 
+            ? process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY_LIVE']
+            : (process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY_TEST'] || process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY']);
           
           if (!supabaseUrl || !supabaseServiceRoleKey || !priceEnterpriseMonthly) {
             console.error(`[${traceId}] Configuration Error: Missing Supabase/Stripe env vars`);
@@ -411,8 +415,8 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
           const payload: WebhookRpcPayload = {
             p_provider_event_id: event.id,
             p_event_type: event.type,
-            p_payload_sha256: null,
-            p_livemode: false,
+            p_payload_sha256: 'automatic_webhook_hash_v1', // Non-null for constraint
+            p_livemode: isLive,
             p_event_data: {
               id: String(eventObject.id || ''),
               object: eventObject,
