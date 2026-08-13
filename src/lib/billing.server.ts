@@ -293,7 +293,7 @@ export async function createStripeCheckoutSessionImpl(empresaId: string, traceId
 
     if (isPreTransport && classification.reason_code && attempt?.id) {
       try {
-        await supabaseAdmin.rpc('fail_checkout_attempt_initialization', {
+        await (supabaseAdmin.rpc as any)('fail_checkout_attempt_initialization', {
           p_attempt_id: attempt.id,
           p_empresa_id: empresaId,
           p_subscription_id: sub.id,
