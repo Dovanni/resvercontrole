@@ -30,7 +30,8 @@ export function isValidOrigin(origin: string | null): boolean {
     const allowlist = [
       CANONICAL_WWW_ORIGIN,
       CANONICAL_APEX_ORIGIN,
-      ALLOWED_PREVIEW_ORIGIN
+      ALLOWED_PREVIEW_ORIGIN,
+      'http://localhost:8080'
     ];
 
     return allowlist.includes(normalizedOrigin);
@@ -47,7 +48,8 @@ export function isAuthorizedHost(host: string | null): boolean {
   const normalizedHost = host.toLowerCase();
   return normalizedHost === CANONICAL_HOST || 
          normalizedHost === APEX_HOST || 
-         normalizedHost === ALLOWED_PREVIEW_HOST;
+         normalizedHost === ALLOWED_PREVIEW_HOST ||
+         normalizedHost === 'localhost:8080';
 }
 
 /**
