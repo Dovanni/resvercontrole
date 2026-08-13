@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { WhatsAppSupport } from '../src/components/WhatsAppSupport';
 import React from 'react';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, screen, cleanup } from '@testing-library/react';
 
 // Mock Tooltip components to avoid environment issues
 vi.mock('@/components/ui/tooltip', () => ({
@@ -17,47 +17,35 @@ vi.mock('lucide-react', () => ({
   MessageCircle: () => React.createElement('span', null, 'Icon'),
 }));
 
-// Mock shadcn button
-vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, ...props }: any) => 
-    React.createElement('button', { ...props }, children),
-}));
-
 describe('WhatsAppSupport Component', () => {
   beforeEach(() => {
     cleanup();
-    vi.restoreAllMocks();
   });
 
   describe('Global Button', () => {
-    it('generates the correct URL for the global button', () => {
-      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => ({} as Window));
+    it('renders as an anchor with the correct URL for the global button', () => {
       render(React.createElement(WhatsAppSupport));
       
-      const button = screen.getByLabelText(/Falar com o suporte VEJAMAIS pelo WhatsApp/i);
-      fireEvent.click(button);
+      const anchor = screen.getByLabelText(/Falar com o suporte VEJAMAIS pelo WhatsApp/i) as HTMLAnchorElement;
+      expect(anchor.tagName).toBe('A');
+      expect(anchor.href).toContain('https://wa.me/5517992822622');
+      expect(anchor.target).toBe('_blank');
+      expect(anchor.rel).toBe('noopener noreferrer');
       
-      expect(windowOpenSpy).toHaveBeenCalledWith(
-        expect.stringContaining('https://wa.me/5517992822622'),
-        '_blank',
-        'noopener,noreferrer'
-      );
-      
-      const url = new URL(windowOpenSpy.mock.calls[0][0] as string);
+      const url = new URL(anchor.href);
       expect(url.searchParams.get('text')).toBe('Olá! Preciso de ajuda com o VEJAMAIS.');
     });
   });
 
   describe('Link Variant', () => {
-    it('generates the correct URL for the subscription context link', () => {
-      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => ({} as Window));
+    it('renders as an anchor with the correct URL for the subscription context link', () => {
       render(React.createElement(WhatsAppSupport, { variant: "link", message: "Olá! Preciso de ajuda com a assinatura do VEJAMAIS." }));
       
-      const button = screen.getByLabelText(/Falar com o suporte VEJAMAIS pelo WhatsApp/i);
-      fireEvent.click(button);
+      const anchor = screen.getByLabelText(/Falar com o suporte VEJAMAIS pelo WhatsApp/i) as HTMLAnchorElement;
+      expect(anchor.tagName).toBe('A');
+      expect(anchor.href).toContain('https://wa.me/5517992822622');
       
-      expect(windowOpenSpy).toHaveBeenCalled();
-      const url = new URL(windowOpenSpy.mock.calls[0][0] as string);
+      const url = new URL(anchor.href);
       expect(url.searchParams.get('text')).toBe('Olá! Preciso de ajuda com a assinatura do VEJAMAIS.');
     });
   });
