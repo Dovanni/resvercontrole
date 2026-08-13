@@ -620,7 +620,7 @@ function SaleForm({ onDone, saleId, idempotencyKey }: { onDone: () => void; sale
           p_empresa_id: empresaId,
           p_payload: salePayload,
           p_items: itemsPayload,
-          p_idempotency_key: crypto.randomUUID()
+          p_idempotency_key: idempotencyKey || crypto.randomUUID()
         });
 
         if (error) {
