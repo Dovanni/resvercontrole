@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.rpc_registrar_venda(uuid, jsonb, public.rpc_sale_item_input[], text) TO sandbox_exec;
