@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LandingPage } from "@/components/landing/landing-page";
+import { WhatsAppSupport } from "@/components/WhatsAppSupport";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -46,6 +47,7 @@ export const Route = createFileRoute("/")({
   component: () => (
     <div className="relative">
       <LandingPage />
+      <WhatsAppSupport message="Olá! Gostaria de conhecer melhor o VEJAMAIS." />
     </div>
   ),
 });
