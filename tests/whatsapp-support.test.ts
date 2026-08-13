@@ -17,10 +17,10 @@ vi.mock('lucide-react', () => ({
   MessageCircle: () => React.createElement('span', null, 'Icon'),
 }));
 
-// Mock shadcn button - pass aria-label
+// Mock shadcn button - pass ALL props to avoid missing aria-label
 vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, onClick, className, size, 'aria-label': ariaLabel }: any) => 
-    React.createElement('button', { onClick, className, 'data-size': size, 'aria-label': ariaLabel }, children),
+  Button: ({ children, ...props }: any) => 
+    React.createElement('button', { ...props }, children),
 }));
 
 describe('WhatsAppSupport Component', () => {
