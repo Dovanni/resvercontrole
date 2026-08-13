@@ -2433,6 +2433,15 @@ export type Database = {
         }
         Returns: Json
       }
+      rpc_registrar_venda: {
+        Args: {
+          p_empresa_id: string
+          p_idempotency_key?: string
+          p_items: Database["public"]["CompositeTypes"]["rpc_sale_item_input"][]
+          p_payload: Json
+        }
+        Returns: string
+      }
       seed_default_categorias_contas_pagar: {
         Args: { _user_id: string }
         Returns: undefined
@@ -2443,7 +2452,12 @@ export type Database = {
       app_role: "admin" | "vendedor" | "financeiro"
     }
     CompositeTypes: {
-      [_ in never]: never
+      rpc_sale_item_input: {
+        product_id: string | null
+        quantity: number | null
+        unit_price: number | null
+        unit_cost: number | null
+      }
     }
   }
 }
