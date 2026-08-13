@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { WhatsAppSupport } from '../src/components/WhatsAppSupport';
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 
 // Mock Tooltip components to avoid environment issues
 vi.mock('@/components/ui/tooltip', () => ({
@@ -17,7 +17,7 @@ vi.mock('lucide-react', () => ({
   MessageCircle: () => React.createElement('span', null, 'Icon'),
 }));
 
-// Mock shadcn button - pass ALL props to avoid missing aria-label
+// Mock shadcn button
 vi.mock('@/components/ui/button', () => ({
   Button: ({ children, ...props }: any) => 
     React.createElement('button', { ...props }, children),
@@ -27,6 +27,7 @@ describe('WhatsAppSupport Component', () => {
   let windowOpenSpy: any;
 
   beforeEach(() => {
+    cleanup();
     windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => ({} as Window));
   });
 
