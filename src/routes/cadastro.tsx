@@ -222,7 +222,7 @@ function SignupPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Building2 className="h-4 w-4 text-primary" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Dados Oficiais</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Provedor: THIRD_PARTY_PUBLIC_DATA_PROVIDER</span>
                     </div>
                     {validatedData.situacao_cadastral === "ATIVA" ? (
                       <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 gap-1 px-2 py-0">
