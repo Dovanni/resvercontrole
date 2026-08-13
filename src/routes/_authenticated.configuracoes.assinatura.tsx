@@ -9,6 +9,7 @@ import { Check, CreditCard, Users, Clock, AlertCircle, Sparkles, ShieldCheck } f
 import { format, isAfter } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { createStripeCheckoutSession, createStripePortalSession } from "@/lib/billing.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 
 export const Route = createFileRoute("/_authenticated/configuracoes/assinatura")({
@@ -183,12 +184,38 @@ export function SubscriptionSettingsPage() {
                             btn.innerText = "Redirecionando para pagamento seguro...";
                             
                             try {
-                              const result = await createStripeCheckoutSession(empresaId);
+                              const response = await fetch('/api/public/billing/create-checkout-v2', {
+                                method: 'POST',
+                                headers: { 
+                                  'Content-Type': 'application/json',
+                                  'Authorization': (await supabase.auth.getSession()).data.session?.access_token ? `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}` : ''
+                                },
+                                body: JSON.stringify({ empresaId })
+                              });
                               
-                              if (result.status === 'session_created' && result.checkoutUrl) {
-                                window.location.href = result.checkoutUrl;
-                              } else {
+                              if (!response.ok) {
+                                const result = await response.json();
                                 console.error("Checkout session failed:", result);
+                                btn.disabled = false;
+                                btn.innerText = originalText;
+                                return;
+                              }
+
+                              const data = await response.json();
+                              
+                              // Validation Protocol
+                              const isValidUrl = typeof data.url === "string";
+                              const isHttps = isValidUrl && new URL(data.url).protocol === "https:";
+                              const isStripeHost = isValidUrl && new URL(data.url).hostname === "checkout.stripe.com";
+                              const isLiveSession = typeof data.sessionId === "string" && data.sessionId.startsWith("cs_live_");
+
+                              if (isValidUrl && isHttps && isStripeHost && isLiveSession) {
+                                window.location.assign(data.url);
+                              } else {
+                                console.error("Security validation failed for checkout redirect", {
+                                  url: data.url,
+                                  sessionId: data.sessionId
+                                });
                                 btn.disabled = false;
                                 btn.innerText = originalText;
                               }
