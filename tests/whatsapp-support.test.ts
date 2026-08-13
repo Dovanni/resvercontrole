@@ -29,32 +29,36 @@ describe('WhatsAppSupport Component', () => {
     vi.restoreAllMocks();
   });
 
-  it('generates the correct URL for the global button', () => {
-    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => ({} as Window));
-    render(React.createElement(WhatsAppSupport));
-    
-    const button = screen.getByLabelText(/Falar com o suporte VEJAMAIS pelo WhatsApp/i);
-    fireEvent.click(button);
-    
-    expect(windowOpenSpy).toHaveBeenCalledWith(
-      expect.stringContaining('https://wa.me/5517992822622'),
-      '_blank',
-      'noopener,noreferrer'
-    );
-    
-    const url = new URL(windowOpenSpy.mock.calls[0][0] as string);
-    expect(url.searchParams.get('text')).toBe('Olá! Preciso de ajuda com o VEJAMAIS.');
+  describe('Global Button', () => {
+    it('generates the correct URL for the global button', () => {
+      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => ({} as Window));
+      render(React.createElement(WhatsAppSupport));
+      
+      const button = screen.getByLabelText(/Falar com o suporte VEJAMAIS pelo WhatsApp/i);
+      fireEvent.click(button);
+      
+      expect(windowOpenSpy).toHaveBeenCalledWith(
+        expect.stringContaining('https://wa.me/5517992822622'),
+        '_blank',
+        'noopener,noreferrer'
+      );
+      
+      const url = new URL(windowOpenSpy.mock.calls[0][0] as string);
+      expect(url.searchParams.get('text')).toBe('Olá! Preciso de ajuda com o VEJAMAIS.');
+    });
   });
 
-  it('generates the correct URL for the subscription context link', () => {
-    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => ({} as Window));
-    render(React.createElement(WhatsAppSupport, { variant: "link", message: "Olá! Preciso de ajuda com a assinatura do VEJAMAIS." }));
-    
-    const button = screen.getByLabelText(/Falar com o suporte VEJAMAIS pelo WhatsApp/i);
-    fireEvent.click(button);
-    
-    expect(windowOpenSpy).toHaveBeenCalled();
-    const url = new URL(windowOpenSpy.mock.calls[0][0] as string);
-    expect(url.searchParams.get('text')).toBe('Olá! Preciso de ajuda com a assinatura do VEJAMAIS.');
+  describe('Link Variant', () => {
+    it('generates the correct URL for the subscription context link', () => {
+      const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => ({} as Window));
+      render(React.createElement(WhatsAppSupport, { variant: "link", message: "Olá! Preciso de ajuda com a assinatura do VEJAMAIS." }));
+      
+      const button = screen.getByLabelText(/Falar com o suporte VEJAMAIS pelo WhatsApp/i);
+      fireEvent.click(button);
+      
+      expect(windowOpenSpy).toHaveBeenCalled();
+      const url = new URL(windowOpenSpy.mock.calls[0][0] as string);
+      expect(url.searchParams.get('text')).toBe('Olá! Preciso de ajuda com a assinatura do VEJAMAIS.');
+    });
   });
 });
