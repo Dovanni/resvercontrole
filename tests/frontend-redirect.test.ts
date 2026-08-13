@@ -1,9 +1,10 @@
+/** @vitest-environment jsdom */
 import { test, expect, vi } from 'vitest';
 
 // Mock window.location
 const originalLocation = window.location;
 delete (window as any).location;
-window.location = { ...originalLocation, assign: vi.fn() };
+window.location = { ...originalLocation, assign: vi.fn() } as any;
 
 // Mock response.json()
 const mockResponse = (data: any, ok = true) => ({
