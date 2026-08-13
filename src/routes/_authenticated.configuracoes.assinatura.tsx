@@ -292,8 +292,18 @@ export function SubscriptionSettingsPage() {
                     try {
                       if (!empresaId) return;
                       const result = await createStripePortalSession(empresaId);
-                      if (result.url) {
-                        window.location.href = result.url;
+                      if (result && typeof result.url === 'string') {
+                        const url = new URL(result.url);
+                        const isStripeHost = url.hostname === "billing.stripe.com";
+                        const isHttps = url.protocol === "https:";
+                        
+                        if (isHttps && isStripeHost) {
+                          window.location.assign(result.url);
+                        } else {
+                          console.error("Security validation failed for portal redirect", { url: result.url });
+                          btn.disabled = false;
+                          btn.innerText = originalText;
+                        }
                       }
                     } catch (err) {
                       console.error("Portal session error:", err);
