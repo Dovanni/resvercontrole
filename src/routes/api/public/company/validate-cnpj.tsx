@@ -40,12 +40,17 @@ export const Route = createFileRoute("/api/public/company/validate-cnpj")({
           }
 
           // 2. Rate Limit
-          const clientIp = request.headers.get("x-forwarded-for") || "unknown";
-          const rateCheck = await checkRateLimit(`rate:cnpj:api:${normalized}:${clientIp}`, 5, 60 * 60 * 1000);
-          if (!rateCheck.allowed) {
+          // 2. Rate Limit (Atômico e Persistente via DB)
+          const { data: allowed, error: rateError } = await supabaseAdmin.rpc('check_rate_limit_persistent', {
+            _key: `rate:cnpj:api:${normalized}`,
+            _limit: 5,
+            _window_interval: '24 hours'
+          });
+
+          if (rateError || !allowed) {
             return new Response(JSON.stringify({ 
               error: "RATE_LIMITED", 
-              retryAfterSeconds: rateCheck.retryAfterSeconds 
+              message: "Muitas consultas para este CNPJ hoje. Aguarde."
             }), {
               status: 429,
               headers: { "Content-Type": "application/json" },
