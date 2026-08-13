@@ -321,6 +321,11 @@ export function SubscriptionSettingsPage() {
                           btn.innerText = originalText;
                         }
                       }
+                    } catch (err) {
+                      console.error("Portal session error:", err);
+                      btn.disabled = false;
+                      btn.innerText = originalText;
+                    }
                   }}
                   className="w-full sm:w-auto"
                 >
