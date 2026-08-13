@@ -1806,6 +1806,7 @@ export type Database = {
           empresa_id: string
           frete_empresa: number
           id: string
+          idempotency_key: string | null
           mercado_pago_fees: number | null
           notes: string | null
           payment_method: string
@@ -1826,6 +1827,7 @@ export type Database = {
           empresa_id: string
           frete_empresa?: number
           id?: string
+          idempotency_key?: string | null
           mercado_pago_fees?: number | null
           notes?: string | null
           payment_method?: string
@@ -1846,6 +1848,7 @@ export type Database = {
           empresa_id?: string
           frete_empresa?: number
           id?: string
+          idempotency_key?: string | null
           mercado_pago_fees?: number | null
           notes?: string | null
           payment_method?: string
