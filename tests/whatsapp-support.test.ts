@@ -1,20 +1,35 @@
-import { describe, it, expect, vi } from 'vitest';
+/** @vitest-environment jsdom */
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { WhatsAppSupport } from '../src/components/WhatsAppSupport';
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 // Mock Tooltip components to avoid environment issues
 vi.mock('@/components/ui/tooltip', () => ({
-  Tooltip: ({ children }: any) => React.createElement('div', null, children),
-  TooltipTrigger: ({ children }: any) => React.createElement('div', null, children),
-  TooltipContent: ({ children }: any) => React.createElement('div', null, children),
-  TooltipProvider: ({ children }: any) => React.createElement('div', null, children),
+  Tooltip: ({ children }: any) => React.createElement('div', { 'data-testid': 'tooltip' }, children),
+  TooltipTrigger: ({ children }: any) => React.createElement('div', { 'data-testid': 'tooltip-trigger' }, children),
+  TooltipContent: ({ children }: any) => React.createElement('div', { 'data-testid': 'tooltip-content' }, children),
+  TooltipProvider: ({ children }: any) => React.createElement('div', { 'data-testid': 'tooltip-provider' }, children),
 }));
 
-// Mock window.open
-const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+// Mock lucide-react
+vi.mock('lucide-react', () => ({
+  MessageCircle: () => React.createElement('span', null, 'Icon'),
+}));
+
+// Mock shadcn button
+vi.mock('@/components/ui/button', () => ({
+  Button: ({ children, onClick, className, size }: any) => 
+    React.createElement('button', { onClick, className, 'data-size': size }, children),
+}));
 
 describe('WhatsAppSupport Component', () => {
+  let windowOpenSpy: any;
+
+  beforeEach(() => {
+    windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+  });
+
   it('generates the correct URL for the global button', () => {
     render(React.createElement(WhatsAppSupport));
     const button = screen.getByLabelText(/Falar com o suporte VEJAMAIS pelo WhatsApp/i);
@@ -35,7 +50,8 @@ describe('WhatsAppSupport Component', () => {
     const button = screen.getByLabelText(/Falar com o suporte VEJAMAIS pelo WhatsApp/i);
     fireEvent.click(button);
     
-    const url = new URL(windowOpenSpy.mock.calls[1][0] as string);
+    expect(windowOpenSpy).toHaveBeenCalled();
+    const url = new URL(windowOpenSpy.mock.calls[0][0] as string);
     expect(url.searchParams.get('text')).toBe('Olá! Preciso de ajuda com a assinatura do VEJAMAIS.');
   });
 });
