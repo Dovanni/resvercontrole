@@ -114,7 +114,8 @@ function SalesPage() {
             </Button>
             <Dialog open={open} onOpenChange={(o) => {
               setOpen(o);
-              if (o) setIdempotencyKey(crypto.randomUUID());
+            if (o) setIdempotencyKey(crypto.randomUUID());
+
             }}>
               <DialogTrigger asChild>
                 <Button className="bg-gradient-primary text-primary-foreground"><Plus className="size-4 mr-1" /> Nova venda</Button>
