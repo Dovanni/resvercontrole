@@ -89,14 +89,25 @@ function SignupPage() {
       toast.success("CNPJ validado com sucesso!");
     } catch (error: any) {
       console.error("CNPJ Validation Error:", error);
-      if (error.message === "EXISTING_COMPANY") {
+      let errorData;
+      try {
+        errorData = JSON.parse(error.message);
+      } catch {
+        errorData = { error: "Erro inesperado", reason_code: "UNKNOWN" };
+      }
+
+      if (errorData.error === "EXISTING_COMPANY" || errorData.reason_code === "DUPLICATE_COMPANY") {
         toast.error("Esta empresa já está cadastrada no VEJAMAIS. Solicite acesso ao administrador da conta.");
-      } else if (error.message === "PROVIDER_ALPHANUMERIC_NOT_SUPPORTED") {
+      } else if (errorData.error === "PROVIDER_ALPHANUMERIC_NOT_SUPPORTED" || errorData.reason_code === "ALPHANUMERIC_NOT_SUPPORTED") {
         toast.info("O CNPJ é estruturalmente válido, mas a consulta cadastral alfanumérica está temporariamente indisponível. Fale com nosso suporte pelo WhatsApp para concluir o cadastro.", {
           duration: 10000,
         });
       } else {
-        toast.error(error.message || "Erro ao validar CNPJ.");
+        toast.error(errorData.error || "Erro ao validar CNPJ.");
+      }
+      
+      if (errorData.trace_id) {
+        console.log(`Trace ID: ${errorData.trace_id}`);
       }
     } finally {
       setValidatingCnpj(false);
