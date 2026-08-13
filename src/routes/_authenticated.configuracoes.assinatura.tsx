@@ -10,6 +10,7 @@ import { format, isAfter } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { createStripeCheckoutSession, createStripePortalSession } from "@/lib/billing.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { WhatsAppSupport } from "@/components/WhatsAppSupport";
 
 
 export const Route = createFileRoute("/_authenticated/configuracoes/assinatura")({
@@ -334,10 +335,14 @@ export function SubscriptionSettingsPage() {
         </Card>
       </div>
       
-      <div className="flex justify-between items-center mt-4">
+      <div className="flex flex-col sm:flex-row justify-between items-center mt-8 pt-6 border-t gap-4">
         <Button variant="ghost" asChild>
           <Link to="/configuracoes">← Voltar para Configurações</Link>
         </Button>
+        <WhatsAppSupport 
+          variant="link" 
+          message="Olá! Preciso de ajuda com a assinatura do VEJAMAIS."
+        />
       </div>
     </div>
   );
