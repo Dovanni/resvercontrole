@@ -88,7 +88,10 @@ export const Route = createFileRoute("/api/public/company/validate-cnpj")({
           try {
             const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${normalized}`, {
               method: "GET",
-              headers: { "Accept": "application/json" },
+              headers: { 
+                "Accept": "application/json",
+                "User-Agent": "Vejamais-Validator/1.0"
+              },
               signal: controller.signal
             });
             
