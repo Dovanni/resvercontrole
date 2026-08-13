@@ -114,7 +114,8 @@ function SalesPage() {
             </Button>
             <Dialog open={open} onOpenChange={(o) => {
               setOpen(o);
-              if (o) setIdempotencyKey(crypto.randomUUID());
+            if (o) setIdempotencyKey(crypto.randomUUID());
+
             }}>
               <DialogTrigger asChild>
                 <Button className="bg-gradient-primary text-primary-foreground"><Plus className="size-4 mr-1" /> Nova venda</Button>
@@ -134,7 +135,7 @@ function SalesPage() {
       <Dialog open={!!editingId} onOpenChange={(o) => !o && setEditingId(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle className="font-display">Editar venda</DialogTitle></DialogHeader>
-          {editingId && <SaleForm saleId={editingId} onDone={() => { setEditingId(null); invalidate(); }} />}
+          {editingId && <SaleForm saleId={editingId} idempotencyKey={`edit-${editingId}`} onDone={() => { setEditingId(null); invalidate(); }} />}
         </DialogContent>
       </Dialog>
 
@@ -351,7 +352,7 @@ function SaleView({ saleId }: { saleId: string }) {
   );
 }
 
-function SaleForm({ onDone, saleId, idempotencyKey }: { onDone: () => void; saleId?: string; idempotencyKey?: string }) {
+function SaleForm({ onDone, saleId, idempotencyKey }: { onDone: () => void; saleId?: string; idempotencyKey: string }) {
   const { empresaId, isEnabled } = useMultiempresa();
   const editing = !!saleId;
 
@@ -620,7 +621,7 @@ function SaleForm({ onDone, saleId, idempotencyKey }: { onDone: () => void; sale
           p_empresa_id: empresaId,
           p_payload: salePayload,
           p_items: itemsPayload,
-          p_idempotency_key: idempotencyKey || crypto.randomUUID()
+          p_idempotency_key: idempotencyKey
         });
 
         if (error) {

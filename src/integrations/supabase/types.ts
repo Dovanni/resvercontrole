@@ -2439,7 +2439,7 @@ export type Database = {
       rpc_registrar_venda: {
         Args: {
           p_empresa_id: string
-          p_idempotency_key?: string
+          p_idempotency_key: string
           p_items: Database["public"]["CompositeTypes"]["rpc_sale_item_input"][]
           p_payload: Json
         }
