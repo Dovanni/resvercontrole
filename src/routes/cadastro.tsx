@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, ExternalLink } from "lucide-react";
-import { useState, useEffect } from "react";
+import { ArrowLeft, ExternalLink, CheckCircle2, AlertTriangle, Building2, Search, Loader2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,8 +10,11 @@ import { VejamaisMark } from "@/components/vejamais-logo";
 import { useServerFn } from "@tanstack/react-start";
 import { secureSignUp, completeSignUpSuccess } from "@/lib/auth-security.functions";
 import { TurnstileWidget, TurnstileWidgetRef } from "@/components/turnstile-widget";
-import { useRef } from "react";
 import { MathChallengeField } from "@/components/math-challenge";
+import { validateCompanyCnpj, type CompanyValidationResult } from "@/lib/company-validation.functions";
+import { formatCnpj, normalizeCnpj } from "@/lib/cnpj-validator";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/cadastro")({
   head: () => ({ meta: [{ title: "Criar conta — Vejamais" }] }),
@@ -28,6 +30,8 @@ function SignupPage() {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [validatingCnpj, setValidatingCnpj] = useState(false);
+  const [validatedData, setValidatedData] = useState<CompanyValidationResult | null>(null);
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
   
   const [mathToken, setMathToken] = useState("");
@@ -35,6 +39,8 @@ function SignupPage() {
   
   const signUpFn = useServerFn(secureSignUp);
   const completeSignUpFn = useServerFn(completeSignUpSuccess);
+  const validateCnpjFn = useServerFn(validateCompanyCnpj);
+  
   const turnstileRef = useRef<TurnstileWidgetRef>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const mathChallengeRef = useRef<{ refresh: () => void }>(null);
@@ -63,8 +69,48 @@ function SignupPage() {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
+  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toUpperCase();
+    setCnpj(formatCnpj(value));
+    if (validatedData) setValidatedData(null);
+  };
+
+  const handleValidateCnpj = async () => {
+    if (!cnpj) {
+      toast.error("Informe o CNPJ para validar.");
+      return;
+    }
+
+    setValidatingCnpj(true);
+    try {
+      const result = await validateCnpjFn({ data: { cnpj } });
+      setValidatedData(result);
+      setEmpresaNome(result.nome_fantasia || result.razao_social);
+      toast.success("CNPJ validado com sucesso!");
+    } catch (error: any) {
+      console.error("CNPJ Validation Error:", error);
+      if (error.message === "EXISTING_COMPANY") {
+        toast.error("Esta empresa já está cadastrada no VEJAMAIS. Solicite acesso ao administrador da conta.");
+      } else {
+        toast.error(error.message || "Erro ao validar CNPJ.");
+      }
+    } finally {
+      setValidatingCnpj(false);
+    }
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (!validatedData) {
+      toast.error("Por favor, valide o CNPJ antes de continuar.");
+      return;
+    }
+
+    if (validatedData.situacao_cadastral !== "ATIVA") {
+      toast.error("Somente empresas com situação cadastral ATIVA podem se cadastrar automaticamente.");
+      return;
+    }
 
     if (!acceptTerms || !acceptPrivacy) {
       toast.error("Você precisa aceitar os termos e a política de privacidade.");
@@ -80,12 +126,11 @@ function SignupPage() {
         return;
       }
       
-      // 1. Validar precondições e SiteVerify no servidor antes do Supabase
       const result = await signUpFn({
         data: {
           email: email.trim(),
           empresaNome: empresaNome.trim(),
-          cnpj: cnpj.trim(),
+          cnpj: normalizeCnpj(cnpj),
           nomeAdmin: nomeAdmin.trim(),
           turnstileToken,
           mathChallengeToken: mathToken,
@@ -94,13 +139,9 @@ function SignupPage() {
         }
       });
 
-      // 3. Sucesso total: limpar rate limit
       await completeSignUpFn({ data: { email: email.trim() } });
 
       toast.success(result.message || "Solicitação enviada! Verifique seu e-mail.");
-      navigate({ to: "/login" });
-
-      toast.success("Conta criada! Verifique seu e-mail para confirmar.");
       navigate({ to: "/login" });
     } catch (error: any) {
       try {
@@ -112,11 +153,7 @@ function SignupPage() {
           toast.error(parsedError.message || error.message || "Erro ao criar conta.");
         }
       } catch {
-        if (error.message.includes("TURNSTILE_CONFIGURATION_REQUIRED")) {
-          toast.error("Configuração de segurança necessária (TURNSTILE_SITE_KEY).");
-        } else {
-          toast.error(error.message || "Erro ao criar conta.");
-        }
+        toast.error(error.message || "Erro ao criar conta.");
       }
       turnstileRef.current?.reset();
       setTurnstileToken(null);
@@ -144,24 +181,125 @@ function SignupPage() {
                 placeholder="Seu nome completo"
                 value={nomeAdmin} 
                 onChange={(e) => setNomeAdmin(e.target.value)} 
+                disabled={busy}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="empresa">Nome da Empresa</Label>
-              <Input id="empresa" required value={empresaNome} onChange={(e) => setEmpresaNome(e.target.value)} />
+              <Label htmlFor="cnpj">CNPJ da empresa</Label>
+              <div className="flex gap-2">
+                <Input 
+                  id="cnpj" 
+                  placeholder="00.000.000/0000-00" 
+                  value={cnpj} 
+                  onChange={handleCnpjChange} 
+                  disabled={busy || validatingCnpj}
+                  className="font-mono"
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleValidateCnpj}
+                  disabled={busy || validatingCnpj || !cnpj}
+                  className="shrink-0"
+                >
+                  {validatingCnpj ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4 mr-2" />
+                      Validar
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Suporta CNPJ numérico e alfanumérico (2026).</p>
             </div>
 
+            {validatedData && (
+              <Card className="bg-muted/30 border-primary/20 animate-in fade-in slide-in-from-top-2 duration-300">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Dados Oficiais</span>
+                    </div>
+                    {validatedData.situacao_cadastral === "ATIVA" ? (
+                      <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 gap-1 px-2 py-0">
+                        <CheckCircle2 className="h-3 w-3" /> {validatedData.situacao_cadastral}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1 px-2 py-0">
+                        <AlertTriangle className="h-3 w-3" /> {validatedData.situacao_cadastral}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="grid gap-2">
+                    <div>
+                      <Label className="text-[10px] uppercase text-muted-foreground">Razão Social</Label>
+                      <p className="text-sm font-semibold truncate">{validatedData.razao_social}</p>
+                    </div>
+                    {validatedData.nome_fantasia && (
+                      <div>
+                        <Label className="text-[10px] uppercase text-muted-foreground">Nome Fantasia</Label>
+                        <p className="text-sm font-medium">{validatedData.nome_fantasia}</p>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-[10px] uppercase text-muted-foreground">Data de Abertura</Label>
+                        <p className="text-sm font-medium">{validatedData.data_abertura}</p>
+                      </div>
+                      <div>
+                        <Label className="text-[10px] uppercase text-muted-foreground">Município / UF</Label>
+                        <p className="text-sm font-medium">{validatedData.municipio} - {validatedData.uf}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-[10px] uppercase text-muted-foreground">Natureza Jurídica</Label>
+                      <p className="text-xs text-muted-foreground line-clamp-1">{validatedData.natureza_juridica}</p>
+                    </div>
+                  </div>
+
+                  {validatedData.situacao_cadastral !== "ATIVA" && (
+                    <div className="pt-2 mt-2 border-t border-destructive/10">
+                      <p className="text-[10px] text-destructive leading-tight mb-2">
+                        A situação cadastral desta empresa não permite a ativação automática. Entre em contato com nosso suporte.
+                      </p>
+                      <Button variant="outline" size="sm" className="w-full text-[10px] h-7 gap-1.5" asChild>
+                        <a href="https://wa.me/5517992822622?text=Olá!%20Minha%20empresa%20está%20com%20situação%20irregular%20e%20gostaria%20de%20ajuda%20para%20usar%20o%20VEJAMAIS." target="_blank">
+                          Suporte via WhatsApp
+                        </a>
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             <div className="space-y-2">
-              <Label htmlFor="cnpj">CNPJ</Label>
-              <Input id="cnpj" placeholder="00.000.000/0000-00" value={cnpj} onChange={(e) => setCnpj(e.target.value)} />
+              <Label htmlFor="empresa">Nome de Exibição da Empresa</Label>
+              <Input 
+                id="empresa" 
+                required 
+                value={empresaNome} 
+                onChange={(e) => setEmpresaNome(e.target.value)} 
+                disabled={busy}
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="email">Email do Administrador</Label>
-              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input 
+                id="email" 
+                type="email" 
+                required 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                disabled={busy}
+              />
             </div>
-
 
             <div className="space-y-4 py-2 border-t border-b border-border/50">
               <div className="flex items-start space-x-2">
@@ -169,6 +307,7 @@ function SignupPage() {
                   id="terms" 
                   checked={acceptTerms} 
                   onCheckedChange={(v) => setAcceptTerms(!!v)} 
+                  disabled={busy}
                 />
                 <div className="grid gap-1.5 leading-none">
                   <label
@@ -188,6 +327,7 @@ function SignupPage() {
                   id="privacy" 
                   checked={acceptPrivacy} 
                   onCheckedChange={(v) => setAcceptPrivacy(!!v)} 
+                  disabled={busy}
                 />
                 <div className="grid gap-1.5 leading-none">
                   <label
@@ -212,10 +352,7 @@ function SignupPage() {
                   Muitas tentativas de cadastro. Aguarde {formatTime(retryAfter)} para tentar novamente.
                 </span>
               ) : retryAfter === 0 || (retryAfter === null && busy === false && turnstileToken === null && mathToken === "") ? (
-                // O estado inicial ou após o countdown pode mostrar uma mensagem ou nada
-                retryAfter === null && busy === false && turnstileToken === null && mathToken === "" ? null : (
-                  <span className="text-primary">Você já pode tentar novamente</span>
-                )
+                null
               ) : null}
             </div>
 
@@ -231,10 +368,10 @@ function SignupPage() {
 
             <Button 
               type="submit" 
-              disabled={busy || retryAfter !== null || (import.meta.env.VITE_TURNSTILE_SITE_KEY ? !turnstileToken : true)} 
+              disabled={busy || !validatedData || validatedData.situacao_cadastral !== "ATIVA" || retryAfter !== null || (import.meta.env.VITE_TURNSTILE_SITE_KEY ? !turnstileToken : true)} 
               className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95"
             >
-              {busy ? "Processando..." : "Enviar convite de ativação"}
+              {busy ? "Processando..." : validatedData ? "Confirmar dados e cadastrar empresa" : "Valide o CNPJ primeiro"}
             </Button>
             
             <p className="text-[10px] text-center text-muted-foreground mt-2">
@@ -255,3 +392,4 @@ function SignupPage() {
     </div>
   );
 }
+
