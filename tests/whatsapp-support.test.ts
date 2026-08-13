@@ -17,17 +17,17 @@ vi.mock('lucide-react', () => ({
   MessageCircle: () => React.createElement('span', null, 'Icon'),
 }));
 
-// Mock shadcn button
+// Mock shadcn button - pass aria-label
 vi.mock('@/components/ui/button', () => ({
-  Button: ({ children, onClick, className, size }: any) => 
-    React.createElement('button', { onClick, className, 'data-size': size }, children),
+  Button: ({ children, onClick, className, size, 'aria-label': ariaLabel }: any) => 
+    React.createElement('button', { onClick, className, 'data-size': size, 'aria-label': ariaLabel }, children),
 }));
 
 describe('WhatsAppSupport Component', () => {
   let windowOpenSpy: any;
 
   beforeEach(() => {
-    windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
+    windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => ({} as Window));
   });
 
   it('generates the correct URL for the global button', () => {
