@@ -99,10 +99,11 @@ sem rotação e sem alteração do secret.
 
 PARAR.
 NÃO PUBLICAR.
-NÃO ALTERAR BANCO.
+NÃO ALTERAR BANCO (EXECUTAR MIGRATION MANUALMENTE).
 NÃO REALIZAR CHECKOUT.
-Prosseguir com a auditoria final do cliente rk_live_ e da recuperação
-atômica da tentativa creating.
+Implementada RPC recovery_checkout_attempt (20260813002500) para desbloqueio da F958.
+Aguardando execução da migration para prosseguir com a limpeza da tentativa 5ab7aa4f.
+        
         `}
       </div>
     </div>
