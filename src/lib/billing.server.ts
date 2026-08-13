@@ -184,12 +184,11 @@ export async function createStripeCheckoutSessionImpl(empresaId: string, traceId
       try {
         const existingSession = await stripe.checkout.sessions.retrieve(attempt.provider_checkout_session_id);
         
-        // Invariantes Sandbox/Live (Sandbox domain can only use test keys, Live domain only live keys)
+        // Invariantes Sandbox/Live
         if (isProduction !== existingSession.livemode) throw new Error("LIVEMODE_REJECTION");
         if (existingSession.status !== 'open') throw new Error("SESSION_EXPIRED_OR_COMPLETED");
         if (existingSession.payment_status !== 'unpaid') throw new Error("PAYMENT_ALREADY_PROCESSED");
 
-        // Invariantes Financeiros e Metadados
         const sessionMetadata = existingSession.metadata || {};
         if (sessionMetadata.empresa_id !== empresaId || sessionMetadata.subscription_id !== sub.id) {
           throw new Error("SESSION_METADATA_MISMATCH");
@@ -216,12 +215,23 @@ export async function createStripeCheckoutSessionImpl(empresaId: string, traceId
     const cancelUrl = `${origin}/configuracoes/assinatura?checkout=cancel`;
 
     current_stage = "STRIPE_REQUEST_PREPARED";
+    
+    // Explicitly serializing line items to check for local errors before transport
+    const lineItems = [{
+      price: STRIPE_PRICE_ENTERPRISE_MONTHLY,
+      quantity: 1,
+    }];
+
+    if (!lineItems[0].price) {
+      current_stage = "STRIPE_REQUEST_PREPARED";
+      const err = new Error("Missing price ID");
+      (err as any).reason_code = "STRIPE_REQUEST_PREPARATION_FAILED";
+      throw err;
+    }
+
     current_stage = "STRIPE_TRANSPORT_STARTED";
     const session = await stripe.checkout.sessions.create({
-      line_items: [{
-        price: STRIPE_PRICE_ENTERPRISE_MONTHLY,
-        quantity: 1,
-      }],
+      line_items: lineItems,
       mode: 'subscription',
       success_url: successUrl,
       cancel_url: cancelUrl,
@@ -274,6 +284,28 @@ export async function createStripeCheckoutSessionImpl(empresaId: string, traceId
     };
   } catch (error: any) {
     const classification = classifyError(error);
+    
+    // ATOMIC RECOVERY GATE: Pre-transport compensation
+    const isPreTransport = 
+      current_stage === "STRIPE_CLIENT_CONSTRUCTION_STARTED" ||
+      current_stage === "STRIPE_CLIENT_CONSTRUCTED" ||
+      current_stage === "STRIPE_REQUEST_PREPARED";
+
+    if (isPreTransport && classification.reason_code && attempt?.id) {
+      try {
+        await (supabaseAdmin.rpc as any)('fail_checkout_attempt_initialization', {
+          p_attempt_id: attempt.id,
+          p_empresa_id: empresaId,
+          p_subscription_id: sub.id,
+          p_livemode: isProduction,
+          p_expected_updated_at: attempt.updated_at,
+          p_reason_code: classification.reason_code
+        });
+      } catch (recoveryErr) {
+        console.error("Critical: Pre-transport recovery RPC failed:", recoveryErr);
+      }
+    }
+
     const sanitizedError = {
       error: "CHECKOUT_INITIALIZATION_FAILED",
       contract_version: "reservation-observability-v2",
