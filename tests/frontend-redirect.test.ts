@@ -31,11 +31,8 @@ async function handleCheckoutResponse(response: Response, btn: HTMLButtonElement
 
 test('valid 200 response with live URL calls location.assign once', async () => {
   const assignSpy = vi.fn();
-  Object.defineProperty(window, 'location', {
-    value: { assign: assignSpy },
-    writable: true,
-    configurable: true
-  });
+  const mockLocation = { assign: assignSpy };
+  vi.stubGlobal('location', mockLocation);
   
   const btn = document.createElement('button');
   const data = { 
@@ -51,15 +48,13 @@ test('valid 200 response with live URL calls location.assign once', async () => 
   
   expect(assignSpy).toHaveBeenCalledWith(data.url);
   expect(assignSpy).toHaveBeenCalledTimes(1);
+  vi.unstubAllGlobals();
 });
 
 test('invalid URL protocol is rejected', async () => {
   const assignSpy = vi.fn();
-  Object.defineProperty(window, 'location', {
-    value: { assign: assignSpy },
-    writable: true,
-    configurable: true
-  });
+  const mockLocation = { assign: assignSpy };
+  vi.stubGlobal('location', mockLocation);
   
   const btn = document.createElement('button');
   const data = { 
@@ -74,15 +69,13 @@ test('invalid URL protocol is rejected', async () => {
   await handleCheckoutResponse(resp, btn, "Assinar");
   
   expect(assignSpy).not.toHaveBeenCalled();
+  vi.unstubAllGlobals();
 });
 
 test('invalid host is rejected', async () => {
   const assignSpy = vi.fn();
-  Object.defineProperty(window, 'location', {
-    value: { assign: assignSpy },
-    writable: true,
-    configurable: true
-  });
+  const mockLocation = { assign: assignSpy };
+  vi.stubGlobal('location', mockLocation);
   
   const btn = document.createElement('button');
   const data = { 
@@ -97,15 +90,13 @@ test('invalid host is rejected', async () => {
   await handleCheckoutResponse(resp, btn, "Assinar");
   
   expect(assignSpy).not.toHaveBeenCalled();
+  vi.unstubAllGlobals();
 });
 
 test('sandbox session in production check is rejected', async () => {
   const assignSpy = vi.fn();
-  Object.defineProperty(window, 'location', {
-    value: { assign: assignSpy },
-    writable: true,
-    configurable: true
-  });
+  const mockLocation = { assign: assignSpy };
+  vi.stubGlobal('location', mockLocation);
   
   const btn = document.createElement('button');
   const data = { 
@@ -120,15 +111,13 @@ test('sandbox session in production check is rejected', async () => {
   await handleCheckoutResponse(resp, btn, "Assinar");
   
   expect(assignSpy).not.toHaveBeenCalled();
+  vi.unstubAllGlobals();
 });
 
 test('HTTP error never redirects', async () => {
   const assignSpy = vi.fn();
-  Object.defineProperty(window, 'location', {
-    value: { assign: assignSpy },
-    writable: true,
-    configurable: true
-  });
+  const mockLocation = { assign: assignSpy };
+  vi.stubGlobal('location', mockLocation);
   
   const btn = document.createElement('button');
   const resp = {
@@ -140,4 +129,5 @@ test('HTTP error never redirects', async () => {
   
   expect(assignSpy).not.toHaveBeenCalled();
   expect(btn.disabled).toBe(false);
+  vi.unstubAllGlobals();
 });
