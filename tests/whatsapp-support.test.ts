@@ -24,19 +24,17 @@ vi.mock('@/components/ui/button', () => ({
 }));
 
 describe('WhatsAppSupport Component', () => {
-  let windowOpenSpy: any;
-
   beforeEach(() => {
     cleanup();
-    windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => ({} as Window));
+    vi.restoreAllMocks();
   });
 
   it('generates the correct URL for the global button', () => {
+    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => ({} as Window));
     render(React.createElement(WhatsAppSupport));
-    // When only floating, there's only 1 button
-    const buttons = screen.getAllByLabelText(/Falar com o suporte VEJAMAIS pelo WhatsApp/i);
-    expect(buttons).toHaveLength(1);
-    fireEvent.click(buttons[0]);
+    
+    const button = screen.getByLabelText(/Falar com o suporte VEJAMAIS pelo WhatsApp/i);
+    fireEvent.click(button);
     
     expect(windowOpenSpy).toHaveBeenCalledWith(
       expect.stringContaining('https://wa.me/5517992822622'),
@@ -49,13 +47,11 @@ describe('WhatsAppSupport Component', () => {
   });
 
   it('generates the correct URL for the subscription context link', () => {
+    const windowOpenSpy = vi.spyOn(window, 'open').mockImplementation(() => ({} as Window));
     render(React.createElement(WhatsAppSupport, { variant: "link", message: "Olá! Preciso de ajuda com a assinatura do VEJAMAIS." }));
-    // When link variant is rendered, the component STILL renders the floating button by default in the same output?
-    // Wait, WhatsAppSupport ALWAYS renders floating UNLESS variant is link, in which case it returns ONLY the link.
-    // So the multiple elements error suggests cleanup is not working as expected or Vitest is running in a way that preserves DOM.
     
-    const buttons = screen.getAllByLabelText(/Falar com o suporte VEJAMAIS pelo WhatsApp/i);
-    fireEvent.click(buttons[buttons.length - 1]); // Click the last one added
+    const button = screen.getByLabelText(/Falar com o suporte VEJAMAIS pelo WhatsApp/i);
+    fireEvent.click(button);
     
     expect(windowOpenSpy).toHaveBeenCalled();
     const url = new URL(windowOpenSpy.mock.calls[0][0] as string);
