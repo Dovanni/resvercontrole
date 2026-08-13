@@ -26,7 +26,10 @@ export function validateCnpj(cnpjRaw: string): boolean {
 
   // Cálculo de dígitos verificadores (Módulo 11)
   // Conforme orientação: valor ASCII - 48
-  const getWeightValue = (char: string) => char.charCodeAt(0) - 48;
+  const getWeightValue = (char: string) => {
+    const code = char.charCodeAt(0);
+    return code - 48;
+  };
 
   const calculateDV = (base: string, weights: number[]) => {
     let sum = 0;
@@ -64,3 +67,4 @@ export function formatCnpj(cnpj: string): string {
 export const cnpjSchema = z.string().refine(validateCnpj, {
   message: "CNPJ inválido (numérico ou alfanumérico)",
 });
+

@@ -47,6 +47,7 @@ import { Route as ApiPublicAcceptInvitationRouteImport } from './routes/api/publ
 import { Route as AuthenticatedConfiguracoesCategoriasRouteImport } from './routes/_authenticated.configuracoes.categorias'
 import { Route as AuthenticatedConfiguracoesAssinaturaRouteImport } from './routes/_authenticated.configuracoes.assinatura'
 import { Route as ApiPublicStripeWebhookLiveRouteImport } from './routes/api/public/stripe-webhook/live'
+import { Route as ApiPublicCompanyValidateCnpjRouteImport } from './routes/api/public/company/validate-cnpj'
 import { Route as ApiPublicBillingCreatePortalSessionRouteImport } from './routes/api/public/billing/create-portal-session'
 import { Route as ApiPublicBillingCreateCheckoutV2RouteImport } from './routes/api/public/billing/create-checkout-v2'
 import { Route as ApiPublicBillingCreateCheckoutRouteImport } from './routes/api/public/billing/create-checkout'
@@ -255,6 +256,12 @@ const ApiPublicStripeWebhookLiveRoute =
     path: '/live',
     getParentRoute: () => ApiPublicStripeWebhookRoute,
   } as any)
+const ApiPublicCompanyValidateCnpjRoute =
+  ApiPublicCompanyValidateCnpjRouteImport.update({
+    id: '/api/public/company/validate-cnpj',
+    path: '/api/public/company/validate-cnpj',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicBillingCreatePortalSessionRoute =
   ApiPublicBillingCreatePortalSessionRouteImport.update({
     id: '/api/public/billing/create-portal-session',
@@ -327,6 +334,7 @@ export interface FileRoutesByFullPath {
   '/api/public/billing/create-checkout': typeof ApiPublicBillingCreateCheckoutRoute
   '/api/public/billing/create-checkout-v2': typeof ApiPublicBillingCreateCheckoutV2Route
   '/api/public/billing/create-portal-session': typeof ApiPublicBillingCreatePortalSessionRoute
+  '/api/public/company/validate-cnpj': typeof ApiPublicCompanyValidateCnpjRoute
   '/api/public/stripe-webhook/live': typeof ApiPublicStripeWebhookLiveRoute
 }
 export interface FileRoutesByTo {
@@ -371,6 +379,7 @@ export interface FileRoutesByTo {
   '/api/public/billing/create-checkout': typeof ApiPublicBillingCreateCheckoutRoute
   '/api/public/billing/create-checkout-v2': typeof ApiPublicBillingCreateCheckoutV2Route
   '/api/public/billing/create-portal-session': typeof ApiPublicBillingCreatePortalSessionRoute
+  '/api/public/company/validate-cnpj': typeof ApiPublicCompanyValidateCnpjRoute
   '/api/public/stripe-webhook/live': typeof ApiPublicStripeWebhookLiveRoute
 }
 export interface FileRoutesById {
@@ -417,6 +426,7 @@ export interface FileRoutesById {
   '/api/public/billing/create-checkout': typeof ApiPublicBillingCreateCheckoutRoute
   '/api/public/billing/create-checkout-v2': typeof ApiPublicBillingCreateCheckoutV2Route
   '/api/public/billing/create-portal-session': typeof ApiPublicBillingCreatePortalSessionRoute
+  '/api/public/company/validate-cnpj': typeof ApiPublicCompanyValidateCnpjRoute
   '/api/public/stripe-webhook/live': typeof ApiPublicStripeWebhookLiveRoute
 }
 export interface FileRouteTypes {
@@ -463,6 +473,7 @@ export interface FileRouteTypes {
     | '/api/public/billing/create-checkout'
     | '/api/public/billing/create-checkout-v2'
     | '/api/public/billing/create-portal-session'
+    | '/api/public/company/validate-cnpj'
     | '/api/public/stripe-webhook/live'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -507,6 +518,7 @@ export interface FileRouteTypes {
     | '/api/public/billing/create-checkout'
     | '/api/public/billing/create-checkout-v2'
     | '/api/public/billing/create-portal-session'
+    | '/api/public/company/validate-cnpj'
     | '/api/public/stripe-webhook/live'
   id:
     | '__root__'
@@ -552,6 +564,7 @@ export interface FileRouteTypes {
     | '/api/public/billing/create-checkout'
     | '/api/public/billing/create-checkout-v2'
     | '/api/public/billing/create-portal-session'
+    | '/api/public/company/validate-cnpj'
     | '/api/public/stripe-webhook/live'
   fileRoutesById: FileRoutesById
 }
@@ -571,6 +584,7 @@ export interface RootRouteChildren {
   ApiPublicBillingCreateCheckoutRoute: typeof ApiPublicBillingCreateCheckoutRoute
   ApiPublicBillingCreateCheckoutV2Route: typeof ApiPublicBillingCreateCheckoutV2Route
   ApiPublicBillingCreatePortalSessionRoute: typeof ApiPublicBillingCreatePortalSessionRoute
+  ApiPublicCompanyValidateCnpjRoute: typeof ApiPublicCompanyValidateCnpjRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -841,6 +855,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStripeWebhookLiveRouteImport
       parentRoute: typeof ApiPublicStripeWebhookRoute
     }
+    '/api/public/company/validate-cnpj': {
+      id: '/api/public/company/validate-cnpj'
+      path: '/api/public/company/validate-cnpj'
+      fullPath: '/api/public/company/validate-cnpj'
+      preLoaderRoute: typeof ApiPublicCompanyValidateCnpjRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/billing/create-portal-session': {
       id: '/api/public/billing/create-portal-session'
       path: '/api/public/billing/create-portal-session'
@@ -996,6 +1017,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicBillingCreateCheckoutV2Route: ApiPublicBillingCreateCheckoutV2Route,
   ApiPublicBillingCreatePortalSessionRoute:
     ApiPublicBillingCreatePortalSessionRoute,
+  ApiPublicCompanyValidateCnpjRoute: ApiPublicCompanyValidateCnpjRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

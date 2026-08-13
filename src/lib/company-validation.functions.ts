@@ -37,40 +37,30 @@ export const validateCompanyCnpj = createServerFn({ method: "POST" })
       throw new Error("Formato de CNPJ inválido ou dígitos verificadores incorretos.");
     }
 
-    // 2. Rate Limit (por IP e hash do CNPJ)
-    const request = (globalThis as any).request as Request;
-    // Em alguns ambientes, request pode ser undefined se não injetado corretamente pelo TanStack Start
-    // Vamos usar um fallback seguro
-    const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
-    
-    // Hash simples para rate limit por CNPJ
-    const cnpjKey = `rate:cnpj:${normalized}`;
-    const ipKey = `rate:ip:${clientIp}`;
+    // 2. Rate Limit Persistente via Supabase RPC
+    const { data: allowed, error: rateError } = await supabaseAdmin.rpc('check_rate_limit_persistent', {
+      _key: `rate:cnpj:fn:${normalized}`,
+      _limit: 5,
+      _window_interval: '24 hours'
+    });
 
-    const [allowedCnpj, allowedIp] = await Promise.all([
-      checkRateLimit(cnpjKey, 5, 24 * 60 * 60 * 1000), // 5 por dia por CNPJ
-      checkRateLimit(ipKey, 20, 60 * 60 * 1000)      // 20 por hora por IP
-    ]);
-
-    if (!allowedCnpj || !allowedIp) {
-      throw new Error("Muitas consultas. Aguarde.");
+    if (rateError || !allowed) {
+      throw new Error("Muitas consultas para este CNPJ hoje. Aguarde.");
     }
 
-    // 3. Verificar se já existe no banco
-    const { data: existing, error: searchError } = await supabaseAdmin
+    // 3. Verificar duplicidade no banco
+    const { data: existing } = await supabaseAdmin
       .from('empresas')
       .select('id')
       .eq('documento', normalized)
       .maybeSingle();
 
     if (existing) {
-      // Regra: Não revelar dados, orientar convite
       throw new Error("EXISTING_COMPANY");
     }
 
-    // 4. Consultar Provedor
+    // 4. Consultar Provedor (Reclassificado como THIRD_PARTY_PUBLIC_DATA_PROVIDER)
     try {
-      // Timeout de 8s para API externa
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000);
 
@@ -82,14 +72,14 @@ export const validateCompanyCnpj = createServerFn({ method: "POST" })
 
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error("CNPJ não localizado na base da Receita Federal.");
+          throw new Error("CNPJ não localizado na base pública (THIRD_PARTY_PUBLIC_DATA_PROVIDER).");
         }
-        throw new Error("Serviço de consulta temporariamente indisponível.");
+        throw new Error("Serviço de consulta externa indisponível no momento.");
       }
 
       const raw = await response.json() as any;
 
-      // 5. Normalizar Resposta (Allowlist estrita)
+      // 5. Normalizar Resposta (Sanitização estrita)
       const result: CompanyValidationResult = {
         cnpj: normalized,
         razao_social: raw.razao_social || raw.nome_empresarial || "NÃO INFORMADO",
@@ -102,7 +92,7 @@ export const validateCompanyCnpj = createServerFn({ method: "POST" })
         municipio: raw.municipio || "",
         uf: raw.uf || "",
         endereco_complet_omitted: true,
-        source: "BrasilAPI",
+        source: "THIRD_PARTY_PUBLIC_DATA_PROVIDER",
         validated_at: new Date().toISOString(),
         version: "2026.1"
       };
@@ -110,12 +100,8 @@ export const validateCompanyCnpj = createServerFn({ method: "POST" })
       return result;
     } catch (err: any) {
       if (err.name === 'AbortError') {
-        throw new Error("O serviço de consulta demorou muito para responder. Tente novamente.");
+        throw new Error("A consulta ao provedor externo demorou muito. Tente novamente.");
       }
-      if (err.message && (err.message.includes("CNPJ") || err.message.includes("indisponível") || err.message.includes("EXISTING_COMPANY"))) {
-        throw err;
-      }
-      console.error("[validateCompanyCnpj] Unexpected Error:", err);
-      throw new Error("Erro na consulta do CNPJ. Tente novamente mais tarde.");
+      throw err;
     }
   });
