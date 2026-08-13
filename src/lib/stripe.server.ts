@@ -1,25 +1,56 @@
 import Stripe from 'stripe';
 
-const STRIPE_RESTRICTED_KEY = process.env['STRIPE_RESTRICTED_KEY'];
-
 /**
  * Stripe client server-only.
- * Rejects live keys to prevent accidental production use during test phase.
+ * Production-ready gate with explicit environment validation and sanitized errors.
  */
-export const getStripeClient = () => {
+export const getStripeClient = (livemode: boolean = false) => {
+  const STRIPE_RESTRICTED_KEY = process.env['STRIPE_RESTRICTED_KEY'];
+
   if (!STRIPE_RESTRICTED_KEY) {
-    return null;
+    const err = new Error('Stripe key is missing');
+    (err as any).__isStripeClientError = true;
+    (err as any).reason_code = 'STRIPE_CLIENT_KEY_MISSING';
+    throw err;
   }
 
-  if (STRIPE_RESTRICTED_KEY.startsWith('sk_live_') || STRIPE_RESTRICTED_KEY.startsWith('rk_live_')) {
-    console.error('Stripe Live Key detected and rejected in Phase 2A.');
-    return null;
+  const isLiveKey = STRIPE_RESTRICTED_KEY.startsWith('sk_live_') || STRIPE_RESTRICTED_KEY.startsWith('rk_live_');
+  const isTestKey = STRIPE_RESTRICTED_KEY.startsWith('sk_test_') || STRIPE_RESTRICTED_KEY.startsWith('rk_test_');
+
+  // Format validation
+  if (!isLiveKey && !isTestKey) {
+    const err = new Error('Invalid Stripe key format');
+    (err as any).__isStripeClientError = true;
+    (err as any).reason_code = 'STRIPE_CLIENT_KEY_FORMAT_INVALID';
+    throw err;
   }
 
-  return new Stripe(STRIPE_RESTRICTED_KEY, {
-    apiVersion: '2026-07-29.dahlia',
-    typescript: true,
-  });
+  // Environment mismatch validation
+  if (livemode && !isLiveKey) {
+    const err = new Error('Attempting live checkout with non-live key');
+    (err as any).__isStripeClientError = true;
+    (err as any).reason_code = 'STRIPE_CLIENT_KEY_MODE_MISMATCH';
+    throw err;
+  }
+
+  if (!livemode && isLiveKey) {
+    const err = new Error('Attempting test/sandbox checkout with live key');
+    (err as any).__isStripeClientError = true;
+    (err as any).reason_code = 'STRIPE_CLIENT_KEY_MODE_MISMATCH';
+    throw err;
+  }
+
+  try {
+    return new Stripe(STRIPE_RESTRICTED_KEY, {
+      apiVersion: '2026-07-29.dahlia',
+      typescript: true,
+    });
+  } catch (error) {
+    const err = new Error('Failed to construct Stripe client');
+    (err as any).__isStripeClientError = true;
+    (err as any).reason_code = 'STRIPE_CLIENT_CONSTRUCTION_FAILED';
+    throw err;
+  }
 };
 
 /**
@@ -29,16 +60,12 @@ export const getStripeClient = () => {
 export const handleStripeWebhook = async (event: Stripe.Event) => {
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
   
-  // SHA-256 equivalent logic or placeholder for now as per schema
-  const payloadString = JSON.stringify(event);
-  
   // Log the event for audit trail
-  // Using 'as any' to bypass transient type mismatch until next sync
   await (supabaseAdmin.from('payment_events') as any).insert({
     provider: 'stripe',
     provider_event_id: event.id,
     event_type: event.type,
-    payload_sha256: 'pending', // Replaced from 'payload' which was failing
+    payload_sha256: 'pending',
     processed: false
   });
 
