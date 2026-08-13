@@ -44,10 +44,12 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  component: () => (
-    <div className="relative">
-      <LandingPage />
-      <WhatsAppSupport message="Olá! Gostaria de conhecer melhor o VEJAMAIS." />
-    </div>
-  ),
+  component: () => {
+    return (
+      <div className="relative">
+        <LandingPage />
+        <WhatsAppSupport message="Olá! Gostaria de conhecer melhor o VEJAMAIS." />
+      </div>
+    );
+  },
 });
