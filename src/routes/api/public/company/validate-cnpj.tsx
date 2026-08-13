@@ -77,9 +77,12 @@ export const Route = createFileRoute("/api/public/company/validate-cnpj")({
           clearTimeout(timeoutId);
 
           if (!response.ok) {
-            return new Response(JSON.stringify({ 
-              error: response.status === 404 ? "NOT_FOUND" : "PROVIDER_UNAVAILABLE" 
-            }), {
+            const isAlphanumeric = /[A-Z]/.test(normalized);
+            const error = (response.status === 404 && isAlphanumeric) 
+              ? "PROVIDER_ALPHANUMERIC_NOT_SUPPORTED" 
+              : (response.status === 404 ? "NOT_FOUND" : "PROVIDER_UNAVAILABLE");
+
+            return new Response(JSON.stringify({ error }), {
               status: response.status === 404 ? 404 : 503,
               headers: { "Content-Type": "application/json" },
             });
