@@ -91,6 +91,10 @@ function SignupPage() {
       console.error("CNPJ Validation Error:", error);
       if (error.message === "EXISTING_COMPANY") {
         toast.error("Esta empresa já está cadastrada no VEJAMAIS. Solicite acesso ao administrador da conta.");
+      } else if (error.message === "PROVIDER_ALPHANUMERIC_NOT_SUPPORTED") {
+        toast.info("O CNPJ é estruturalmente válido, mas a consulta cadastral alfanumérica está temporariamente indisponível. Fale com nosso suporte pelo WhatsApp para concluir o cadastro.", {
+          duration: 10000,
+        });
       } else {
         toast.error(error.message || "Erro ao validar CNPJ.");
       }

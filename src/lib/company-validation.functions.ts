@@ -72,6 +72,12 @@ export const validateCompanyCnpj = createServerFn({ method: "POST" })
 
       if (!response.ok) {
         if (response.status === 404) {
+          // Se o CNPJ for alfanumérico e der 404, assumimos que o provedor não suporta o formato ainda.
+          // Conforme PROTOCOLO: VEJAMAIS_CNPJ_FINAL_MATERIAL_AND_VISUAL_AUDIT item 2.
+          const isAlphanumeric = /[A-Z]/.test(normalized);
+          if (isAlphanumeric) {
+            throw new Error("PROVIDER_ALPHANUMERIC_NOT_SUPPORTED");
+          }
           throw new Error("CNPJ não localizado na base pública (THIRD_PARTY_PUBLIC_DATA_PROVIDER).");
         }
         throw new Error("Serviço de consulta externa indisponível no momento.");

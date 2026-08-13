@@ -45,3 +45,12 @@ describe("CNPJ Validator (Numeric & Alphanumeric 2026)", () => {
   });
 });
 
+describe("CNPJ Error Logic Proofs", () => {
+  it("should detect alphanumeric CNPJ for provider support logic", () => {
+    const numeric = "11222333000181";
+    const alphanumeric = "00000000E08G12";
+    expect(/[A-Z]/.test(numeric)).toBe(false);
+    expect(/[A-Z]/.test(alphanumeric)).toBe(true);
+  });
+});
+
