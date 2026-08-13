@@ -9,6 +9,7 @@ import { Check, CreditCard, Users, Clock, AlertCircle, Sparkles, ShieldCheck } f
 import { format, isAfter } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { createStripeCheckoutSession, createStripePortalSession } from "@/lib/billing.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 
 export const Route = createFileRoute("/_authenticated/configuracoes/assinatura")({

@@ -1,16 +1,4 @@
-/** @vitest-environment jsdom */
 import { test, expect, vi } from 'vitest';
-
-// Mock window.location
-const originalLocation = window.location;
-delete (window as any).location;
-window.location = { ...originalLocation, assign: vi.fn() } as any;
-
-// Mock response.json()
-const mockResponse = (data: any, ok = true) => ({
-  ok,
-  json: async () => data
-});
 
 async function handleCheckoutResponse(response: Response, btn: HTMLButtonElement, originalText: string) {
   if (!response.ok) {
@@ -42,64 +30,89 @@ async function handleCheckoutResponse(response: Response, btn: HTMLButtonElement
 }
 
 test('valid 200 response with live URL calls location.assign once', async () => {
+  const assignSpy = vi.spyOn(window.location, 'assign').mockImplementation(() => {});
   const btn = document.createElement('button');
   const data = { 
     url: 'https://checkout.stripe.com/pay/cs_live_123', 
     sessionId: 'cs_live_123' 
   };
-  const resp = mockResponse(data) as any;
+  const resp = {
+    ok: true,
+    json: async () => data
+  } as any;
   
   await handleCheckoutResponse(resp, btn, "Assinar");
   
-  expect(window.location.assign).toHaveBeenCalledWith(data.url);
-  expect(window.location.assign).toHaveBeenCalledTimes(1);
+  expect(assignSpy).toHaveBeenCalledWith(data.url);
+  expect(assignSpy).toHaveBeenCalledTimes(1);
+  assignSpy.mockRestore();
 });
 
 test('invalid URL protocol is rejected', async () => {
+  const assignSpy = vi.spyOn(window.location, 'assign').mockImplementation(() => {});
   const btn = document.createElement('button');
   const data = { 
     url: 'http://checkout.stripe.com/pay/cs_live_123', 
     sessionId: 'cs_live_123' 
   };
-  const resp = mockResponse(data) as any;
+  const resp = {
+    ok: true,
+    json: async () => data
+  } as any;
   
   await handleCheckoutResponse(resp, btn, "Assinar");
   
-  expect(window.location.assign).not.toHaveBeenCalled();
+  expect(assignSpy).not.toHaveBeenCalled();
+  assignSpy.mockRestore();
 });
 
 test('invalid host is rejected', async () => {
+  const assignSpy = vi.spyOn(window.location, 'assign').mockImplementation(() => {});
   const btn = document.createElement('button');
   const data = { 
     url: 'https://evil.com/pay/cs_live_123', 
     sessionId: 'cs_live_123' 
   };
-  const resp = mockResponse(data) as any;
+  const resp = {
+    ok: true,
+    json: async () => data
+  } as any;
   
   await handleCheckoutResponse(resp, btn, "Assinar");
   
-  expect(window.location.assign).not.toHaveBeenCalled();
+  expect(assignSpy).not.toHaveBeenCalled();
+  assignSpy.mockRestore();
 });
 
 test('sandbox session in production check is rejected', async () => {
+  const assignSpy = vi.spyOn(window.location, 'assign').mockImplementation(() => {});
   const btn = document.createElement('button');
   const data = { 
     url: 'https://checkout.stripe.com/pay/cs_test_123', 
     sessionId: 'cs_test_123' 
   };
-  const resp = mockResponse(data) as any;
+  const resp = {
+    ok: true,
+    json: async () => data
+  } as any;
   
   await handleCheckoutResponse(resp, btn, "Assinar");
   
-  expect(window.location.assign).not.toHaveBeenCalled();
+  expect(assignSpy).not.toHaveBeenCalled();
+  assignSpy.mockRestore();
 });
 
 test('HTTP error never redirects', async () => {
+  const assignSpy = vi.spyOn(window.location, 'assign').mockImplementation(() => {});
   const btn = document.createElement('button');
-  const resp = mockResponse({ error: 'failed' }, false) as any;
+  const resp = {
+    ok: false,
+    json: async () => ({ error: 'failed' })
+  } as any;
   
   await handleCheckoutResponse(resp, btn, "Assinar");
   
-  expect(window.location.assign).not.toHaveBeenCalled();
+  expect(assignSpy).not.toHaveBeenCalled();
   expect(btn.disabled).toBe(false);
+  assignSpy.mockRestore();
 });
