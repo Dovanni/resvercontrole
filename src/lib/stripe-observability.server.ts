@@ -26,7 +26,14 @@ export const REASON_CODES = {
   STRIPE_CLIENT_KEY_FORMAT_INVALID: "STRIPE_CLIENT_KEY_FORMAT_INVALID",
   STRIPE_CLIENT_KEY_MODE_MISMATCH: "STRIPE_CLIENT_KEY_MODE_MISMATCH",
   STRIPE_CLIENT_CONSTRUCTION_FAILED: "STRIPE_CLIENT_CONSTRUCTION_FAILED",
-  STRIPE_REQUEST_PREPARATION_FAILED: "STRIPE_REQUEST_PREPARATION_FAILED"
+  STRIPE_REQUEST_PREPARATION_FAILED: "STRIPE_REQUEST_PREPARATION_FAILED",
+  STRIPE_API_KEY_REJECTED: "STRIPE_API_KEY_REJECTED",
+  STRIPE_PERMISSION_DENIED: "STRIPE_PERMISSION_DENIED",
+  STRIPE_PRICE_OR_RESOURCE_INVALID: "STRIPE_PRICE_OR_RESOURCE_INVALID",
+  STRIPE_RATE_LIMITED: "STRIPE_RATE_LIMITED",
+  STRIPE_UPSTREAM_FAILURE: "STRIPE_UPSTREAM_FAILURE",
+  STRIPE_TRANSPORT_AMBIGUOUS: "STRIPE_TRANSPORT_AMBIGUOUS",
+  STRIPE_REST_TRANSPORT_FAILED: "STRIPE_REST_TRANSPORT_FAILED"
 } as const;
 
 export const ALLOWED_UPSTREAM_CODES = [
@@ -46,11 +53,17 @@ export interface SanitizedError {
   trace_id: string;
   stage: Stage;
   reason_code: ReasonCode;
-  upstream_code: UpstreamCode | null;
+  upstream_code: UpstreamCode | string | null;
   upstream_http_status: number | null;
+  upstream_param?: string | null;
 }
 
-export function classifyError(error: any): { reason_code: ReasonCode; upstream_code: UpstreamCode | null; upstream_http_status: number | null } {
+export function classifyError(error: any): { 
+  reason_code: ReasonCode; 
+  upstream_code: string | null; 
+  upstream_http_status: number | null;
+  upstream_param?: string | null;
+} {
   // Check for our custom internal error structure from getStripeClient
   if (error?.__isStripeClientError) {
     return {
@@ -60,11 +73,21 @@ export function classifyError(error: any): { reason_code: ReasonCode; upstream_c
     };
   }
 
+  // Handle REST specific errors (if manually thrown)
+  if (error?.__isStripeRestError) {
+    return {
+      reason_code: error.reason_code as ReasonCode,
+      upstream_code: error.upstream_code || null,
+      upstream_http_status: error.upstream_http_status || null,
+      upstream_param: error.upstream_param || null
+    };
+  }
+
   // PGRST202 ou PGRST203 -> RESERVATION_RPC_SIGNATURE_NOT_FOUND
   if (error?.code === "PGRST202" || error?.code === "PGRST203") {
     return {
       reason_code: "RESERVATION_RPC_SIGNATURE_NOT_FOUND",
-      upstream_code: error.code as UpstreamCode,
+      upstream_code: error.code as string,
       upstream_http_status: null
     };
   }
