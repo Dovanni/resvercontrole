@@ -352,7 +352,7 @@ function SaleView({ saleId }: { saleId: string }) {
   );
 }
 
-function SaleForm({ onDone, saleId, idempotencyKey }: { onDone: () => void; saleId?: string; idempotencyKey?: string }) {
+function SaleForm({ onDone, saleId, idempotencyKey }: { onDone: () => void; saleId?: string; idempotencyKey: string }) {
   const { empresaId, isEnabled } = useMultiempresa();
   const editing = !!saleId;
 
