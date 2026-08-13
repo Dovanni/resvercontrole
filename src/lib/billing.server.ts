@@ -98,16 +98,12 @@ export async function createStripeCheckoutSessionImpl(empresaId: string, traceId
     return { status: 'checkout_disabled', message: 'Production checkout disabled' };
   }
 
-  const STRIPE_RESTRICTED_KEY = isProduction 
-    ? process.env['STRIPE_RESTRICTED_KEY_LIVE'] 
-    : (process.env['STRIPE_RESTRICTED_KEY_TEST'] || process.env['STRIPE_RESTRICTED_KEY']);
-
   const STRIPE_PRICE_ENTERPRISE_MONTHLY = isProduction
     ? process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY_LIVE']
     : (process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY_TEST'] || process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY']);
 
-  if (!STRIPE_RESTRICTED_KEY || !STRIPE_PRICE_ENTERPRISE_MONTHLY) {
-    console.warn("Stripe configuration pending (Missing secrets)");
+  if (!STRIPE_PRICE_ENTERPRISE_MONTHLY) {
+    console.warn("Stripe configuration pending (Missing prices)");
     return { status: 'configuration_pending' };
   }
 
@@ -139,6 +135,7 @@ export async function createStripeCheckoutSessionImpl(empresaId: string, traceId
     const classification = classifyError(reserveError);
     const sanitizedError = {
       error: "CHECKOUT_INITIALIZATION_FAILED",
+      contract_version: "reservation-observability-v2",
       trace_id,
       stage: current_stage,
       reason_code: classification.reason_code,
@@ -151,6 +148,7 @@ export async function createStripeCheckoutSessionImpl(empresaId: string, traceId
   if (reserveData == null) {
     const sanitizedError = {
       error: "CHECKOUT_INITIALIZATION_FAILED",
+      contract_version: "reservation-observability-v2",
       trace_id,
       stage: current_stage,
       reason_code: REASON_CODES.RESERVATION_RPC_RESPONSE_EMPTY,
@@ -160,11 +158,11 @@ export async function createStripeCheckoutSessionImpl(empresaId: string, traceId
     throw new Error(JSON.stringify(sanitizedError));
   }
 
-  // Validar formato do reserveData (deve ser um objeto com as propriedades esperadas)
   const attempt = reserveData as any;
   if (!attempt.id || !attempt.status) {
     const sanitizedError = {
       error: "CHECKOUT_INITIALIZATION_FAILED",
+      contract_version: "reservation-observability-v2",
       trace_id,
       stage: current_stage,
       reason_code: REASON_CODES.RESERVATION_RPC_RESPONSE_INVALID,
@@ -176,51 +174,49 @@ export async function createStripeCheckoutSessionImpl(empresaId: string, traceId
 
   current_stage = "RESERVATION_RESULT_VALIDATED";
 
-  const stripe = getStripeClient();
-
-  if (!stripe) {
-    console.error("Stripe client initialization failed");
-    throw new Error("Payment service unavailable");
-  }
-
-  // ETAPA 3: Retomada ou Nova Sessão
-  if (attempt.status === 'open' && attempt.provider_checkout_session_id) {
-    try {
-      const existingSession = await stripe.checkout.sessions.retrieve(attempt.provider_checkout_session_id);
-      
-      // Invariantes Sandbox
-      if (existingSession.livemode) throw new Error("LIVEMODE_REJECTION");
-      if (existingSession.status !== 'open') throw new Error("SESSION_EXPIRED_OR_COMPLETED");
-      if (existingSession.payment_status !== 'unpaid') throw new Error("PAYMENT_ALREADY_PROCESSED");
-
-      // Invariantes Financeiros e Metadados
-      const sessionMetadata = existingSession.metadata || {};
-      if (sessionMetadata.empresa_id !== empresaId || sessionMetadata.subscription_id !== sub.id) {
-        throw new Error("SESSION_METADATA_MISMATCH");
-      }
-
-      return {
-        status: 'session_created',
-        checkoutUrl: existingSession.url,
-        sessionId: existingSession.id,
-        canonical_quantity: 1,
-        item_count: 1
-      };
-    } catch (e) {
-      console.error("Failed to resume session:", e);
-      throw new Error("CHECKOUT_RESUME_FAILED");
-    }
-  }
-
-  if (attempt.status === 'open' && !attempt.provider_checkout_session_id) {
-    throw new Error("CHECKOUT_RECONCILIATION_REQUIRED");
-  }
-
-  const successUrl = `${origin}/configuracoes/assinatura?checkout=success`;
-  const cancelUrl = `${origin}/configuracoes/assinatura?checkout=cancel`;
-
   try {
-    current_stage = "STRIPE_CHECKOUT_STARTED";
+    current_stage = "STRIPE_CLIENT_CONSTRUCTION_STARTED";
+    const stripe = getStripeClient(isProduction);
+    current_stage = "STRIPE_CLIENT_CONSTRUCTED";
+
+    // ETAPA 3: Retomada ou Nova Sessão
+    if (attempt.status === 'open' && attempt.provider_checkout_session_id) {
+      try {
+        const existingSession = await stripe.checkout.sessions.retrieve(attempt.provider_checkout_session_id);
+        
+        // Invariantes Sandbox/Live (Sandbox domain can only use test keys, Live domain only live keys)
+        if (isProduction !== existingSession.livemode) throw new Error("LIVEMODE_REJECTION");
+        if (existingSession.status !== 'open') throw new Error("SESSION_EXPIRED_OR_COMPLETED");
+        if (existingSession.payment_status !== 'unpaid') throw new Error("PAYMENT_ALREADY_PROCESSED");
+
+        // Invariantes Financeiros e Metadados
+        const sessionMetadata = existingSession.metadata || {};
+        if (sessionMetadata.empresa_id !== empresaId || sessionMetadata.subscription_id !== sub.id) {
+          throw new Error("SESSION_METADATA_MISMATCH");
+        }
+
+        return {
+          status: 'session_created',
+          checkoutUrl: existingSession.url,
+          sessionId: existingSession.id,
+          canonical_quantity: 1,
+          item_count: 1
+        };
+      } catch (e) {
+        console.error("Failed to resume session:", e);
+        throw new Error("CHECKOUT_RESUME_FAILED");
+      }
+    }
+
+    if (attempt.status === 'open' && !attempt.provider_checkout_session_id) {
+      throw new Error("CHECKOUT_RECONCILIATION_REQUIRED");
+    }
+
+    const successUrl = `${origin}/configuracoes/assinatura?checkout=success`;
+    const cancelUrl = `${origin}/configuracoes/assinatura?checkout=cancel`;
+
+    current_stage = "STRIPE_REQUEST_PREPARED";
+    current_stage = "STRIPE_TRANSPORT_STARTED";
     const session = await stripe.checkout.sessions.create({
       line_items: [{
         price: STRIPE_PRICE_ENTERPRISE_MONTHLY,
@@ -246,6 +242,9 @@ export async function createStripeCheckoutSessionImpl(empresaId: string, traceId
     }, {
       idempotencyKey: attempt.idempotency_key
     });
+
+    current_stage = "STRIPE_RESPONSE_RECEIVED";
+    current_stage = "STRIPE_CHECKOUT_STARTED";
 
     const { data: finalizeData, error: finalizeError } = await supabaseAdmin.rpc('finalize_checkout_attempt_v2', {
       p_attempt_id: attempt.id,
@@ -273,8 +272,17 @@ export async function createStripeCheckoutSessionImpl(empresaId: string, traceId
       canonical_quantity: 1,
       item_count: 1
     };
-  } catch (stripeError) {
-    console.error("Stripe Session Creation Error:", stripeError);
-    throw new Error("Failed to create checkout session");
+  } catch (error: any) {
+    const classification = classifyError(error);
+    const sanitizedError = {
+      error: "CHECKOUT_INITIALIZATION_FAILED",
+      contract_version: "reservation-observability-v2",
+      trace_id,
+      stage: current_stage,
+      reason_code: classification.reason_code,
+      upstream_code: classification.upstream_code,
+      upstream_http_status: classification.upstream_http_status
+    };
+    throw new Error(JSON.stringify(sanitizedError));
   }
 }
