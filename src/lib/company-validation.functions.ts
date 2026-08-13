@@ -39,6 +39,8 @@ export const validateCompanyCnpj = createServerFn({ method: "POST" })
 
     // 2. Rate Limit (por IP e hash do CNPJ)
     const request = (globalThis as any).request as Request;
+    // Em alguns ambientes, request pode ser undefined se não injetado corretamente pelo TanStack Start
+    // Vamos usar um fallback seguro
     const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
     
     // Hash simples para rate limit por CNPJ
@@ -55,7 +57,7 @@ export const validateCompanyCnpj = createServerFn({ method: "POST" })
     }
 
     // 3. Verificar se já existe no banco
-    const { data: existing } = await supabaseAdmin
+    const { data: existing, error: searchError } = await supabaseAdmin
       .from('empresas')
       .select('id')
       .eq('documento', normalized)
@@ -66,16 +68,12 @@ export const validateCompanyCnpj = createServerFn({ method: "POST" })
       throw new Error("EXISTING_COMPANY");
     }
 
-    // 4. Consultar Provedor (Mock para homologação visual inicial ou Integração Real)
-    // No METRIXHR usa-se geralmente a BrasilAPI ou ReceitaWS.
-    // Implementaremos um adapter resiliente.
-    
+    // 4. Consultar Provedor
     try {
       // Timeout de 8s para API externa
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-      // Usando BrasilAPI como provedor primário (homologado)
       const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${normalized}`, {
         signal: controller.signal
       });
@@ -89,7 +87,7 @@ export const validateCompanyCnpj = createServerFn({ method: "POST" })
         throw new Error("Serviço de consulta temporariamente indisponível.");
       }
 
-      const raw = await response.json();
+      const raw = await response.json() as any;
 
       // 5. Normalizar Resposta (Allowlist estrita)
       const result: CompanyValidationResult = {
@@ -114,6 +112,10 @@ export const validateCompanyCnpj = createServerFn({ method: "POST" })
       if (err.name === 'AbortError') {
         throw new Error("O serviço de consulta demorou muito para responder. Tente novamente.");
       }
-      throw err;
+      if (err.message && (err.message.includes("CNPJ") || err.message.includes("indisponível") || err.message.includes("EXISTING_COMPANY"))) {
+        throw err;
+      }
+      console.error("[validateCompanyCnpj] Unexpected Error:", err);
+      throw new Error("Erro na consulta do CNPJ. Tente novamente mais tarde.");
     }
   });
