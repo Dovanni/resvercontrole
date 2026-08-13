@@ -1628,6 +1628,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          expires_at: string
+          hits: number | null
+          key: string
+          last_hit: string | null
+        }
+        Insert: {
+          expires_at: string
+          hits?: number | null
+          key: string
+          last_hit?: string | null
+        }
+        Update: {
+          expires_at?: string
+          hits?: number | null
+          key?: string
+          last_hit?: string | null
+        }
+        Relationships: []
+      }
       receivables: {
         Row: {
           amount: number
@@ -2118,20 +2139,37 @@ export type Database = {
         Args: { p_onboarding_id: string }
         Returns: undefined
       }
-      cleanup_expired_auth_rate_limits: { Args: never; Returns: undefined }
-      create_pending_onboarding: {
-        Args: {
-          p_cnpj_formatado: string
-          p_cnpj_limpo: string
-          p_email_hash: string
-          p_expires_in_hours?: number
-          p_nome_admin: string
-          p_nome_empresa: string
-          p_privacy_version: string
-          p_terms_version: string
-        }
-        Returns: string
+      check_rate_limit_persistent: {
+        Args: { _key: string; _limit: number; _window_interval: string }
+        Returns: boolean
       }
+      cleanup_expired_auth_rate_limits: { Args: never; Returns: undefined }
+      create_pending_onboarding:
+        | {
+            Args: {
+              _cnpj_formatado: string
+              _cnpj_limpo: string
+              _email_hash: string
+              _nome_admin: string
+              _nome_empresa: string
+              _privacy_version: string
+              _terms_version: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_cnpj_formatado: string
+              p_cnpj_limpo: string
+              p_email_hash: string
+              p_expires_in_hours?: number
+              p_nome_admin: string
+              p_nome_empresa: string
+              p_privacy_version: string
+              p_terms_version: string
+            }
+            Returns: string
+          }
       ensure_default_routing: { Args: { _user_id: string }; Returns: undefined }
       ensure_empresa_defaults: {
         Args: { _empresa_id: string; _user_id: string }
