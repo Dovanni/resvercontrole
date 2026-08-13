@@ -13,8 +13,8 @@ export function WhatsAppSupport({
   className = "" 
 }: WhatsAppSupportProps) {
   const phoneNumber = "5517992822622";
-  const encodedMessage = typeof window !== 'undefined' ? encodeURIComponent(message) : '';
-  const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+  const encodedMessage = message ? encodeURIComponent(message) : '';
+  const whatsappUrl = `https://wa.me/${phoneNumber}${encodedMessage ? `?text=${encodedMessage}` : ''}`;
 
   if (variant === "link") {
     return (
