@@ -640,6 +640,7 @@ function SignupPage() {
   );
 }
 
+
 function MarketplaceChip({ name, color, size = "md", className }: { name: string; color: string; size?: "sm" | "md"; className?: string }) {
   return (
     <div className={cn(
