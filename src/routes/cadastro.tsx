@@ -585,8 +585,7 @@ function SignupPage() {
           </form>
         </div>
       </div>
-          </div>
-        </div>
+    </div>
 
         {/* Coluna Direita: Marketplaces e Serviços */}
         <div className="order-3 space-y-6 lg:col-span-2 xl:col-span-1">
