@@ -35,7 +35,7 @@ export const validateCnpj = createServerFn({ method: "POST" })
     const normalized = normalizeCnpj(rawCnpj);
 
     // 1. Validar formato e DV
-    if (!validateCnpj(normalized)) {
+    if (!validateCnpjCheck(normalized)) {
       throw new Error(JSON.stringify({ 
         error: "INVALID_CNPJ_FORMAT", 
         reason_code: "LOCAL_DV_INVALID",
