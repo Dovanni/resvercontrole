@@ -204,23 +204,45 @@ function SignupPage() {
 
   return (
     <div className="min-h-screen bg-gradient-rose flex items-center justify-center px-4 py-12 relative overflow-x-hidden">
-      {/* Marketplace Ecosystem - Desktop Sidebars */}
-      <div className="hidden lg:block absolute left-8 top-1/2 -translate-y-1/2 w-48 space-y-6 opacity-40 hover:opacity-100 transition-opacity duration-500" aria-hidden="true">
-        <MarketplaceChip name="Mercado Livre" color="bg-[#FFE600] text-black" />
-        <MarketplaceChip name="Amazon" color="bg-[#232F3E] text-white" />
-        <MarketplaceChip name="Shopee" color="bg-[#EE4D2D] text-white" />
-        <div className="pt-4 border-t border-primary/10">
+      {/* Marketplace & E-commerce Ecosystem - Desktop Sidebars */}
+      <div className="hidden lg:block absolute left-8 top-1/2 -translate-y-1/2 w-56 space-y-6 opacity-40 hover:opacity-100 transition-opacity duration-500" aria-hidden="true">
+        <div className="mb-8 p-6 rounded-2xl bg-primary text-primary-foreground shadow-glow border border-primary/20 scale-110 transform origin-left">
+          <div className="flex items-center gap-3 mb-2">
+            <Globe className="size-6" />
+            <h3 className="font-display text-lg font-bold">Meu e-commerce</h3>
+          </div>
+          <p className="text-xs font-medium opacity-90 leading-tight">Loja virtual própria</p>
+        </div>
+        
+        <div className="space-y-4 pt-4 border-t border-primary/10">
+          <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest mb-3">Canais próprios</p>
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground flex items-center gap-2"><Check className="size-3 text-primary" /> Loja física</p>
+            <p className="text-xs font-medium text-muted-foreground flex items-center gap-2"><Check className="size-3 text-primary" /> Redes sociais</p>
+            <p className="text-xs font-medium text-muted-foreground flex items-center gap-2"><Check className="size-3 text-primary" /> Venda direta</p>
+          </div>
+        </div>
+
+        <div className="pt-6 border-t border-primary/10">
           <p className="text-[10px] font-medium text-muted-foreground leading-tight">
-            Seu negócio vende em diferentes canais? Centralize o acompanhamento na VEJAMAIS.
+            Do seu e-commerce próprio aos marketplaces: acompanhe todos os canais do seu negócio com a VEJAMAIS.
           </p>
         </div>
       </div>
 
-      <div className="hidden lg:block absolute right-8 top-1/2 -translate-y-1/2 w-48 space-y-6 opacity-40 hover:opacity-100 transition-opacity duration-500 text-right" aria-hidden="true">
-        <div className="flex justify-end"><MarketplaceChip name="Magalu" color="bg-[#0086FF] text-white" /></div>
-        <div className="flex justify-end"><MarketplaceChip name="Mercado Pago" color="bg-[#009EE3] text-white" /></div>
-        <div className="flex justify-end"><MarketplaceChip name="SHEIN" color="bg-black text-white" /></div>
-        <div className="flex justify-end"><MarketplaceChip name="Temu" color="bg-[#FF6000] text-white" /></div>
+      <div className="hidden lg:block absolute right-8 top-1/2 -translate-y-1/2 w-48 space-y-4 opacity-40 hover:opacity-100 transition-opacity duration-500 text-right" aria-hidden="true">
+        <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest mb-4">Marketplaces e Serviços</p>
+        <div className="flex justify-end"><MarketplaceChip name="Mercado Livre" color="bg-[#FFE600] text-black" size="sm" /></div>
+        <div className="flex justify-end"><MarketplaceChip name="Amazon" color="bg-[#232F3E] text-white" size="sm" /></div>
+        <div className="flex justify-end"><MarketplaceChip name="Shopee" color="bg-[#EE4D2D] text-white" size="sm" /></div>
+        <div className="flex justify-end"><MarketplaceChip name="Magalu" color="bg-[#0086FF] text-white" size="sm" /></div>
+        <div className="flex justify-end"><MarketplaceChip name="SHEIN" color="bg-black text-white" size="sm" /></div>
+        <div className="flex justify-end"><MarketplaceChip name="Temu" color="bg-[#FF6000] text-white" size="sm" /></div>
+        <div className="flex justify-end pt-2">
+          <div className="text-[10px] py-1 px-3 rounded-full bg-muted border border-border text-muted-foreground font-medium">
+            Serviço: Mercado Pago
+          </div>
+        </div>
       </div>
 
       <div className="w-full max-w-lg relative z-10">
