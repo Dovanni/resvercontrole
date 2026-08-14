@@ -1,5 +1,20 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { ArrowLeft, ExternalLink, CheckCircle2, AlertTriangle, Building2, Search, Loader2 } from "lucide-react";
+import { 
+  ArrowLeft, 
+  ExternalLink, 
+  CheckCircle2, 
+  AlertTriangle, 
+  Building2, 
+  Search, 
+  Loader2, 
+  HelpCircle,
+  Check,
+  LayoutDashboard,
+  Rocket,
+  Settings2,
+  BarChart3,
+  Globe
+} from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +30,16 @@ import { validateCompanyCnpj, type CompanyValidationResult } from "@/lib/company
 import { formatCnpj, normalizeCnpj } from "@/lib/cnpj-validator";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/cadastro")({
   head: () => ({ meta: [{ title: "Criar conta — Vejamais" }] }),
@@ -178,12 +203,135 @@ function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-rose flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-lg">
+    <div className="min-h-screen bg-gradient-rose flex items-center justify-center px-4 py-12 relative overflow-x-hidden">
+      {/* Marketplace Ecosystem - Desktop Sidebars */}
+      <div className="hidden lg:block absolute left-8 top-1/2 -translate-y-1/2 w-48 space-y-6 opacity-40 hover:opacity-100 transition-opacity duration-500" aria-hidden="true">
+        <MarketplaceChip name="Mercado Livre" color="bg-[#FFE600] text-black" />
+        <MarketplaceChip name="Amazon" color="bg-[#232F3E] text-white" />
+        <MarketplaceChip name="Shopee" color="bg-[#EE4D2D] text-white" />
+        <div className="pt-4 border-t border-primary/10">
+          <p className="text-[10px] font-medium text-muted-foreground leading-tight">
+            Seu negócio vende em diferentes canais? Centralize o acompanhamento na VEJAMAIS.
+          </p>
+        </div>
+      </div>
+
+      <div className="hidden lg:block absolute right-8 top-1/2 -translate-y-1/2 w-48 space-y-6 opacity-40 hover:opacity-100 transition-opacity duration-500 text-right" aria-hidden="true">
+        <div className="flex justify-end"><MarketplaceChip name="Magalu" color="bg-[#0086FF] text-white" /></div>
+        <div className="flex justify-end"><MarketplaceChip name="Mercado Pago" color="bg-[#009EE3] text-white" /></div>
+        <div className="flex justify-end"><MarketplaceChip name="SHEIN" color="bg-black text-white" /></div>
+        <div className="flex justify-end"><MarketplaceChip name="Temu" color="bg-[#FF6000] text-white" /></div>
+      </div>
+
+      <div className="w-full max-w-lg relative z-10">
         <div className="text-center mb-8">
           <VejamaisMark size={64} className="mx-auto mb-4 rounded-2xl shadow-glow" />
-          <h1 className="font-display text-4xl text-foreground">Criar minha empresa</h1>
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <h1 className="font-display text-4xl text-foreground">Criar minha empresa</h1>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-8 w-8 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
+                  aria-haspopup="dialog"
+                  title="Como funciona esta etapa?"
+                >
+                  <HelpCircle className="h-5 w-5" />
+                  <span className="sr-only">Como funciona esta etapa?</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-2xl max-h-[90vh] p-0 gap-0 overflow-hidden">
+                <ScrollArea className="max-h-[90vh]">
+                  <div className="p-8">
+                    <DialogHeader className="mb-8">
+                      <DialogTitle className="text-3xl font-display text-primary mb-4 leading-tight">
+                        Comece a organizar a gestão do seu negócio
+                      </DialogTitle>
+                      <p className="text-base text-muted-foreground leading-relaxed">
+                        Cadastre sua empresa para centralizar o acompanhamento comercial e financeiro do seu e-commerce ou comércio. Após a criação da conta, você poderá organizar pedidos, vendas, produtos, estoque, clientes, fornecedores, contas, fluxo de caixa, custos, margens e resultados em um só lugar.
+                      </p>
+                    </DialogHeader>
+
+                    <div className="grid gap-8 mb-10">
+                      <div className="grid sm:grid-cols-2 gap-6">
+                        <StepItem 
+                          number="1" 
+                          icon={<Building2 className="size-5" />}
+                          title="Cadastre sua empresa"
+                          description="Informe os dados básicos do administrador e da empresa. O CNPJ será validado antes da confirmação do cadastro."
+                        />
+                        <StepItem 
+                          number="2" 
+                          icon={<Rocket className="size-5" />}
+                          title="Inicie sua avaliação gratuita"
+                          description="Tenha acesso aos recursos da VEJAMAIS durante o período de avaliação, conforme as condições comerciais vigentes."
+                        />
+                        <StepItem 
+                          number="3" 
+                          icon={<Settings2 className="size-5" />}
+                          title="Organize sua operação"
+                          description="Cadastre produtos, clientes, fornecedores, contas bancárias e demais informações necessárias para acompanhar o negócio."
+                        />
+                        <StepItem 
+                          number="4" 
+                          icon={<BarChart3 className="size-5" />}
+                          title="Registre e acompanhe resultados"
+                          description="Monitore vendas, estoque, despesas, contas a pagar e receber, fluxo de caixa, margens, lucros, relatórios, BI e DRE."
+                        />
+                      </div>
+                    </div>
+
+                    <div className="bg-primary/5 rounded-2xl p-6 mb-8 border border-primary/10">
+                      <h3 className="font-display text-xl text-primary mb-4 flex items-center gap-2">
+                        <CheckCircle2 className="size-5" />
+                        Por que utilizar a VEJAMAIS?
+                      </h3>
+                      <div className="grid sm:grid-cols-2 gap-y-2 gap-x-4">
+                        {[
+                          "Gestão comercial e financeira centralizada",
+                          "Acompanhamento de pedidos, vendas e recebimentos",
+                          "Controle de produtos e estoque",
+                          "Organização de taxas, fretes, custos e despesas",
+                          "Visibilidade sobre margens e lucros",
+                          "Contas a pagar, receber e fluxo de caixa",
+                          "Relatórios avançados, BI e DRE",
+                          "Operação multiempresa com isolamento",
+                          "Até 5 usuários conforme o plano",
+                          "Clareza para decidir e segurança para crescer"
+                        ].map((benefit) => (
+                          <div key={benefit} className="flex items-start gap-2 text-sm text-muted-foreground">
+                            <Check className="size-4 text-primary mt-0.5 shrink-0" />
+                            <span>{benefit}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <p className="text-sm text-center font-medium text-primary/80 mb-8 italic">
+                      “A VEJAMAIS ajuda a transformar os dados da operação em uma visão mais clara do desempenho comercial e financeiro do seu negócio.”
+                    </p>
+
+                    <div className="flex justify-center">
+                      <DialogClose asChild>
+                        <Button className="px-8 bg-gradient-primary text-primary-foreground font-semibold shadow-lg shadow-primary/20">
+                          Entendi, continuar cadastro
+                        </Button>
+                      </DialogClose>
+                    </div>
+                  </div>
+                </ScrollArea>
+              </DialogContent>
+            </Dialog>
+          </div>
           <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Gestão Comercial e Financeira</p>
+          
+          <div className="mt-6 space-y-1">
+            <h2 className="text-primary font-semibold text-lg">Gestão comercial e financeira para e-commerce e comércio</h2>
+            <p className="text-sm text-muted-foreground px-4">
+              Organize em um só lugar os resultados das vendas realizadas em marketplaces, lojas virtuais e outros canais do seu negócio.
+            </p>
+          </div>
         </div>
 
         <div className="rounded-2xl bg-card shadow-soft border p-8">
@@ -403,6 +551,60 @@ function SignupPage() {
             </div>
           </form>
         </div>
+
+        {/* Marketplace Ecosystem - Mobile/Tablet Footer */}
+        <div className="lg:hidden mt-12 space-y-6">
+          <div className="text-center space-y-2">
+            <h3 className="text-sm font-semibold text-primary">Seu negócio vende em diferentes canais?</h3>
+            <p className="text-xs text-muted-foreground">Centralize o acompanhamento na VEJAMAIS.</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <MarketplaceChip name="Mercado Livre" color="bg-[#FFE600] text-black" size="sm" />
+            <MarketplaceChip name="Amazon" color="bg-[#232F3E] text-white" size="sm" />
+            <MarketplaceChip name="Shopee" color="bg-[#EE4D2D] text-white" size="sm" />
+            <MarketplaceChip name="Magalu" color="bg-[#0086FF] text-white" size="sm" />
+            <MarketplaceChip name="Mercado Pago" color="bg-[#009EE3] text-white" size="sm" />
+            <MarketplaceChip name="SHEIN" color="bg-black text-white" size="sm" />
+            <MarketplaceChip name="Temu" color="bg-[#FF6000] text-white" size="sm" />
+          </div>
+        </div>
+
+        <div className="mt-8 text-center px-4">
+          <p className="text-[9px] text-muted-foreground leading-relaxed max-w-md mx-auto">
+            Marcas citadas pertencem aos seus respectivos titulares. A exibição representa canais de venda utilizados por empresas e não implica parceria, afiliação ou integração automática com a VEJAMAIS.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MarketplaceChip({ name, color, size = "md" }: { name: string; color: string; size?: "sm" | "md" }) {
+  return (
+    <div className={cn(
+      "flex items-center justify-center rounded-xl shadow-sm border border-white/10 transition-transform hover:scale-105 select-none font-bold tracking-tight",
+      color,
+      size === "md" ? "h-12 px-6 text-sm" : "h-10 px-4 text-xs"
+    )}>
+      {name}
+    </div>
+  );
+}
+
+function StepItem({ number, icon, title, description }: { number: string; icon: React.ReactNode; title: string; description: string }) {
+  return (
+    <div className="flex gap-4 p-4 rounded-xl border border-primary/5 bg-white/50">
+      <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary">
+        {icon}
+      </div>
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold text-primary/50 uppercase tracking-wider">Passo {number}</span>
+          <h4 className="font-semibold text-foreground text-sm">{title}</h4>
+        </div>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          {description}
+        </p>
       </div>
     </div>
   );
