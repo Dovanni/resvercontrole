@@ -101,7 +101,7 @@ export type Plan = {
   features: string[];
   support: string;
   cta: string;
-  ctaTarget: "/cadastro" | "checkout";
+  ctaTarget: string;
   recommended?: boolean;
   available: boolean;
 };
