@@ -352,7 +352,10 @@ function SignupPage() {
           <div className="mt-6 space-y-1">
             <h2 className="text-primary font-semibold text-lg">Gestão comercial e financeira para e-commerce e comércio</h2>
             <p className="text-sm text-muted-foreground px-4">
-              Organize em um só lugar os resultados das vendas realizadas em marketplaces, lojas virtuais e outros canais do seu negócio.
+              Organize em um só lugar os resultados do seu e-commerce próprio, da sua loja virtual, dos marketplaces e dos demais canais de venda do seu negócio.
+            </p>
+            <p className="text-sm text-muted-foreground px-4">
+              Da venda realizada no seu próprio site às operações em diferentes plataformas, acompanhe pedidos, produtos, estoque, taxas, fretes, contas, margens e lucros com mais clareza.
             </p>
           </div>
         </div>
