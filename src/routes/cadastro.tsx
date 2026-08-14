@@ -330,6 +330,7 @@ function SignupPage() {
         {/* Layout de Colunas (Grid do Ecossistema) */}
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] xl:grid-cols-[260px_1fr_280px] gap-6 lg:gap-8 items-start">
 
+
           
           {/* Coluna Esquerda: Canais Próprios */}
           <div className="order-2 lg:order-1 space-y-6">
