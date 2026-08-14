@@ -58,21 +58,21 @@ export function isAuthorizedHost(host: string | null): boolean {
 export function getBillingEnvironment(host: string | null): 'live' | 'sandbox' {
   if (!host) return 'sandbox';
   const normalizedHost = host.toLowerCase();
-  return (normalizedHost === CANONICAL_HOST || normalizedHost === APEX_HOST) ? 'live' : 'sandbox';
+  const STRIPE_LIVE_CHECKOUT_ENABLED = process.env['STRIPE_LIVE_CHECKOUT_ENABLED'] === 'true';
+  return (normalizedHost === CANONICAL_HOST || normalizedHost === APEX_HOST) && STRIPE_LIVE_CHECKOUT_ENABLED ? 'live' : 'sandbox';
 }
 
 export async function getCheckoutStatusImpl(empresaId: string, host: string | null, origin: string | null) {
   const normalizedHost = host?.toLowerCase();
   
-  const isProduction = normalizedHost === CANONICAL_HOST || normalizedHost === APEX_HOST;
-  const isPreview = normalizedHost === ALLOWED_PREVIEW_HOST;
+  const STRIPE_LIVE_CHECKOUT_ENABLED = process.env['STRIPE_LIVE_CHECKOUT_ENABLED'] === 'true';
+  const isProduction = (normalizedHost === CANONICAL_HOST || normalizedHost === APEX_HOST) && STRIPE_LIVE_CHECKOUT_ENABLED;
+  const isPreview = normalizedHost === ALLOWED_PREVIEW_HOST || normalizedHost === 'localhost:8080' || (!isProduction && normalizedHost?.includes('.lovable.app'));
   
   const isAllowedOrigin = origin ? isValidOrigin(origin) : isAuthorizedHost(host);
 
-  const STRIPE_LIVE_BILLING_ENABLED = process.env['STRIPE_LIVE_BILLING_ENABLED'] === 'true';
-
-  // Business Logic: Production needs live flag, Preview is always enabled for testing
-  const checkout_enabled = (isProduction && STRIPE_LIVE_BILLING_ENABLED && isAllowedOrigin) || (isPreview && isAllowedOrigin);
+  // Business Logic: Production needs live flag, Preview/Sandbox is enabled for testing
+  const checkout_enabled = (isProduction && isAllowedOrigin) || (!isProduction && isAllowedOrigin);
   
   const billing_environment = isProduction ? 'live' : 'sandbox';
   const plan_display_price = 'R$ 35,90/mês';
