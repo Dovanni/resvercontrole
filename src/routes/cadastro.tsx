@@ -375,12 +375,9 @@ function SignupPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="admin_name">Nome do Administrador</Label>
+                  <Input 
+                    id="admin_name" 
 
-
-
-
-
-              <Input 
                 id="admin_name" 
                 required 
                 placeholder="Seu nome completo"
