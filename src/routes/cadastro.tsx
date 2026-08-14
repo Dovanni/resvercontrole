@@ -643,14 +643,6 @@ function SignupPage() {
       </div>
 
 
-      <div className="w-full max-w-[1180px] mt-12 mb-8 text-center px-4">
-        <p className="text-[9px] text-muted-foreground/60 leading-relaxed max-w-md mx-auto">
-          Marcas citadas pertencem aos seus respectivos titulares. A exibição representa canais e serviços utilizados por empresas e não implica parceria, afiliação ou integração automática com a VEJAMAIS.
-        </p>
-      </div>
-    </div>
-  );
-}
 
 
 
