@@ -585,46 +585,51 @@ function SignupPage() {
           </form>
         </div>
 
-        {/* Marketplace & E-commerce Ecosystem - Mobile/Tablet Footer */}
-        <div className="lg:hidden mt-12 space-y-8">
-          <div className="p-6 rounded-2xl bg-primary text-primary-foreground shadow-glow border border-primary/20 max-w-sm mx-auto">
-            <div className="flex items-center gap-3 mb-2">
-              <Globe className="size-6" />
-              <h3 className="font-display text-lg font-bold">Meu e-commerce</h3>
-            </div>
-            <p className="text-xs font-medium opacity-90 leading-tight">Loja virtual própria</p>
-          </div>
-
-          <div className="text-center space-y-2">
-            <h3 className="text-sm font-semibold text-primary">Do seu e-commerce próprio aos marketplaces:</h3>
-            <p className="text-xs text-muted-foreground">Acompanhe todos os canais do seu negócio com a VEJAMAIS.</p>
-            <p className="text-xs text-muted-foreground/80">Registre e organize as informações comerciais e financeiras de cada canal para ter uma visão mais clara da operação.</p>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <MarketplaceChip name="Mercado Livre" color="bg-[#FFE600] text-black" size="sm" />
-            <MarketplaceChip name="Amazon" color="bg-[#232F3E] text-white" size="sm" />
-            <MarketplaceChip name="Shopee" color="bg-[#EE4D2D] text-white" size="sm" />
-            <MarketplaceChip name="Magalu" color="bg-[#0086FF] text-white" size="sm" />
-            <MarketplaceChip name="SHEIN" color="bg-black text-white" size="sm" />
-            <MarketplaceChip name="Temu" color="bg-[#FF6000] text-white" size="sm" />
-            <div className="col-span-2 flex justify-center pt-2">
-              <div className="text-[10px] py-1 px-4 rounded-full bg-muted border border-border text-muted-foreground font-medium">
-                Serviço de Pagamento: Mercado Pago
+        {/* Coluna Direita: Marketplaces e Serviços */}
+        <div className="order-3 space-y-6">
+          <Card className="border-primary/10 shadow-sm bg-white/80 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-6 space-y-6">
+              <div>
+                <h3 className="text-sm font-bold text-primary/60 uppercase tracking-widest mb-2">Marketplaces e serviços</h3>
+                <p className="text-[10px] font-medium text-muted-foreground leading-relaxed mb-6">
+                  Registre e acompanhe os resultados das vendas realizadas em diferentes plataformas.
+                </p>
+                
+                <div className="grid grid-cols-2 gap-2.5">
+                  <MarketplaceChip name="Mercado Livre" color="bg-[#FFE600] text-black" size="sm" />
+                  <MarketplaceChip name="Amazon" color="bg-[#232F3E] text-white" size="sm" />
+                  <MarketplaceChip name="Shopee" color="bg-[#EE4D2D] text-white" size="sm" />
+                  <MarketplaceChip name="Magalu" color="bg-[#0086FF] text-white" size="sm" />
+                  <MarketplaceChip name="SHEIN" color="bg-black text-white" size="sm" />
+                  <MarketplaceChip name="Temu" color="bg-[#FF6000] text-white" size="sm" />
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
 
-        <div className="mt-8 text-center px-4">
-          <p className="text-[9px] text-muted-foreground leading-relaxed max-w-md mx-auto">
-            Marcas citadas pertencem aos seus respectivos titulares. A exibição representa canais e serviços utilizados por empresas e não implica parceria, afiliação ou integração automática com a VEJAMAIS.
-          </p>
+              <div className="pt-6 border-t border-primary/5 space-y-3">
+                <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Serviço de pagamento</h5>
+                <MarketplaceChip name="Mercado Pago" color="bg-muted border border-border text-muted-foreground" size="sm" />
+              </div>
+
+              <div className="pt-6 border-t border-primary/5">
+                <p className="text-[9px] text-muted-foreground/70 leading-relaxed italic">
+                  Canais apresentados como referência. Não há integração automática ou parceria comercial implícita.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      <div className="w-full max-w-[1180px] mt-12 mb-8 text-center px-4">
+        <p className="text-[9px] text-muted-foreground/60 leading-relaxed max-w-md mx-auto">
+          Marcas citadas pertencem aos seus respectivos titulares. A exibição representa canais e serviços utilizados por empresas e não implica parceria, afiliação ou integração automática com a VEJAMAIS.
+        </p>
+      </div>
     </div>
-  );
+  </div>
+);
 }
+
 
 function MarketplaceChip({ name, color, size = "md" }: { name: string; color: string; size?: "sm" | "md" }) {
   return (
