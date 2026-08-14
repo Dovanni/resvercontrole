@@ -333,6 +333,7 @@ function SignupPage() {
 
 
 
+
           
           {/* Coluna Esquerda: Canais Próprios */}
           <div className="order-2 lg:order-1 space-y-6">
