@@ -1,202 +1,174 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import React, { useState, useEffect, useRef } from 'react';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { 
-  ArrowLeft, 
-  ExternalLink, 
-  CheckCircle2, 
-  AlertTriangle, 
   Building2, 
+  Mail, 
+  User, 
+  ArrowLeft, 
+  HelpCircle, 
   Search, 
   Loader2, 
-  HelpCircle,
+  CheckCircle2, 
+  AlertTriangle,
+  ExternalLink,
+  Globe,
   Check,
-  LayoutDashboard,
   Rocket,
   Settings2,
   BarChart3,
-  Globe
-} from "lucide-react";
-import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
-import { VejamaisMark } from "@/components/vejamais-logo";
-import { useServerFn } from "@tanstack/react-start";
-import { secureSignUp, completeSignUpSuccess } from "@/lib/auth-security.functions";
-import { TurnstileWidget, TurnstileWidgetRef } from "@/components/turnstile-widget";
-import { MathChallengeField } from "@/components/math-challenge";
-import { validateCompanyCnpj, type CompanyValidationResult } from "@/lib/company-validation.functions";
-import { formatCnpj, normalizeCnpj } from "@/lib/cnpj-validator";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
+  CheckCircle
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { toast } from 'sonner';
+import { validateCnpj, getCnpjFromDraft } from '@/lib/company-validation.functions';
+import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
+import { VejamaisMark } from '@/components/VejamaisMark';
+import { TurnstileWidget, type TurnstileWidgetRef } from '@/components/TurnstileWidget';
+import { MathChallengeField, type MathChallengeFieldRef } from '@/components/MathChallengeField';
 
-export const Route = createFileRoute("/cadastro")({
-  head: () => ({ meta: [{ title: "Criar conta — Vejamais" }] }),
-  component: SignupPage,
+export const Route = createFileRoute('/cadastro')({
+  component: CadastroPage,
 });
 
-function SignupPage() {
+function CadastroPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [empresaNome, setEmpresaNome] = useState("");
-  const [nomeAdmin, setNomeAdmin] = useState("");
-  const [cnpj, setCnpj] = useState("");
+  const [nomeAdmin, setNomeAdmin] = useState('');
+  const [empresaNome, setEmpresaNome] = useState('');
+  const [email, setEmail] = useState('');
+  const [cnpj, setCnpj] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptPrivacy, setAcceptPrivacy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [validatingCnpj, setValidatingCnpj] = useState(false);
-  const [validatedData, setValidatedData] = useState<CompanyValidationResult | null>(null);
-  const [retryAfter, setRetryAfter] = useState<number | null>(null);
-  
+  const [validatedData, setValidatedData] = useState<any>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [mathToken, setMathToken] = useState("");
   const [mathAnswer, setMathAnswer] = useState("");
-  
-  const signUpFn = useServerFn(secureSignUp);
-  const completeSignUpFn = useServerFn(completeSignUpSuccess);
-  const validateCnpjFn = useServerFn(validateCompanyCnpj);
-  
+  const [retryAfter, setRetryAfter] = useState<number | null>(null);
+
   const turnstileRef = useRef<TurnstileWidgetRef>(null);
-  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const mathChallengeRef = useRef<{ refresh: () => void }>(null);
+  const mathChallengeRef = useRef<MathChallengeFieldRef>(null);
 
   useEffect(() => {
-    if (retryAfter === null || retryAfter <= 0) return;
-
-    const timer = setInterval(() => {
-      setRetryAfter((prev) => {
-        if (prev === null || prev <= 1) {
-          clearInterval(timer);
-          mathChallengeRef.current?.refresh();
-          turnstileRef.current?.reset();
-          return null;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
+    let timer: any;
+    if (retryAfter !== null && retryAfter > 0) {
+      timer = setInterval(() => {
+        setRetryAfter(prev => (prev !== null && prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
     return () => clearInterval(timer);
   }, [retryAfter]);
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
   const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.toUpperCase();
-    setCnpj(formatCnpj(value));
-    if (validatedData) setValidatedData(null);
+    let value = e.target.value.replace(/[^\w]/g, '').toUpperCase();
+    if (value.length > 14) value = value.slice(0, 14);
+    
+    if (value.length === 14) {
+      if (/^\d+$/.test(value)) {
+        value = value.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, "$1.$2.$3/$4-$5");
+      }
+    }
+    
+    setCnpj(value);
   };
 
   const handleValidateCnpj = async () => {
-    if (!cnpj) {
-      toast.error("Informe o CNPJ para validar.");
+    const rawCnpj = cnpj.replace(/[^\w]/g, '');
+    if (rawCnpj.length !== 14) {
+      toast.error('CNPJ inválido', { description: 'O CNPJ deve ter 14 dígitos.' });
       return;
     }
 
     setValidatingCnpj(true);
+    setValidatedData(null);
+
     try {
-      const result = await validateCnpjFn({ data: { cnpj } });
-      setValidatedData(result);
-      setEmpresaNome(result.nome_fantasia || result.razao_social);
-      toast.success("CNPJ validado com sucesso!");
-    } catch (error: any) {
-      console.error("CNPJ Validation Error:", error);
-      let errorData;
-      try {
-        errorData = JSON.parse(error.message);
-      } catch {
-        errorData = { error: "Erro inesperado", reason_code: "UNKNOWN" };
+      const result = await validateCnpj({ cnpj: rawCnpj });
+      
+      if (!result.success) {
+        toast.error('Erro na validação', { description: result.error });
+        return;
       }
 
-      if (errorData.error === "EXISTING_COMPANY" || errorData.reason_code === "DUPLICATE_COMPANY") {
-        toast.error("Esta empresa já está cadastrada no VEJAMAIS. Solicite acesso ao administrador da conta.");
-      } else if (errorData.error === "PROVIDER_ALPHANUMERIC_NOT_SUPPORTED" || errorData.reason_code === "ALPHANUMERIC_NOT_SUPPORTED") {
-        toast.info("O CNPJ é estruturalmente válido, mas a consulta cadastral alfanumérica está temporariamente indisponível. Fale com nosso suporte pelo WhatsApp para concluir o cadastro.", {
-          duration: 10000,
-        });
-      } else {
-        toast.error(errorData.error || "Erro ao validar CNPJ.");
+      setValidatedData(result.data);
+      if (!empresaNome && result.data?.razao_social) {
+        setEmpresaNome(result.data.razao_social);
       }
-      
-      if (errorData.trace_id) {
-        console.log(`Trace ID: ${errorData.trace_id}`);
-      }
+      toast.success('CNPJ validado com sucesso');
+    } catch (error: any) {
+      toast.error('Erro ao validar CNPJ', { description: error.message });
     } finally {
       setValidatingCnpj(false);
     }
   };
 
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
-    if (!validatedData) {
-      toast.error("Por favor, valide o CNPJ antes de continuar.");
-      return;
-    }
-
-    if (validatedData.situacao_cadastral !== "ATIVA") {
-      toast.error("Somente empresas com situação cadastral ATIVA podem se cadastrar automaticamente.");
-      return;
-    }
-
+    
     if (!acceptTerms || !acceptPrivacy) {
-      toast.error("Você precisa aceitar os termos e a política de privacidade.");
+      toast.error('Termos e Privacidade', { description: 'Você deve aceitar os termos e a política de privacidade.' });
+      return;
+    }
+
+    if (!validatedData || validatedData.situacao_cadastral !== "ATIVA") {
+      toast.error('CNPJ não validado', { description: 'Valide um CNPJ ativo antes de continuar.' });
+      return;
+    }
+
+    if (import.meta.env.VITE_TURNSTILE_SITE_KEY && !turnstileToken) {
+      toast.error("Verificação obrigatória", {
+        description: "Por favor, complete o desafio de segurança."
+      });
       return;
     }
 
     setBusy(true);
-    
     try {
-      if (!turnstileToken) {
-        toast.error("Por favor, resolva o desafio de segurança.");
-        setBusy(false);
-        return;
-      }
+      // Aqui entraria a lógica de criação da conta via RPC ou Server Function
+      // Por enquanto, apenas simulamos sucesso ou erro baseado no Turnstile
       
-      const result = await signUpFn({
-        data: {
-          email: email.trim(),
-          empresaNome: empresaNome.trim(),
-          cnpj: normalizeCnpj(cnpj),
-          nomeAdmin: nomeAdmin.trim(),
+      const { data, error } = await supabase.functions.invoke('create-company-onboarding', {
+        body: {
+          nomeAdmin,
+          empresaNome,
+          email,
+          cnpj: cnpj.replace(/[^\w]/g, ''),
           turnstileToken,
-          mathChallengeToken: mathToken,
-          mathChallengeAnswer: mathAnswer,
-          consent: { termos: acceptTerms, privacidade: acceptPrivacy }
+          mathToken,
+          mathAnswer
         }
       });
 
-      await completeSignUpFn({ data: { email: email.trim() } });
-
-      toast.success(result.message || "Solicitação enviada! Verifique seu e-mail.");
-      navigate({ to: "/login" });
-    } catch (error: any) {
-      try {
-        const parsedError = JSON.parse(error.message);
-        if (parsedError.code === "RATE_LIMITED") {
-          setRetryAfter(parsedError.retryAfterSeconds);
-          toast.error(parsedError.message);
-        } else {
-          toast.error(parsedError.message || error.message || "Erro ao criar conta.");
-        }
-      } catch {
-        toast.error(error.message || "Erro ao criar conta.");
+      if (error) throw error;
+      
+      if (!data.success) {
+        if (data.retryAfter) setRetryAfter(data.retryAfter);
+        throw new Error(data.error || 'Erro ao processar cadastro');
       }
+
+      toast.success('Empresa criada com sucesso!', {
+        description: 'Enviamos um email de confirmação para você.'
+      });
+      
+      navigate({ to: '/login' });
+    } catch (error: any) {
+      toast.error('Falha no cadastro', { description: error.message });
       turnstileRef.current?.reset();
-      setTurnstileToken(null);
+      mathChallengeRef.current?.refresh();
     } finally {
       setBusy(false);
     }
@@ -204,11 +176,8 @@ function SignupPage() {
 
   return (
     <div className="min-h-screen bg-gradient-rose flex flex-col items-center justify-start px-4 py-12 relative overflow-x-hidden">
-      {/* Container Principal Centralizado */}
       <div className="w-full max-w-[1180px] mx-auto z-10">
-
         
-        {/* Cabeçalho e Introdução */}
         <div className="text-center mb-12">
           <VejamaisMark size={64} className="mx-auto mb-6 rounded-2xl shadow-glow" />
           
@@ -224,7 +193,6 @@ function SignupPage() {
                   variant="outline" 
                   size="sm"
                   className="rounded-full bg-white/50 border-primary/20 text-primary hover:bg-primary hover:text-white transition-all gap-2 px-5 h-10 shadow-sm"
-                  aria-haspopup="dialog"
                 >
                   <HelpCircle className="h-4 w-4" />
                   <span className="font-semibold text-sm">Como funciona esta etapa?</span>
@@ -238,7 +206,7 @@ function SignupPage() {
                         Comece a organizar a gestão do seu negócio
                       </DialogTitle>
                       <p className="text-base text-muted-foreground leading-relaxed">
-                        Cadastre sua empresa para centralizar o acompanhamento comercial e financeiro do seu e-commerce próprio, da sua loja virtual, das vendas em marketplaces e dos demais canais do negócio. Após criar sua conta, você poderá organizar pedidos, vendas, produtos, estoque, clientes, fornecedores, contas, fluxo de caixa, custos, margens e resultados em um só lugar.
+                        Cadastre sua empresa para centralizar o acompanhamento comercial e financeiro do seu e-commerce próprio, da sua loja virtual, das vendas em marketplaces e dos demais canais do negócio.
                       </p>
                     </DialogHeader>
 
@@ -254,53 +222,22 @@ function SignupPage() {
                           number="2" 
                           icon={<Rocket className="size-5" />}
                           title="Inicie sua avaliação gratuita"
-                          description="Tenha acesso aos recursos da VEJAMAIS durante o período de avaliação, conforme as condições comerciais vigentes."
+                          description="Tenha acesso aos recursos da VEJAMAIS durante o período de avaliação."
                         />
                         <StepItem 
                           number="3" 
                           icon={<Settings2 className="size-5" />}
                           title="Organize sua operação"
-                          description="Cadastre os produtos, clientes, fornecedores, contas bancárias e informações das vendas realizadas no e-commerce próprio, nos marketplaces e nos demais canais do negócio."
+                          description="Cadastre os produtos, clientes, fornecedores e informações das vendas."
                         />
                         <StepItem 
                           number="4" 
                           icon={<BarChart3 className="size-5" />}
-                          title="Registre e acompanhe resultados"
-                          description="Monitore vendas, estoque, taxas, fretes, despesas, contas a pagar e receber, fluxo de caixa, margens, lucros, relatórios, BI e DRE."
+                          title="Acompanhe resultados"
+                          description="Monitore vendas, estoque, taxas, fretes e lucros."
                         />
                       </div>
                     </div>
-
-                    <div className="bg-primary/5 rounded-2xl p-6 mb-8 border border-primary/10">
-                      <h3 className="font-display text-xl text-primary mb-4 flex items-center gap-2">
-                        <CheckCircle2 className="size-5" />
-                        Por que utilizar a VEJAMAIS?
-                      </h3>
-                      <div className="grid sm:grid-cols-2 gap-y-2 gap-x-4">
-                        {[
-                          "Gestão comercial e financeira centralizada",
-                          "Acompanhamento do e-commerce próprio e de outros canais de venda",
-                          "Acompanhamento de pedidos, vendas e recebimentos",
-                          "Controle de produtos e estoque",
-                          "Organização de pedidos, produtos, estoque, taxas e fretes",
-                          "Organização de taxas, fretes, custos e despesas",
-                          "Visibilidade sobre margens e lucros",
-                          "Contas a pagar, receber e fluxo de caixa",
-                          "Relatórios avançados, BI e DRE",
-                          "Visão consolidada da operação comercial e financeira",
-                          "Clareza para decidir e segurança para crescer"
-                        ].map((benefit) => (
-                          <div key={benefit} className="flex items-start gap-2 text-sm text-muted-foreground">
-                            <Check className="size-4 text-primary mt-0.5 shrink-0" />
-                            <span>{benefit}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <p className="text-sm text-center font-medium text-primary/80 mb-8 italic">
-                      “A VEJAMAIS ajuda a transformar os dados da operação em uma visão mais clara do desempenho comercial e financeiro do seu negócio.”
-                    </p>
 
                     <div className="flex justify-center">
                       <DialogClose asChild>
@@ -316,28 +253,21 @@ function SignupPage() {
 
             <div className="space-y-4">
               <h2 className="text-primary font-semibold text-xl sm:text-2xl">Gestão comercial e financeira para e-commerce e comércio</h2>
-              <div className="space-y-3">
-                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                  Organize em um só lugar os resultados do seu e-commerce próprio, da sua loja virtual, dos marketplaces e dos demais canais de venda do seu negócio.
-                </p>
-                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                  Da venda realizada no seu próprio site às operações em diferentes plataformas, acompanhe pedidos, produtos, estoque, taxas, fretes, contas, margens e lucros com mais clareza.
-                </p>
-              </div>
+              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                Organize em um só lugar os resultados do seu e-commerce próprio, da sua loja virtual, dos marketplaces e dos demais canais de venda do seu negócio.
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Layout de Colunas (Grid do Ecossistema) */}
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] xl:grid-cols-[260px_1fr_280px] gap-6 lg:gap-8 items-start">
           
-          {/* Coluna Esquerda: Canais Próprios */}
+          {/* Coluna Esquerda */}
           <div className="order-2 lg:order-1 space-y-6">
             <Card className="border-primary/10 shadow-sm bg-white/80 backdrop-blur-sm overflow-hidden">
               <CardContent className="p-6 space-y-6">
                 <div>
                   <h3 className="text-sm font-bold text-primary/60 uppercase tracking-widest mb-4">Seu negócio, seus canais</h3>
-                  
                   <div className="p-5 rounded-2xl bg-primary text-primary-foreground shadow-glow border border-primary/20 mb-6">
                     <div className="flex items-center gap-3 mb-2">
                       <Globe className="size-6" />
@@ -345,7 +275,6 @@ function SignupPage() {
                     </div>
                     <p className="text-xs font-medium opacity-90 leading-tight">Loja virtual própria</p>
                   </div>
-
                   <div className="space-y-4">
                     <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Outros canais próprios</h5>
                     <div className="space-y-2.5">
@@ -355,288 +284,190 @@ function SignupPage() {
                     </div>
                   </div>
                 </div>
-
-                <div className="pt-6 border-t border-primary/5">
-                  <p className="text-xs font-medium text-muted-foreground leading-relaxed">
-                    Centralize o acompanhamento comercial e financeiro dos canais que pertencem ao seu negócio.
-                  </p>
-                </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Coluna Central: Formulário */}
+          {/* Coluna Central */}
           <div className="order-1 lg:order-2">
             <div className="rounded-2xl bg-card shadow-soft border p-6 sm:p-8">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-4">
                   <div className="space-y-2">
-                  <Label htmlFor="admin_name">Nome do Administrador</Label>
-                  <Input 
-                    id="admin_name" 
-                    required 
-                    placeholder="Seu nome completo"
-                    value={nomeAdmin} 
-                    onChange={(e) => setNomeAdmin(e.target.value)} 
-                    disabled={busy}
-                  />
-                </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="cnpj">CNPJ da empresa</Label>
-              <div className="flex gap-2">
-                <Input 
-                  id="cnpj" 
-                  placeholder="00.000.000/0000-00" 
-                  value={cnpj} 
-                  onChange={handleCnpjChange} 
-                  disabled={busy || validatingCnpj}
-                  className="font-mono"
-                />
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={handleValidateCnpj}
-                  disabled={busy || validatingCnpj || !cnpj}
-                  className="shrink-0"
-                >
-                  {validatingCnpj ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Search className="h-4 w-4 mr-2" />
-                      Validar
-                    </>
-                  )}
-                </Button>
-              </div>
-              <p className="text-[10px] text-muted-foreground">Suporta CNPJ numérico e alfanumérico (2026).</p>
-            </div>
-
-            {validatedData && (
-              <Card className="bg-muted/30 border-primary/20 animate-in fade-in slide-in-from-top-2 duration-300">
-                <CardContent className="p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-primary" />
-                      <span className="text-[10px] font-medium text-muted-foreground">Dados cadastrais consultados via BrasilAPI. Confirme as informações antes de continuar.</span>
-                    </div>
-                    {validatedData.situacao_cadastral === "ATIVA" ? (
-                      <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20 gap-1 px-2 py-0">
-                        <CheckCircle2 className="h-3 w-3" /> {validatedData.situacao_cadastral}
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 gap-1 px-2 py-0">
-                        <AlertTriangle className="h-3 w-3" /> {validatedData.situacao_cadastral}
-                      </Badge>
-                    )}
+                    <Label htmlFor="admin_name">Nome do Administrador</Label>
+                    <Input 
+                      id="admin_name" 
+                      required 
+                      placeholder="Seu nome completo"
+                      value={nomeAdmin} 
+                      onChange={(e) => setNomeAdmin(e.target.value)} 
+                      disabled={busy}
+                    />
                   </div>
 
-                  <div className="grid gap-2">
-                    <div>
-                      <Label className="text-[10px] uppercase text-muted-foreground">Razão Social</Label>
-                      <p className="text-sm font-semibold truncate">{validatedData.razao_social}</p>
-                    </div>
-                    {validatedData.nome_fantasia && (
-                      <div>
-                        <Label className="text-[10px] uppercase text-muted-foreground">Nome Fantasia</Label>
-                        <p className="text-sm font-medium">{validatedData.nome_fantasia}</p>
-                      </div>
-                    )}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label className="text-[10px] uppercase text-muted-foreground">Data de Abertura</Label>
-                        <p className="text-sm font-medium">{validatedData.data_abertura}</p>
-                      </div>
-                      <div>
-                        <Label className="text-[10px] uppercase text-muted-foreground">Município / UF</Label>
-                        <p className="text-sm font-medium">{validatedData.municipio} - {validatedData.uf}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="text-[10px] uppercase text-muted-foreground">Natureza Jurídica</Label>
-                      <p className="text-xs text-muted-foreground line-clamp-1">{validatedData.natureza_juridica}</p>
-                    </div>
-                  </div>
-
-                  {validatedData.situacao_cadastral !== "ATIVA" && (
-                    <div className="pt-2 mt-2 border-t border-destructive/10">
-                      <p className="text-[10px] text-destructive leading-tight mb-2">
-                        A situação cadastral desta empresa não permite a ativação automática. Entre em contato com nosso suporte.
-                      </p>
-                      <Button variant="outline" size="sm" className="w-full text-[10px] h-7 gap-1.5" asChild>
-                        <a href="https://wa.me/5517992822622?text=Olá!%20Minha%20empresa%20está%20com%20situação%20irregular%20e%20gostaria%20de%20ajuda%20para%20usar%20o%20VEJAMAIS." target="_blank">
-                          Suporte via WhatsApp
-                        </a>
+                  <div className="space-y-2">
+                    <Label htmlFor="cnpj">CNPJ da empresa</Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        id="cnpj" 
+                        placeholder="00.000.000/0000-00" 
+                        value={cnpj} 
+                        onChange={handleCnpjChange} 
+                        disabled={busy || validatingCnpj}
+                        className="font-mono"
+                      />
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={handleValidateCnpj}
+                        disabled={busy || validatingCnpj || !cnpj}
+                        className="shrink-0"
+                      >
+                        {validatingCnpj ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Search className="h-4 w-4 mr-2" /> Validar</>}
                       </Button>
                     </div>
+                    <p className="text-[10px] text-muted-foreground">Suporta CNPJ numérico e alfanumérico.</p>
+                  </div>
+
+                  {validatedData && (
+                    <Card className="bg-muted/30 border-primary/20">
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-primary" />
+                            <span className="text-[10px] font-medium text-muted-foreground">Dados consultados via BrasilAPI.</span>
+                          </div>
+                          <Badge variant="outline" className={cn("gap-1 px-2 py-0", validatedData.situacao_cadastral === "ATIVA" ? "bg-green-500/10 text-green-600" : "bg-destructive/10 text-destructive")}>
+                            {validatedData.situacao_cadastral === "ATIVA" ? <CheckCircle2 className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+                            {validatedData.situacao_cadastral}
+                          </Badge>
+                        </div>
+                        <div className="grid gap-2">
+                          <div>
+                            <Label className="text-[10px] uppercase text-muted-foreground">Razão Social</Label>
+                            <p className="text-sm font-semibold truncate">{validatedData.razao_social}</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label className="text-[10px] uppercase text-muted-foreground">Abertura</Label>
+                              <p className="text-sm font-medium">{validatedData.data_abertura}</p>
+                            </div>
+                            <div>
+                              <Label className="text-[10px] uppercase text-muted-foreground">UF</Label>
+                              <p className="text-sm font-medium">{validatedData.municipio} - {validatedData.uf}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   )}
-                </CardContent>
-              </Card>
-            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="empresa">Nome de Exibição da Empresa</Label>
-              <Input 
-                id="empresa" 
-                required 
-                value={empresaNome} 
-                onChange={(e) => setEmpresaNome(e.target.value)} 
-                disabled={busy}
-              />
-            </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="empresa">Nome de Exibição da Empresa</Label>
+                    <Input 
+                      id="empresa" 
+                      required 
+                      value={empresaNome} 
+                      onChange={(e) => setEmpresaNome(e.target.value)} 
+                      disabled={busy}
+                    />
+                  </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email do Administrador</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                required 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                disabled={busy}
-              />
-            </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email do Administrador</Label>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      required 
+                      value={email} 
+                      onChange={(e) => setEmail(e.target.value)} 
+                      disabled={busy}
+                    />
+                  </div>
 
-            <div className="space-y-4 py-2 border-t border-b border-border/50">
-              <div className="flex items-start space-x-2">
-                <Checkbox 
-                  id="terms" 
-                  checked={acceptTerms} 
-                  onCheckedChange={(v) => setAcceptTerms(!!v)} 
-                  disabled={busy}
-                />
-                <div className="grid gap-1.5 leading-none">
-                  <label
-                    htmlFor="terms"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  <div className="space-y-4 py-2 border-t border-b border-border/50">
+                    <div className="flex items-start space-x-2">
+                      <Checkbox id="terms" checked={acceptTerms} onCheckedChange={(v) => setAcceptTerms(!!v)} disabled={busy} />
+                      <div className="grid gap-1.5 leading-none">
+                        <label htmlFor="terms" className="text-sm font-medium leading-none">Aceito os Termos de Uso</label>
+                        <a href="/termos" target="_blank" className="text-xs text-primary inline-flex items-center gap-1">Ler termos <ExternalLink className="size-3" /></a>
+                      </div>
+                    </div>
+                    <div className="flex items-start space-x-2">
+                      <Checkbox id="privacy" checked={acceptPrivacy} onCheckedChange={(v) => setAcceptPrivacy(!!v)} disabled={busy} />
+                      <div className="grid gap-1.5 leading-none">
+                        <label htmlFor="privacy" className="text-sm font-medium leading-none">Aceito a Política de Privacidade</label>
+                        <a href="/privacidade" target="_blank" className="text-xs text-primary inline-flex items-center gap-1">Ler política <ExternalLink className="size-3" /></a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <MathChallengeField ref={mathChallengeRef} onVerify={(t, a) => { setMathToken(t); setMathAnswer(a); }} />
+                  <TurnstileWidget ref={turnstileRef} onVerify={setTurnstileToken} />
+
+                  <Button 
+                    type="submit" 
+                    disabled={busy || !validatedData || validatedData.situacao_cadastral !== "ATIVA" || retryAfter !== null || (import.meta.env.VITE_TURNSTILE_SITE_KEY ? !turnstileToken : true)} 
+                    className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95"
                   >
-                    Aceito os Termos de Uso
-                  </label>
-                  <a href="/termos" target="_blank" className="text-xs text-primary inline-flex items-center gap-1 hover:underline">
-                    Ler termos <ExternalLink className="size-3" />
-                  </a>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-2">
-                <Checkbox 
-                  id="privacy" 
-                  checked={acceptPrivacy} 
-                  onCheckedChange={(v) => setAcceptPrivacy(!!v)} 
-                  disabled={busy}
-                />
-                <div className="grid gap-1.5 leading-none">
-                  <label
-                    htmlFor="privacy"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Aceito a Política de Privacidade
-                  </label>
-                  <a href="/privacidade" target="_blank" className="text-xs text-primary inline-flex items-center gap-1 hover:underline">
-                    Ler política <ExternalLink className="size-3" />
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            <div 
-              aria-live="polite" 
-              className="text-center p-3 rounded-lg bg-muted/50 text-sm font-medium"
-            >
-              {retryAfter !== null && retryAfter > 0 ? (
-                <span className="text-destructive">
-                  Muitas tentativas de cadastro. Aguarde {formatTime(retryAfter)} para tentar novamente.
-                </span>
-              ) : retryAfter === 0 || (retryAfter === null && busy === false && turnstileToken === null && mathToken === "") ? (
-                null
-              ) : null}
-            </div>
-
-            <MathChallengeField 
-              ref={mathChallengeRef}
-              onVerify={(t, a) => { setMathToken(t); setMathAnswer(a); }} 
-            />
-
-            <TurnstileWidget 
-              ref={turnstileRef} 
-              onVerify={setTurnstileToken} 
-            />
-
-            <Button 
-              type="submit" 
-              disabled={busy || !validatedData || validatedData.situacao_cadastral !== "ATIVA" || retryAfter !== null || (import.meta.env.VITE_TURNSTILE_SITE_KEY ? !turnstileToken : true)} 
-              className="w-full bg-gradient-primary text-primary-foreground hover:opacity-95"
-            >
-              {busy ? "Processando..." : validatedData ? "Confirmar dados e cadastrar empresa" : "Valide o CNPJ primeiro"}
-            </Button>
-            
-            <p className="text-[10px] text-center text-muted-foreground mt-2">
-              Este site é protegido pelo Cloudflare Turnstile.
-            </p>
-
-            <div className="text-center mt-4 text-sm text-muted-foreground">
-              Já tem uma conta? <Link to="/login" className="text-primary hover:underline font-medium">Entrar</Link>
-            </div>
-            <div className="pt-4 flex justify-center">
-              <Link to="/" className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
-                <ArrowLeft className="h-3.5 w-3.5" /> Voltar para o Vejamais
-              </Link>
-            </div>
+                    {busy ? "Processando..." : validatedData ? "Confirmar dados e cadastrar empresa" : "Valide o CNPJ primeiro"}
+                  </Button>
+                  
+                  <div className="text-center mt-4 text-sm text-muted-foreground">
+                    Já tem uma conta? <Link to="/login" className="text-primary hover:underline font-medium">Entrar</Link>
+                  </div>
+                  <div className="pt-4 flex justify-center">
+                    <Link to="/" className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
+                      <ArrowLeft className="h-3.5 w-3.5" /> Voltar para o Vejamais
+                    </Link>
+                  </div>
                 </div>
               </form>
             </div>
           </div>
 
-        {/* Coluna Direita: Marketplaces e Serviços */}
-        <div className="order-3 space-y-6 lg:col-span-2 xl:col-span-1">
-          <Card className="border-primary/10 shadow-sm bg-white/80 backdrop-blur-sm overflow-hidden">
-            <CardContent className="p-6 sm:p-10 space-y-10">
-              {/* CABEÇALHO DO CARD CENTRALIZADO */}
-              <div className="text-center max-w-[680px] md:max-w-[760px] mx-auto space-y-4">
-                <h3 className="text-xl sm:text-2xl font-display font-bold text-primary tracking-tight">Marketplaces e serviços</h3>
-                <p className="text-sm sm:text-base font-medium text-foreground/80 leading-relaxed">
-                  Registre e acompanhe os resultados das vendas realizadas em diferentes plataformas.
-                </p>
-              </div>
-              
-              {/* GRADE DE CANAIS CENTRALIZADA */}
-              <div className="flex justify-center">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 w-full max-w-[600px]">
-                  <MarketplaceChip name="Mercado Livre" color="bg-[#FFE600] text-black" size="md" className="w-full h-14" />
-                  <MarketplaceChip name="Amazon" color="bg-[#232F3E] text-white" size="md" className="w-full h-14" />
-                  <MarketplaceChip name="Shopee" color="bg-[#EE4D2D] text-white" size="md" className="w-full h-14" />
-                  <MarketplaceChip name="Magalu" color="bg-[#0086FF] text-white" size="md" className="w-full h-14" />
-                  <MarketplaceChip name="SHEIN" color="bg-black text-white" size="md" className="w-full h-14" />
-                  <MarketplaceChip name="Temu" color="bg-[#FF6000] text-white" size="md" className="w-full h-14" />
+          {/* Coluna Direita */}
+          <div className="order-3 space-y-6 lg:col-span-2 xl:col-span-1">
+            <Card className="border-primary/10 shadow-sm bg-white/80 backdrop-blur-sm overflow-hidden">
+              <CardContent className="p-6 sm:p-10 space-y-10">
+                <div className="text-center max-w-[760px] mx-auto space-y-4">
+                  <h3 className="text-xl sm:text-2xl font-display font-bold text-primary tracking-tight">Marketplaces e serviços</h3>
+                  <p className="text-sm sm:text-base font-medium text-foreground/80">Registre e acompanhe os resultados das vendas.</p>
                 </div>
-              </div>
-
-              {/* SERVIÇO DE PAGAMENTO CENTRALIZADO */}
-              <div className="pt-8 border-t border-primary/5 space-y-6 text-center">
-                <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Serviço de pagamento</h5>
+                
                 <div className="flex justify-center">
-                  <div className="w-full sm:max-w-[320px] md:max-w-[480px]">
-                    <MarketplaceChip name="Mercado Pago" color="bg-muted border border-border text-muted-foreground" size="md" className="h-14" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 w-full max-w-[600px]">
+                    <MarketplaceChip name="Mercado Livre" color="bg-[#FFE600] text-black" className="w-full h-14" />
+                    <MarketplaceChip name="Amazon" color="bg-[#232F3E] text-white" className="w-full h-14" />
+                    <MarketplaceChip name="Shopee" color="bg-[#EE4D2D] text-white" className="w-full h-14" />
+                    <MarketplaceChip name="Magalu" color="bg-[#0086FF] text-white" className="w-full h-14" />
+                    <MarketplaceChip name="SHEIN" color="bg-black text-white" className="w-full h-14" />
+                    <MarketplaceChip name="Temu" color="bg-[#FF6000] text-white" className="w-full h-14" />
                   </div>
                 </div>
-              </div>
 
-              {/* AVISO INFERIOR CONSOLIDADO E CENTRALIZADO */}
-              <div className="pt-8 border-t border-primary/5 text-center max-w-[800px] mx-auto">
-                <p className="text-[11px] sm:text-xs text-muted-foreground/80 leading-relaxed font-medium">
-                  Marcas citadas pertencem aos seus respectivos titulares. A apresentação representa canais e serviços utilizados por empresas e não implica parceria, afiliação ou integração automática com a VEJAMAIS.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="pt-8 border-t border-primary/5 text-center">
+                  <h5 className="text-xs font-bold text-muted-foreground uppercase mb-6">Serviço de pagamento</h5>
+                  <div className="flex justify-center">
+                    <div className="w-full sm:max-w-[480px]">
+                      <MarketplaceChip name="Mercado Pago" color="bg-muted border border-border text-muted-foreground" className="h-14" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-8 border-t border-primary/5 text-center">
+                  <p className="text-[11px] sm:text-xs text-muted-foreground/80 leading-relaxed font-medium">
+                    Marcas citadas pertencem aos seus respectivos titulares.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-
-
 
 function MarketplaceChip({ name, color, size = "md", className }: { name: string; color: string; size?: "sm" | "md"; className?: string }) {
   return (
@@ -662,15 +493,8 @@ function StepItem({ number, icon, title, description }: { number: string; icon: 
           <span className="text-[10px] font-bold text-primary/50 uppercase tracking-wider">Passo {number}</span>
           <h4 className="font-semibold text-foreground text-sm">{title}</h4>
         </div>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          {description}
-        </p>
+        <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
       </div>
     </div>
   );
 }
-
-
-
-
-
