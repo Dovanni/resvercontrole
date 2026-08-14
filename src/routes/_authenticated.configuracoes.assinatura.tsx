@@ -156,7 +156,7 @@ export function SubscriptionSettingsPage() {
               </div>
             </div>
 
-            {isTrial && (
+            {(isTrial || sub.status === 'none') && (
               <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20">
                 <h4 className="font-semibold text-primary flex items-center gap-2 mb-2">
                   <Sparkles className="size-4" />
