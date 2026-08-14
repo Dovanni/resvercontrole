@@ -598,39 +598,50 @@ function SignupPage() {
 
 
         {/* Coluna Direita: Marketplaces e Serviços */}
-        <div className="order-3 space-y-6">
+        <div className="order-3 space-y-6 lg:col-span-2 xl:col-span-1">
           <Card className="border-primary/10 shadow-sm bg-white/80 backdrop-blur-sm overflow-hidden">
-            <CardContent className="p-6 space-y-6">
-              <div>
-                <h3 className="text-sm font-bold text-primary/60 uppercase tracking-widest mb-2">Marketplaces e serviços</h3>
-                <p className="text-[10px] font-medium text-muted-foreground leading-relaxed mb-6">
+            <CardContent className="p-6 sm:p-10 space-y-10">
+              {/* CABEÇALHO DO CARD CENTRALIZADO */}
+              <div className="text-center max-w-[680px] md:max-w-[760px] mx-auto space-y-4">
+                <h3 className="text-xl sm:text-2xl font-display font-bold text-primary tracking-tight">Marketplaces e serviços</h3>
+                <p className="text-sm sm:text-base font-medium text-foreground/80 leading-relaxed">
                   Registre e acompanhe os resultados das vendas realizadas em diferentes plataformas.
                 </p>
-                
-                <div className="grid grid-cols-2 gap-2.5">
-                  <MarketplaceChip name="Mercado Livre" color="bg-[#FFE600] text-black" size="sm" />
-                  <MarketplaceChip name="Amazon" color="bg-[#232F3E] text-white" size="sm" />
-                  <MarketplaceChip name="Shopee" color="bg-[#EE4D2D] text-white" size="sm" />
-                  <MarketplaceChip name="Magalu" color="bg-[#0086FF] text-white" size="sm" />
-                  <MarketplaceChip name="SHEIN" color="bg-black text-white" size="sm" />
-                  <MarketplaceChip name="Temu" color="bg-[#FF6000] text-white" size="sm" />
+              </div>
+              
+              {/* GRADE DE CANAIS CENTRALIZADA */}
+              <div className="flex justify-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4 w-full max-w-[600px]">
+                  <MarketplaceChip name="Mercado Livre" color="bg-[#FFE600] text-black" size="md" className="w-full h-14" />
+                  <MarketplaceChip name="Amazon" color="bg-[#232F3E] text-white" size="md" className="w-full h-14" />
+                  <MarketplaceChip name="Shopee" color="bg-[#EE4D2D] text-white" size="md" className="w-full h-14" />
+                  <MarketplaceChip name="Magalu" color="bg-[#0086FF] text-white" size="md" className="w-full h-14" />
+                  <MarketplaceChip name="SHEIN" color="bg-black text-white" size="md" className="w-full h-14" />
+                  <MarketplaceChip name="Temu" color="bg-[#FF6000] text-white" size="md" className="w-full h-14" />
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-primary/5 space-y-3">
-                <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Serviço de pagamento</h5>
-                <MarketplaceChip name="Mercado Pago" color="bg-muted border border-border text-muted-foreground" size="sm" />
+              {/* SERVIÇO DE PAGAMENTO CENTRALIZADO */}
+              <div className="pt-8 border-t border-primary/5 space-y-6 text-center">
+                <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Serviço de pagamento</h5>
+                <div className="flex justify-center">
+                  <div className="w-full sm:max-w-[320px] md:max-w-[480px]">
+                    <MarketplaceChip name="Mercado Pago" color="bg-muted border border-border text-muted-foreground" size="md" className="h-14" />
+                  </div>
+                </div>
               </div>
 
-              <div className="pt-6 border-t border-primary/5">
-                <p className="text-[9px] text-muted-foreground/70 leading-relaxed italic">
-                  Canais apresentados como referência. Não há integração automática ou parceria comercial implícita.
+              {/* AVISO INFERIOR CONSOLIDADO E CENTRALIZADO */}
+              <div className="pt-8 border-t border-primary/5 text-center max-w-[800px] mx-auto">
+                <p className="text-[11px] sm:text-xs text-muted-foreground/80 leading-relaxed font-medium">
+                  Marcas citadas pertencem aos seus respectivos titulares. A apresentação representa canais e serviços utilizados por empresas e não implica parceria, afiliação ou integração automática com a VEJAMAIS.
                 </p>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
+
 
       <div className="w-full max-w-[1180px] mt-12 mb-8 text-center px-4">
         <p className="text-[9px] text-muted-foreground/60 leading-relaxed max-w-md mx-auto">
