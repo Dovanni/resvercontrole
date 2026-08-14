@@ -74,4 +74,3 @@ def run_isolated_audit():
 
 if __name__ == "__main__":
     run_isolated_audit()
-
