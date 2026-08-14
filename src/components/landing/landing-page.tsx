@@ -548,7 +548,7 @@ function PlanCard({ plan }: { plan: Plan }) {
         ) : (
           <div className="space-y-3">
             <Link 
-              to={plan.ctaTarget} 
+              to="/cadastro" 
               search={{ intent: "empresarial" }}
               className="block w-full"
             >
