@@ -131,9 +131,12 @@ export function SubscriptionSettingsPage() {
               <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
                 <Users className="size-5 text-primary" />
                 <div>
-                  <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Usuários</div>
+                  <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{isInstitutional ? "Usuários ativos" : "Usuários"}</div>
                   <div className="text-sm font-medium">
-                    {sub.current_user_count} de 5 utilizados
+                    {isInstitutional 
+                      ? `${sub.current_user_count} membros`
+                      : `${sub.current_user_count} de 5 utilizados`
+                    }
                   </div>
                 </div>
               </div>
@@ -142,10 +145,12 @@ export function SubscriptionSettingsPage() {
                 <Clock className="size-5 text-primary" />
                 <div>
                   <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                    {isTrial ? "Expira em" : "Valor Mensal"}
+                    {isInstitutional ? "Faturamento" : (isTrial ? "Expira em" : "Valor Mensal")}
                   </div>
                   <div className="text-sm font-medium">
-                    {isTrial ? (
+                    {isInstitutional ? (
+                      "Não aplicável"
+                    ) : (isTrial ? (
                       <>
                         {sub.current_period_ends_at ? format(new Date(sub.current_period_ends_at), "dd/MM/yyyy", { locale: ptBR }) : 'N/A'}
                         <span className="ml-2 text-xs text-muted-foreground">
@@ -154,7 +159,7 @@ export function SubscriptionSettingsPage() {
                       </>
                     ) : (
                       "R$ 35,90 / mês"
-                    )}
+                    ))}
                   </div>
                 </div>
               </div>
