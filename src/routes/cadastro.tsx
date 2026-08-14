@@ -626,9 +626,9 @@ function SignupPage() {
         </p>
       </div>
     </div>
-  </div>
-);
+  );
 }
+
 
 
 function MarketplaceChip({ name, color, size = "md" }: { name: string; color: string; size?: "sm" | "md" }) {
