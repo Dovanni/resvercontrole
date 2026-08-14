@@ -312,14 +312,15 @@ function SignupPage() {
                       <div className="grid sm:grid-cols-2 gap-y-2 gap-x-4">
                         {[
                           "Gestão comercial e financeira centralizada",
+                          "Acompanhamento do e-commerce próprio e de outros canais de venda",
                           "Acompanhamento de pedidos, vendas e recebimentos",
                           "Controle de produtos e estoque",
+                          "Organização de pedidos, produtos, estoque, taxas e fretes",
                           "Organização de taxas, fretes, custos e despesas",
                           "Visibilidade sobre margens e lucros",
                           "Contas a pagar, receber e fluxo de caixa",
                           "Relatórios avançados, BI e DRE",
-                          "Operação multiempresa com isolamento",
-                          "Até 5 usuários conforme o plano",
+                          "Visão consolidada da operação comercial e financeira",
                           "Clareza para decidir e segurança para crescer"
                         ].map((benefit) => (
                           <div key={benefit} className="flex items-start gap-2 text-sm text-muted-foreground">
