@@ -65,38 +65,42 @@ export function SubscriptionSettingsPage() {
     );
   }
 
-  const { subscription: sub, checkout: status } = context;
-
+  const { subscription: sub, checkout: status, billing_mode: billingMode } = context;
+  const isInstitutional = billingMode === 'institutional';
 
   const isTrial = sub.status === "trialing";
-  const statusColor = {
-    active: "bg-green-500/10 text-green-600 border-green-200",
-    trialing: "bg-primary/10 text-primary border-primary/20",
-    past_due: "bg-amber-500/10 text-amber-600 border-amber-200",
-    grace_read_only: "bg-orange-500/10 text-orange-600 border-orange-200",
-    restricted: "bg-destructive/10 text-destructive border-destructive/20",
-    canceled: "bg-muted text-muted-foreground border-muted-foreground/20",
-    none: "bg-muted text-muted-foreground",
-  }[sub.status as string] || "bg-muted text-muted-foreground";
+  const statusColor = isInstitutional 
+    ? "bg-primary/10 text-primary border-primary/20"
+    : {
+        active: "bg-green-500/10 text-green-600 border-green-200",
+        trialing: "bg-primary/10 text-primary border-primary/20",
+        past_due: "bg-amber-500/10 text-amber-600 border-amber-200",
+        grace_read_only: "bg-orange-500/10 text-orange-600 border-orange-200",
+        restricted: "bg-destructive/10 text-destructive border-destructive/20",
+        canceled: "bg-muted text-muted-foreground border-muted-foreground/20",
+        none: "bg-muted text-muted-foreground",
+      }[sub.status as string] || "bg-muted text-muted-foreground";
 
-  const statusLabel = {
-    active: "Ativa",
-    trialing: "Período de avaliação",
-    past_due: "Pagamento Pendente",
-    grace_read_only: "Aguardando Pagamento",
-    restricted: "Restrita",
-    canceled: "Cancelada",
-    none: "Sem Assinatura",
-  }[sub.status as string] || sub.status;
+  const statusLabel = isInstitutional
+    ? "Ambiente administrativo"
+    : {
+        active: "Ativa",
+        trialing: "Período de avaliação",
+        past_due: "Pagamento Pendente",
+        grace_read_only: "Aguardando Pagamento",
+        restricted: "Restrita",
+        canceled: "Cancelada",
+        none: "Sem Assinatura",
+      }[sub.status as string] || sub.status;
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
       <PageHeader 
         title="Assinatura" 
-        subtitle="Controle seu plano, limites e faturamento" 
+        subtitle={isInstitutional ? "Configurações institucionais da plataforma" : "Controle seu plano, limites e faturamento"} 
       />
 
-      {checkoutStatusParam === 'cancel' && (
+      {checkoutStatusParam === 'cancel' && !isInstitutional && (
         <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
           <AlertCircle className="size-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
@@ -114,11 +118,11 @@ export function SubscriptionSettingsPage() {
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <CardTitle className="font-display text-2xl">
-                  Plano Atual: {sub.plan_code === 'essencial' ? 'Essencial — Avaliação gratuita' : sub.plan_name}
+                  {isInstitutional ? "Plano atual: Acesso Institucional" : `Plano Atual: ${sub.plan_code === 'essencial' ? 'Essencial — Avaliação gratuita' : sub.plan_name}`}
                 </CardTitle>
               </div>
               <Badge className={`${statusColor} capitalize px-3 py-1 font-semibold`}>
-                {sub.plan_code === 'essencial' ? 'Período de avaliação' : statusLabel}
+                {(!isInstitutional && sub.plan_code === 'essencial') ? 'Período de avaliação' : statusLabel}
               </Badge>
             </div>
           </CardHeader>
@@ -127,9 +131,12 @@ export function SubscriptionSettingsPage() {
               <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
                 <Users className="size-5 text-primary" />
                 <div>
-                  <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Usuários</div>
+                  <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{isInstitutional ? "Usuários ativos" : "Usuários"}</div>
                   <div className="text-sm font-medium">
-                    {sub.current_user_count} de 5 utilizados
+                    {isInstitutional 
+                      ? `${sub.current_user_count} membros`
+                      : `${sub.current_user_count} de 5 utilizados`
+                    }
                   </div>
                 </div>
               </div>
@@ -138,10 +145,12 @@ export function SubscriptionSettingsPage() {
                 <Clock className="size-5 text-primary" />
                 <div>
                   <div className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                    {isTrial ? "Expira em" : "Valor Mensal"}
+                    {isInstitutional ? "Faturamento" : (isTrial ? "Expira em" : "Valor Mensal")}
                   </div>
                   <div className="text-sm font-medium">
-                    {isTrial ? (
+                    {isInstitutional ? (
+                      "Não aplicável"
+                    ) : (isTrial ? (
                       <>
                         {sub.current_period_ends_at ? format(new Date(sub.current_period_ends_at), "dd/MM/yyyy", { locale: ptBR }) : 'N/A'}
                         <span className="ml-2 text-xs text-muted-foreground">
@@ -150,13 +159,29 @@ export function SubscriptionSettingsPage() {
                       </>
                     ) : (
                       "R$ 35,90 / mês"
-                    )}
+                    ))}
                   </div>
                 </div>
               </div>
             </div>
 
-            {(isTrial || sub.status === 'none') && (
+            {isInstitutional && (
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
+                <h4 className="font-semibold text-primary flex items-center gap-2 mb-2">
+                  <ShieldCheck className="size-4" />
+                  Acesso administrativo da plataforma
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  Este ambiente é destinado à administração institucional da VEJAMAIS. Não há contratação comercial ou cobrança vinculada a esta empresa.
+                </p>
+                <div className="mt-4 pt-4 border-t border-primary/10 flex flex-col gap-1">
+                  <span className="text-xs font-medium text-muted-foreground">Empresa Matriz da VEJAMAIS</span>
+                  <span className="text-xs text-muted-foreground">Acesso institucional à plataforma</span>
+                </div>
+              </div>
+            )}
+
+            {!isInstitutional && (isTrial || sub.status === 'none') && (
               <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20">
                 <h4 className="font-semibold text-primary flex items-center gap-2 mb-2">
                   <Sparkles className="size-4" />
@@ -338,19 +363,29 @@ export function SubscriptionSettingsPage() {
 
         <Card className="shadow-soft">
           <CardHeader>
-            <CardTitle className="text-lg">Recursos do Plano</CardTitle>
+            <CardTitle className="text-lg">{isInstitutional ? "Recursos do Ambiente" : "Recursos do Plano"}</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">
-              {[
-                "Multiempresa Ativo",
-                "Gestão Comercial Completa",
-                "Controle Financeiro & DRE",
-                "Até 5 Usuários inclusos",
-                "Suporte Prioritário",
-                "Importação via Excel",
-                "Proteção e isolamento dos dados"
-              ].map((feature, i) => (
+              {(isInstitutional 
+                ? [
+                    "Administração institucional",
+                    "Gestão multiempresa",
+                    "Acompanhamento operacional",
+                    "Controle de acessos e permissões",
+                    "Proteção e isolamento dos dados",
+                    "Suporte e auditoria administrativa"
+                  ]
+                : [
+                    "Multiempresa Ativo",
+                    "Gestão Comercial Completa",
+                    "Controle Financeiro & DRE",
+                    "Até 5 Usuários inclusos",
+                    "Suporte Prioritário",
+                    "Importação via Excel",
+                    "Proteção e isolamento dos dados"
+                  ]
+              ).map((feature, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                   <Check className="size-4 text-green-500 mt-0.5 shrink-0" />
                   {feature}

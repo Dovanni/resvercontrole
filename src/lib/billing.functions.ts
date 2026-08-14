@@ -29,11 +29,11 @@ export const getBillingContextTransport = async (empresaId: string) => {
       trial_ends_at: string | null;
     };
     checkout: {
-
       enabled: boolean;
       environment: 'live' | 'sandbox';
       reason_code: string;
     };
+    billing_mode?: 'commercial' | 'institutional';
   }>;
 };
 
