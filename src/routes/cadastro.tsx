@@ -34,7 +34,12 @@ import { VejamaisMark } from '@/components/vejamais-logo';
 import { TurnstileWidget, type TurnstileWidgetRef } from '@/components/turnstile-widget';
 import { MathChallengeField } from '@/components/math-challenge';
 
+import { z } from 'zod';
+
 export const Route = createFileRoute('/cadastro')({
+  validateSearch: (search) => z.object({
+    intent: z.string().optional()
+  }).parse(search),
   component: CadastroPage,
 });
 

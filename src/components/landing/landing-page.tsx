@@ -547,15 +547,21 @@ function PlanCard({ plan }: { plan: Plan }) {
           </Link>
         ) : (
           <div className="space-y-3">
-            <Button 
-              className="w-full h-11" 
-              variant={highlight ? "default" : "outline"} 
-              disabled={true}
+            <Link 
+              to="/cadastro" 
+              search={{ intent: "empresarial" }}
+              className="block w-full"
             >
-              {plan.cta}
-            </Button>
-            <p className="text-[11px] text-center text-amber-600 font-medium bg-amber-50/50 p-2 rounded-lg border border-amber-100/50">
-              Contratação online disponível em breve.
+              <Button 
+                className="w-full h-11" 
+                variant={highlight ? "default" : "outline"} 
+                disabled={!plan.available}
+              >
+                {plan.cta}
+              </Button>
+            </Link>
+            <p className="text-[11px] text-center text-primary-deep font-medium bg-primary/5 p-2 rounded-lg border border-primary/20">
+              Contratação segura pela Stripe após entrar ou criar sua conta.
             </p>
           </div>
         )}
