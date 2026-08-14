@@ -234,7 +234,7 @@ export function SubscriptionSettingsPage() {
                         {!isCtaEnabled && (
                           <p className="text-[10px] text-amber-600 font-medium leading-relaxed bg-amber-50 p-2 rounded border border-amber-100 flex items-center gap-1.5">
                             <AlertCircle className="size-3" />
-                            Checkout temporariamente indisponível. Por favor, tente novamente em alguns instantes.
+                            Checkout indisponível em produção. Utilize o ambiente de Sandbox para testes.
                           </p>
                         )}
                         
@@ -246,7 +246,7 @@ export function SubscriptionSettingsPage() {
                             </p>
                             {!isLive && (
                               <p className="text-[10px] text-amber-600 font-bold bg-amber-50 p-1 px-2 rounded border border-amber-200 w-fit">
-                                MODO SANDBOX / TESTE
+                                AMBIENTE DE TESTE (SANDBOX) — NENHUMA COBRANÇA REAL
                               </p>
                             )}
                           </div>

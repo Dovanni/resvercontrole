@@ -91,10 +91,10 @@ export async function createStripeCheckoutSessionImpl(empresaId: string, traceId
   const billing_env = getBillingEnvironment(host);
   const isProduction = billing_env === 'live';
 
-  const STRIPE_LIVE_BILLING_ENABLED = process.env['STRIPE_LIVE_BILLING_ENABLED'] === 'true';
+  const STRIPE_LIVE_CHECKOUT_ENABLED = process.env['STRIPE_LIVE_CHECKOUT_ENABLED'] === 'true';
 
-  if (isProduction && !STRIPE_LIVE_BILLING_ENABLED) {
-    console.warn("Production checkout is globally disabled via STRIPE_LIVE_BILLING_ENABLED");
+  if (isProduction && !STRIPE_LIVE_CHECKOUT_ENABLED) {
+    console.warn("Production checkout is globally disabled via STRIPE_LIVE_CHECKOUT_ENABLED");
     return { status: 'checkout_disabled', message: 'Production checkout disabled' };
   }
 
@@ -110,7 +110,7 @@ export async function createStripeCheckoutSessionImpl(empresaId: string, traceId
   // Restricted Key selection
   const STRIPE_KEY = isProduction 
     ? process.env['STRIPE_RESTRICTED_KEY_LIVE'] 
-    : process.env['STRIPE_RESTRICTED_KEY'];
+    : (process.env['STRIPE_RESTRICTED_KEY_TEST'] || process.env['STRIPE_RESTRICTED_KEY']);
 
   if (!STRIPE_KEY) {
     console.error(`Stripe key missing for environment: ${isProduction ? 'LIVE' : 'SANDBOX'}`);
