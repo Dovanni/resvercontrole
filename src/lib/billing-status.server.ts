@@ -83,7 +83,7 @@ export async function getCheckoutStatusImpl(empresaId: string, host: string | nu
     // Log sanitizado para diagnóstico (sem PII)
     console.warn(`[getCheckoutStatusImpl] Blocked: host=${host}, origin=${origin}, isProduction=${isProduction}, isPreview=${isPreview}`);
   }
-  else if (isProduction && !STRIPE_LIVE_BILLING_ENABLED) exact_disable_reason = 'Production checkout disabled';
+  else if (isProduction && !STRIPE_LIVE_CHECKOUT_ENABLED) exact_disable_reason = 'Production checkout disabled';
   else if (!isProduction && !isPreview) exact_disable_reason = 'Unauthorized host';
 
   return {
