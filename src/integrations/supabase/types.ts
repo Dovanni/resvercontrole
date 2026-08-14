@@ -2142,6 +2142,14 @@ export type Database = {
         Args: { p_onboarding_id: string }
         Returns: undefined
       }
+      check_current_user_is_active_member: {
+        Args: { _empresa_id: string }
+        Returns: boolean
+      }
+      check_current_user_is_admin: {
+        Args: { _empresa_id: string }
+        Returns: boolean
+      }
       check_rate_limit_persistent: {
         Args: { _key: string; _limit: number; _window_interval: string }
         Returns: boolean
