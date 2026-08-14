@@ -639,8 +639,11 @@ function SignupPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
       </div>
+    </div>
+  );
+}
+
 
 
 
