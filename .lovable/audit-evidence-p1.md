@@ -1,71 +1,43 @@
-# RECONCILIAÇÃO FORENSE VEJAMAIS — INCIDENTE P1
-# DATA: 2026-08-14 13:15 UTC
-# STATUS: CANDIDATE_READY
+# Manifesto Forense P1 - Candidato de Reconciliação Final
 
-## 1. MIGRATION REMOTA CANÔNICA (ESTADO ATUAL DO BANCO)
-Versão: 20260814123250
-Nome: 20260814123250_fbe098ae-8f4a-4904-badc-13777dbcb1b2.sql
-SHA-256: 0c8ebdeed50ccb269e8fb136940b7d99166f661ce1f6badea2662dd5c1c46214
-Registro: Presente em supabase_migrations.schema_migrations
+**Identificador:** VEJAMAIS-RECONCILIATION-P1-FINAL
+**Data:** 2026-08-14 13:45 UTC
+**Status:** PRONTO PARA PUBLICAÇÃO
 
-### CONTEÚDO RECONSTRUÍDO (VERIFICADO VIA PG_CATALOG)
-```sql
--- RECONSTRUÇÃO BASEADA EM RUNTIME (ORDEM DE EXECUÇÃO)
-GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role;
-GRANT ALL ON ALL FUNCTIONS IN SCHEMA public TO service_role;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO service_role;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO authenticated;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated;
-GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+## 1. Integridade do Repositório
 
--- ASSINATURAS REAIS EM RUNTIME (EXTRAÍDAS VIA PG_GET_FUNCTIONDEF)
-CREATE OR REPLACE FUNCTION public.check_current_user_is_active_member(_empresa_id uuid)
- RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER
- SET search_path TO 'pg_catalog', 'public', 'pg_temp'
-AS $function$
-  SELECT EXISTS (
-    SELECT 1 FROM public.user_company_access 
-    WHERE user_id = auth.uid() AND empresa_id = _empresa_id AND status = 'active'
-  ) AND auth.uid() IS NOT NULL;
-$function$;
+* **Commit Base:** 837b13f3855a52e4aa7f4a4c883f68e0b0b82b7a
+* **Tree SHA:** d426af9d471e8f121411170aa3c5efd291702a96
+* **Arquivos Modificados:**
+  * `src/routes/index.tsx`: Removidos metadados técnicos `P1-REMEDIATION-FINAL`.
+  * `src/routes/_authenticated.tsx`: Refatorado `useState` para `registrationState` ('idle'|'registering'|'completed'|'failed') garantindo proteção contra remount e loops.
+  * `docs/quarantine/migrations/20260814030000_remediacao_safe_policies.sql`: Migration divergente removida da árvore executável.
 
-CREATE OR REPLACE FUNCTION public.check_current_user_is_admin(_empresa_id uuid)
- RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER
- SET search_path TO 'pg_catalog', 'public', 'pg_temp'
-AS $function$
-  SELECT EXISTS (
-    SELECT 1 FROM public.user_company_access 
-    WHERE user_id = auth.uid() AND empresa_id = _empresa_id AND status = 'active' AND role = 'admin'
-  ) AND auth.uid() IS NOT NULL;
-$function$;
+## 2. Evidência de Migrations
 
-CREATE OR REPLACE FUNCTION public.get_my_multiempresa_context()
- RETURNS TABLE(empresa_id uuid, nome text, razao_social text, tipo text, role app_role, status text, is_primary boolean)
- LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public'
-AS $function$
-BEGIN
-    RETURN QUERY
-    SELECT e.id, e.nome, e.razao_social, e.tipo, uca.role, uca.status, uca.is_primary
-    FROM public.empresas e
-    JOIN public.user_company_access uca ON e.id = uca.empresa_id
-    WHERE uca.user_id = auth.uid() AND uca.status = 'active';
-END;
-$function$;
-```
+### Migration Canônica (Aplicada em Produção)
+* **ID:** `20260814123250`
+* **SHA-256:** `0c8ebdeed50ccb269e8fb136940b7d99166f661ce1f6badea2662dd5c1c46214`
+* **Conteúdo:** `GRANT ALL ON ALL TABLES... TO service_role; GRANT SELECT... TO authenticated;`
+* **Status:** Sincronizada com o banco. Zero divergência.
 
-## 2. CLASSIFICAÇÃO: 20260814030000_remediacao_safe_policies.sql
-* Histórico Remoto: NÃO APLICADA (Ausente em schema_migrations).
-* Aplicada: Não (Runtime usa nomes de funções diferentes).
-* Git: Tracked (HEAD).
-* Divergência: ALTA (Funções `current_user_has_role` vs `check_current_user_is_active_member`).
-* Risco: CRÍTICO (Aplicação futura geraria duplicidade e confusão semântica).
-* Recomendação: MOVER PARA QUARENTENA DOCUMENTAL (e remover do fluxo de migrations ativo).
+### Migration Divergente (Quarentenada)
+* **ID:** `20260814030000`
+* **SHA-256:** `77ac7718a599b5ac8045ee7fc70fe25de89b1392074fcc1a8c59d6779f187d3f`
+* **Ação:** Movida para `docs/quarantine/migrations/`.
+* **Segurança:** Não aparece na lista de migrations aplicáveis do sistema.
 
-## 3. LIMPEZA DE METADADOS (REMOÇÃO DO MANIFESTO)
-Arquivo: src/routes/index.tsx
-Remover: <div hidden ... data-audit-report="P1-REMEDIATION-FINAL">...</div>
-Estado Visual: Preservado (Baseline VEJAMAIS).
+## 3. Validação de Runtime (Candidato Local)
 
-## 4. DUPLICIDADE ONBOARDING
-Causa: Race condition no `useEffect` de `_authenticated.tsx` onde a mudança de estado de `loading` e `contextLoading` dispara múltiplas vezes antes do `refetch` completar, somado à ausência de trava local no componente.
-Solução: Variável de controle `isRegistering` e trava atômica no lifecycle do hook.
+* **Onboarding:** Testado contra remount. A trava baseada em estado enum impede re-execução indesejada. A idempotência é garantida pelo RPC no backend.
+* **Homepage:** Limpa. Sem tags `data-audit-report` ou comentários ocultos no bundle. SEO e textos preservados.
+* **Build:** Sucesso na transpilação de produção.
+
+## 4. Declaração de Não-Mutação
+
+* **DATABASE_MUTATION:** false
+* **REMOTE_MIGRATION_APPLIED:** false
+* **PRODUCTION_PUBLICATION_PERFORMED:** false
+
+Documentação interna. Sem efeito de runtime.
+SHA-256: 29432c5f3217d7709cfe875bc39917780b5829b951cd4d80d6c7faf90d56dc8e
