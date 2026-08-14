@@ -145,7 +145,7 @@ export const PLANS: Plan[] = [
     ],
     support: "Suporte prioritário",
     cta: "Assinar Plano Empresarial",
-    ctaTarget: "checkout",
+    ctaTarget: "/configuracoes/assinatura",
     recommended: true,
     available: true,
   },
