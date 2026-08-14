@@ -593,9 +593,6 @@ function SignupPage() {
 
       {/* Coluna Direita: Marketplaces e Serviços */}
       <div className="order-3 space-y-6 lg:col-span-2 xl:col-span-1">
-
-
-
           <Card className="border-primary/10 shadow-sm bg-white/80 backdrop-blur-sm overflow-hidden">
             <CardContent className="p-6 sm:p-10 space-y-10">
               {/* CABEÇALHO DO CARD CENTRALIZADO */}
