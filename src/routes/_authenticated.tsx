@@ -25,31 +25,17 @@ function AuthedLayout() {
   const { companies, isLoading: contextLoading, refetch } = useMultiempresa();
   const runOnboarding = useServerFn(completeCompanyOnboarding);
   const navigate = useNavigate();
-  const [isRegistering, setIsRegistering] = useState(false);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    supabase.from("company_settings" as any).select("theme").eq("user_id", user.id).maybeSingle().then(({ data }) => {
-      const theme = (data as any)?.theme ?? "light";
-      document.documentElement.classList.toggle("dark", theme === "dark");
-    });
-  }, [user?.id]);
-
-  useEffect(() => {
-    if (!loading && !session) {
-      navigate({ to: "/auth", replace: true });
-    }
-  }, [loading, session, navigate]);
+  const [registrationState, setRegistrationState] = useState<'idle' | 'registering' | 'completed' | 'failed'>('idle');
 
   // Onboarding automático se o usuário não tem nenhuma empresa
   useEffect(() => {
     async function checkOnboarding() {
-      // Bloqueio se já está registrando ou se o contexto ainda está carregando
-      if (isRegistering || loading || contextLoading || !session) return;
+      // Bloqueio se já está registrando, se já completou nesta sessão, ou se o contexto ainda está carregando
+      if (registrationState !== 'idle' || loading || contextLoading || !session) return;
       
       // Só dispara se realmente não houver empresas
       if (companies.length === 0) {
-        setIsRegistering(true);
+        setRegistrationState('registering');
         try {
           const metadata = session.user.user_metadata || {};
           const nomeEmpresa = metadata.nome_empresa || "Minha Empresa";
@@ -70,24 +56,20 @@ function AuthedLayout() {
           });
           
           await refetch();
+          setRegistrationState('completed');
           
-          // Apenas emite o toast se for um novo registro real (idempotência no servidor tratada no RPC)
           if (!(result as any)?.already_onboarded) {
             toast.success("Empresa configurada com sucesso!");
           }
         } catch (err) {
           console.error("Erro no onboarding automático:", err);
-          // O erro não destrava isRegistering para evitar loops infinitos em falhas persistentes, 
-          // mas permite que o usuário veja a página.
-        } finally {
-          // Mantemos isRegistering=true para evitar novas tentativas neste ciclo de vida do componente
-          // a menos que o refetch falhe e companies.length continue 0.
-          // Se o refetch funcionou, companies.length > 0 impedirá nova execução no próximo tick.
+          setRegistrationState('failed');
+          // Permite retry manual via UI se implementado, ou via reload
         }
       }
     }
     checkOnboarding();
-  }, [loading, session, contextLoading, companies.length, runOnboarding, refetch, isRegistering]);
+  }, [loading, session, contextLoading, companies.length, runOnboarding, refetch, registrationState]);
 
   if (loading || (session && contextLoading)) {
     return (
