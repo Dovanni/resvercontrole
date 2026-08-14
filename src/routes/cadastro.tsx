@@ -379,10 +379,12 @@ function SignupPage() {
                     id="admin_name" 
                     required 
                     placeholder="Seu nome completo"
+                    value={nomeAdmin} 
+                    onChange={(e) => setNomeAdmin(e.target.value)} 
+                    disabled={busy}
+                  />
+                </div>
 
-                value={nomeAdmin} 
-                onChange={(e) => setNomeAdmin(e.target.value)} 
-                disabled={busy}
               />
             </div>
 
