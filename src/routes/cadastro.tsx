@@ -680,3 +680,36 @@ function StepItem({ number, icon, title, description }: { number: string; icon: 
   );
 }
 
+function MarketplaceChip({ name, color, size = "md", className }: { name: string; color: string; size?: "sm" | "md"; className?: string }) {
+  return (
+    <div className={cn(
+      "flex items-center justify-center rounded-xl shadow-sm border border-white/10 transition-transform hover:scale-105 select-none font-bold tracking-tight",
+      color,
+      size === "md" ? "h-12 px-6 text-sm" : "h-10 px-4 text-xs",
+      className
+    )}>
+      {name}
+    </div>
+  );
+}
+
+function StepItem({ number, icon, title, description }: { number: string; icon: React.ReactNode; title: string; description: string }) {
+  return (
+    <div className="flex gap-4 p-4 rounded-xl border border-primary/5 bg-white/50">
+      <div className="flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary">
+        {icon}
+      </div>
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold text-primary/50 uppercase tracking-wider">Passo {number}</span>
+          <h4 className="font-semibold text-foreground text-sm">{title}</h4>
+        </div>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          {description}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
