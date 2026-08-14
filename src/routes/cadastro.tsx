@@ -377,10 +377,9 @@ function SignupPage() {
                   <Label htmlFor="admin_name">Nome do Administrador</Label>
                   <Input 
                     id="admin_name" 
+                    required 
+                    placeholder="Seu nome completo"
 
-                id="admin_name" 
-                required 
-                placeholder="Seu nome completo"
                 value={nomeAdmin} 
                 onChange={(e) => setNomeAdmin(e.target.value)} 
                 disabled={busy}
