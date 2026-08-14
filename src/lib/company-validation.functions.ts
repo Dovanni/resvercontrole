@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { normalizeCnpj, validateCnpj } from "@/lib/cnpj-validator";
+import { normalizeCnpj, validateCnpj as validateCnpjCheck } from "@/lib/cnpj-validator";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import crypto from "crypto";
 
