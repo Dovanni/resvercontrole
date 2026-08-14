@@ -379,6 +379,7 @@ function SignupPage() {
                     onChange={(e) => setNomeAdmin(e.target.value)} 
                     disabled={busy}
                   />
+                </div>
 
             <div className="space-y-2">
               <Label htmlFor="cnpj">CNPJ da empresa</Label>
