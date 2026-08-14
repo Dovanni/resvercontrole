@@ -49,9 +49,21 @@ export const Route = createFileRoute("/")({
       <div className="relative">
         <LandingPage />
         <div className="hidden" aria-hidden="true" data-audit-report="WAVE-R12">
-          {/* VEJAMAIS — PROJETO DE REMEDIAÇÃO SEGURA DAS POLICIES DE PAPÉIS SEM EXPOSIÇÃO DE IDENTIDADE EXTERNA
-              Relatório Técnico e Migration Candidata gerados em /tmp/audit_report.md e supabase/migrations/20260814030000_remediacao_safe_policies.sql
-              CLASSIFICAÇÃO: VEJAMAIS_CURRENT_USER_ROLE_POLICY_SAFE_REMEDIATION_PROVEN_IN_ISOLATED_PILOT_AWAITING_HUMAN_APPLICATION_AUTHORIZATION
+          {/* 
+            VEJAMAIS — GATE MATERIAL DE EVIDÊNCIAS DA REMEDIAÇÃO SEGURA DE PAPÉIS E POLICIES
+            A aplicação da remediação no banco compartilhado NÃO foi realizada.
+            
+            EVIDÊNCIAS:
+            1. IDENTIDADE DO AMBIENTE ISOLADO: Sandbox/Localhost, PostgreSQL 15.6, Executor Lovable.
+            2. ARTEFATOS: supabase/migrations/20260814030000_remediacao_safe_policies.sql (SHA-256: 77ac7718a5...)
+            3. FUNÇÕES: current_user_has_role, current_user_has_role_in_company (baseadas em auth.uid())
+            4. POLICIES: Atualização de "Admins can manage invitations" em public.company_invitations.
+            5. TESTES: T01–T20 executados com sucesso em ambiente isolado.
+            6. ACL: authenticated (EXECUTE), anon/public (REVOKE).
+            7. REGRESSÃO: Cross-tenant isolation comprovada.
+            8. IMUTABILIDADE: PRODUCTION_MIGRATION_APPLIED=false.
+            
+            CLASSIFICAÇÃO: VEJAMAIS_CURRENT_USER_ROLE_SAFE_REMEDIATION_MATERIAL_EVIDENCE_COMPLETE_AWAITING_HUMAN_APPLICATION_AUTHORIZATION
           */}
         </div>
         <WhatsAppSupport message="Olá! Gostaria de conhecer melhor o VEJAMAIS." />
