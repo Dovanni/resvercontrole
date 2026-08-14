@@ -1,0 +1,13 @@
+CREATE POLICY "Enable all for authenticated" ON public.plans FOR ALL TO authenticated USING (true);
+CREATE POLICY "Enable all for authenticated" ON public.empresas FOR ALL TO authenticated USING (true);
+CREATE POLICY "Enable all for authenticated" ON public.profiles FOR ALL TO authenticated USING (true);
+CREATE POLICY "Enable all for authenticated" ON public.sales FOR ALL TO authenticated USING (true);
+CREATE POLICY "Enable all for authenticated" ON public.sale_items FOR ALL TO authenticated USING (true);
+CREATE POLICY "Enable all for authenticated" ON public.products FOR ALL TO authenticated USING (true);
+CREATE POLICY "Enable all for authenticated" ON public.customers FOR ALL TO authenticated USING (true);
+CREATE POLICY "Enable all for authenticated" ON public.bank_accounts FOR ALL TO authenticated USING (true);
+CREATE POLICY "Enable all for authenticated" ON public.user_roles FOR ALL TO authenticated USING (true);
+CREATE POLICY "Enable all for authenticated" ON public.user_company_access FOR ALL TO authenticated USING (true);
+CREATE POLICY "Enable all for authenticated" ON public.rate_limits FOR ALL TO authenticated USING (true);
+CREATE POLICY "Enable all for authenticated" ON public.pending_onboardings FOR ALL TO authenticated USING (true);
+CREATE POLICY "Enable read for anon" ON public.plans FOR SELECT TO anon USING (true);
