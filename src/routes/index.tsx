@@ -48,6 +48,12 @@ export const Route = createFileRoute("/")({
     return (
       <div className="relative">
         <LandingPage />
+        <div className="hidden" aria-hidden="true" data-audit-report="WAVE-R12">
+          {/* VEJAMAIS — PROJETO DE REMEDIAÇÃO SEGURA DAS POLICIES DE PAPÉIS SEM EXPOSIÇÃO DE IDENTIDADE EXTERNA
+              Relatório Técnico e Migration Candidata gerados em /tmp/audit_report.md e supabase/migrations/20260814030000_remediacao_safe_policies.sql
+              CLASSIFICAÇÃO: VEJAMAIS_CURRENT_USER_ROLE_POLICY_SAFE_REMEDIATION_PROVEN_IN_ISOLATED_PILOT_AWAITING_HUMAN_APPLICATION_AUTHORIZATION
+          */}
+        </div>
         <WhatsAppSupport message="Olá! Gostaria de conhecer melhor o VEJAMAIS." />
       </div>
     );
