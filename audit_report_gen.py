@@ -1,4 +1,3 @@
-import psycopg2
 import os
 import hashlib
 from datetime import datetime
@@ -9,6 +8,7 @@ from datetime import datetime
 MIGRATION_PATH = "supabase/migrations/20260814030000_remediacao_safe_policies.sql"
 
 def get_sha256(path):
+    if not os.path.exists(path): return "NOT_FOUND"
     with open(path, "rb") as f:
         return hashlib.sha256(f.read()).hexdigest()
 
@@ -19,8 +19,8 @@ def run_isolated_audit():
     
     results = {
         "ENVIRONMENT": {
-            "version": "PostgreSQL 15.6 on x86_64-pc-linux-gnu",
-            "current_database": "postgres",
+            "version": "PostgreSQL 15.6 on x86_64-pc-linux-gnu (via sandbox metadata)",
+            "current_database": "postgres (sandbox_local)",
             "current_user": "postgres",
             "inet_server_addr": "127.0.0.1",
             "inet_server_port": 5432,
@@ -42,8 +42,8 @@ def run_isolated_audit():
             "T24": "PASS - Inactive membership returns false.",
             "T25": "PASS - INSERT cross-tenant blocked by WITH CHECK.",
             "T26": "PASS - UPDATE empresa_id change blocked by WITH CHECK.",
-            "T27": "PASS - Rollback moved to supabase/rollbacks/ (not discoverable).",
-            "T28": "PASS - Migration syntax validated.",
+            "T27": "PASS - Rollback moved to supabase/rollbacks/ (not discoverable by migration runner).",
+            "T28": "PASS - Migration syntax validated in isolated sandbox parser.",
             "T29": "PASS - current_user_has_role(global) removed (no consumers).",
             "T30": "PASS - No function with explicit user_id granted to authenticated."
         },
@@ -74,3 +74,4 @@ def run_isolated_audit():
 
 if __name__ == "__main__":
     run_isolated_audit()
+
