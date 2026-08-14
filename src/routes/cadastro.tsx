@@ -583,8 +583,9 @@ function SignupPage() {
                 <ArrowLeft className="h-3.5 w-3.5" /> Voltar para o Vejamais
               </Link>
             </div>
-          </form>
-        </div>
+                </div>
+              </form>
+            </div>
       </div>
     </div>
 
