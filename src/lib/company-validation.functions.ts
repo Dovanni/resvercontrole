@@ -27,7 +27,7 @@ export interface CompanyValidationResult {
   trace_id: string;
 }
 
-export const validateCompanyCnpj = createServerFn({ method: "POST" })
+export const validateCnpj = createServerFn({ method: "POST" })
   .inputValidator((data) => validateCnpjSchema.parse(data))
   .handler(async ({ data }) => {
     const traceId = crypto.randomUUID();

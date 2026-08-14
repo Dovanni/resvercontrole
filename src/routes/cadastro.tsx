@@ -27,12 +27,12 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { validateCnpj, getCnpjFromDraft } from '@/lib/company-validation.functions';
+import { validateCnpj } from '@/lib/company-validation.functions';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
-import { VejamaisMark } from '@/components/VejamaisMark';
-import { TurnstileWidget, type TurnstileWidgetRef } from '@/components/TurnstileWidget';
-import { MathChallengeField, type MathChallengeFieldRef } from '@/components/MathChallengeField';
+import { VejamaisMark } from '@/components/vejamais-logo';
+import { TurnstileWidget, type TurnstileWidgetRef } from '@/components/turnstile-widget';
+import { MathChallengeField } from '@/components/math-challenge';
 
 export const Route = createFileRoute('/cadastro')({
   component: CadastroPage,
@@ -55,7 +55,7 @@ function CadastroPage() {
   const [retryAfter, setRetryAfter] = useState<number | null>(null);
 
   const turnstileRef = useRef<TurnstileWidgetRef>(null);
-  const mathChallengeRef = useRef<MathChallengeFieldRef>(null);
+  const mathChallengeRef = useRef<{ refresh: () => void }>(null);
 
   useEffect(() => {
     let timer: any;
@@ -91,20 +91,22 @@ function CadastroPage() {
     setValidatedData(null);
 
     try {
-      const result = await validateCnpj({ cnpj: rawCnpj });
+      const result = await validateCnpj({ data: { cnpj: rawCnpj } });
       
-      if (!result.success) {
-        toast.error('Erro na validação', { description: result.error });
-        return;
-      }
-
-      setValidatedData(result.data);
-      if (!empresaNome && result.data?.razao_social) {
-        setEmpresaNome(result.data.razao_social);
+      setValidatedData(result);
+      if (!empresaNome && result?.razao_social) {
+        setEmpresaNome(result.razao_social);
       }
       toast.success('CNPJ validado com sucesso');
     } catch (error: any) {
-      toast.error('Erro ao validar CNPJ', { description: error.message });
+      let errorMsg = "Erro ao validar CNPJ";
+      try {
+        const parsed = JSON.parse(error.message);
+        errorMsg = parsed.error || errorMsg;
+      } catch {
+        errorMsg = error.message || errorMsg;
+      }
+      toast.error('Erro na validação', { description: errorMsg });
     } finally {
       setValidatingCnpj(false);
     }
@@ -138,9 +140,6 @@ function CadastroPage() {
 
     setBusy(true);
     try {
-      // Aqui entraria a lógica de criação da conta via RPC ou Server Function
-      // Por enquanto, apenas simulamos sucesso ou erro baseado no Turnstile
-      
       const { data, error } = await supabase.functions.invoke('create-company-onboarding', {
         body: {
           nomeAdmin,
@@ -262,7 +261,6 @@ function CadastroPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] xl:grid-cols-[260px_1fr_280px] gap-6 lg:gap-8 items-start">
           
-          {/* Coluna Esquerda */}
           <div className="order-2 lg:order-1 space-y-6">
             <Card className="border-primary/10 shadow-sm bg-white/80 backdrop-blur-sm overflow-hidden">
               <CardContent className="p-6 space-y-6">
@@ -288,7 +286,6 @@ function CadastroPage() {
             </Card>
           </div>
 
-          {/* Coluna Central */}
           <div className="order-1 lg:order-2">
             <div className="rounded-2xl bg-card shadow-soft border p-6 sm:p-8">
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -402,7 +399,7 @@ function CadastroPage() {
                     </div>
                   </div>
 
-                  <MathChallengeField ref={mathChallengeRef} onVerify={(t, a) => { setMathToken(t); setMathAnswer(a); }} />
+                  <MathChallengeField onVerify={(t: string, a: string) => { setMathToken(t); setMathAnswer(a); }} />
                   <TurnstileWidget ref={turnstileRef} onVerify={setTurnstileToken} />
 
                   <Button 
@@ -426,7 +423,6 @@ function CadastroPage() {
             </div>
           </div>
 
-          {/* Coluna Direita */}
           <div className="order-3 space-y-6 lg:col-span-2 xl:col-span-1">
             <Card className="border-primary/10 shadow-sm bg-white/80 backdrop-blur-sm overflow-hidden">
               <CardContent className="p-6 sm:p-10 space-y-10">
