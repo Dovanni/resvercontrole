@@ -363,19 +363,29 @@ export function SubscriptionSettingsPage() {
 
         <Card className="shadow-soft">
           <CardHeader>
-            <CardTitle className="text-lg">Recursos do Plano</CardTitle>
+            <CardTitle className="text-lg">{isInstitutional ? "Recursos do Ambiente" : "Recursos do Plano"}</CardTitle>
           </CardHeader>
           <CardContent>
             <ul className="space-y-3">
-              {[
-                "Multiempresa Ativo",
-                "Gestão Comercial Completa",
-                "Controle Financeiro & DRE",
-                "Até 5 Usuários inclusos",
-                "Suporte Prioritário",
-                "Importação via Excel",
-                "Proteção e isolamento dos dados"
-              ].map((feature, i) => (
+              {(isInstitutional 
+                ? [
+                    "Administração institucional",
+                    "Gestão multiempresa",
+                    "Acompanhamento operacional",
+                    "Controle de acessos e permissões",
+                    "Proteção e isolamento dos dados",
+                    "Suporte e auditoria administrativa"
+                  ]
+                : [
+                    "Multiempresa Ativo",
+                    "Gestão Comercial Completa",
+                    "Controle Financeiro & DRE",
+                    "Até 5 Usuários inclusos",
+                    "Suporte Prioritário",
+                    "Importação via Excel",
+                    "Proteção e isolamento dos dados"
+                  ]
+              ).map((feature, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                   <Check className="size-4 text-green-500 mt-0.5 shrink-0" />
                   {feature}
