@@ -165,7 +165,23 @@ export function SubscriptionSettingsPage() {
               </div>
             </div>
 
-            {(isTrial || sub.status === 'none') && (
+            {isInstitutional && (
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
+                <h4 className="font-semibold text-primary flex items-center gap-2 mb-2">
+                  <ShieldCheck className="size-4" />
+                  Acesso administrativo da plataforma
+                </h4>
+                <p className="text-sm text-muted-foreground">
+                  Este ambiente é destinado à administração institucional da VEJAMAIS. Não há contratação comercial ou cobrança vinculada a esta empresa.
+                </p>
+                <div className="mt-4 pt-4 border-t border-primary/10 flex flex-col gap-1">
+                  <span className="text-xs font-medium text-muted-foreground">Empresa Matriz da VEJAMAIS</span>
+                  <span className="text-xs text-muted-foreground">Acesso institucional à plataforma</span>
+                </div>
+              </div>
+            )}
+
+            {!isInstitutional && (isTrial || sub.status === 'none') && (
               <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20">
                 <h4 className="font-semibold text-primary flex items-center gap-2 mb-2">
                   <Sparkles className="size-4" />
