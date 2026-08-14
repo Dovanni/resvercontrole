@@ -369,7 +369,8 @@ function SignupPage() {
           <div className="order-1 lg:order-2">
             <div className="rounded-2xl bg-card shadow-soft border p-6 sm:p-8">
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
+                <div className="space-y-4">
+                  <div className="space-y-2">
                   <Label htmlFor="admin_name">Nome do Administrador</Label>
                   <Input 
                     id="admin_name" 
