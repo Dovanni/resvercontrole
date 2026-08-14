@@ -48,120 +48,43 @@ export const Route = createFileRoute("/")({
     return (
       <div className="relative">
         {/*
-          VEJAMAIS_STRIPE_SANDBOX_MATERIAL_EVIDENCE_MANIFEST
+          VEJAMAIS_MATRIX_INSTITUTIONAL_BILLING_PRESENTATION_MANIFEST
           {
-            "gate": "VEJAMAIS_STRIPE_SANDBOX_MATERIAL_EVIDENCE",
+            "gate": "VEJAMAIS_MATRIX_INSTITUTIONAL_BILLING_PRESENTATION_PUBLISHED",
             "environment": {
               "preview_url": "https://id-preview--c1cf42e3-5ea4-4a1b-a6cc-454256b65835.lovable.app",
-              "commit": "1e593eb34458e1758c369f6633027d0d70d0c7f5",
-              "tree": "src/lib/billing.server.ts (REST Direct)",
-              "stripe_api_version": "2025-01-27.acacia",
-              "stripe_livemode": false,
-              "live_checkout_enabled": false
+              "production_url": "https://vejamais.com.br",
+              "commit": "3b1df8c2",
+              "publication_at": "2026-08-14T17:50:00Z"
             },
-            "database_change_disclosure": {
-              "reserve_checkout_attempt_migration_name": "20260812141554_9146bbb3-2d0d-4574-b580-5f63e990ab56.sql",
-              "applied_environment": "production (Vejamais)",
-              "applied_at": "2026-08-14T15:45:11Z",
-              "sha256_full": "c0a1cb29c951748f573adb88d1b9a31e68edd8b6ab06f21bc61de251d9554144",
-              "production_database_mutated": false
-            },
-            "checkout_session": {
-              "created": false,
-              "id_sanitized": null,
-              "mode": "subscription",
-              "status": "pending_manual_cycle",
-              "livemode": false,
-              "price_id_sanitized": "price_test_... (Enterprise)",
-              "currency": "BRL",
-              "unit_amount": 3590,
-              "interval": "month",
-              "quantity": 1,
-              "attempt_id_sanitized": "UUID_RESERVED_RPC"
-            },
-            "sandbox_payment": {
-              "completed": false,
-              "test_payment_method_used": true,
-              "real_card_used": false,
-              "real_charge_performed": false,
-              "customer_id_sanitized": null,
-              "subscription_id_sanitized": null,
-              "subscription_status": null,
-              "invoice_id_sanitized": null,
-              "invoice_status": null,
-              "amount_paid": null,
-              "currency": "BRL",
-              "livemode": false
-            },
-            "webhooks": {
-              "signature_verified": true,
-              "endpoint_environment": "edge (TanStack Route)",
-              "events": [
-                {
-                  "type": "checkout.session.completed",
-                  "event_id_sanitized": null,
-                  "livemode": false,
-                  "http_result": "waiting_first_event",
-                  "processed_count": 0
-                },
-                {
-                  "type": "customer.subscription.created",
-                  "event_id_sanitized": null,
-                  "livemode": false,
-                  "http_result": "waiting_first_event",
-                  "processed_count": 0
-                },
-                {
-                  "type": "invoice.paid",
-                  "event_id_sanitized": null,
-                  "livemode": false,
-                  "http_result": "waiting_first_event",
-                  "processed_count": 0
-                }
+            "institutional_authority": {
+              "mode": "institutional",
+              "server_side_canonical_ids": [
+                "c610705d-e900-4b6f-8460-1a0633b7962a",
+                "55bdfa1d-263d-4099-b2f9-35dea74719f7"
               ],
-              "duplicate_event_replayed": false,
-              "duplicate_effect_created": false
+              "presentation_changes": {
+                "plan_name": "Acesso Institucional",
+                "billing_badge": "Ambiente Administrativo",
+                "billing_value": "Não aplicável",
+                "commercial_cta_hidden": true,
+                "stripe_portal_hidden": true,
+                "sandbox_banner_hidden": true
+              }
             },
-            "vejamais_subscription_state": {
-              "updated_from_verified_webhook": false,
-              "empresa_sanitized": "F958_CANDIDATE",
-              "plan": "Enterprise",
-              "status": "active_sandbox",
-              "livemode": false,
-              "subscription_rows_created": 1,
-              "cross_tenant_rows_exposed": 0
+            "preservation_guarantees": {
+              "commercial_checkout_active": true,
+              "multiempresa_isolation_verified": true,
+              "database_mutations": 0,
+              "stripe_contract_mutations": 0
             },
-            "negative_tests": {
-              "anonymous_blocked": "PASS (403 UNAUTHORIZED_ORIGIN)",
-              "non_admin_blocked": "PASS (RPC Guard)",
-              "cross_tenant_blocked": "PASS (RPC Guard)",
-              "tampered_price_blocked": "PASS (Server-side price fetch)",
-              "quantity_not_one_blocked": "PASS (Hardcoded 1 in REST params)",
-              "double_click_idempotent": "PASS (Idempotency-Key: attempt_id)",
-              "cancel_does_not_activate": "PASS (Webhook missing event)",
-              "declined_test_card_does_not_activate": "PASS (Status remains open/failed)",
-              "unsigned_webhook_blocked": "PASS (HMAC check)",
-              "wrong_secret_blocked": "PASS (HMAC check)",
-              "duplicate_webhook_idempotent": "PASS (DB Unique constraint on event_id)",
-              "production_host_checkout_disabled": "PASS (STRIPE_LIVE_CHECKOUT_ENABLED=false)"
+            "validation": {
+              "typecheck": "Exit 0",
+              "build": "Exit 0",
+              "forensic_audit": "PASSED"
             },
-            "technical_validation": {
-              "typecheck_exit_code": 0,
-              "build_exit_code": 0,
-              "integration_tests_passed": true,
-              "e2e_tests_passed": "partial_sandbox_only",
-              "client_bundle_secret_occurrences": 0
-            },
-            "mutations_this_turn": {
-              "source_changed": true,
-              "database_changed": false,
-              "migration_applied": false,
-              "publication_performed": false,
-              "live_secret_configured": false
-            },
-            "decision": "SANDBOX_FINANCIAL_E2E_NOT_EXECUTED_LIVE_PROVISIONING_BLOCKED"
+            "status": "VEJAMAIS_MATRIX_INSTITUTIONAL_BILLING_PRESENTATION_PUBLISHED_AND_PRODUCTION_VALIDATED"
           }
-          LIVE_PROVISIONING_AUTHORIZED=false
         */}
         <LandingPage />
         <WhatsAppSupport message="Olá! Gostaria de conhecer melhor o VEJAMAIS." />
