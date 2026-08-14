@@ -25,6 +25,7 @@ function AuthedLayout() {
   const { companies, isLoading: contextLoading, refetch } = useMultiempresa();
   const runOnboarding = useServerFn(completeCompanyOnboarding);
   const navigate = useNavigate();
+  const [isRegistering, setIsRegistering] = useState(false);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -43,13 +44,18 @@ function AuthedLayout() {
   // Onboarding automático se o usuário não tem nenhuma empresa
   useEffect(() => {
     async function checkOnboarding() {
-      if (!loading && session && !contextLoading && companies.length === 0) {
+      // Bloqueio se já está registrando ou se o contexto ainda está carregando
+      if (isRegistering || loading || contextLoading || !session) return;
+      
+      // Só dispara se realmente não houver empresas
+      if (companies.length === 0) {
+        setIsRegistering(true);
         try {
           const metadata = session.user.user_metadata || {};
           const nomeEmpresa = metadata.nome_empresa || "Minha Empresa";
           const documento = metadata.cnpj || "00.000.000/0000-00";
           
-          await runOnboarding({
+          const result = await runOnboarding({
             data: {
               empresa: {
                 nome: nomeEmpresa,
@@ -64,14 +70,24 @@ function AuthedLayout() {
           });
           
           await refetch();
-          toast.success("Empresa configurated com sucesso!");
+          
+          // Apenas emite o toast se for um novo registro real (idempotência no servidor tratada no RPC)
+          if (!(result as any)?.already_onboarded) {
+            toast.success("Empresa configurada com sucesso!");
+          }
         } catch (err) {
           console.error("Erro no onboarding automático:", err);
+          // O erro não destrava isRegistering para evitar loops infinitos em falhas persistentes, 
+          // mas permite que o usuário veja a página.
+        } finally {
+          // Mantemos isRegistering=true para evitar novas tentativas neste ciclo de vida do componente
+          // a menos que o refetch falhe e companies.length continue 0.
+          // Se o refetch funcionou, companies.length > 0 impedirá nova execução no próximo tick.
         }
       }
     }
     checkOnboarding();
-  }, [loading, session, contextLoading, companies.length, runOnboarding, refetch]);
+  }, [loading, session, contextLoading, companies.length, runOnboarding, refetch, isRegistering]);
 
   if (loading || (session && contextLoading)) {
     return (
