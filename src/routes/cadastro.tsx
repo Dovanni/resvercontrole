@@ -587,6 +587,7 @@ function SignupPage() {
         </div>
 
 
+
         {/* Coluna Direita: Marketplaces e Serviços */}
         <div className="order-3 space-y-6">
           <Card className="border-primary/10 shadow-sm bg-white/80 backdrop-blur-sm overflow-hidden">
