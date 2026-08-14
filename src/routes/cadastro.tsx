@@ -578,26 +578,40 @@ function SignupPage() {
           </form>
         </div>
 
-        {/* Marketplace Ecosystem - Mobile/Tablet Footer */}
-        <div className="lg:hidden mt-12 space-y-6">
-          <div className="text-center space-y-2">
-            <h3 className="text-sm font-semibold text-primary">Seu negócio vende em diferentes canais?</h3>
-            <p className="text-xs text-muted-foreground">Centralize o acompanhamento na VEJAMAIS.</p>
+        {/* Marketplace & E-commerce Ecosystem - Mobile/Tablet Footer */}
+        <div className="lg:hidden mt-12 space-y-8">
+          <div className="p-6 rounded-2xl bg-primary text-primary-foreground shadow-glow border border-primary/20 max-w-sm mx-auto">
+            <div className="flex items-center gap-3 mb-2">
+              <Globe className="size-6" />
+              <h3 className="font-display text-lg font-bold">Meu e-commerce</h3>
+            </div>
+            <p className="text-xs font-medium opacity-90 leading-tight">Loja virtual própria</p>
           </div>
+
+          <div className="text-center space-y-2">
+            <h3 className="text-sm font-semibold text-primary">Do seu e-commerce próprio aos marketplaces:</h3>
+            <p className="text-xs text-muted-foreground">Acompanhe todos os canais do seu negócio com a VEJAMAIS.</p>
+            <p className="text-xs text-muted-foreground/80">Registre e organize as informações comerciais e financeiras de cada canal para ter uma visão mais clara da operação.</p>
+          </div>
+
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <MarketplaceChip name="Mercado Livre" color="bg-[#FFE600] text-black" size="sm" />
             <MarketplaceChip name="Amazon" color="bg-[#232F3E] text-white" size="sm" />
             <MarketplaceChip name="Shopee" color="bg-[#EE4D2D] text-white" size="sm" />
             <MarketplaceChip name="Magalu" color="bg-[#0086FF] text-white" size="sm" />
-            <MarketplaceChip name="Mercado Pago" color="bg-[#009EE3] text-white" size="sm" />
             <MarketplaceChip name="SHEIN" color="bg-black text-white" size="sm" />
             <MarketplaceChip name="Temu" color="bg-[#FF6000] text-white" size="sm" />
+            <div className="col-span-2 flex justify-center pt-2">
+              <div className="text-[10px] py-1 px-4 rounded-full bg-muted border border-border text-muted-foreground font-medium">
+                Serviço de Pagamento: Mercado Pago
+              </div>
+            </div>
           </div>
         </div>
 
         <div className="mt-8 text-center px-4">
           <p className="text-[9px] text-muted-foreground leading-relaxed max-w-md mx-auto">
-            Marcas citadas pertencem aos seus respectivos titulares. A exibição representa canais de venda utilizados por empresas e não implica parceria, afiliação ou integração automática com a VEJAMAIS.
+            Marcas citadas pertencem aos seus respectivos titulares. A exibição representa canais e serviços utilizados por empresas e não implica parceria, afiliação ou integração automática com a VEJAMAIS.
           </p>
         </div>
       </div>
