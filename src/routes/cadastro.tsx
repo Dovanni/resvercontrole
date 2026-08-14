@@ -206,6 +206,7 @@ function SignupPage() {
     <div className="min-h-screen bg-gradient-rose flex flex-col items-center justify-start px-4 py-12 relative overflow-x-hidden">
       {/* Container Principal Centralizado */}
       <div className="w-full max-w-[1180px] mx-auto z-10">
+
         
         {/* Cabeçalho e Introdução */}
         <div className="text-center mb-12">
