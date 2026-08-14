@@ -203,64 +203,30 @@ function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-rose flex items-center justify-center px-4 py-12 relative overflow-x-hidden">
-      {/* Marketplace & E-commerce Ecosystem - Desktop Sidebars */}
-      <div className="hidden lg:block absolute left-8 top-1/2 -translate-y-1/2 w-56 space-y-6 opacity-40 hover:opacity-100 transition-opacity duration-500" aria-hidden="true">
-        <div className="mb-8 p-6 rounded-2xl bg-primary text-primary-foreground shadow-glow border border-primary/20 scale-110 transform origin-left">
-          <div className="flex items-center gap-3 mb-2">
-            <Globe className="size-6" />
-            <h3 className="font-display text-lg font-bold">Meu e-commerce</h3>
-          </div>
-          <p className="text-xs font-medium opacity-90 leading-tight">Loja virtual própria</p>
-        </div>
+    <div className="min-h-screen bg-gradient-rose flex flex-col items-center justify-start px-4 py-12 relative overflow-x-hidden">
+      {/* Container Principal Centralizado */}
+      <div className="w-full max-w-[1180px] mx-auto z-10">
         
-        <div className="space-y-4 pt-4 border-t border-primary/10">
-          <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest mb-3">Canais próprios</p>
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground flex items-center gap-2"><Check className="size-3 text-primary" /> Loja física</p>
-            <p className="text-xs font-medium text-muted-foreground flex items-center gap-2"><Check className="size-3 text-primary" /> Redes sociais</p>
-            <p className="text-xs font-medium text-muted-foreground flex items-center gap-2"><Check className="size-3 text-primary" /> Venda direta</p>
+        {/* Cabeçalho e Introdução */}
+        <div className="text-center mb-12">
+          <VejamaisMark size={64} className="mx-auto mb-6 rounded-2xl shadow-glow" />
+          
+          <div className="space-y-2 mb-6">
+            <h1 className="font-display text-4xl sm:text-5xl text-foreground tracking-tight">Criar minha empresa</h1>
+            <p className="text-xs sm:text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground/80">Gestão Comercial e Financeira</p>
           </div>
-        </div>
 
-        <div className="pt-6 border-t border-primary/10">
-          <p className="text-[10px] font-medium text-muted-foreground leading-tight">
-            Do seu e-commerce próprio aos marketplaces: acompanhe todos os canais do seu negócio com a VEJAMAIS.
-          </p>
-        </div>
-      </div>
-
-      <div className="hidden lg:block absolute right-8 top-1/2 -translate-y-1/2 w-48 space-y-4 opacity-40 hover:opacity-100 transition-opacity duration-500 text-right" aria-hidden="true">
-        <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest mb-4">Marketplaces e Serviços</p>
-        <div className="flex justify-end"><MarketplaceChip name="Mercado Livre" color="bg-[#FFE600] text-black" size="sm" /></div>
-        <div className="flex justify-end"><MarketplaceChip name="Amazon" color="bg-[#232F3E] text-white" size="sm" /></div>
-        <div className="flex justify-end"><MarketplaceChip name="Shopee" color="bg-[#EE4D2D] text-white" size="sm" /></div>
-        <div className="flex justify-end"><MarketplaceChip name="Magalu" color="bg-[#0086FF] text-white" size="sm" /></div>
-        <div className="flex justify-end"><MarketplaceChip name="SHEIN" color="bg-black text-white" size="sm" /></div>
-        <div className="flex justify-end"><MarketplaceChip name="Temu" color="bg-[#FF6000] text-white" size="sm" /></div>
-        <div className="flex justify-end pt-2">
-          <div className="text-[10px] py-1 px-3 rounded-full bg-muted border border-border text-muted-foreground font-medium">
-            Serviço: Mercado Pago
-          </div>
-        </div>
-      </div>
-
-      <div className="w-full max-w-lg relative z-10">
-        <div className="text-center mb-8">
-          <VejamaisMark size={64} className="mx-auto mb-4 rounded-2xl shadow-glow" />
-          <div className="flex items-center justify-center gap-2 mb-1">
-            <h1 className="font-display text-4xl text-foreground">Criar minha empresa</h1>
+          <div className="flex flex-col items-center gap-6 max-w-2xl mx-auto">
             <Dialog>
               <DialogTrigger asChild>
                 <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 rounded-full text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
+                  variant="outline" 
+                  size="sm"
+                  className="rounded-full bg-white/50 border-primary/20 text-primary hover:bg-primary hover:text-white transition-all gap-2 px-5 h-10 shadow-sm"
                   aria-haspopup="dialog"
-                  title="Como funciona esta etapa?"
                 >
-                  <HelpCircle className="h-5 w-5" />
-                  <span className="sr-only">Como funciona esta etapa?</span>
+                  <HelpCircle className="h-4 w-4" />
+                  <span className="font-semibold text-sm">Como funciona esta etapa?</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-2xl max-h-[90vh] p-0 gap-0 overflow-hidden">
@@ -346,24 +312,68 @@ function SignupPage() {
                 </ScrollArea>
               </DialogContent>
             </Dialog>
-          </div>
-          <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Gestão Comercial e Financeira</p>
-          
-          <div className="mt-6 space-y-1">
-            <h2 className="text-primary font-semibold text-lg">Gestão comercial e financeira para e-commerce e comércio</h2>
-            <p className="text-sm text-muted-foreground px-4">
-              Organize em um só lugar os resultados do seu e-commerce próprio, da sua loja virtual, dos marketplaces e dos demais canais de venda do seu negócio.
-            </p>
-            <p className="text-sm text-muted-foreground px-4">
-              Da venda realizada no seu próprio site às operações em diferentes plataformas, acompanhe pedidos, produtos, estoque, taxas, fretes, contas, margens e lucros com mais clareza.
-            </p>
+
+            <div className="space-y-4">
+              <h2 className="text-primary font-semibold text-xl sm:text-2xl">Gestão comercial e financeira para e-commerce e comércio</h2>
+              <div className="space-y-3">
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                  Organize em um só lugar os resultados do seu e-commerce próprio, da sua loja virtual, dos marketplaces e dos demais canais de venda do seu negócio.
+                </p>
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                  Da venda realizada no seu próprio site às operações em diferentes plataformas, acompanhe pedidos, produtos, estoque, taxas, fretes, contas, margens e lucros com mais clareza.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="rounded-2xl bg-card shadow-soft border p-8">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Layout de Colunas (Grid do Ecossistema) */}
+        <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr_280px] gap-6 lg:gap-8 items-start">
+          
+          {/* Coluna Esquerda: Canais Próprios */}
+          <div className="order-2 lg:order-1 space-y-6">
+            <Card className="border-primary/10 shadow-sm bg-white/80 backdrop-blur-sm overflow-hidden">
+              <CardContent className="p-6 space-y-6">
+                <div>
+                  <h3 className="text-sm font-bold text-primary/60 uppercase tracking-widest mb-4">Seu negócio, seus canais</h3>
+                  
+                  <div className="p-5 rounded-2xl bg-primary text-primary-foreground shadow-glow border border-primary/20 mb-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Globe className="size-6" />
+                      <h4 className="font-display text-lg font-bold">Meu e-commerce</h4>
+                    </div>
+                    <p className="text-xs font-medium opacity-90 leading-tight">Loja virtual própria</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Outros canais próprios</h5>
+                    <div className="space-y-2.5">
+                      <p className="text-sm font-medium text-foreground flex items-center gap-3"><Check className="size-4 text-primary" /> Loja física</p>
+                      <p className="text-sm font-medium text-foreground flex items-center gap-3"><Check className="size-4 text-primary" /> Redes sociais</p>
+                      <p className="text-sm font-medium text-foreground flex items-center gap-3"><Check className="size-4 text-primary" /> Venda direta</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-primary/5">
+                  <p className="text-xs font-medium text-muted-foreground leading-relaxed">
+                    Centralize o acompanhamento comercial e financeiro dos canais que pertencem ao seu negócio.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Coluna Central: Formulário */}
+          <div className="order-1 lg:order-2">
+            <div className="rounded-2xl bg-card shadow-soft border p-6 sm:p-8">
+              <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="admin_name">Nome do Administrador</Label>
+
+
+
+
               <Input 
                 id="admin_name" 
                 required 
@@ -577,47 +587,63 @@ function SignupPage() {
             </div>
           </form>
         </div>
+      </div>
+    </div>
 
-        {/* Marketplace & E-commerce Ecosystem - Mobile/Tablet Footer */}
-        <div className="lg:hidden mt-12 space-y-8">
-          <div className="p-6 rounded-2xl bg-primary text-primary-foreground shadow-glow border border-primary/20 max-w-sm mx-auto">
-            <div className="flex items-center gap-3 mb-2">
-              <Globe className="size-6" />
-              <h3 className="font-display text-lg font-bold">Meu e-commerce</h3>
-            </div>
-            <p className="text-xs font-medium opacity-90 leading-tight">Loja virtual própria</p>
-          </div>
 
-          <div className="text-center space-y-2">
-            <h3 className="text-sm font-semibold text-primary">Do seu e-commerce próprio aos marketplaces:</h3>
-            <p className="text-xs text-muted-foreground">Acompanhe todos os canais do seu negócio com a VEJAMAIS.</p>
-            <p className="text-xs text-muted-foreground/80">Registre e organize as informações comerciais e financeiras de cada canal para ter uma visão mais clara da operação.</p>
-          </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <MarketplaceChip name="Mercado Livre" color="bg-[#FFE600] text-black" size="sm" />
-            <MarketplaceChip name="Amazon" color="bg-[#232F3E] text-white" size="sm" />
-            <MarketplaceChip name="Shopee" color="bg-[#EE4D2D] text-white" size="sm" />
-            <MarketplaceChip name="Magalu" color="bg-[#0086FF] text-white" size="sm" />
-            <MarketplaceChip name="SHEIN" color="bg-black text-white" size="sm" />
-            <MarketplaceChip name="Temu" color="bg-[#FF6000] text-white" size="sm" />
-            <div className="col-span-2 flex justify-center pt-2">
-              <div className="text-[10px] py-1 px-4 rounded-full bg-muted border border-border text-muted-foreground font-medium">
-                Serviço de Pagamento: Mercado Pago
+
+
+
+
+        {/* Coluna Direita: Marketplaces e Serviços */}
+        <div className="order-3 space-y-6">
+          <Card className="border-primary/10 shadow-sm bg-white/80 backdrop-blur-sm overflow-hidden">
+            <CardContent className="p-6 space-y-6">
+              <div>
+                <h3 className="text-sm font-bold text-primary/60 uppercase tracking-widest mb-2">Marketplaces e serviços</h3>
+                <p className="text-[10px] font-medium text-muted-foreground leading-relaxed mb-6">
+                  Registre e acompanhe os resultados das vendas realizadas em diferentes plataformas.
+                </p>
+                
+                <div className="grid grid-cols-2 gap-2.5">
+                  <MarketplaceChip name="Mercado Livre" color="bg-[#FFE600] text-black" size="sm" />
+                  <MarketplaceChip name="Amazon" color="bg-[#232F3E] text-white" size="sm" />
+                  <MarketplaceChip name="Shopee" color="bg-[#EE4D2D] text-white" size="sm" />
+                  <MarketplaceChip name="Magalu" color="bg-[#0086FF] text-white" size="sm" />
+                  <MarketplaceChip name="SHEIN" color="bg-black text-white" size="sm" />
+                  <MarketplaceChip name="Temu" color="bg-[#FF6000] text-white" size="sm" />
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
 
-        <div className="mt-8 text-center px-4">
-          <p className="text-[9px] text-muted-foreground leading-relaxed max-w-md mx-auto">
-            Marcas citadas pertencem aos seus respectivos titulares. A exibição representa canais e serviços utilizados por empresas e não implica parceria, afiliação ou integração automática com a VEJAMAIS.
-          </p>
+              <div className="pt-6 border-t border-primary/5 space-y-3">
+                <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Serviço de pagamento</h5>
+                <MarketplaceChip name="Mercado Pago" color="bg-muted border border-border text-muted-foreground" size="sm" />
+              </div>
+
+              <div className="pt-6 border-t border-primary/5">
+                <p className="text-[9px] text-muted-foreground/70 leading-relaxed italic">
+                  Canais apresentados como referência. Não há integração automática ou parceria comercial implícita.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
+      </div>
+
+      <div className="w-full max-w-[1180px] mt-12 mb-8 text-center px-4">
+        <p className="text-[9px] text-muted-foreground/60 leading-relaxed max-w-md mx-auto">
+          Marcas citadas pertencem aos seus respectivos titulares. A exibição representa canais e serviços utilizados por empresas e não implica parceria, afiliação ou integração automática com a VEJAMAIS.
+        </p>
       </div>
     </div>
   );
 }
+
+
+
+
+
 
 function MarketplaceChip({ name, color, size = "md" }: { name: string; color: string; size?: "sm" | "md" }) {
   return (
