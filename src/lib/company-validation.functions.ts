@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { normalizeCnpj, validateCnpj } from "@/lib/cnpj-validator";
+import { normalizeCnpj, validateCnpj as validateCnpjCheck } from "@/lib/cnpj-validator";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import crypto from "crypto";
 
@@ -27,7 +27,7 @@ export interface CompanyValidationResult {
   trace_id: string;
 }
 
-export const validateCompanyCnpj = createServerFn({ method: "POST" })
+export const validateCnpj = createServerFn({ method: "POST" })
   .inputValidator((data) => validateCnpjSchema.parse(data))
   .handler(async ({ data }) => {
     const traceId = crypto.randomUUID();
@@ -35,7 +35,7 @@ export const validateCompanyCnpj = createServerFn({ method: "POST" })
     const normalized = normalizeCnpj(rawCnpj);
 
     // 1. Validar formato e DV
-    if (!validateCnpj(normalized)) {
+    if (!validateCnpjCheck(normalized)) {
       throw new Error(JSON.stringify({ 
         error: "INVALID_CNPJ_FORMAT", 
         reason_code: "LOCAL_DV_INVALID",
