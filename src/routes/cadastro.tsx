@@ -385,9 +385,6 @@ function SignupPage() {
                   />
                 </div>
 
-              />
-            </div>
-
             <div className="space-y-2">
               <Label htmlFor="cnpj">CNPJ da empresa</Label>
               <div className="flex gap-2">
