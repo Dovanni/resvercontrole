@@ -35,48 +35,53 @@ function AuthedLayout() {
       // Bloqueio se já está registrando, se já completou nesta sessão, ou se o contexto ainda está carregando
       if (registrationState !== 'idle' || loading || contextLoading || !session) return;
       
-      // Só dispara se realmente não houver empresas
-      if (companies.length === 0) {
-        setRegistrationState('registering');
-        try {
-          const metadata = session.user.user_metadata || {};
-          const nomeEmpresa = metadata.nome_empresa || "Minha Empresa";
-          const documento = metadata.cnpj || "00.000.000/0000-00";
-          
-          const result = await runOnboarding({
-            data: {
-              empresa: {
-                nome: nomeEmpresa,
-                documento: documento,
-              },
-              consentimentos: {
-                termos_uso: true,
-                politica_privacidade: true,
-                versao: "1.0",
-              }
-            }
-          });
-          
-          await refetch();
-          setRegistrationState('completed');
-          
-          if (!(result as any)?.already_onboarded) {
-            toast.success("Empresa configurada com sucesso!");
-          }
-
-          // Redirecionamento baseado na intenção após onboarding
-          if (intent === 'empresarial') {
-            navigate({ to: '/configuracoes/assinatura', replace: true });
-          }
-        } catch (err) {
-          console.error("Erro no onboarding automático:", err);
-          setRegistrationState('failed');
-          // Permite retry manual via UI se implementado, ou via reload
+      // Se já tem empresas, apenas verifica a intenção
+      if (companies.length > 0) {
+        if (intent === 'empresarial') {
+          navigate({ to: '/configuracoes/assinatura', replace: true });
         }
+        return;
+      }
+      
+      // Só dispara onboarding se realmente não houver empresas
+      setRegistrationState('registering');
+      try {
+        const metadata = session.user.user_metadata || {};
+        const nomeEmpresa = metadata.nome_empresa || "Minha Empresa";
+        const documento = metadata.cnpj || "00.000.000/0000-00";
+        
+        const result = await runOnboarding({
+          data: {
+            empresa: {
+              nome: nomeEmpresa,
+              documento: documento,
+            },
+            consentimentos: {
+              termos_uso: true,
+              politica_privacidade: true,
+              versao: "1.0",
+            }
+          }
+        });
+        
+        await refetch();
+        setRegistrationState('completed');
+        
+        if (!(result as any)?.already_onboarded) {
+          toast.success("Empresa configurada com sucesso!");
+        }
+
+        // Redirecionamento baseado na intenção após onboarding
+        if (intent === 'empresarial') {
+          navigate({ to: '/configuracoes/assinatura', replace: true });
+        }
+      } catch (err) {
+        console.error("Erro no onboarding automático:", err);
+        setRegistrationState('failed');
       }
     }
     checkOnboarding();
-  }, [loading, session, contextLoading, companies.length, runOnboarding, refetch, registrationState]);
+  }, [loading, session, contextLoading, companies.length, runOnboarding, refetch, registrationState, intent, navigate]);
 
   if (loading || (session && contextLoading)) {
     return (
