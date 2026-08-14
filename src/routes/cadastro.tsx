@@ -583,8 +583,10 @@ function SignupPage() {
                 <ArrowLeft className="h-3.5 w-3.5" /> Voltar para o Vejamais
               </Link>
             </div>
-          </form>
+            </form>
+          </div>
         </div>
+
 
         {/* Coluna Direita: Marketplaces e Serviços */}
         <div className="order-3 space-y-6">
