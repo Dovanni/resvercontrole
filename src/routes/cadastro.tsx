@@ -271,7 +271,7 @@ function SignupPage() {
                         Comece a organizar a gestão do seu negócio
                       </DialogTitle>
                       <p className="text-base text-muted-foreground leading-relaxed">
-                        Cadastre sua empresa para centralizar o acompanhamento comercial e financeiro do seu e-commerce ou comércio. Após a criação da conta, você poderá organizar pedidos, vendas, produtos, estoque, clientes, fornecedores, contas, fluxo de caixa, custos, margens e resultados em um só lugar.
+                        Cadastre sua empresa para centralizar o acompanhamento comercial e financeiro do seu e-commerce próprio, da sua loja virtual, das vendas em marketplaces e dos demais canais do negócio. Após criar sua conta, você poderá organizar pedidos, vendas, produtos, estoque, clientes, fornecedores, contas, fluxo de caixa, custos, margens e resultados em um só lugar.
                       </p>
                     </DialogHeader>
 
