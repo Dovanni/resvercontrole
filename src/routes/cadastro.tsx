@@ -636,8 +636,10 @@ function SignupPage() {
           Marcas citadas pertencem aos seus respectivos titulares. A exibição representa canais e serviços utilizados por empresas e não implica parceria, afiliação ou integração automática com a VEJAMAIS.
         </p>
       </div>
+    </div>
   );
 }
+
 
 
 
