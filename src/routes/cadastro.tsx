@@ -293,13 +293,13 @@ function SignupPage() {
                           number="3" 
                           icon={<Settings2 className="size-5" />}
                           title="Organize sua operação"
-                          description="Cadastre produtos, clientes, fornecedores, contas bancárias e demais informações necessárias para acompanhar o negócio."
+                          description="Cadastre os produtos, clientes, fornecedores, contas bancárias e informações das vendas realizadas no e-commerce próprio, nos marketplaces e nos demais canais do negócio."
                         />
                         <StepItem 
                           number="4" 
                           icon={<BarChart3 className="size-5" />}
                           title="Registre e acompanhe resultados"
-                          description="Monitore vendas, estoque, despesas, contas a pagar e receber, fluxo de caixa, margens, lucros, relatórios, BI e DRE."
+                          description="Monitore vendas, estoque, taxas, fretes, despesas, contas a pagar e receber, fluxo de caixa, margens, lucros, relatórios, BI e DRE."
                         />
                       </div>
                     </div>
