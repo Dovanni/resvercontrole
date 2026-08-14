@@ -25,6 +25,8 @@ function AuthedLayout() {
   const { companies, isLoading: contextLoading, refetch } = useMultiempresa();
   const runOnboarding = useServerFn(completeCompanyOnboarding);
   const navigate = useNavigate();
+  const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+  const intent = searchParams.get("intent");
   const [registrationState, setRegistrationState] = useState<'idle' | 'registering' | 'completed' | 'failed'>('idle');
 
   // Onboarding automático se o usuário não tem nenhuma empresa
@@ -60,6 +62,11 @@ function AuthedLayout() {
           
           if (!(result as any)?.already_onboarded) {
             toast.success("Empresa configurada com sucesso!");
+          }
+
+          // Redirecionamento baseado na intenção após onboarding
+          if (intent === 'empresarial') {
+            navigate({ to: '/configuracoes/assinatura', replace: true });
           }
         } catch (err) {
           console.error("Erro no onboarding automático:", err);
