@@ -73,6 +73,11 @@ export const Route = createFileRoute('/api/public/billing/context')({
             });
           }
 
+          // Identificação Institucional Segura (Server-side canonical authority)
+          // ID da Matriz autorizado para modo administrativo institucional
+          const INSTITUTIONAL_MATRIX_ID = 'c610705d-e900-4b6f-8460-1a0633b7962a';
+          const isInstitutional = empresaId === INSTITUTIONAL_MATRIX_ID;
+
           const responseData = {
             subscription: {
               status: subContext.status,
@@ -83,12 +88,12 @@ export const Route = createFileRoute('/api/public/billing/context')({
               days_remaining: subContext.days_remaining,
               trial_ends_at: subContext.trial_ends_at
             },
-
             checkout: {
-              enabled: checkoutStatus.checkout_enabled,
+              enabled: isInstitutional ? false : checkoutStatus.checkout_enabled,
               environment: checkoutStatus.billing_environment,
-              reason_code: checkoutStatus.exact_disable_reason || 'READY'
-            }
+              reason_code: isInstitutional ? 'INSTITUTIONAL_MODE' : (checkoutStatus.exact_disable_reason || 'READY')
+            },
+            billing_mode: isInstitutional ? 'institutional' : 'commercial'
           };
 
           return new Response(JSON.stringify(responseData), {
