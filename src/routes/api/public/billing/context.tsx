@@ -75,8 +75,11 @@ export const Route = createFileRoute('/api/public/billing/context')({
 
           // Identificação Institucional Segura (Server-side canonical authority)
           // ID da Matriz autorizado para modo administrativo institucional
-          const INSTITUTIONAL_MATRIX_ID = 'c610705d-e900-4b6f-8460-1a0633b7962a';
-          const isInstitutional = empresaId === INSTITUTIONAL_MATRIX_ID;
+          const INSTITUTIONAL_MATRIX_IDS = [
+            'c610705d-e900-4b6f-8460-1a0633b7962a',
+            '55bdfa1d-263d-4099-b2f9-35dea74719f7'
+          ];
+          const isInstitutional = INSTITUTIONAL_MATRIX_IDS.includes(empresaId);
 
           const responseData = {
             subscription: {
