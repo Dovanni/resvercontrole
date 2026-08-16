@@ -669,6 +669,7 @@ function NovaCompraDialog({ userId, empresaId: passedEmpresaId, fornecedores, pr
 
   const save = useMutation({
     mutationFn: async () => {
+      if (!empresaId) throw new Error("Não foi possível registrar a compra. Confirme a empresa ativa e tente novamente.");
       if (!f.fornecedor_id) throw new Error("Selecione um fornecedor");
       if (itens.length === 0) throw new Error("Adicione ao menos um item");
       for (const it of itens) {
@@ -733,11 +734,8 @@ function NovaCompraDialog({ userId, empresaId: passedEmpresaId, fornecedores, pr
         return { count: (rpcData as any)?.parcelas_recriadas ?? 0, edit: true };
       }
 
-
-      // ============== MODO CREATE ==============
-      // 1. Criar compra
-      const { data: compraRow, error: e1 } = await (supabase.from("compras" as any).insert({
-        user_id: userId,
+      // ============== MODO CREATE — RPC atômica (CORREÇÃO P1) ==============
+      const purchasePayload = {
         fornecedor_id: f.fornecedor_id,
         data_compra: f.data_compra,
         numero_nf: f.numero_nf || null,
@@ -747,61 +745,75 @@ function NovaCompraDialog({ userId, empresaId: passedEmpresaId, fornecedores, pr
         parcelas: f.condicao === "parcelado" ? f.parcelas : 1,
         dia_vencimento: diaVenc,
         data_vencimento: f.condicao === "a_prazo" ? f.data_vencimento : (f.condicao === "parcelado" ? f.data_primeira_parcela : null),
-        subtotal, desconto: Number(f.desconto) || 0, frete: Number(f.frete) || 0, total,
+        subtotal,
+        desconto: Number(f.desconto) || 0,
+        frete: Number(f.frete) || 0,
+        total,
         observacoes: f.observacoes || null,
-      }).select().single());
-      if (e1 || !compraRow) throw e1 ?? new Error("Falha ao criar compra");
-      const compraId = (compraRow as any).id as string;
-      const shortId = compraId.slice(0, 8);
+        status: "confirmada"
+      };
 
-      // 2. Itens + estoque + custo
-      const itensRows = itens.map((it) => ({
-        user_id: userId, compra_id: compraId, produto_id: it.produto_id,
-        quantidade: it.quantidade, preco_unitario: it.preco_unitario, subtotal: it.subtotal,
-        empresa_id: empresaId!,
+      const itemsPayload = itens.map((it) => ({
+        produto_id: it.produto_id,
+        quantidade: it.quantidade,
+        preco_unitario: it.preco_unitario,
       }));
-      const { error: e2 } = await (supabase.from("compras_itens" as any).insert(itensRows));
-      if (e2) throw e2;
 
-      for (const it of itens) {
-        const p = produtos.find((x) => x.id === it.produto_id);
-        if (!p) continue;
-        await supabase.from("products").update({
-          stock: Number(p.stock) + Number(it.quantidade),
-          cost_price: it.preco_unitario,
-        }).eq("id", it.produto_id);
-      }
-
-      // 3. Gerar contas a pagar
-      let payablesCount = 0;
-      const baseDesc = `Compra #${shortId} — ${fornName}${f.numero_nf ? ` NF ${f.numero_nf}` : ""}`;
+      const payablesPayload = [];
+      const baseDesc = `Compra #AUTO — ${fornName}${f.numero_nf ? ` NF ${f.numero_nf}` : ""}`;
+      
       if (f.condicao === "a_vista") {
-        await supabase.from("payables").insert({
-          user_id: userId, supplier_id: f.fornecedor_id, description: baseDesc,
-          category: "Fornecedor", amount: total, due_date: f.data_compra,
-          payment_method: f.forma_pagamento, status: "pago",
-          paid_amount: total, paid_at: new Date().toISOString(),
+        payablesPayload.push({
+          description: baseDesc.replace("#AUTO", ""), // A RPC não tem o ID ainda, mas o baseDesc é apenas informativo
+          amount: total,
+          due_date: f.data_compra,
+          status: "pago",
+          paid_amount: total,
+          paid_at: new Date().toISOString(),
           bank_account_id: f.bank_account_id,
-          empresa_id: empresaId! });
-        payablesCount = 1;
+        });
       } else if (f.condicao === "parcelado") {
-        const rows = parcelasPreview.map((p) => ({
-          user_id: userId, supplier_id: f.fornecedor_id,
-          description: `${baseDesc} (${p.n}/${f.parcelas})`,
-          category: "Fornecedor", amount: p.amount,
-          due_date: p.date, status: "pendente",
-          empresa_id: empresaId! }));
-        const { error } = await supabase.from("payables").insert(rows);
-        if (error) throw error;
-        payablesCount = f.parcelas;
+        parcelasPreview.forEach((p) => {
+          payablesPayload.push({
+            description: `${baseDesc.replace("#AUTO", "")} (${p.n}/${f.parcelas})`,
+            amount: p.amount,
+            due_date: p.date,
+            status: "pendente",
+            paid_amount: 0,
+            paid_at: null,
+            bank_account_id: null,
+          });
+        });
       } else {
-        await supabase.from("payables").insert({
-          user_id: userId, supplier_id: f.fornecedor_id, description: baseDesc,
-          category: "Fornecedor", amount: total, due_date: f.data_vencimento, status: "pendente",
-          empresa_id: empresaId! });
-        payablesCount = 1;
+        payablesPayload.push({
+          description: baseDesc.replace("#AUTO", ""),
+          amount: total,
+          due_date: f.data_vencimento,
+          status: "pendente",
+          paid_amount: 0,
+          paid_at: null,
+          bank_account_id: null,
+        });
       }
-      return { count: payablesCount, edit: false };
+
+      const { data: compraId, error: rpcErr } = await (supabase.rpc as any)("rpc_registrar_compra", {
+        p_empresa_id: empresaId,
+        p_payload: purchasePayload,
+        p_items: itemsPayload,
+        p_payables: payablesPayload,
+        p_idempotency_key: crypto.randomUUID(),
+      });
+
+      if (rpcErr) {
+        console.error("Erro RPC rpc_registrar_compra:", rpcErr);
+        // Mapear erros conhecidos da RPC para mensagens amigáveis
+        if (rpcErr.message?.includes("Cross-Tenant")) {
+           throw new Error("Segurança: Tentativa de acesso a dados de outra empresa detectada.");
+        }
+        throw new Error("Não foi possível registrar a compra. Confirme a empresa ativa e tente novamente.");
+      }
+
+      return { count: payablesPayload.length, edit: false };
     },
     onSuccess: (r) => {
       if (r.edit) toast.success("Compra atualizada com sucesso.");
