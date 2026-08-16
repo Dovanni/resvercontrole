@@ -481,11 +481,13 @@ export function NovaCompraDialog({ userId, empresaId: passedEmpresaId, fornecedo
   // Pilot Idempotency Logic
   const isPilotEnabled = import.meta.env.VITE_ENABLE_PURCHASE_IDEMPOTENCY_PILOT === 'true';
   const idempotencyKeyRef = useRef<string | null>(null);
+  const submissionLockRef = useRef(false);
   const [pilotState, setPilotState] = useState<'idle' | 'prepared' | 'submitting' | 'ambiguous_failure' | 'definitive_failure' | 'confirmed' | 'cancelled'>('idle');
 
   // Isolamento por empresa: se empresaId mudar, limpamos a chave do piloto
   useEffect(() => {
     idempotencyKeyRef.current = null;
+    submissionLockRef.current = false;
     setPilotState('idle');
   }, [empresaId]);
 
@@ -837,11 +839,16 @@ export function NovaCompraDialog({ userId, empresaId: passedEmpresaId, fornecedo
                               rpcErr.message?.toLowerCase().includes("fetch");
            if (isAmbiguous) {
               setPilotState('ambiguous_failure');
+              // Para erro ambíguo, liberamos o lock síncrono para permitir o retry (que usará a mesma idempotencyKeyRef)
+              submissionLockRef.current = false;
            } else {
               setPilotState('definitive_failure');
               // Se for falha definitiva, a regra diz para descartar a chave anterior para permitir correção
               idempotencyKeyRef.current = null;
+              submissionLockRef.current = false;
            }
+        } else {
+           submissionLockRef.current = false;
         }
         
         throw new Error(rpcErr.message || "Não foi possível registrar a compra. Confirme a empresa ativa e tente novamente.");
@@ -854,6 +861,7 @@ export function NovaCompraDialog({ userId, empresaId: passedEmpresaId, fornecedo
         setPilotState('confirmed');
         idempotencyKeyRef.current = null; // Sucesso confirmado: limpa a chave
       }
+      submissionLockRef.current = false; // Libera o lock síncrono após sucesso confirmando o fechamento do ciclo
       if (r.edit) toast.success("Compra atualizada com sucesso.");
       else toast.success(`Compra registrada! ${r.count} conta(s) a pagar gerada(s) e estoque atualizado.`);
       onDone();
@@ -865,7 +873,7 @@ export function NovaCompraDialog({ userId, empresaId: passedEmpresaId, fornecedo
   });
 
   const handleSave = () => {
-     if (save.isPending) return; // Double-click guard lógico
+     if (save.isPending || submissionLockRef.current) return; // Guarda síncrona real e TanStack Query
      
      if (isPilotEnabled && !isEdit) {
         // Se já tivemos uma falha ambígua, mantemos a mesma chave
@@ -876,13 +884,16 @@ export function NovaCompraDialog({ userId, empresaId: passedEmpresaId, fornecedo
         setPilotState('submitting');
      }
      
+     submissionLockRef.current = true; // Ativa lock síncrono imediatamente
      save.mutate();
   };
 
   const handleCancel = () => {
+    if (save.isPending || submissionLockRef.current) return; // Bloqueia cancelamento se estiver salvando
     if (isPilotEnabled && !isEdit) {
       setPilotState('cancelled');
       idempotencyKeyRef.current = null;
+      submissionLockRef.current = false;
     }
     onDone();
   };
