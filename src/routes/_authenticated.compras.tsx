@@ -775,7 +775,7 @@ function NovaCompraDialog({ userId, empresaId: passedEmpresaId, fornecedores, pr
       
       if (f.condicao === "a_vista") {
         payablesPayload.push({
-          description: baseDesc.replace("#AUTO", ""), // A RPC não tem o ID ainda, mas o baseDesc é apenas informativo
+          description: baseDesc.replace("#AUTO", ""),
           amount: total,
           due_date: f.data_compra,
           status: "pago",
@@ -807,32 +807,85 @@ function NovaCompraDialog({ userId, empresaId: passedEmpresaId, fornecedores, pr
         });
       }
 
+      // Pilot Logic: Determinar idempotency key
+      let finalKey = `compra_${empresaId}_${f.fornecedor_id}_${f.data_compra}_${subtotal}_${Date.now()}`;
+      if (isPilotEnabled && !isEdit) {
+        if (!idempotencyKeyRef.current) {
+          idempotencyKeyRef.current = crypto.randomUUID();
+        }
+        finalKey = idempotencyKeyRef.current;
+      }
+
       const { data: compraId, error: rpcErr } = await (supabase.rpc as any)("rpc_registrar_compra", {
         p_empresa_id: empresaId,
         p_payload: purchasePayload,
         p_items: itemsPayload,
         p_payables: payablesPayload,
-        p_idempotency_key: `compra_${empresaId}_${f.fornecedor_id}_${f.data_compra}_${subtotal}_${Date.now()}`,
+        p_idempotency_key: finalKey,
       });
 
       if (rpcErr) {
         console.error("Erro RPC rpc_registrar_compra:", rpcErr);
-        // Mapear erros conhecidos da RPC para mensagens amigáveis
         if (rpcErr.message?.includes("Cross-Tenant")) {
            throw new Error("Segurança: Tentativa de acesso a dados de outra empresa detectada.");
         }
-        throw new Error("Não foi possível registrar a compra. Confirme a empresa ativa e tente novamente.");
+        
+        // Pilot Logic: Diferenciar erros ambíguos
+        if (isPilotEnabled && !isEdit) {
+           const isAmbiguous = rpcErr.message?.toLowerCase().includes("timeout") || 
+                              rpcErr.message?.toLowerCase().includes("network") ||
+                              rpcErr.message?.toLowerCase().includes("fetch");
+           if (isAmbiguous) {
+              setPilotState('ambiguous_failure');
+           } else {
+              setPilotState('definitive_failure');
+              // Se for falha definitiva, a regra diz para descartar a chave anterior para permitir correção
+              idempotencyKeyRef.current = null;
+           }
+        }
+        
+        throw new Error(rpcErr.message || "Não foi possível registrar a compra. Confirme a empresa ativa e tente novamente.");
       }
 
       return { count: payablesPayload.length, edit: false };
     },
     onSuccess: (r) => {
+      if (isPilotEnabled && !isEdit) {
+        setPilotState('confirmed');
+        idempotencyKeyRef.current = null; // Sucesso confirmado: limpa a chave
+      }
       if (r.edit) toast.success("Compra atualizada com sucesso.");
       else toast.success(`Compra registrada! ${r.count} conta(s) a pagar gerada(s) e estoque atualizado.`);
       onDone();
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => {
+      // toast.error já é chamado aqui
+      toast.error(e.message);
+    },
   });
+
+  const handleSave = () => {
+     if (save.isPending) return; // Double-click guard lógico
+     
+     if (isPilotEnabled && !isEdit) {
+        // Se já tivemos uma falha ambígua, mantemos a mesma chave
+        if (pilotState === 'idle' || pilotState === 'definitive_failure' || pilotState === 'cancelled') {
+           idempotencyKeyRef.current = crypto.randomUUID();
+           setPilotState('prepared');
+        }
+        setPilotState('submitting');
+     }
+     
+     save.mutate();
+  };
+
+  const handleCancel = () => {
+    if (isPilotEnabled && !isEdit) {
+      setPilotState('cancelled');
+      idempotencyKeyRef.current = null;
+    }
+    onDone();
+  };
 
 
   return (
