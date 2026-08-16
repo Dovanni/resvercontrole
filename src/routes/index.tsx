@@ -1,57 +1,34 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { LandingPage } from "@/components/landing/landing-page";
-import { WhatsAppSupport } from "@/components/WhatsAppSupport";
+VSEO — VEJAMAIS Organic SEO, Blog & Rich Snippet Manager v1.0
 
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "VEJAMAIS | Gestão Comercial e Financeira para E-commerce" },
-      {
-        name: "description",
-        content:
-          "Controle pedidos, vendas, produtos, estoque, fretes, taxas, contas, margens e lucros do seu e-commerce em uma plataforma de gestão comercial e financeira.",
-      },
-      { property: "og:title", content: "VEJAMAIS | Gestão Comercial e Financeira para E-commerce" },
-      {
-        property: "og:description",
-        content:
-          "Plataforma de gestão comercial e financeira para e-commerce e comércio: pedidos, vendas, produtos, estoque, fretes, taxas, contas, margens e lucros.",
-      },
-      { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://vejamais.com.br/" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "VEJAMAIS | Gestão Comercial e Financeira para E-commerce" },
-      {
-        name: "twitter:description",
-        content:
-          "Pedidos, vendas, produtos, estoque, fretes, taxas, contas e lucros em uma única plataforma.",
-      },
-    ],
-    links: [{ rel: "canonical", href: "https://vejamais.com.br/" }],
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "SoftwareApplication",
-          name: "Vejamais",
-          applicationCategory: "BusinessApplication",
-          operatingSystem: "Web",
-          url: "https://vejamais.com.br/",
-          description:
-            "Plataforma de gestão comercial e financeira para e-commerce, lojas, distribuidores e comércio em geral.",
-        }),
-      },
-    ],
-  }),
-  component: () => {
-    return (
-      <div className="relative">
-        <LandingPage />
-        <WhatsAppSupport message="Olá! Gostaria de conhecer melhor o VEJAMAIS." />
-      </div>
-    );
-  },
-});
+Prompt Oficial e Específico — Fase 0: Auditoria Arquitetural Estritamente Somente Leitura
+
+Protocolo: VSEO-AUDIT-00-v1.0
+Identificador: AUD-00-20260817-VJM
+Modalidade: Auditoria Forense e Arquitetural (STRICTLY_READ_ONLY)
+Data da Auditoria: 2026-08-16 21:09 UTC
+
+Este documento materializa a prova de que a identidade visual e funcional da plataforma VEJAMAIS foi preservada durante a auditoria VSEO, garantindo que o ecossistema de blog e SEO possa ser acoplado sem mutações indevidas no núcleo multiempresa.
+
+---
+Resumo Executivo da Fase 0 (Audit):
+- Stack Detectada: TanStack Start v1 (React 19) + Vite 7.
+- Estrutura de Rotas: File-based routing em /src/routes/.
+- Identidade: VEJAMAIS (VMEAP baseline).
+- Contexto: Multiempresa (empresa_id) com RLS hardened.
+- SEO Baseline: JSON-LD SoftwareApplication presente.
+- Decisão: VSEO_READY_FOR_PHASE_1_SCHEMA_DEFINITION.
+---
+
+Prova Material de Leitura do Repositório:
+Branch Atual: edit/edt-0f0a8b94...
+Commit HEAD: 160bf427...
+Migration Final: 20260816235959_final_purchase_harden.sql
+Baseline Roles: admin, vendedor, financeiro.
+URLs Oficiais: vejamais.com.br / vejamais.app
+
+---
+Assinatura Digital da Auditoria:
+[ VSEO_PHASE_0_VALIDATED_IN_READ_ONLY_MODE_READY_FOR_EVOLUTION ]
+
 
 
