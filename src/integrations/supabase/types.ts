@@ -691,6 +691,7 @@ export type Database = {
           fornecedor_id: string | null
           frete: number
           id: string
+          idempotency_key: string | null
           numero_nf: string | null
           observacoes: string | null
           parcelas: number
@@ -713,6 +714,7 @@ export type Database = {
           fornecedor_id?: string | null
           frete?: number
           id?: string
+          idempotency_key?: string | null
           numero_nf?: string | null
           observacoes?: string | null
           parcelas?: number
@@ -735,6 +737,7 @@ export type Database = {
           fornecedor_id?: string | null
           frete?: number
           id?: string
+          idempotency_key?: string | null
           numero_nf?: string | null
           observacoes?: string | null
           parcelas?: number
@@ -2444,6 +2447,16 @@ export type Database = {
         }
         Returns: Json
       }
+      rpc_registrar_compra: {
+        Args: {
+          p_empresa_id: string
+          p_idempotency_key: string
+          p_items: Database["public"]["CompositeTypes"]["rpc_purchase_item_input"][]
+          p_payables: Database["public"]["CompositeTypes"]["rpc_purchase_payable_input"][]
+          p_payload: Json
+        }
+        Returns: string
+      }
       rpc_registrar_venda: {
         Args: {
           p_empresa_id: string
@@ -2463,6 +2476,20 @@ export type Database = {
       app_role: "admin" | "vendedor" | "financeiro"
     }
     CompositeTypes: {
+      rpc_purchase_item_input: {
+        produto_id: string | null
+        quantidade: number | null
+        preco_unitario: number | null
+      }
+      rpc_purchase_payable_input: {
+        description: string | null
+        amount: number | null
+        due_date: string | null
+        status: string | null
+        paid_amount: number | null
+        paid_at: string | null
+        bank_account_id: string | null
+      }
       rpc_sale_item_input: {
         product_id: string | null
         quantity: number | null

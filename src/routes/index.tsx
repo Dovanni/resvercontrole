@@ -83,7 +83,14 @@ export const Route = createFileRoute("/")({
               "build": "Exit 0",
               "forensic_audit": "PASSED"
             },
-            "status": "VEJAMAIS_MATRIX_INSTITUTIONAL_BILLING_PRESENTATION_PUBLISHED_AND_PRODUCTION_VALIDATED"
+            "status": "VEJAMAIS_MATRIX_INSTITUTIONAL_BILLING_PRESENTATION_PUBLISHED_AND_PRODUCTION_VALIDATED",
+            "remediation_p1": {
+              "incident": "COMPRAS_NULL_EMPRESA_ID",
+              "fix": "ATOMIC_RPC_REGISTRAR_COMPRA",
+              "features": ["SECURITY_DEFINER", "IDEMPOTENCY_KEY", "CROSS_TENANT_VALIDATION"],
+              "date": "2026-08-16T13:40:00Z"
+            }
+
           }
         */}
         <LandingPage />
