@@ -478,6 +478,17 @@ function NovaCompraDialog({ userId, empresaId: passedEmpresaId, fornecedores, pr
   const isEdit = mode === "edit" && !!editCompra;
   const shortIdEdit = isEdit ? editCompra!.id.slice(0, 8) : "";
 
+  // Pilot Idempotency Logic
+  const isPilotEnabled = import.meta.env.VITE_ENABLE_PURCHASE_IDEMPOTENCY_PILOT === 'true';
+  const idempotencyKeyRef = useRef<string | null>(null);
+  const [pilotState, setPilotState] = useState<'idle' | 'prepared' | 'submitting' | 'ambiguous_failure' | 'definitive_failure' | 'confirmed' | 'cancelled'>('idle');
+
+  // Isolamento por empresa: se empresaId mudar, limpamos a chave do piloto
+  useEffect(() => {
+    idempotencyKeyRef.current = null;
+    setPilotState('idle');
+  }, [empresaId]);
+
   // Carrega itens existentes em modo edição
   const { data: existingItens } = useQuery({
     queryKey: ["compra_itens_edit", editCompra?.id],
