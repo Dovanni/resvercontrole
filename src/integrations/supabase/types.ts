@@ -2457,6 +2457,17 @@ export type Database = {
         }
         Returns: string
       }
+      rpc_registrar_compra_test: {
+        Args: {
+          p_empresa_id: string
+          p_idempotency_key: string
+          p_items: Database["public"]["CompositeTypes"]["rpc_purchase_item_input"][]
+          p_mock_user_id: string
+          p_payables: Database["public"]["CompositeTypes"]["rpc_purchase_payable_input"][]
+          p_payload: Json
+        }
+        Returns: string
+      }
       rpc_registrar_venda: {
         Args: {
           p_empresa_id: string
