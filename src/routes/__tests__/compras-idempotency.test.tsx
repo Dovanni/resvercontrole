@@ -77,7 +77,7 @@ describe('Purchase Idempotency Pilot Logic', () => {
 
   it('2. creates key exactly once per session', () => {
     const { result } = renderHook(() => useIdempotencyPilot('emp1', true, false));
-    let firstKey;
+    let firstKey = '';
     act(() => { 
       result.current.initiateSave((key) => { firstKey = key; return Promise.resolve(); }); 
     });
@@ -101,7 +101,7 @@ describe('Purchase Idempotency Pilot Logic', () => {
 
   it('4. supports manual retry with same key after ambiguous failure', () => {
     const { result } = renderHook(() => useIdempotencyPilot('emp1', true, false));
-    let usedKey;
+    let usedKey = '';
     act(() => { result.current.initiateSave((key) => { usedKey = key; return Promise.resolve(); }); });
     act(() => { result.current.handleRpcResult({ message: 'Network timeout' }); });
     
@@ -198,11 +198,11 @@ describe('Purchase Idempotency Pilot Logic', () => {
 
   it('14. retry uses same key after lock release', () => {
     const { result } = renderHook(() => useIdempotencyPilot('emp1', true, false));
-    let firstKey;
+    let firstKey = '';
     act(() => { result.current.initiateSave((key) => { firstKey = key; return Promise.resolve(); }); });
     act(() => { result.current.handleRpcResult({ message: 'timeout' }); });
     
-    let secondKey;
+    let secondKey = '';
     act(() => { result.current.initiateSave((key) => { secondKey = key; return Promise.resolve(); }); });
     expect(secondKey).toBe(firstKey);
   });
