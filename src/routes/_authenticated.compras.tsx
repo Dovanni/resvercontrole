@@ -801,7 +801,7 @@ function NovaCompraDialog({ userId, empresaId: passedEmpresaId, fornecedores, pr
         p_payload: purchasePayload,
         p_items: itemsPayload,
         p_payables: payablesPayload,
-        p_idempotency_key: crypto.randomUUID(),
+        p_idempotency_key: `compra_${empresaId}_${f.fornecedor_id}_${f.data_compra}_${subtotal}_${Date.now()}`,
       });
 
       if (rpcErr) {
