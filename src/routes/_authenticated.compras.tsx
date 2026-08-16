@@ -1023,11 +1023,17 @@ function NovaCompraDialog({ userId, empresaId: passedEmpresaId, fornecedores, pr
         </div>
 
         <div><Label>Observações</Label><Textarea value={f.observacoes} onChange={(e) => setF({ ...f, observacoes: e.target.value })} /></div>
+        
+        {isPilotEnabled && pilotState === 'ambiguous_failure' && (
+          <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-700">
+            A resposta do servidor foi inconclusiva. A mesma chave de operação será mantida no próximo reenvio para evitar duplicidade.
+          </div>
+        )}
       </div>
 
       <DialogFooter>
-        <Button variant="outline" onClick={() => onDone()} disabled={save.isPending}>Cancelar</Button>
-        <Button onClick={() => save.mutate()} disabled={save.isPending || payablesMissing || payablesMismatch}>
+        <Button variant="outline" onClick={handleCancel} disabled={save.isPending}>Cancelar</Button>
+        <Button onClick={handleSave} disabled={save.isPending || payablesMissing || payablesMismatch}>
           {save.isPending ? (isEdit ? "Salvando alterações…" : "Salvando…") : (isEdit ? "Salvar alterações" : "Salvar compra")}
         </Button>
       </DialogFooter>
