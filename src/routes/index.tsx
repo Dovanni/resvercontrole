@@ -47,9 +47,6 @@ export const Route = createFileRoute("/")({
   component: () => {
     return (
       <div className="relative">
-        {/* 
-          VEJAMAIS_CLEAN_HOMEPAGE_RESTORED
-        */}
         <LandingPage />
         <WhatsAppSupport message="Olá! Gostaria de conhecer melhor o VEJAMAIS." />
       </div>
