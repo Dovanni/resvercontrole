@@ -51,7 +51,7 @@ function PilotDashboard() {
                 </div>
                 <div className="flex items-center gap-2 text-[10px] text-amber-600 bg-amber-50 p-2 rounded border border-amber-100 mt-2">
                   <AlertCircle className="w-3 h-3 flex-shrink-0" />
-                  <span>Meta keywords detectadas (inúteis para Google)</span>
+                  <span>Palavra-chave foco interna — não enviada ao Google</span>
                 </div>
               </div>
             </CardContent>
