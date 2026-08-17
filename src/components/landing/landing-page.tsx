@@ -78,11 +78,11 @@ function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3 md:px-6">
+      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-6">
         <a href="#top" className="flex shrink-0 items-center" aria-label="VEJAMAIS ERP — ir para o topo">
           <VejamaisLogo variant="compact" />
         </a>
-        <nav className="hidden lg:flex flex-1 items-center justify-center gap-1 overflow-hidden" aria-label="Navegação principal">
+        <nav className="hidden xl:flex flex-1 items-center justify-center gap-1 overflow-hidden" aria-label="Navegação principal">
           {NAV.map((n) => (
             <a
               key={n.href}
@@ -93,7 +93,7 @@ function Header() {
             </a>
           ))}
         </nav>
-        <div className="ml-auto hidden lg:flex shrink-0 items-center gap-4">
+        <div className="ml-auto hidden xl:flex shrink-0 items-center gap-4">
           <Link 
             to="/login" 
             className="text-sm text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
@@ -107,7 +107,7 @@ function Header() {
         </div>
         <button
           type="button"
-          className="ml-auto lg:hidden inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-secondary"
+          className="ml-auto xl:hidden inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-secondary"
           aria-label={open ? "Fechar menu" : "Abrir menu"}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
@@ -116,8 +116,8 @@ function Header() {
         </button>
       </div>
       {open && (
-        <div className="lg:hidden border-t border-border bg-background">
-          <nav className="mx-auto flex max-w-6xl flex-col px-4 py-3" aria-label="Navegação mobile">
+        <div className="xl:hidden border-t border-border bg-background">
+          <nav className="mx-auto flex max-w-7xl flex-col px-4 py-3" aria-label="Navegação mobile">
             {NAV.map((n) => (
               <a
                 key={n.href}
