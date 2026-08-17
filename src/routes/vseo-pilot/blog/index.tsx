@@ -18,8 +18,9 @@ function PilotBlogIndex() {
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       <div className="text-center space-y-2">
-        <h1 className="text-4xl font-extrabold tracking-tight">Blog VEJAMAIS</h1>
-        <p className="text-xl text-muted-foreground">Conteúdo educativo sobre gestão e tecnologia (Demonstração)</p>
+        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">Blog VEJAMAIS ERP</h1>
+        <p className="text-xl text-muted-foreground">Conteúdo educativo sobre gestão e tecnologia</p>
+
       </div>
 
       <div className="grid gap-8">

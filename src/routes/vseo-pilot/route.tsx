@@ -5,8 +5,9 @@ export const Route = createFileRoute('/vseo-pilot')({
   component: PilotLayout,
   head: () => ({
     meta: [
-      { name: 'robots', content: 'noindex, nofollow, noarchive' },
-      { title: 'VSEO Pilot Dashboard | VEJAMAIS' }
+      { name: 'robots', content: 'noindex, nofollow, noarchive, nosnippet' },
+      { title: 'VSEO — VEJAMAIS ERP Organic SEO, Blog & Rich Snippet Manager v1.0' }
+
     ]
   })
 });

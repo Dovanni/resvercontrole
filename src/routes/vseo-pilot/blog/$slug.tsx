@@ -95,33 +95,88 @@ function PilotArticleView() {
         </div>
       </footer>
       
-      {/* JSON-LD Script Block (Visible in Inspector for Validation) */}
+      {/* SEO & Rich Snippets Visualization Section */}
+      <section className="mt-16 p-6 bg-slate-50 rounded-2xl border border-slate-200 space-y-6">
+        <h4 className="text-sm font-bold uppercase tracking-widest text-slate-400">Inspeção Técnica VSEO</h4>
+        
+        <div className="grid gap-4 text-xs">
+          <div className="p-3 bg-white rounded border border-slate-200">
+            <span className="font-bold block mb-1">Rich Snippet: BreadcrumbList</span>
+            <code className="text-[10px] text-slate-600">
+              Início &gt; Blog &gt; {article.title}
+            </code>
+          </div>
+          
+          <div className="p-3 bg-white rounded border border-slate-200">
+            <span className="font-bold block mb-1">Rich Snippet: BlogPosting</span>
+            <div className="text-[10px] text-slate-500 space-y-1">
+              <p>Type: BlogPosting</p>
+              <p>Publisher: VEJAMAIS ERP</p>
+              <p>Headline: {article.title}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* JSON-LD Script Block (Safe Implementation) */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "BlogPosting",
-            "headline": article.title,
-            "description": article.metaDescription,
-            "author": {
-              "@type": "Person",
-              "name": article.author
+          __html: JSON.stringify([
+            {
+              "@context": "https://schema.org",
+              "@type": "BlogPosting",
+              "headline": article.title,
+              "description": article.metaDescription,
+              "image": "https://vejamais.com.br/placeholder-blog.jpg",
+              "author": {
+                "@type": "Person",
+                "name": article.author
+              },
+              "publisher": {
+                "@type": "Organization",
+                "name": "VEJAMAIS ERP",
+                "logo": {
+                  "@type": "ImageObject",
+                  "url": "https://vejamais.com.br/logo.png"
+                }
+              },
+              "datePublished": article.publishedAt,
+              "dateModified": article.updatedAt,
+              "mainEntityOfPage": {
+                "@type": "WebPage",
+                "@id": `https://vejamais.com.br/vseo-pilot/blog/${article.slug}`
+              },
+              "inLanguage": "pt-BR"
             },
-            "publisher": {
-              "@type": "Organization",
-              "name": "VEJAMAIS"
-            },
-            "datePublished": article.publishedAt,
-            "dateModified": article.updatedAt,
-            "mainEntityOfPage": {
-              "@type": "WebPage",
-              "@id": `https://vejamais.com.br/vseo-pilot/blog/${article.slug}`
-            },
-            "inLanguage": "pt-BR"
-          })
+            {
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              "itemListElement": [
+                {
+                  "@type": "ListItem",
+                  "position": 1,
+                  "name": "Início",
+                  "item": "https://vejamais.com.br"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 2,
+                  "name": "Blog",
+                  "item": "https://vejamais.com.br/vseo-pilot/blog"
+                },
+                {
+                  "@type": "ListItem",
+                  "position": 3,
+                  "name": article.title,
+                  "item": `https://vejamais.com.br/vseo-pilot/blog/${article.slug}`
+                }
+              ]
+            }
+          ])
         }}
       />
+
     </article>
   );
 }
