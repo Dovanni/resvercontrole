@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { MOCK_ARTICLES } from '@/features/vseo-pilot/mockArticles';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, User } from 'lucide-react';
+import { Calendar, User, FileText } from 'lucide-react';
 
 export const Route = createFileRoute('/vseo-pilot/blog/')({
   component: PilotBlogIndex,
