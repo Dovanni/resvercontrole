@@ -7,6 +7,7 @@ type Props = {
   showTagline?: boolean;
   wordmarkClassName?: string;
   taglineClassName?: string;
+  variant?: "default" | "compact";
 };
 
 export function VejamaisMark({ className, size = 40 }: { className?: string; size?: number }) {
