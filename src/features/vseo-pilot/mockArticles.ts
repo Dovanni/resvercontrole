@@ -17,6 +17,8 @@ export interface MockArticle {
   imageAlt: string;
   status: 'draft' | 'published';
   visibility: 'public' | 'private';
+  seoScore: number;
+  lastUpdate: string;
 }
 
 export const MOCK_ARTICLES: MockArticle[] = [
@@ -47,6 +49,8 @@ export const MOCK_ARTICLES: MockArticle[] = [
     imageAlt: 'Gráfico representativo de fluxo de caixa em e-commerce',
     status: 'draft',
     visibility: 'public',
+    seoScore: 88,
+    lastUpdate: '17 Ago, 2026'
   },
   {
     id: '2',
@@ -75,6 +79,8 @@ export const MOCK_ARTICLES: MockArticle[] = [
     imageAlt: 'Depósito organizado com prateleiras e etiquetas',
     status: 'draft',
     visibility: 'public',
+    seoScore: 82,
+    lastUpdate: '17 Ago, 2026'
   },
   {
     id: '3',
@@ -103,5 +109,7 @@ export const MOCK_ARTICLES: MockArticle[] = [
     imageAlt: 'Painel de controle exibindo múltiplas unidades de negócio',
     status: 'draft',
     visibility: 'public',
+    seoScore: 85,
+    lastUpdate: '17 Ago, 2026'
   },
 ];
