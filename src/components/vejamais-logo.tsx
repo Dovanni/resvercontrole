@@ -41,16 +41,28 @@ export function VejamaisLogo({
   showTagline = false,
   wordmarkClassName,
   taglineClassName,
+  variant = "default",
 }: Props) {
+  const isCompact = variant === "compact";
+
   return (
     <div className={cn("inline-flex items-center gap-2.5", className)}>
-      <VejamaisMark size={size} className="rounded-xl shadow-glow" />
+      <VejamaisMark
+        size={isCompact ? 34 : size}
+        className={cn("rounded-xl shadow-glow", isCompact && "rounded-lg")}
+      />
       {showWordmark && (
-        <div className="flex flex-col leading-none">
-          <span className={cn("font-display text-2xl tracking-tight text-foreground", wordmarkClassName)}>
+        <div className={cn("flex leading-none", isCompact ? "flex-row items-center" : "flex-col")}>
+          <span
+            className={cn(
+              "font-display tracking-tight text-foreground",
+              isCompact ? "text-xl" : "text-2xl",
+              wordmarkClassName,
+            )}
+          >
             VEJAMAIS ERP
           </span>
-          {showTagline && (
+          {showTagline && !isCompact && (
             <span
               className={cn(
                 "mt-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground",
