@@ -17,7 +17,8 @@ import {
   AlertTriangle,
   Info,
   Check,
-  ChevronRight
+  ChevronRight,
+  Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PilotBadge } from '@/components/vseo-pilot/PilotUI';
