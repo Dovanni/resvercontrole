@@ -29,7 +29,7 @@ function PilotLayout() {
               Dashboard
             </Link>
             <Link to="/vseo-pilot/blog" className="text-sm font-medium hover:text-primary transition-colors [&.active]:text-primary">
-              Blog Mocks
+              Blog Piloto
             </Link>
           </nav>
         </div>

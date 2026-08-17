@@ -32,16 +32,16 @@ export const MOCK_ARTICLES: MockArticle[] = [
       <h3>Entradas e Saídas</h3>
       <p>O registro meticuloso de cada venda e de cada despesa operacional é o primeiro passo para o sucesso. Sem isso, a previsibilidade financeira torna-se impossível.</p>
       
-      <h3>Visão Consolidada com VEJAMAIS</h3>
-      <p>Utilizar uma plataforma que oferece visão consolidada permite identificar gargalos e oportunidades de investimento em tempo real. O VEJAMAIS ajuda a centralizar essas informações, permitindo que você foque no crescimento do negócio.</p>
+      <h3>Visão Consolidada com VEJAMAIS ERP</h3>
+      <p>Utilizar uma plataforma que oferece visão consolidada permite identificar gargalos e oportunidades de investimento em tempo real. O VEJAMAIS ERP ajuda a centralizar essas informações, permitindo que você foque no crescimento do negócio.</p>
     `,
     category: 'Financeiro',
     tags: ['fluxo de caixa', 'e-commerce', 'gestão'],
-    author: 'Equipe Editorial VEJAMAIS — Conteúdo Piloto',
+    author: 'Equipe Editorial VEJAMAIS ERP — Conteúdo Piloto',
     publishedAt: '2026-08-17T10:00:00Z',
     updatedAt: '2026-08-17T10:00:00Z',
-    metaTitle: 'Como Organizar Fluxo de Caixa para E-commerce | VEJAMAIS',
-    metaDescription: 'Guia prático sobre gestão de entradas, saídas e previsibilidade financeira para e-commerce. Veja como centralizar informações com VEJAMAIS.',
+    metaTitle: 'Como Organizar Fluxo de Caixa para E-commerce | VEJAMAIS ERP',
+    metaDescription: 'Guia prático sobre gestão de entradas, saídas e previsibilidade financeira para e-commerce. Veja como centralizar informações com VEJAMAIS ERP.',
     focusKeyword: 'fluxo de caixa e-commerce',
     relatedKeywords: ['gestão financeira', 'contas a pagar', 'previsibilidade'],
     imageAlt: 'Gráfico representativo de fluxo de caixa em e-commerce',
@@ -61,15 +61,15 @@ export const MOCK_ARTICLES: MockArticle[] = [
       <p>Cada entrada de mercadoria deve ser registrada imediatamente. A conferência rigorosa no momento do recebimento previne erros em cascata.</p>
       
       <h3>Prevenção de Duplicidades</h3>
-      <p>O VEJAMAIS utiliza mecanismos de proteção contra duplicidades no registro de compras, garantindo que seu estoque reflita a realidade física da empresa. Indicadores operacionais claros ajudam a manter o controle total.</p>
+      <p>O VEJAMAIS ERP utiliza mecanismos de proteção contra duplicidades no registro de compras, garantindo que seu estoque reflita a realidade física da empresa. Indicadores operacionais claros ajudam a manter o controle total.</p>
     `,
     category: 'Operacional',
     tags: ['estoque', 'inventário', 'compras'],
-    author: 'Equipe Editorial VEJAMAIS — Conteúdo Piloto',
+    author: 'Equipe Editorial VEJAMAIS ERP — Conteúdo Piloto',
     publishedAt: '2026-08-17T11:00:00Z',
     updatedAt: '2026-08-17T11:00:00Z',
-    metaTitle: 'Gestão de Estoque: Evite Divergências | VEJAMAIS',
-    metaDescription: 'Descubra como manter seu estoque fiel à realidade. Dicas sobre registro de compras e prevenção de duplicidades com VEJAMAIS.',
+    metaTitle: 'Gestão de Estoque: Evite Divergências | VEJAMAIS ERP',
+    metaDescription: 'Descubra como manter seu estoque fiel à realidade. Dicas sobre registro de compras e prevenção de duplicidades com VEJAMAIS ERP.',
     focusKeyword: 'divergências no estoque',
     relatedKeywords: ['gestão de inventário', 'indicadores operacionais', 'compras'],
     imageAlt: 'Depósito organizado com prateleiras e etiquetas',
@@ -88,16 +88,16 @@ export const MOCK_ARTICLES: MockArticle[] = [
       <h3>Isolamento e Segurança</h3>
       <p>O isolamento entre empresas é crítico. Cada unidade deve ter seus dados protegidos, enquanto a gestão central mantém a visão consolidada necessária para a tomada de decisão.</p>
       
-      <h3>Papéis e Permissões no VEJAMAIS</h3>
-      <p>Com o sistema multiempresa do VEJAMAIS, você define papéis e permissões específicos para cada usuário em cada empresa, garantindo que a informação certa esteja nas mãos das pessoas certas com total segurança.</p>
+      <h3>Papéis e Permissões no VEJAMAIS ERP</h3>
+      <p>Com o sistema multiempresa do VEJAMAIS ERP, você define papéis e permissões específicos para cada usuário em cada empresa, garantindo que a informação certa esteja nas mãos das pessoas certas com total segurança.</p>
     `,
     category: 'Administrativo',
     tags: ['multiempresa', 'segurança', 'gestão'],
-    author: 'Equipe Editorial VEJAMAIS — Conteúdo Piloto',
+    author: 'Equipe Editorial VEJAMAIS ERP — Conteúdo Piloto',
     publishedAt: '2026-08-17T12:00:00Z',
     updatedAt: '2026-08-17T12:00:00Z',
-    metaTitle: 'Gestão Multiempresa Segura e Centralizada | VEJAMAIS',
-    metaDescription: 'Saiba como centralizar a gestão de várias empresas com segurança. Entenda o isolamento de dados e papéis no VEJAMAIS.',
+    metaTitle: 'Gestão Multiempresa Segura e Centralizada | VEJAMAIS ERP',
+    metaDescription: 'Saiba como centralizar a gestão de várias empresas com segurança. Entenda o isolamento de dados e papéis no VEJAMAIS ERP.',
     focusKeyword: 'gestão multiempresa',
     relatedKeywords: ['isolamento de dados', 'visão consolidada', 'permissões'],
     imageAlt: 'Painel de controle exibindo múltiplas unidades de negócio',
