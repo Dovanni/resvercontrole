@@ -149,12 +149,13 @@ function ResetPasswordPage() {
           <div className="mx-auto mb-4 flex justify-center">
             <VejamaisMark size={64} className="rounded-2xl shadow-glow" />
           </div>
-          <h1 className="font-display text-3xl text-foreground">
-            {hasPending ? "Ative sua conta" : "Redefinir senha"}
+          <h1 className="font-display text-4xl text-foreground">
+            VEJAMAIS ERP
           </h1>
+          <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Gestão Comercial e Financeira — VEJAMAIS ERP</p>
           <p className="mt-2 text-sm text-muted-foreground">
             {state === "checking" && "Validando o link de redefinição..."}
-            {state === "ready" && "Defina sua nova senha de acesso à VEJAMAIS."}
+            {state === "ready" && (hasPending ? "Defina sua senha para ativar sua conta na VEJAMAIS ERP." : "Defina sua nova senha de acesso à VEJAMAIS ERP.")}
             {state === "invalid" && (errorMessage || "Este link é inválido ou já foi utilizado.")}
             {state === "saving" && "Salvando sua nova senha..."}
             {state === "success" && "Senha salva! Redirecionando..."}

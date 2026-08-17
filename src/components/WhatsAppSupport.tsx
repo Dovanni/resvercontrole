@@ -8,7 +8,7 @@ interface WhatsAppSupportProps {
 }
 
 export function WhatsAppSupport({ 
-  message = "Olá! Preciso de ajuda com o VEJAMAIS.", 
+  message = "Olá! Preciso de ajuda com o VEJAMAIS ERP.", 
   variant = "floating",
   className = "" 
 }: WhatsAppSupportProps) {
@@ -23,7 +23,7 @@ export function WhatsAppSupport({
         target="_blank"
         rel="noopener noreferrer"
         className={`text-primary hover:underline font-medium text-sm inline-flex items-center gap-2 ${className}`}
-        aria-label="Falar com o suporte VEJAMAIS pelo WhatsApp"
+        aria-label="Falar com o suporte VEJAMAIS ERP pelo WhatsApp"
       >
         <MessageCircle className="size-4" />
         Precisa de ajuda? Fale conosco pelo WhatsApp
@@ -37,7 +37,7 @@ export function WhatsAppSupport({
       target="_blank"
       rel="noopener noreferrer"
       className={`fixed bottom-20 right-6 z-50 flex items-center justify-center size-12 rounded-full bg-[#25D366] hover:bg-[#20BA56] text-white shadow-lg hover:shadow-xl transition-all active:scale-95 border-none md:bottom-8 md:right-8 print:hidden ${className}`}
-      aria-label="Falar com o suporte VEJAMAIS pelo WhatsApp"
+      aria-label="Falar com o suporte VEJAMAIS ERP pelo WhatsApp"
     >
       <MessageCircle className="size-6" />
     </a>

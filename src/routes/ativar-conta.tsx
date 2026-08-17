@@ -10,7 +10,7 @@ import { ShieldCheck, Loader2, CheckCircle2, XCircle, RefreshCcw } from "lucide-
 import { useQueryClient } from "@tanstack/react-query";
 
 export const Route = createFileRoute("/ativar-conta")({
-  head: () => ({ meta: [{ title: "Ativando sua conta — Vejamais" }] }),
+  head: () => ({ meta: [{ title: "Ativando sua conta — VEJAMAIS ERP" }] }),
   component: ActivationPage,
 });
 
@@ -40,7 +40,7 @@ function ActivationPage() {
         }
         
         setState("success");
-        toast.success("Empresa configurada com sucesso!");
+        toast.success("Empresa configurada com sucesso na VEJAMAIS ERP!");
         
         setTimeout(() => {
           navigate({ to: "/minha-empresa", replace: true });
@@ -77,7 +77,8 @@ function ActivationPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <VejamaisMark size={64} className="mx-auto mb-4 rounded-2xl shadow-glow" />
-          <h1 className="font-display text-3xl text-foreground">Configurando sua conta</h1>
+          <h1 className="font-display text-4xl text-foreground">VEJAMAIS ERP</h1>
+          <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Gestão Comercial e Financeira — VEJAMAIS ERP</p>
           {userEmail && (
             <p className="mt-2 text-sm text-muted-foreground italic">
               {userEmail}
@@ -89,7 +90,7 @@ function ActivationPage() {
           {state === "checking" && (
             <>
               <Loader2 className="h-12 w-12 text-primary animate-spin" />
-              <p className="text-center text-muted-foreground">Verificando convite...</p>
+              <p className="text-center text-muted-foreground">Verificando convite na VEJAMAIS ERP...</p>
             </>
           )}
 
@@ -135,7 +136,7 @@ function ActivationPage() {
 
           <div className="w-full bg-muted/30 p-4 rounded-xl text-[10px] text-muted-foreground flex items-start gap-3">
             <ShieldCheck className="h-4 w-4 text-primary shrink-0" />
-            <p>Sua segurança é nossa prioridade. Este processo garante que sua empresa seja provisionada exclusivamente para seu acesso.</p>
+            <p>Sua segurança é nossa prioridade. Este processo garante que sua empresa seja provisionada exclusivamente para seu acesso na VEJAMAIS ERP.</p>
           </div>
         </div>
       </div>

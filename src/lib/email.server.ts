@@ -11,7 +11,7 @@ export async function sendMail({ to, subject, html, attachments }: {
   const user = process.env['SMTP_USER'];
   const pass = process.env['SMTP_PASSWORD'];
   const fromEmail = process.env['SMTP_FROM_EMAIL'];
-  const fromName = process.env['SMTP_FROM_NAME'] || 'VEJAMAIS';
+  const fromName = process.env['SMTP_FROM_NAME'] || 'VEJAMAIS ERP';
 
   if (!host || !user || !pass || !fromEmail) {
     throw new Error("Configuração SMTP incompleta.");

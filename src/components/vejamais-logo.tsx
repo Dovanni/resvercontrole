@@ -18,7 +18,7 @@ export function VejamaisMark({ className, size = 40 }: { className?: string; siz
       height={size}
       className={cn("shrink-0", className)}
       role="img"
-      aria-label="Vejamais"
+      aria-label="VEJAMAIS ERP"
     >
       <defs>
         <linearGradient id="vjm-mark-bg" x1="0" y1="0" x2="1" y2="1">
@@ -47,7 +47,7 @@ export function VejamaisLogo({
       {showWordmark && (
         <div className="flex flex-col leading-none">
           <span className={cn("font-display text-2xl tracking-tight text-foreground", wordmarkClassName)}>
-            Vejamais
+            VEJAMAIS ERP
           </span>
           {showTagline && (
             <span

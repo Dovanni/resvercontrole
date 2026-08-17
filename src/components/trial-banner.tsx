@@ -105,8 +105,8 @@ export function TrialBanner() {
   const modalContent = {
     title: displayRemainingDays === 0 ? "Sua avaliação gratuita terminou" : "Sua avaliação está em andamento",
     message: displayRemainingDays === 0 
-      ? "Conheça o Plano Empresarial para continuar utilizando todos os recursos da VEJAMAIS."
-      : `Restam ${displayRemainingDays} ${displayRemainingDays === 1 ? 'dia' : 'dias'} para aproveitar todos os recursos da VEJAMAIS.`,
+      ? "Conheça o Plano Empresarial para continuar utilizando todos os recursos da VEJAMAIS ERP."
+      : `Restam ${displayRemainingDays} ${displayRemainingDays === 1 ? 'dia' : 'dias'} para aproveitar todos os recursos da VEJAMAIS ERP.`,
     showDate: displayRemainingDays > 0,
   };
 

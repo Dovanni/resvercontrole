@@ -89,8 +89,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="px-6 py-6 flex items-center gap-2.5">
           <VejamaisMark size={36} className="rounded-xl shadow-glow" />
           <div className="flex flex-col leading-none">
-            <span className="font-display text-2xl">Vejamais</span>
-            <span className="mt-1 text-[9px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Gestão Comercial e Financeira</span>
+            <span className="font-display text-2xl">VEJAMAIS ERP</span>
+            <span className="mt-1 text-[9px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Gestão Comercial e Financeira — VEJAMAIS ERP</span>
           </div>
         </div>
         
@@ -134,7 +134,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <header className="border-b px-4 py-3 flex items-center justify-between bg-sidebar md:bg-background md:border-transparent">
           <div className="flex items-center gap-2 md:hidden">
             <VejamaisMark size={32} className="rounded-lg" />
-            <span className="font-display text-xl">Vejamais</span>
+            <span className="font-display text-xl">VEJAMAIS ERP</span>
           </div>
           <div className="md:ml-auto flex items-center gap-2">
             <div className="hidden md:block">
@@ -156,7 +156,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <SheetHeader className="px-4 py-4 border-b text-left">
                   <SheetTitle className="flex items-center gap-2">
                     <VejamaisMark size={28} className="rounded-lg" />
-                    <span className="font-display text-lg">Vejamais</span>
+                    <span className="font-display text-lg">VEJAMAIS ERP</span>
                   </SheetTitle>
                   {user?.email && (
                     <div className="text-xs text-muted-foreground truncate">{user.email}</div>

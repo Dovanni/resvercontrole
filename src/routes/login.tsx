@@ -18,7 +18,7 @@ import { secureSignIn, completeSignInSuccess } from "@/lib/auth-security.functio
 import { MathChallengeField } from "@/components/math-challenge";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Entrar — Vejamais" }] }),
+  head: () => ({ meta: [{ title: "Entrar — VEJAMAIS ERP" }] }),
   component: LoginPage,
 });
 
@@ -156,9 +156,9 @@ function LoginPage() {
             <VejamaisMark size={64} className="rounded-2xl shadow-glow" />
           </div>
           <h1 className="font-display text-4xl text-foreground">
-            VEJAMAIS
+            VEJAMAIS ERP
           </h1>
-          <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Gestão Comercial e Financeira</p>
+          <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Gestão Comercial e Financeira — VEJAMAIS ERP</p>
         </div>
 
         <div className="rounded-2xl bg-card shadow-soft border p-6">
@@ -223,11 +223,11 @@ function LoginPage() {
             <div className="pt-2 flex justify-center border-t mt-4">
               <Link
                 to="/"
-                aria-label="Voltar para o Vejamais"
+                aria-label="Voltar para a homepage da VEJAMAIS ERP"
                 className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
               >
                 <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-                Voltar para o Vejamais
+                Voltar para o VEJAMAIS ERP
               </Link>
             </div>
           </form>

@@ -79,10 +79,10 @@ function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3 md:px-6">
-        <a href="#top" className="flex items-center gap-2.5" aria-label="Vejamais — ir para o topo">
+        <a href="#top" className="flex items-center gap-2.5" aria-label="VEJAMAIS ERP — ir para o topo">
           <VejamaisMark size={34} className="rounded-lg shadow-glow" />
           <div className="flex flex-col leading-none">
-            <span className="font-display text-xl">Vejamais</span>
+            <span className="font-display text-xl">VEJAMAIS ERP</span>
             <span className="mt-0.5 text-[9px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
               Gestão Comercial e Financeira
             </span>
@@ -171,7 +171,7 @@ function Hero() {
             className="mt-5 font-sans text-[2.35rem] font-extrabold text-petrol sm:text-[2.8rem] md:text-[2.8rem] lg:text-[3.15rem] xl:text-[3.4rem]"
             style={{ lineHeight: 1.0, letterSpacing: "-0.035em", fontWeight: 800 }}
           >
-            A <span className="text-primary-deep">VEJAMAIS</span> reinventou a gestão comercial e
+            A <span className="text-primary-deep">VEJAMAIS ERP</span> reinventou a gestão comercial e
             financeira.
           </h1>
 
@@ -272,7 +272,7 @@ function HeroComposition() {
           sizes="(max-width: 767px) 380px, (max-width: 1279px) 46vw, 620px"
           width={1024}
           height={1024}
-          alt="Empreendedora apresenta no celular indicadores de vendas, saldo e lucro do VEJAMAIS."
+          alt="Empreendedora apresenta no celular indicadores de vendas, saldo e lucro do VEJAMAIS ERP."
           className="relative mx-auto aspect-square w-full max-w-[380px] select-none md:max-w-none"
           style={{ filter: "drop-shadow(0 18px 26px rgba(11,47,58,0.18))" }}
           fetchPriority="high"
@@ -405,7 +405,7 @@ function Benefits() {
       id="beneficios"
       eyebrow="Benefícios"
       title="Clareza que se traduz em rotina."
-      subtitle="O que você ganha ao centralizar sua gestão no Vejamais."
+      subtitle="O que você ganha ao centralizar sua gestão no VEJAMAIS ERP."
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {BENEFITS.map((b) => (
