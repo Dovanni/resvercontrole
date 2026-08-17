@@ -86,7 +86,7 @@ function RecoveryPage() {
           <h1 className="font-display text-4xl text-foreground">
             VEJAMAIS ERP
           </h1>
-          <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Gestão Comercial e Financeira</p>
+          <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Gestão Comercial e Financeira — VEJAMAIS ERP</p>
         </div>
 
         <div className="rounded-2xl bg-card shadow-soft border p-6">

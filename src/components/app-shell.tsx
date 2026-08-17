@@ -90,7 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <VejamaisMark size={36} className="rounded-xl shadow-glow" />
           <div className="flex flex-col leading-none">
             <span className="font-display text-2xl">VEJAMAIS ERP</span>
-            <span className="mt-1 text-[9px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Gestão Comercial e Financeira</span>
+            <span className="mt-1 text-[9px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Gestão Comercial e Financeira — VEJAMAIS ERP</span>
           </div>
         </div>
         

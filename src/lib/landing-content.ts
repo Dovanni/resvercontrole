@@ -10,10 +10,10 @@ export const HERO = {
   subheadline:
     "Tenha acesso completo por 30 dias. Depois, continue com o Plano Empresarial por R$ 35,90 ao mês.",
   subtitle:
-    "Centralize pedidos, vendas, produtos, estoque, taxas, fretes, contas, margens e lucros em um só lugar — com clareza para decidir e segurança para crescer.",
+    "Centralize pedidos, vendas, produtos, estoque, taxas, fretes, contas, margens e lucros em um só lugar — com a clareza do VEJAMAIS ERP para decidir e a segurança para crescer.",
   primaryCta: "Começar agora",
   secondaryCta: "Conhecer o VEJAMAIS ERP",
-  existingClientCta: "Já sou cliente — Entrar",
+  existingClientCta: "Já sou cliente VEJAMAIS ERP — Entrar",
 };
 
 

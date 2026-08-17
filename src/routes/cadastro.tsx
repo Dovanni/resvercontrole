@@ -187,7 +187,7 @@ function CadastroPage() {
           
           <div className="space-y-2 mb-6">
             <h1 className="font-display text-4xl sm:text-5xl text-foreground tracking-tight">Criar minha empresa</h1>
-            <p className="text-xs sm:text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground/80">Gestão Comercial e Financeira</p>
+            <p className="text-xs sm:text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground/80">Gestão Comercial e Financeira — VEJAMAIS ERP</p>
           </div>
 
           <div className="flex flex-col items-center gap-6 max-w-2xl mx-auto">
