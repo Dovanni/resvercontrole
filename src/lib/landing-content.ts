@@ -6,13 +6,13 @@ export const VEJAMAIS_DOMAIN = "https://vejamais.com.br";
 
 export const HERO = {
   eyebrow: "Planos",
-  title: "Comece gratuitamente e continue crescendo com o VEJAMAIS.",
+  title: "Comece gratuitamente e continue crescendo com o VEJAMAIS ERP.",
   subheadline:
     "Tenha acesso completo por 30 dias. Depois, continue com o Plano Empresarial por R$ 35,90 ao mês.",
   subtitle:
     "Centralize pedidos, vendas, produtos, estoque, taxas, fretes, contas, margens e lucros em um só lugar — com clareza para decidir e segurança para crescer.",
   primaryCta: "Começar agora",
-  secondaryCta: "Conhecer o VEJAMAIS",
+  secondaryCta: "Conhecer o VEJAMAIS ERP",
   existingClientCta: "Já sou cliente — Entrar",
 };
 
@@ -111,7 +111,7 @@ export const PLANS: Plan[] = [
     id: "essencial",
     badge: "30 DIAS GRÁTIS",
     name: "Essencial",
-    description: "Experimente todos os recursos do VEJAMAIS para organizar e acompanhar sua gestão comercial e financeira.",
+    description: "Experimente todos os recursos do VEJAMAIS ERP para organizar e acompanhar sua gestão comercial e financeira.",
     priceDisplay: "Grátis por 30 dias",
     complement: "Sem cartão para começar",
     users: "Até 5 usuários",
@@ -131,7 +131,7 @@ export const PLANS: Plan[] = [
     id: "empresarial",
     badge: "CONTINUIDADE COMPLETA",
     name: "Empresarial",
-    description: "Continue utilizando todos os recursos do VEJAMAIS após o período de avaliação.",
+    description: "Continue utilizando todos os recursos do VEJAMAIS ERP após o período de avaliação.",
     priceDisplay: "R$ 35,90",
     pricePeriod: "por mês",
     users: "Até 5 usuários",
@@ -170,12 +170,12 @@ export const SECURITY = {
 
 export const FAQ = [
   {
-    q: "O que é o Vejamais?",
+    q: "O que é o VEJAMAIS ERP?",
     a: "Uma plataforma de gestão comercial e financeira para centralizar vendas, compras, contas, fluxo de caixa e resultados do seu negócio.",
   },
   {
-    q: "O Vejamais substitui minhas planilhas?",
-    a: "O Vejamais reduz a dependência de planilhas ao concentrar as informações comerciais e financeiras em rotinas estruturadas.",
+    q: "O VEJAMAIS ERP substitui minhas planilhas?",
+    a: "O VEJAMAIS ERP reduz a dependência de planilhas ao concentrar as informações comerciais e financeiras em rotinas estruturadas.",
   },
   {
     q: "Posso controlar contas a pagar e receber?",
@@ -183,7 +183,7 @@ export const FAQ = [
   },
   {
     q: "Consigo acompanhar meu lucro?",
-    a: "O Vejamais oferece auditoria de lucro, relatórios e indicadores que apoiam a análise de resultado.",
+    a: "O VEJAMAIS ERP oferece auditoria de lucro, relatórios e indicadores que apoiam a análise de resultado.",
   },
   {
     q: "Posso cadastrar produtos, clientes e fornecedores?",
@@ -214,7 +214,7 @@ export const FAQ = [
     a: "A arquitetura está preparada para evolução multiempresa. A liberação ocorrerá quando a funcionalidade estiver tecnicamente homologada.",
   },
   {
-    q: "Qual a relação entre Vejamais e Metrixhr?",
-    a: "Vejamais e Metrixhr são soluções complementares. O Vejamais atua na organização comercial e financeira. O Metrixhr atua na gestão com inteligência humanizada de vendas, desempenho e desenvolvimento das pessoas. Não existe compartilhamento automático de dados ou sessão entre as plataformas.",
+    q: "Qual a relação entre VEJAMAIS ERP e Metrixhr?",
+    a: "VEJAMAIS ERP e Metrixhr são soluções complementares. O VEJAMAIS ERP atua na organização comercial e financeira. O Metrixhr atua na gestão com inteligência humanizada de vendas, desempenho e desenvolvimento das pessoas. Não existe compartilhamento automático de dados ou sessão entre as plataformas.",
   },
 ];
