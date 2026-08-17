@@ -78,11 +78,11 @@ function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur">
-      <div className="mx-auto flex max-w-[1240px] items-center px-5 py-3 md:px-6">
-        <a href="#top" className="flex shrink-0 items-center mr-7 xl:mr-11" aria-label="VEJAMAIS ERP — ir para o topo">
+      <div className="mx-auto flex max-w-[1240px] items-center px-4 py-3 md:px-6">
+        <a href="#top" className="flex shrink-0 items-center mr-8 xl:mr-11" aria-label="VEJAMAIS ERP — ir para o topo">
           <VejamaisLogo variant="compact" />
         </a>
-        <nav className="hidden lg:flex items-center gap-4.5 xl:gap-7 overflow-hidden" aria-label="Navegação principal">
+        <nav className="hidden lg:flex items-center gap-4 xl:gap-6 overflow-hidden" aria-label="Navegação principal">
           {NAV.map((n) => (
             <a
               key={n.href}
@@ -93,10 +93,10 @@ function Header() {
             </a>
           ))}
         </nav>
-        <div className="ml-auto hidden lg:flex shrink-0 items-center gap-3 xl:gap-4">
+        <div className="ml-auto hidden lg:flex shrink-0 items-center gap-6 xl:gap-9">
           <Link 
             to="/login" 
-            className="text-[13px] xl:text-sm text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap mr-2 xl:mr-4"
+            className="text-[13px] xl:text-sm text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
             aria-label="Entrar no VEJAMAIS ERP"
             title="Entrar no VEJAMAIS ERP"
           >
