@@ -78,36 +78,38 @@ function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 md:px-6">
+      <div className="mx-auto flex max-w-[90rem] items-center gap-2 sm:gap-4 px-2 sm:px-4 py-3 md:px-6">
         <a href="#top" className="flex shrink-0 items-center" aria-label="VEJAMAIS ERP — ir para o topo">
           <VejamaisLogo variant="compact" />
         </a>
-        <nav className="hidden xl:flex flex-1 items-center justify-center gap-1 overflow-hidden" aria-label="Navegação principal">
+        <nav className="hidden lg:flex flex-1 items-center justify-center gap-0.5 min-[1150px]:gap-1 overflow-hidden" aria-label="Navegação principal">
           {NAV.map((n) => (
             <a
               key={n.href}
               href={n.href}
-              className="rounded-md px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors whitespace-nowrap"
+              className="rounded-md px-1.5 min-[1150px]:px-3 py-2 text-[13px] min-[1150px]:text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors whitespace-nowrap"
             >
               {n.label}
             </a>
           ))}
         </nav>
-        <div className="ml-auto hidden xl:flex shrink-0 items-center gap-4">
+        <div className="ml-auto hidden lg:flex shrink-0 items-center gap-2 min-[1150px]:gap-4">
           <Link 
             to="/login" 
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
+            className="text-[13px] min-[1150px]:text-sm text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
+            aria-label="Entrar no VEJAMAIS ERP"
+            title="Entrar no VEJAMAIS ERP"
           >
             {HERO.existingClientCta}
           </Link>
 
           <Link to="/cadastro" className="shrink-0">
-            <Button size="sm" className="whitespace-nowrap">{HERO.primaryCta}</Button>
+            <Button size="sm" className="whitespace-nowrap px-3 min-[1150px]:px-4">{HERO.primaryCta}</Button>
           </Link>
         </div>
         <button
           type="button"
-          className="ml-auto xl:hidden inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-secondary"
+          className="ml-auto lg:hidden inline-flex items-center justify-center rounded-md p-2 text-foreground hover:bg-secondary"
           aria-label={open ? "Fechar menu" : "Abrir menu"}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
@@ -116,7 +118,7 @@ function Header() {
         </button>
       </div>
       {open && (
-        <div className="xl:hidden border-t border-border bg-background">
+        <div className="lg:hidden border-t border-border bg-background">
           <nav className="mx-auto flex max-w-7xl flex-col px-4 py-3" aria-label="Navegação mobile">
             {NAV.map((n) => (
               <a
