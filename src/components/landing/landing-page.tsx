@@ -78,22 +78,24 @@ function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur">
-      <div className="mx-auto flex max-w-[1240px] items-center px-5 py-3 md:px-6">
-        <a href="#top" className="flex shrink-0 items-center mr-8 xl:mr-11" aria-label="VEJAMAIS ERP — ir para o topo">
-          <VejamaisLogo variant="compact" />
-        </a>
-        <nav className="hidden lg:flex items-center gap-5 xl:gap-7 overflow-hidden" aria-label="Navegação principal">
-          {NAV.map((n) => (
-            <a
-              key={n.href}
-              href={n.href}
-              className="rounded-md px-1 py-2 text-[13px] xl:text-sm text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
-            >
-              {n.label}
-            </a>
-          ))}
-        </nav>
-        <div className="ml-auto hidden lg:flex shrink-0 items-center gap-7 xl:gap-10">
+      <div className="mx-auto flex max-w-[1240px] items-center px-4 py-3 md:px-6">
+        <div className="flex flex-1 items-center">
+          <a href="#top" className="flex shrink-0 items-center mr-8 xl:mr-11" aria-label="VEJAMAIS ERP — ir para o topo">
+            <VejamaisLogo variant="compact" />
+          </a>
+          <nav className="hidden lg:flex items-center gap-5 xl:gap-7 overflow-hidden" aria-label="Navegação principal">
+            {NAV.map((n) => (
+              <a
+                key={n.href}
+                href={n.href}
+                className="rounded-md px-1 py-2 text-[13px] xl:text-sm text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
+              >
+                {n.label}
+              </a>
+            ))}
+          </nav>
+        </div>
+        <div className="hidden lg:flex shrink-0 items-center gap-7 xl:gap-10">
           <Link 
             to="/login" 
             className="text-[13px] xl:text-sm text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
