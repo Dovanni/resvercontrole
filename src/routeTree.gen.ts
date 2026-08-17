@@ -16,9 +16,7 @@ import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AtivarContaRouteImport } from './routes/ativar-conta'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as VseoPilotRouteRouteImport } from './routes/vseo-pilot/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as VseoPilotIndexRouteImport } from './routes/vseo-pilot/index'
 import { Route as AuthenticatedVendasRouteImport } from './routes/_authenticated.vendas'
 import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated.relatorios'
 import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated.produtos'
@@ -42,9 +40,7 @@ import { Route as AuthenticatedCategoriasRouteImport } from './routes/_authentic
 import { Route as AuthenticatedCartoesCreditoRouteImport } from './routes/_authenticated.cartoes-credito'
 import { Route as AuthenticatedBiRouteImport } from './routes/_authenticated.bi'
 import { Route as AuthenticatedBalanceteRouteImport } from './routes/_authenticated.balancete'
-import { Route as VseoPilotBlogIndexRouteImport } from './routes/vseo-pilot/blog/index'
 import { Route as AuthCallbackIndexRouteImport } from './routes/auth/callback/index'
-import { Route as VseoPilotBlogSlugRouteImport } from './routes/vseo-pilot/blog/$slug'
 import { Route as AuthCallbackRecoveryRouteImport } from './routes/auth/callback/recovery'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
 import { Route as ApiPublicAcceptInvitationRouteImport } from './routes/api/public/accept-invitation'
@@ -92,20 +88,10 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const VseoPilotRouteRoute = VseoPilotRouteRouteImport.update({
-  id: '/vseo-pilot',
-  path: '/vseo-pilot',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
-const VseoPilotIndexRoute = VseoPilotIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => VseoPilotRouteRoute,
 } as any)
 const AuthenticatedVendasRoute = AuthenticatedVendasRouteImport.update({
   id: '/vendas',
@@ -231,20 +217,10 @@ const AuthenticatedBalanceteRoute = AuthenticatedBalanceteRouteImport.update({
   path: '/balancete',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const VseoPilotBlogIndexRoute = VseoPilotBlogIndexRouteImport.update({
-  id: '/blog/',
-  path: '/blog/',
-  getParentRoute: () => VseoPilotRouteRoute,
-} as any)
 const AuthCallbackIndexRoute = AuthCallbackIndexRouteImport.update({
   id: '/callback/',
   path: '/callback/',
   getParentRoute: () => AuthRoute,
-} as any)
-const VseoPilotBlogSlugRoute = VseoPilotBlogSlugRouteImport.update({
-  id: '/blog/$slug',
-  path: '/blog/$slug',
-  getParentRoute: () => VseoPilotRouteRoute,
 } as any)
 const AuthCallbackRecoveryRoute = AuthCallbackRecoveryRouteImport.update({
   id: '/callback/recovery',
@@ -318,7 +294,6 @@ const ApiPublicBillingCheckoutStatusRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/vseo-pilot': typeof VseoPilotRouteRouteWithChildren
   '/ativar-conta': typeof AtivarContaRoute
   '/auth': typeof AuthRouteWithChildren
   '/cadastro': typeof CadastroRoute
@@ -348,15 +323,12 @@ export interface FileRoutesByFullPath {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/vendas': typeof AuthenticatedVendasRoute
-  '/vseo-pilot/': typeof VseoPilotIndexRoute
   '/configuracoes/assinatura': typeof AuthenticatedConfiguracoesAssinaturaRoute
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRouteWithChildren
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
-  '/vseo-pilot/blog/$slug': typeof VseoPilotBlogSlugRoute
   '/auth/callback/': typeof AuthCallbackIndexRoute
-  '/vseo-pilot/blog/': typeof VseoPilotBlogIndexRoute
   '/api/public/billing/checkout-status': typeof ApiPublicBillingCheckoutStatusRoute
   '/api/public/billing/context': typeof ApiPublicBillingContextRoute
   '/api/public/billing/create-checkout': typeof ApiPublicBillingCreateCheckoutRoute
@@ -396,15 +368,12 @@ export interface FileRoutesByTo {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/vendas': typeof AuthenticatedVendasRoute
-  '/vseo-pilot': typeof VseoPilotIndexRoute
   '/configuracoes/assinatura': typeof AuthenticatedConfiguracoesAssinaturaRoute
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRouteWithChildren
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
-  '/vseo-pilot/blog/$slug': typeof VseoPilotBlogSlugRoute
   '/auth/callback': typeof AuthCallbackIndexRoute
-  '/vseo-pilot/blog': typeof VseoPilotBlogIndexRoute
   '/api/public/billing/checkout-status': typeof ApiPublicBillingCheckoutStatusRoute
   '/api/public/billing/context': typeof ApiPublicBillingContextRoute
   '/api/public/billing/create-checkout': typeof ApiPublicBillingCreateCheckoutRoute
@@ -416,7 +385,6 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/vseo-pilot': typeof VseoPilotRouteRouteWithChildren
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/ativar-conta': typeof AtivarContaRoute
   '/auth': typeof AuthRouteWithChildren
@@ -447,15 +415,12 @@ export interface FileRoutesById {
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/vendas': typeof AuthenticatedVendasRoute
-  '/vseo-pilot/': typeof VseoPilotIndexRoute
   '/_authenticated/configuracoes/assinatura': typeof AuthenticatedConfiguracoesAssinaturaRoute
   '/_authenticated/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRouteWithChildren
   '/auth/callback/recovery': typeof AuthCallbackRecoveryRoute
-  '/vseo-pilot/blog/$slug': typeof VseoPilotBlogSlugRoute
   '/auth/callback/': typeof AuthCallbackIndexRoute
-  '/vseo-pilot/blog/': typeof VseoPilotBlogIndexRoute
   '/api/public/billing/checkout-status': typeof ApiPublicBillingCheckoutStatusRoute
   '/api/public/billing/context': typeof ApiPublicBillingContextRoute
   '/api/public/billing/create-checkout': typeof ApiPublicBillingCreateCheckoutRoute
@@ -468,7 +433,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/vseo-pilot'
     | '/ativar-conta'
     | '/auth'
     | '/cadastro'
@@ -498,15 +462,12 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/relatorios'
     | '/vendas'
-    | '/vseo-pilot/'
     | '/configuracoes/assinatura'
     | '/configuracoes/categorias'
     | '/api/public/accept-invitation'
     | '/api/public/stripe-webhook'
     | '/auth/callback/recovery'
-    | '/vseo-pilot/blog/$slug'
     | '/auth/callback/'
-    | '/vseo-pilot/blog/'
     | '/api/public/billing/checkout-status'
     | '/api/public/billing/context'
     | '/api/public/billing/create-checkout'
@@ -546,15 +507,12 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/relatorios'
     | '/vendas'
-    | '/vseo-pilot'
     | '/configuracoes/assinatura'
     | '/configuracoes/categorias'
     | '/api/public/accept-invitation'
     | '/api/public/stripe-webhook'
     | '/auth/callback/recovery'
-    | '/vseo-pilot/blog/$slug'
     | '/auth/callback'
-    | '/vseo-pilot/blog'
     | '/api/public/billing/checkout-status'
     | '/api/public/billing/context'
     | '/api/public/billing/create-checkout'
@@ -565,7 +523,6 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/vseo-pilot'
     | '/_authenticated'
     | '/ativar-conta'
     | '/auth'
@@ -596,15 +553,12 @@ export interface FileRouteTypes {
     | '/_authenticated/produtos'
     | '/_authenticated/relatorios'
     | '/_authenticated/vendas'
-    | '/vseo-pilot/'
     | '/_authenticated/configuracoes/assinatura'
     | '/_authenticated/configuracoes/categorias'
     | '/api/public/accept-invitation'
     | '/api/public/stripe-webhook'
     | '/auth/callback/recovery'
-    | '/vseo-pilot/blog/$slug'
     | '/auth/callback/'
-    | '/vseo-pilot/blog/'
     | '/api/public/billing/checkout-status'
     | '/api/public/billing/context'
     | '/api/public/billing/create-checkout'
@@ -616,7 +570,6 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  VseoPilotRouteRoute: typeof VseoPilotRouteRouteWithChildren
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AtivarContaRoute: typeof AtivarContaRoute
   AuthRoute: typeof AuthRouteWithChildren
@@ -685,26 +638,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/vseo-pilot': {
-      id: '/vseo-pilot'
-      path: '/vseo-pilot'
-      fullPath: '/vseo-pilot'
-      preLoaderRoute: typeof VseoPilotRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/vseo-pilot/': {
-      id: '/vseo-pilot/'
-      path: '/'
-      fullPath: '/vseo-pilot/'
-      preLoaderRoute: typeof VseoPilotIndexRouteImport
-      parentRoute: typeof VseoPilotRouteRoute
     }
     '/_authenticated/vendas': {
       id: '/_authenticated/vendas'
@@ -867,26 +806,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBalanceteRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/vseo-pilot/blog/': {
-      id: '/vseo-pilot/blog/'
-      path: '/blog'
-      fullPath: '/vseo-pilot/blog/'
-      preLoaderRoute: typeof VseoPilotBlogIndexRouteImport
-      parentRoute: typeof VseoPilotRouteRoute
-    }
     '/auth/callback/': {
       id: '/auth/callback/'
       path: '/callback'
       fullPath: '/auth/callback/'
       preLoaderRoute: typeof AuthCallbackIndexRouteImport
       parentRoute: typeof AuthRoute
-    }
-    '/vseo-pilot/blog/$slug': {
-      id: '/vseo-pilot/blog/$slug'
-      path: '/blog/$slug'
-      fullPath: '/vseo-pilot/blog/$slug'
-      preLoaderRoute: typeof VseoPilotBlogSlugRouteImport
-      parentRoute: typeof VseoPilotRouteRoute
     }
     '/auth/callback/recovery': {
       id: '/auth/callback/recovery'
@@ -974,22 +899,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface VseoPilotRouteRouteChildren {
-  VseoPilotIndexRoute: typeof VseoPilotIndexRoute
-  VseoPilotBlogSlugRoute: typeof VseoPilotBlogSlugRoute
-  VseoPilotBlogIndexRoute: typeof VseoPilotBlogIndexRoute
-}
-
-const VseoPilotRouteRouteChildren: VseoPilotRouteRouteChildren = {
-  VseoPilotIndexRoute: VseoPilotIndexRoute,
-  VseoPilotBlogSlugRoute: VseoPilotBlogSlugRoute,
-  VseoPilotBlogIndexRoute: VseoPilotBlogIndexRoute,
-}
-
-const VseoPilotRouteRouteWithChildren = VseoPilotRouteRoute._addFileChildren(
-  VseoPilotRouteRouteChildren,
-)
 
 interface AuthenticatedConfiguracoesRouteChildren {
   AuthenticatedConfiguracoesAssinaturaRoute: typeof AuthenticatedConfiguracoesAssinaturaRoute
@@ -1093,7 +1002,6 @@ const ApiPublicStripeWebhookRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  VseoPilotRouteRoute: VseoPilotRouteRouteWithChildren,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AtivarContaRoute: AtivarContaRoute,
   AuthRoute: AuthRouteWithChildren,
