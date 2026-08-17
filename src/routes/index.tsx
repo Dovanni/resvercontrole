@@ -5,13 +5,13 @@ import { WhatsAppSupport } from "@/components/WhatsAppSupport";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "VEJAMAIS | Gestão Comercial e Financeira para E-commerce" },
+      { title: "VEJAMAIS ERP | Gestão Comercial e Financeira para E-commerce" },
       {
         name: "description",
         content:
           "Controle pedidos, vendas, produtos, estoque, fretes, taxas, contas, margens e lucros do seu e-commerce em uma plataforma de gestão comercial e financeira.",
       },
-      { property: "og:title", content: "VEJAMAIS | Gestão Comercial e Financeira para E-commerce" },
+      { property: "og:title", content: "VEJAMAIS ERP | Gestão Comercial e Financeira para E-commerce" },
       {
         property: "og:description",
         content:
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/")({
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://vejamais.com.br/" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "VEJAMAIS | Gestão Comercial e Financeira para E-commerce" },
+      { name: "twitter:title", content: "VEJAMAIS ERP | Gestão Comercial e Financeira para E-commerce" },
       {
         name: "twitter:description",
         content:
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/")({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "SoftwareApplication",
-          name: "Vejamais",
+          name: "VEJAMAIS ERP",
           applicationCategory: "BusinessApplication",
           operatingSystem: "Web",
           url: "https://vejamais.com.br/",
@@ -48,7 +48,7 @@ export const Route = createFileRoute("/")({
     return (
       <div className="relative">
         <LandingPage />
-        <WhatsAppSupport message="Olá! Gostaria de conhecer melhor o VEJAMAIS." />
+        <WhatsAppSupport message="Olá! Gostaria de conhecer melhor o VEJAMAIS ERP." />
       </div>
     );
   },
