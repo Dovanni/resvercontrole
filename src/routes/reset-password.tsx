@@ -154,7 +154,7 @@ function ResetPasswordPage() {
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {state === "checking" && "Validando o link de redefinição..."}
-            {state === "ready" && "Defina sua nova senha de acesso à VEJAMAIS."}
+            {state === "ready" && "Defina sua nova senha de acesso à VEJAMAIS ERP."}
             {state === "invalid" && (errorMessage || "Este link é inválido ou já foi utilizado.")}
             {state === "saving" && "Salvando sua nova senha..."}
             {state === "success" && "Senha salva! Redirecionando..."}

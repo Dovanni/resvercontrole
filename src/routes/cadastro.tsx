@@ -226,7 +226,7 @@ function CadastroPage() {
                           number="2" 
                           icon={<Rocket className="size-5" />}
                           title="Inicie sua avaliação gratuita"
-                          description="Tenha acesso aos recursos da VEJAMAIS durante o período de avaliação."
+                          description="Tenha acesso aos recursos da VEJAMAIS ERP durante o período de avaliação."
                         />
                         <StepItem 
                           number="3" 
@@ -392,7 +392,7 @@ function CadastroPage() {
                       <Checkbox id="terms" checked={acceptTerms} onCheckedChange={(v) => setAcceptTerms(!!v)} disabled={busy} />
                       <div className="grid gap-1.5 leading-none">
                         <label htmlFor="terms" className="text-sm font-medium leading-none">Aceito os Termos de Uso</label>
-                        <a href="/termos" target="_blank" className="text-xs text-primary inline-flex items-center gap-1">Ler termos <ExternalLink className="size-3" /></a>
+                        <a href="/termos" target="_blank" className="text-xs text-primary inline-flex items-center gap-1">Ler termos da VEJAMAIS ERP <ExternalLink className="size-3" /></a>
                       </div>
                     </div>
                     <div className="flex items-start space-x-2">

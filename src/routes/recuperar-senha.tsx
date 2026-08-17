@@ -15,9 +15,9 @@ import { TurnstileWidget, TurnstileWidgetRef } from "@/components/turnstile-widg
 export const Route = createFileRoute("/recuperar-senha")({
   head: () => ({ 
     meta: [
-      { title: "Recuperar senha — Vejamais" },
-      { name: "description", content: "Recupere o acesso à sua conta Vejamais com segurança." },
-      { property: "og:title", content: "Recuperar senha — Vejamais" },
+      { title: "Recuperar senha — VEJAMAIS ERP" },
+      { name: "description", content: "Recupere o acesso à sua conta VEJAMAIS ERP com segurança." },
+      { property: "og:title", content: "Recuperar senha — VEJAMAIS ERP" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" }
     ] 
@@ -84,7 +84,7 @@ function RecoveryPage() {
             <VejamaisMark size={64} className="rounded-2xl shadow-glow" />
           </div>
           <h1 className="font-display text-4xl text-foreground">
-            VEJAMAIS
+            VEJAMAIS ERP
           </h1>
           <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Gestão Comercial e Financeira</p>
         </div>
@@ -127,7 +127,7 @@ function RecoveryPage() {
                 className="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
               >
                 <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
-                Voltar para o Vejamais
+                Voltar para o VEJAMAIS ERP
               </Link>
             </div>
           </form>
