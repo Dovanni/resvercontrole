@@ -77,7 +77,8 @@ function ActivationPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <VejamaisMark size={64} className="mx-auto mb-4 rounded-2xl shadow-glow" />
-          <h1 className="font-display text-3xl text-foreground">Configurando sua conta</h1>
+          <h1 className="font-display text-4xl text-foreground">VEJAMAIS ERP</h1>
+          <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Gestão Comercial e Financeira — VEJAMAIS ERP</p>
           {userEmail && (
             <p className="mt-2 text-sm text-muted-foreground italic">
               {userEmail}
@@ -89,7 +90,7 @@ function ActivationPage() {
           {state === "checking" && (
             <>
               <Loader2 className="h-12 w-12 text-primary animate-spin" />
-              <p className="text-center text-muted-foreground">Verificando convite...</p>
+              <p className="text-center text-muted-foreground">Verificando convite na VEJAMAIS ERP...</p>
             </>
           )}
 
