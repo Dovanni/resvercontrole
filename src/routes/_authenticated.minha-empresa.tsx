@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/_authenticated/minha-empresa")({
-  head: () => ({ meta: [{ title: "Gestão da Empresa — Vejamais" }] }),
+  head: () => ({ meta: [{ title: "Gestão da Empresa — VEJAMAIS ERP" }] }),
   component: MinhaEmpresaPage,
 });
 
@@ -173,10 +173,10 @@ function MinhaEmpresaPage() {
         {/* Membros e Equipe */}
         <section className="lg:col-span-2 space-y-4">
           <h2 className="text-xl font-display flex items-center gap-2">
-            <Users className="size-5 text-primary" />
+            <Users className="size-5 text-primary" aria-hidden="true" />
             Membros e Equipe
           </h2>
-          <Card className="shadow-soft overflow-hidden">
+          <Card className="shadow-soft overflow-hidden" aria-label="Equipe VEJAMAIS ERP">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>

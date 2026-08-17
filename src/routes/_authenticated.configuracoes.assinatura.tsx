@@ -14,7 +14,7 @@ import { WhatsAppSupport } from "@/components/WhatsAppSupport";
 
 
 export const Route = createFileRoute("/_authenticated/configuracoes/assinatura")({
-  head: () => ({ meta: [{ title: "Assinatura e Planos — Vejamais" }] }),
+  head: () => ({ meta: [{ title: "Assinatura e Planos — VEJAMAIS ERP" }] }),
   component: SubscriptionSettingsPage,
 });
 
@@ -172,10 +172,10 @@ export function SubscriptionSettingsPage() {
                   Acesso administrativo da plataforma
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  Este ambiente é destinado à administração institucional da VEJAMAIS. Não há contratação comercial ou cobrança vinculada a esta empresa.
+                  Este ambiente é destinado à administração institucional da VEJAMAIS ERP. Não há contratação comercial ou cobrança vinculada a esta empresa.
                 </p>
                 <div className="mt-4 pt-4 border-t border-primary/10 flex flex-col gap-1">
-                  <span className="text-xs font-medium text-muted-foreground">Empresa Matriz da VEJAMAIS</span>
+                  <span className="text-xs font-medium text-muted-foreground">Empresa Matriz da VEJAMAIS ERP</span>
                   <span className="text-xs text-muted-foreground">Acesso institucional à plataforma</span>
                 </div>
               </div>
@@ -185,10 +185,10 @@ export function SubscriptionSettingsPage() {
               <div className="p-4 rounded-xl bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/20">
                 <h4 className="font-semibold text-primary flex items-center gap-2 mb-2">
                   <Sparkles className="size-4" />
-                  Aproveite o VEJAMAIS ao máximo
+                  Aproveite o VEJAMAIS ERP ao máximo
                 </h4>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Seu período gratuito oferece acesso a todos os recursos durante 30 dias. Assine o Plano Empresarial para continuar utilizando o VEJAMAIS após o término da avaliação.
+                  Seu período gratuito oferece acesso a todos os recursos durante 30 dias. Assine o Plano Empresarial para continuar utilizando o VEJAMAIS ERP após o término da avaliação.
                 </p>
                 <div className="space-y-2">
                   {(() => {

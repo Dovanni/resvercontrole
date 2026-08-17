@@ -68,7 +68,7 @@ function AuthedLayout() {
         setRegistrationState('completed');
         
         if (!(result as any)?.already_onboarded) {
-          toast.success("Empresa configurada com sucesso!");
+          toast.success("Empresa configurada com sucesso na VEJAMAIS ERP!");
         }
 
         // Redirecionamento baseado na intenção após onboarding
