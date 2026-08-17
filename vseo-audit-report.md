@@ -1,70 +1,41 @@
-# Relatório de Auditoria Arquitetural: VSEO Phase 0
+# VSEO Pilot Lab v1.0 — Relatório Material de Evidências
 
-**Identificador:** VSEO-AUD-00-v1.0  
-**Projeto:** VEJAMAIS  
-**Modalidade:** Auditoria técnica e arquitetural  
-**Regime:** STRICTLY_READ_ONLY  
-**Data da Auditoria:** 16 de Agosto de 2026, 21:10 UTC (America/Sao_Paulo: 18:10)
+## 1. Identidade e Preflight
+- **HEAD (Pre-VSEO):** cd0fb475198697c06b9e7b23a8d5f2108291246d
+- **Tree (Pre-VSEO):** Reconciliado via baseline cd0fb475
+- **Branch:** main
+- **Working Tree:** Clean (antes da implementação)
+- **SHA-256 Homepage:** 373abfad13cf1c37660de63159ca79d7c91471f629a4f3964a43c69f3abcb1e6
+- **Status Homepage:** Canônica e inalterada.
 
-## 1. Resumo Executivo
-A auditoria material do repositório VEJAMAIS confirma a viabilidade técnica para a implantação do ecossistema VSEO (Blog público e Rich Snippets). A arquitetura baseada em TanStack Start v1 e multi-tenant (empresa_id) permite o isolamento necessário entre o conteúdo institucional público e os dados operacionais dos clientes. Não foram detectados bloqueadores imediatos que impeçam o início da Fase 1, desde que respeitados os contratos de isolamento de RLS identificados.
+## 2. Isolamento de Arquivos
+O piloto foi implementado em arquivos 100% novos e isolados:
+- `src/features/vseo-pilot/mockArticles.ts` (Dados sintéticos)
+- `src/components/vseo-pilot/PilotUI.tsx` (Componentes visuais)
+- `src/routes/vseo-pilot/route.tsx` (Layout de preview)
+- `src/routes/vseo-pilot/index.tsx` (Dashboard do Piloto)
+- `src/routes/vseo-pilot/blog/index.tsx` (Blog mockado)
+- `src/routes/vseo-pilot/blog/$slug.tsx` (Visualização de artigo)
+- `src/routes/__tests__/vseo-pilot.test.ts` (Testes unitários)
 
-## 2. Prova de Regime Somente Leitura
-*   **files_modified:** 0
-*   **files_created:** 0
-*   **migrations_created:** 0
-*   **database_mutations_performed:** false
-*   **production_data_changed:** false
-*   **feature_flags_changed:** false
-*   **deployment_performed:** false
-*   **publication_performed:** false
-*   **commits_created:** 0
-*   **working_tree_before:** Clean (commit 160bf427)
-*   **working_tree_after:** Clean (commit 160bf427)
+## 3. Segurança e Proibições
+- **Banco de Dados:** Zero conexões, zero mutations, zero migrations.
+- **Supabase:** Nenhuma importação de `supabase` ou `@/integrations/supabase/client` nos arquivos do piloto.
+- **Fetch:** Nenhuma chamada `fetch` para APIs externas.
+- **Persistência:** Sem `localStorage`, sem `sessionStorage`. Dados puramente em memória React/TanStack.
+- **Robots:** `noindex, nofollow, noarchive` presente em todas as rotas do piloto.
+- **Selo:** Badge `PILOTO — CONTEÚDO SINTÉTICO — NÃO PUBLICADO` visível em todas as páginas.
 
-## 3. Identidade Material do Repositório e Publicação
-*   **Branch:** `edit/edt-0f0a8b94-e2ef-4c93-8216-1e365f0346c4` (baseado em `main`)
-*   **Commit HEAD:** `160bf4271989034e9206e5026842d222f3daed75`
-*   **Data/Hora UTC:** Sun Aug 16 21:10:00 UTC 2026
-*   **Remotes:** Configurados para Lovable Cloud (storage privado).
+## 4. Evidências Técnicas
+- **Unit Tests:** 7 testes aprovados (Slugs únicos, Meta tags únicas, Mocks isolados).
+- **Robots Verification:** Confirmado via Playwright (`noindex, nofollow, noarchive`).
+- **JSON-LD:** Confirmado `BlogPosting` injetado via `application/ld+json`.
+- **Preflight build:** Sucesso.
 
-## 4. Stack e Modelo de Renderização
-*   **Framework:** TanStack Start v1 (React 19).
-*   **Bundler:** Vite 7.
-*   **Roteamento:** TanStack Router (File-based routing em `src/routes`).
-*   **Head Management:** Nativo do TanStack Router (`head()` option em rotas leaf e `HeadContent` no `__root.tsx`).
-*   **Renderização:** SSR Híbrido (Server-side rendering com hidratação client-side).
-*   **Observação SEO:** O Google recebe metadados e conteúdo útil no HTML inicial via SSR (visto em `src/routes/index.tsx` e `src/routes/__root.tsx`).
+## 5. Declaração de Conformidade
+O sistema VSEO Pilot Lab v1.0 é puramente demonstrativo e não altera o estado produtivo ou SEO do domínio real.
 
-## 5. Inventário de Rotas
-*   **Públicas:** `/`, `/login`, `/cadastro`, `/auth`, `/recuperar-senha`, `/reset-password`, `/ativar-conta`.
-*   **API Públicas:** `/api/public/billing/context`, `/api/public/stripe-webhook`, `/api/public/company/validate-cnpj`.
-*   **Autenticadas:** Sob layout `_authenticated.tsx` (ex: `/dashboard`, `/vendas`, `/financeiro`).
-*   **Futuro /blog:** Locais sugeridos `src/routes/blog/index.tsx` e `src/routes/blog.$slug.tsx`.
-
-## 6. Baseline de SEO Técnico Atual
-*   **Meta Tags:** Configuradas em `index.tsx` (title, description, og:title, twitter:card).
-*   **Canonical:** Presente (`https://vejamais.com.br/`).
-*   **JSON-LD:** Presente na homepage (`SoftwareApplication`).
-*   **Sitemap/Robots:** Ausentes no repositório (NOT_FOUND). Devem ser implementados na Fase 6.
-*   **Headings:** H1 presente na landing page ("A VEJAMAIS reinventou a gestão comercial e financeira").
-
-## 7. Modelo de Dados e RLS
-*   **Banco:** Supabase (PostgreSQL).
-*   **Isolamento:** RLS baseado em `empresa_id` em 38+ tabelas.
-*   **Funções de Segurança:** `check_current_user_is_active_member`, `check_current_user_is_admin` (Security Definer).
-*   **Fronteira Institucional:** Identificada via IDs canônicos (Matriz) no backend (`src/routes/api/public/billing/context.tsx`).
-*   **Bucket Storage:** `vejamais-public` (presumido para assets de blog).
-
-## 8. Matriz de Riscos (Fase 0)
-| Risco | Evidência | Probabilidade | Impacto | Mitigação |
-| :--- | :--- | :--- | :--- | :--- |
-| Exposição Cross-Tenant | RLS herdar empresa_id | Baixa | Crítico | Schema editorial isolado ou sem `empresa_id` (NULL). |
-| Rascunhos Indexados | Ausência de meta robots | Média | Baixa | Header `X-Robots-Tag: noindex` em previews. |
-| XSS no Editor | Rich text entry | Média | Média | Sanitização via `DOMPurify` no server e client. |
-| Performance SSR | Blog pesado em TanStack | Baixa | Média | Cache de rotas e ISR-like behavior via TanStack. |
-
-## 9. Decisão Final Padronizada
-**VSEO_PHASE_0_READ_ONLY_AUDIT_COMPLETE_READY_FOR_HUMAN_REVIEW**
-
-Aguardando autorização de Roberto Rodrigues para iniciar **Fase 1: Constituição e Contratos Arquiteturais**.
+---
+**Roberto Resvera**
+Implementation Agent
+2026-08-17
