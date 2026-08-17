@@ -5,7 +5,7 @@ export function getRecoveryEmailTemplate(recoveryLink: string) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redefinição de Senha - VEJAMAIS</title>
+    <title>Redefinição de Senha - VEJAMAIS ERP</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1a1a1a; margin: 0; padding: 0; background-color: #f9fafb; }
         .container { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
@@ -23,12 +23,12 @@ export function getRecoveryEmailTemplate(recoveryLink: string) {
 <body>
     <div class="container">
         <div class="header">
-            <h1>VEJAMAIS</h1>
+            <h1>VEJAMAIS ERP</h1>
         </div>
         <div class="content">
             <h2>Redefinição de senha</h2>
             <p>Olá,</p>
-            <p>Recebemos uma solicitação para redefinir a sua senha de acesso à VEJAMAIS — Gestão Comercial e Financeira.</p>
+            <p>Recebemos uma solicitação para redefinir a sua senha de acesso à VEJAMAIS ERP — Gestão Comercial e Financeira.</p>
             <div class="button-container">
                 <a href="${recoveryLink}" class="button">Redefinir minha senha</a>
             </div>
@@ -36,7 +36,7 @@ export function getRecoveryEmailTemplate(recoveryLink: string) {
             <p class="notice">Este link expira em breve por motivos de segurança.</p>
         </div>
         <div class="footer">
-            &copy; 2026 VEJAMAIS. Todos os direitos reservados.
+            &copy; 2026 VEJAMAIS ERP. Todos os direitos reservados.
         </div>
     </div>
 </body>
