@@ -60,7 +60,7 @@ describe('VSEO Pilot Lab V1.2 Premium UX Compliance', () => {
     const content = fs.readFileSync(path.resolve(process.cwd(), 'src/routes/vseo-pilot/blog/$slug.tsx'), 'utf-8');
     expect(content).toContain('<article');
     expect(content).toContain('<header');
-    expect(content).toContain('<section class="editorial-content"');
+    expect(content).toContain('className="editorial-content"');
   });
 
   it('article: line-height is optimized for reading', () => {
