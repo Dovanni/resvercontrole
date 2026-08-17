@@ -15,10 +15,10 @@ export const Route = createFileRoute('/vseo-pilot/blog/$slug')({
   head: ({ loaderData }) => ({
     meta: [
       { name: 'robots', content: 'noindex, nofollow, noarchive' },
-      { title: `${loaderData.metaTitle} | VSEO Pilot` },
-      { name: 'description', content: loaderData.metaDescription },
-      { property: 'og:title', content: loaderData.metaTitle },
-      { property: 'og:description', content: loaderData.metaDescription },
+      { title: `${loaderData?.metaTitle || 'Artigo'} | VSEO Pilot` },
+      { name: 'description', content: loaderData?.metaDescription || '' },
+      { property: 'og:title', content: loaderData?.metaTitle || '' },
+      { property: 'og:description', content: loaderData?.metaDescription || '' },
       { property: 'og:type', content: 'article' }
     ]
   })
