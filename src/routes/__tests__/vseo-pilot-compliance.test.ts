@@ -56,10 +56,21 @@ describe('VSEO Pilot Lab V1.2 Premium UX Compliance', () => {
     expect(content).toContain('Open Graph Social Preview');
   });
 
-  it('article: layout must use article and header elements', () => {
+  it('article: layout must use article, header and section elements', () => {
     const content = fs.readFileSync(path.resolve(process.cwd(), 'src/routes/vseo-pilot/blog/$slug.tsx'), 'utf-8');
     expect(content).toContain('<article');
     expect(content).toContain('<header');
+    expect(content).toContain('<section class="editorial-content"');
+  });
+
+  it('article: line-height is optimized for reading', () => {
+    const content = fs.readFileSync(path.resolve(process.cwd(), 'src/routes/vseo-pilot/blog/$slug.tsx'), 'utf-8');
+    expect(content).toContain('prose-p:leading-[1.75]');
+  });
+
+  it('article: max reading width is between 720px and 800px', () => {
+    const content = fs.readFileSync(path.resolve(process.cwd(), 'src/routes/vseo-pilot/blog/$slug.tsx'), 'utf-8');
+    expect(content).toContain('max-w-[800px]');
   });
 
   it('blog: hero must contain "Blog VEJAMAIS ERP"', () => {
@@ -85,10 +96,6 @@ describe('VSEO Pilot Lab V1.2 Premium UX Compliance', () => {
          expect(content).not.toContain('@supabase');
          expect(content).not.toContain('supabase');
      });
-  });
-
-  it('compliance check: real_test_blocks >= 45 across suites', () => {
-      expect(true).toBe(true);
   });
   
   it('robots: remains noindex, nofollow, noarchive, nosnippet', () => {

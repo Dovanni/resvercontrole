@@ -142,17 +142,19 @@ function PilotArticleView() {
             </header>
 
             <div className="p-8 sm:p-12">
-              <div 
-                className="prose prose-slate prose-lg max-w-none 
-                  prose-headings:text-slate-900 prose-headings:font-black prose-headings:tracking-tight
-                  prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h2:leading-tight
-                  prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-4
-                  prose-p:text-slate-600 prose-p:leading-[1.8] prose-p:mb-8 prose-p:font-medium
-                  prose-a:text-primary prose-a:font-bold hover:prose-a:underline
-                  prose-strong:text-slate-900 prose-strong:font-black
-                  prose-img:rounded-3xl prose-img:shadow-2xl prose-img:shadow-slate-200"
-                dangerouslySetInnerHTML={{ __html: article.content }}
-              />
+              <section className="editorial-content">
+                <div 
+                  className="prose prose-slate prose-lg max-w-[800px] mx-auto
+                    prose-headings:text-slate-900 prose-headings:font-black prose-headings:tracking-tight
+                    prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6 prose-h2:leading-[1.7]
+                    prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-4
+                    prose-p:text-slate-600 prose-p:leading-[1.75] prose-p:mb-8 prose-p:font-medium
+                    prose-a:text-primary prose-a:font-bold hover:prose-a:underline
+                    prose-strong:text-slate-900 prose-strong:font-black
+                    prose-img:rounded-3xl prose-img:shadow-2xl prose-img:shadow-slate-200"
+                  dangerouslySetInnerHTML={{ __html: article.content }}
+                />
+              </section>
               
               <footer className="mt-20 pt-10 border-t border-slate-100 space-y-12">
                 <div className="flex flex-wrap gap-2.5">
