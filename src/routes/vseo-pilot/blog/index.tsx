@@ -9,7 +9,7 @@ export const Route = createFileRoute('/vseo-pilot/blog/')({
   head: () => ({
     meta: [
       { name: 'robots', content: 'noindex, nofollow, noarchive' },
-      { title: 'Blog Mocks | VSEO Pilot' }
+      { title: 'Blog Piloto | VSEO Pilot' }
     ]
   })
 });
@@ -33,9 +33,14 @@ function PilotBlogIndex() {
           >
             <Card className="overflow-hidden border-slate-200 group-hover:border-primary/40 transition-all group-hover:shadow-md">
               <div className="md:flex">
-                <div className="md:w-1/3 bg-slate-100 flex items-center justify-center min-h-[200px] border-r border-slate-100">
-                   <div className="text-slate-400 text-sm font-medium p-4 text-center">
-                      Placeholder Imagem:<br/>{article.imageAlt}
+                <div className="md:w-1/3 bg-linear-to-br from-slate-50 to-slate-100 flex items-center justify-center min-h-[200px] border-r border-slate-100 p-6">
+                   <div className="text-center space-y-2">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
+                        <FileText className="w-6 h-6 text-primary/60" />
+                      </div>
+                      <div className="text-slate-500 text-[11px] font-semibold uppercase tracking-wider leading-tight">
+                        {article.imageAlt}
+                      </div>
                    </div>
                 </div>
                 <div className="md:w-2/3 p-6 space-y-4">
