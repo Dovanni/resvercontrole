@@ -62,10 +62,11 @@ export function VejamaisLogo({
           >
             VEJAMAIS ERP
           </span>
-          {showTagline && !isCompact && (
+          {showTagline && (
             <span
               className={cn(
                 "mt-1 text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground",
+                isCompact && "hidden",
                 taglineClassName,
               )}
             >
