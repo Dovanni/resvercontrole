@@ -79,10 +79,10 @@ function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/85 backdrop-blur">
       <div className="mx-auto flex max-w-[1240px] items-center px-4 py-3 md:px-6">
-        <div className="flex flex-1 items-center">
-          <a href="#top" className="flex shrink-0 items-center mr-8 xl:mr-11" aria-label="VEJAMAIS ERP — ir para o topo">
-            <VejamaisLogo variant="compact" />
-          </a>
+        <a href="#top" className="flex shrink-0 items-center" aria-label="VEJAMAIS ERP — ir para o topo">
+          <VejamaisLogo variant="compact" />
+        </a>
+        <div className="flex flex-1 justify-center px-4">
           <nav className="hidden lg:flex items-center gap-5 xl:gap-7 overflow-hidden" aria-label="Navegação principal">
             {NAV.map((n) => (
               <a
