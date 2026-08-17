@@ -14,7 +14,7 @@ import {
 import heroGestora480 from "@/assets/hero-vejamais-gestora-480.webp";
 import heroGestora768 from "@/assets/hero-vejamais-gestora-768.webp";
 import heroGestora1024 from "@/assets/hero-vejamais-gestora-1024.webp";
-import { VejamaisMark } from "@/components/vejamais-logo";
+import { VejamaisMark, VejamaisLogo } from "@/components/vejamais-logo";
 import { Button } from "@/components/ui/button";
 import {
   BENEFITS,
