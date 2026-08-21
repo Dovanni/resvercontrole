@@ -1345,6 +1345,65 @@ BEGIN
 END;
 $function$;
 
+-- Phase 2-B compatibility repair for the application-facing onboarding RPC.
+-- Historical definitions with hard-coded database UUIDs remain excluded.
+CREATE OR REPLACE FUNCTION public.reconcile_and_finalize_onboarding()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public, pg_temp
+AS $function$
+DECLARE
+    v_user_id uuid := auth.uid();
+    v_empresa_id uuid;
+    v_result jsonb;
+BEGIN
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION 'Authentication required';
+    END IF;
+
+    SELECT uca.empresa_id
+      INTO v_empresa_id
+      FROM public.user_company_access AS uca
+     WHERE uca.user_id = v_user_id
+       AND uca.status = 'active'
+     ORDER BY uca.created_at ASC
+     LIMIT 1;
+
+    IF v_empresa_id IS NULL THEN
+        v_result := public.finalize_user_onboarding(v_user_id);
+
+        IF NOT COALESCE((v_result ->> 'success')::boolean, false) THEN
+            RETURN v_result;
+        END IF;
+
+        v_empresa_id := NULLIF(v_result ->> 'empresa_id', '')::uuid;
+
+        IF v_empresa_id IS NULL THEN
+            SELECT uca.empresa_id
+              INTO v_empresa_id
+              FROM public.user_company_access AS uca
+             WHERE uca.user_id = v_user_id
+               AND uca.status = 'active'
+             ORDER BY uca.created_at ASC
+             LIMIT 1;
+        END IF;
+    END IF;
+
+    IF v_empresa_id IS NULL THEN
+        RAISE EXCEPTION 'Onboarding completed without an active company membership';
+    END IF;
+
+    PERFORM public.ensure_empresa_defaults(v_empresa_id, v_user_id);
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'empresa_id', v_empresa_id,
+        'already_finalized', v_result IS NULL
+    );
+END;
+$function$;
+
 -- source: 20260809233430_5eee05ad-70ac-4b67-9605-5da264560374.sql | final function name: public.can_company_invite_member
 CREATE OR REPLACE FUNCTION public.can_company_invite_member(p_empresa_id UUID)
 RETURNS JSONB
