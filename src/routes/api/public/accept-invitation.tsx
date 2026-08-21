@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { supabase } from '@/integrations/supabase/client';
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/integrations/supabase/types';
 import { z } from 'zod';
 
 export const Route = createFileRoute('/api/public/accept-invitation')({
@@ -10,16 +11,43 @@ export const Route = createFileRoute('/api/public/accept-invitation')({
           const body = await request.json();
           const schema = z.object({
             token: z.string(),
-            userId: z.string().uuid(),
           });
 
-          const { token, userId } = schema.parse(body);
+          const { token } = schema.parse(body);
+          const authHeader = request.headers.get('authorization');
+
+          if (!authHeader?.startsWith('Bearer ')) {
+            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+              status: 401,
+              headers: { 'Content-Type': 'application/json' }
+            });
+          }
+
+          const accessToken = authHeader.slice('Bearer '.length);
+          const supabaseUrl = process.env.SUPABASE_URL;
+          const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+
+          if (!supabaseUrl || !publishableKey) {
+            throw new Error('Supabase server configuration is incomplete');
+          }
+
+          const supabase = createClient<Database>(supabaseUrl, publishableKey, {
+            global: { headers: { Authorization: `Bearer ${accessToken}` } },
+            auth: { persistSession: false, autoRefreshToken: false }
+          });
+
+          const { data: claimsData, error: claimsError } = await supabase.auth.getClaims(accessToken);
+          if (claimsError || !claimsData?.claims?.sub) {
+            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+              status: 401,
+              headers: { 'Content-Type': 'application/json' }
+            });
+          }
 
           // Chama a função RPC segura que lida com a lógica atômica de transação
           // e validação de expiração/uso do token.
           const { data, error } = await supabase.rpc('accept_company_invitation', {
-            _token_hash: token,
-            _user_id: userId
+            _token_hash: token
           });
 
           if (error) {
