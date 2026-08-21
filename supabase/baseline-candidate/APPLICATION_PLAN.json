@@ -1,13 +1,13 @@
 {
-  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2E-APPLICATION-PACKAGE-v1",
-  "status": "ORDER_CORRECTED_STATICALLY_CERTIFIED_AWAITING_HUMAN_APPROVAL",
+  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2F-APPLICATION-PACKAGE-v1",
+  "status": "EXPIRES_AT_CORRECTED_STATICALLY_CERTIFIED_AWAITING_HUMAN_APPROVAL",
   "source_branch": "migration/cloudflare-staging",
   "target_class": "NEW_EMPTY_SUPABASE_STAGING_ONLY",
   "application_order": [
     {
       "step": 1,
       "file": "00000000000000_vejamais_canonical_schema_candidate.sql",
-      "sha256": "546bb8cd3ad2e58bc3a96443ccf75b5d4e2c03588b64294d99a7223fc9263380",
+      "sha256": "3ef10c2ee2a01a2581eb26697196157ce100d7440450780cfca620e977e79b24",
       "purpose": "types_tables_constraints_indexes"
     },
     {
@@ -29,8 +29,8 @@
     "target public schema contains no application tables or operational data",
     "all three file SHA-256 values exactly match this plan",
     "repository preflight exits successfully with zero failures",
-    "Phase 2-E sequential constraint and index dependency checks pass with zero failures",
-    "new explicit human authorization is recorded after Phase 2-E certification",
+    "Phase 2-F sequential catalog, constraint, index and ALTER COLUMN dependency checks pass with zero failures",
+    "new explicit human authorization is recorded after Phase 2-F certification",
     "verified backup or disposable-project confirmation exists",
     "target project reference is exactly hoalgniwydgydqaugqph; no credentials are stored in Git"
   ],
@@ -38,7 +38,7 @@
     "any precondition is false or unverifiable",
     "target is not staging or is not empty",
     "any artifact hash differs",
-    "Phase 2-E certification is absent or has any sequential dependency failure",
+    "Phase 2-F certification is absent or has any sequential catalog dependency failure",
     "application order differs",
     "any statement returns warning requiring human judgment or any SQL error",
     "any expected object count or contract differs after a step",
@@ -98,6 +98,17 @@
       "ALTER TABLE public.categorias_contas_pagar ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);"
     ],
     "sequential_preflight_required": true,
+    "application_blocked_pending_human_approval": true
+  },
+  "phase_2f_expires_at_correction": {
+    "source_head_before_phase_2f": "115a008e7a766a61556ee1af8f53c2b1f2b2241e",
+    "triggering_gate": "GATE_3B_1_SCHEMA_APPLICATION_FAILED_ATOMIC_ROLLBACK_CONFIRMED",
+    "target_table": "public.stripe_webhook_runtime_diagnostics",
+    "column_definition": "expires_at timestamptz NOT NULL DEFAULT (now() + interval '7 days')",
+    "historical_final_architecture_changed": false,
+    "functions_changed": false,
+    "security_changed": false,
+    "sequential_catalog_preflight_required": true,
     "application_blocked_pending_human_approval": true
   }
 }

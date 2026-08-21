@@ -1,11 +1,12 @@
 {
-  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2E-CANONICAL-BASELINE-v1",
-  "status": "ORDER_CORRECTED_STATIC_PREFLIGHT_CERTIFIED_AWAITING_HUMAN_APPROVAL",
+  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2F-CANONICAL-BASELINE-v1",
+  "status": "EXPIRES_AT_CORRECTED_STATIC_PREFLIGHT_CERTIFIED_AWAITING_HUMAN_APPROVAL",
   "source_branch": "migration/cloudflare-staging",
   "source_main_head": "1c878ee6e59ba6c2ba80a191dabf711e7ff89067",
   "phase_2a_head": "0cd60f0381cde251aa97f0538dcb0d0209c2416c",
   "phase_2c_head": "dc03835c1b9184f7b6dd6bd53d89f19893e4ea82",
   "phase_2d_head": "1d99a2827fada4c1a3ce83a4b4654276f3eb5c19",
+  "phase_2e_head": "115a008e7a766a61556ee1af8f53c2b1f2b2241e",
   "source_migrations": 173,
   "final_public_table_count": 38,
   "typed_relationship_count": 52,
@@ -37,16 +38,20 @@
     "propagated authenticated server client instead of global browser client",
     "removed authenticated grant from internal ensure_empresa_defaults",
     "removed stale test RPC and dropped-column generated types",
-    "moved existing empresa_id additions for payment_routing_rules and categorias_contas_pagar before their consuming constraints"
+    "moved existing empresa_id additions for payment_routing_rules and categorias_contas_pagar before their consuming constraints",
+    "incorporated the historical final expires_at definition into stripe_webhook_runtime_diagnostics before its consuming constraint and ALTER COLUMN"
   ],
   "application_contract_blockers": [],
-  "static_preflight_checks": 100,
+  "static_preflight_checks": 105,
   "static_preflight_failures": 0,
   "forward_table_references": 0,
   "sequential_dependency_validation": {
     "constraints_scanned": 186,
     "indexes_scanned": 57,
-    "column_references_scanned": 372,
+    "column_references_scanned": 301,
+    "alter_table_statements_scanned": 78,
+    "alter_columns_scanned": 5,
+    "drop_columns_scanned": 0,
     "failures": 0
   },
   "application_order": [
@@ -68,9 +73,9 @@
   "operational_data_included": false,
   "files": {
     "00000000000000_vejamais_canonical_schema_candidate.sql": {
-      "sha256": "546bb8cd3ad2e58bc3a96443ccf75b5d4e2c03588b64294d99a7223fc9263380",
-      "bytes": 54341,
-      "lines": 1019
+      "sha256": "3ef10c2ee2a01a2581eb26697196157ce100d7440450780cfca620e977e79b24",
+      "bytes": 54414,
+      "lines": 1020
     },
     "00000000000001_vejamais_canonical_functions_candidate.sql": {
       "sha256": "2536e26c30a0894ff49281f9c95f85a5006f96cc75c868bcfa54c72ed8b41888",
@@ -88,19 +93,19 @@
       "lines": 52
     },
     "README.md": {
-      "sha256": "75041c25b46028aa4ce0ebf251bbb9324fc1edbf1ccc30e412f36e730987c28c",
-      "bytes": 4149,
-      "lines": 82
+      "sha256": "5ad71f93bbfeedbc8a7a8db80f5dc4d6b966fc1ebcbc82347c150f413839f9e5",
+      "bytes": 5056,
+      "lines": 98
     },
     "APPLICATION_PLAN.json": {
-      "sha256": "73841ba16b6957665a1eb550652d3750fccc58f2669e5c3d0d6758187983cc8a",
-      "bytes": 4462,
-      "lines": 103
+      "sha256": "98065f28fca8855107511f0054d3ecabe70d98517dd53d12857d0918616b8d48",
+      "bytes": 5090,
+      "lines": 114
     },
     "PREFLIGHT_CERTIFICATION.json": {
-      "sha256": "972da08df485c5d98aae689a097e96714a41dc9fc8869fa07488fc38e3af10f1",
-      "bytes": 2640,
-      "lines": 59
+      "sha256": "77b8932a43c8f9780d1277ffe996e313875cd3109a4f258d301c25c1e9a74c5c",
+      "bytes": 2844,
+      "lines": 62
     },
     "PHASE_2D_DECLARATIVE_RECTIFICATION_CERTIFICATION.json": {
       "sha256": "488c12816082337cfef471b6be9df4abdeb8754e55b6756499b9cff4b6448cfa",
@@ -112,10 +117,15 @@
       "bytes": 3052,
       "lines": 71
     },
+    "PHASE_2F_EXPIRES_AT_CATALOG_CORRECTION_CERTIFICATION.json": {
+      "sha256": "f784a260c8025b2a3f4fd4689c39f2d5a79f4d75cf17fa0afe104c3d0005cde5",
+      "bytes": 2723,
+      "lines": 60
+    },
     "scripts/migration/verify-canonical-preflight.mjs": {
-      "sha256": "fb031a6d95958dbc88e7d7389dfc512bfc4f17b1d365d5e9d5b40289d9d3928e",
-      "bytes": 20934,
-      "lines": 354
+      "sha256": "7c12660f5f1be7887144d326c5f55ce51e00934027e6fda119c313c5480a6bb0",
+      "bytes": 24201,
+      "lines": 417
     }
   },
   "target_project_ref": "hoalgniwydgydqaugqph"

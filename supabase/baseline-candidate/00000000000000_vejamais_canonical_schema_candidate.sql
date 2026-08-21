@@ -314,7 +314,8 @@ CREATE TABLE public.stripe_webhook_runtime_diagnostics (
     stage text NOT NULL,
     reason_code text,
     http_status int,
-    created_at timestamptz DEFAULT now() NOT NULL
+    created_at timestamptz DEFAULT now() NOT NULL,
+    expires_at timestamptz NOT NULL DEFAULT (now() + interval '7 days')
 );
 
 -- source: 20260616213419_069279da-c7e6-448d-a23b-4a6899e98df5.sql | object: public.suppliers

@@ -1,0 +1,60 @@
+{
+  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2F-EXPIRES-AT-CATALOG-CORRECTION-CERTIFICATION-v1",
+  "mode": "REPOSITORY_ONLY",
+  "source_branch": "migration/cloudflare-staging",
+  "source_head_before_phase_2f": "115a008e7a766a61556ee1af8f53c2b1f2b2241e",
+  "target_project_ref": "hoalgniwydgydqaugqph",
+  "triggering_gate": {
+    "gate": "3-B-1",
+    "error_sqlstate": "42703",
+    "error": "column expires_at does not exist",
+    "atomic_rollback_certified": true,
+    "public_tables_after_failure": 0,
+    "public_types_after_failure": 0
+  },
+  "authorized_scope": [
+    "incorporate only expires_at timestamptz NOT NULL DEFAULT (now() + interval '7 days') into the initial stripe_webhook_runtime_diagnostics definition",
+    "preserve the historical final architecture",
+    "validate sequential catalog state for constraints, indexes, ALTER COLUMN, DROP COLUMN and ALTER TABLE targets",
+    "recalculate hashes and update plan, manifest and certifications",
+    "block any database application pending integral approval"
+  ],
+  "schema_correction": {
+    "table": "public.stripe_webhook_runtime_diagnostics",
+    "column": "expires_at",
+    "definition": "expires_at timestamptz NOT NULL DEFAULT (now() + interval '7 days')",
+    "position": "initial CREATE TABLE before consuming constraint and ALTER COLUMN",
+    "sha256_before": "546bb8cd3ad2e58bc3a96443ccf75b5d4e2c03588b64294d99a7223fc9263380",
+    "sha256_after": "3ef10c2ee2a01a2581eb26697196157ce100d7440450780cfca620e977e79b24",
+    "bytes_before": 54341,
+    "bytes_after": 54414,
+    "lines_before": 1019,
+    "lines_after": 1020,
+    "historical_final_architecture_changed": false
+  },
+  "unchanged_sql_artifacts": {
+    "00000000000001_vejamais_canonical_functions_candidate.sql": "2536e26c30a0894ff49281f9c95f85a5006f96cc75c868bcfa54c72ed8b41888",
+    "00000000000002_vejamais_canonical_security_candidate.sql": "7df0c5f61615481c35940108052e3292d70ad4a1c91660e09f8c17d7ae3509bb"
+  },
+  "preflight": {
+    "checks_total": 105,
+    "checks_passed": 105,
+    "checks_failed": 0,
+    "constraints_scanned_sequentially": 186,
+    "indexes_scanned_sequentially": 57,
+    "column_references_scanned_sequentially": 301,
+    "alter_table_statements_scanned_sequentially": 78,
+    "alter_columns_scanned_sequentially": 5,
+    "drop_columns_scanned_sequentially": 0,
+    "sequential_dependency_failures": 0
+  },
+  "database_connections": 0,
+  "sql_executions": 0,
+  "supabase_actions": 0,
+  "cloudflare_actions": 0,
+  "dns_actions": 0,
+  "production_actions": 0,
+  "automatic_github_integrations": 0,
+  "application_blocked_pending_human_approval": true,
+  "decision": "PHASE_2F_EXPIRES_AT_CATALOG_DEPENDENCIES_STATICALLY_CERTIFIED_AWAITING_HUMAN_APPROVAL"
+}

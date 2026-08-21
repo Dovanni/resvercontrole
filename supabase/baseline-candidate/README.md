@@ -1,6 +1,6 @@
 # VEJAMAIS ERP — Baseline Canônico Candidate v3
 
-Status: **FASE 2-E APROVADA — APLICAÇÃO BLOQUEADA ATÉ NOVA AUTORIZAÇÃO HUMANA**
+Status: **FASE 2-F APROVADA — APLICAÇÃO BLOQUEADA ATÉ NOVA AUTORIZAÇÃO HUMANA**
 
 Este pacote foi sintetizado estaticamente a partir das 173 migrations da branch
 `migration/cloudflare-staging` e reconciliado com os contratos do runtime e os tipos
@@ -72,6 +72,22 @@ Consulte `PREFLIGHT_CERTIFICATION.json` e execute
   sequenciais de coluna, com zero falhas;
 - functions e security permaneceram byte a byte inalterados.
 
+## Correção canônica Fase 2-F
+
+- o Gate 3-B-1 falhou atomicamente porque `stripe_webhook_runtime_diagnostics`
+  não declarava `expires_at`, embora uma constraint e um `ALTER COLUMN` posteriores
+  utilizassem a coluna;
+- o rollback material do staging foi certificado com zero tabelas e zero tipos públicos;
+- a definição histórica final
+  `expires_at timestamptz NOT NULL DEFAULT (now() + interval '7 days')` foi incorporada
+  exclusivamente à criação inicial da tabela;
+- functions e security permaneceram byte a byte inalterados;
+- o preflight passou a simular o catálogo real e a validar 78 alvos de `ALTER TABLE`,
+  cinco alvos de `ALTER COLUMN`, 186 constraints e 57 índices antes do uso;
+- 105 verificações estáticas foram aprovadas, com zero falhas;
+- uma nova aplicação continua bloqueada até autorização humana expressa baseada no novo
+  HEAD e no novo SHA-256 do schema.
+
 ## Limites e próximo gate
 
 O pacote permanece fora de `supabase/migrations/`, impedindo aplicação automática. Antes
@@ -79,4 +95,4 @@ de qualquer uso requer revisão SQL independente, autorização humana e execuç
 em staging vazio, seguida de certificação material. Cloudflare, DNS e produção continuam
 fora de escopo.
 
-`PHASE_2E_ORDERED_COLUMN_DEPENDENCIES_STATICALLY_CERTIFIED_AWAITING_HUMAN_APPROVAL`
+`PHASE_2F_EXPIRES_AT_CATALOG_DEPENDENCIES_STATICALLY_CERTIFIED_AWAITING_HUMAN_APPROVAL`
