@@ -1,14 +1,15 @@
 import { createServerFn } from "@tanstack/react-start";
-import { supabase } from "@/integrations/supabase/client";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import { z } from "zod";
 
 /**
  * Validação server-side de membership.
  * Garante que o usuário logado pertence à empresa e tem o papel necessário.
  */
-export async function checkMembership(userId: string, empresaId: string, allowedRoles: string[] = []) {
-  const { data, error } = await supabase
+export async function checkMembership(client: SupabaseClient<Database>, userId: string, empresaId: string, allowedRoles: string[] = []) {
+  const { data, error } = await client
     .from("user_company_access")
     .select("role, status")
     .eq("user_id", userId)
@@ -39,13 +40,13 @@ export const createInternalInvitation = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data, context }) => {
     // Apenas admins da empresa podem convidar
-    await checkMembership(context.userId, data.empresaId, ["admin"]);
+    await checkMembership(context.supabase, context.userId, data.empresaId, ["admin"]);
 
     const token = crypto.randomUUID();
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7); // 7 dias
 
-    const { error } = await supabase.from("company_invitations").insert({
+    const { error } = await context.supabase.from("company_invitations").insert({
       empresa_id: data.empresaId,
       role: data.role,
       token_hash: token, // O schema usa token_hash
@@ -70,9 +71,8 @@ export const acceptInvitation = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data, context }) => {
     // Chama a função RPC que executa a lógica atômica de validação e criação de acesso
-    const { data: result, error } = await supabase.rpc("accept_company_invitation", {
-      _token_hash: data.token,
-      _user_id: context.userId
+    const { data: result, error } = await context.supabase.rpc("accept_company_invitation", {
+      _token_hash: data.token
     });
 
     if (error) throw error;
@@ -89,9 +89,9 @@ export const updateCompanySettings = createServerFn({ method: "POST" })
     settings: z.any()
   }))
   .handler(async ({ data, context }) => {
-    await checkMembership(context.userId, data.empresaId, ["admin"]);
+    await checkMembership(context.supabase, context.userId, data.empresaId, ["admin"]);
 
-    const { error } = await supabase
+    const { error } = await context.supabase
       .from("empresas")
       .update({ configuracoes: data.settings })
       .eq("id", data.empresaId);
