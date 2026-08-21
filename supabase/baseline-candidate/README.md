@@ -1,16 +1,31 @@
-# VEJAMAIS ERP — Baseline Canônico Candidate v1
+# VEJAMAIS ERP — Baseline Canônico Candidate v2
 
 Status: **CANDIDATO REPOSITORY-ONLY — NÃO EXECUTAR**
 
 Este pacote foi sintetizado estaticamente a partir das 173 migrations da branch
-`migration/cloudflare-staging`, no HEAD `1c878ee6e59ba6c2ba80a191dabf711e7ff89067`.
+`migration/cloudflare-staging` e reconciliado com os contratos do runtime e os tipos
+gerados na Fase 2-B. Nenhum SQL foi executado e nenhuma conexão externa foi realizada.
 
-## Conteúdo
+## Ordem futura de aplicação
 
-- `00000000000000_vejamais_canonical_schema_candidate.sql`: 38 tabelas públicas, tipos, alterações estruturais e índices finais inferidos.
-- `00000000000001_vejamais_canonical_functions_candidate.sql`: projeção final por nome das funções e triggers.
-- `00000000000002_vejamais_canonical_security_candidate.sql`: RLS, policies finais e grants explícitos.
-- `BASELINE_MANIFEST.json`: inventário mecânico, hashes e exclusões.
+1. `00000000000000_vejamais_canonical_schema_candidate.sql`
+2. `00000000000001_vejamais_canonical_functions_candidate.sql`
+3. `00000000000002_vejamais_canonical_security_candidate.sql`
+
+Essa ordem preserva as dependências: tipos/tabelas/constraints/índices, depois funções e
+triggers, por último RLS, policies e grants.
+
+## Conteúdo reconciliado
+
+- 38 tabelas públicas e 52 relacionamentos tipados;
+- 55 funções finais, incluindo a substituição segura de
+  `reconcile_and_finalize_onboarding()` sem UUIDs de banco;
+- 39 triggers com todas as funções-alvo presentes;
+- 45 policies e RLS habilitado nas 38 tabelas;
+- grants explícitos para `authenticated`, sem execução global de funções;
+- contratos de frontend e tipos alinhados a `accept_company_invitation(text)`;
+- colunas finais antes ocultas em blocos dinâmicos projetadas explicitamente;
+- ausência do RPC de teste `rpc_registrar_compra_test` e de sua tipagem.
 
 ## Exclusões obrigatórias
 
@@ -18,22 +33,25 @@ Este pacote foi sintetizado estaticamente a partir das 173 migrations da branch
 - migrations duplicadas ou semanticamente equivalentes;
 - `blog_posts` e `blog_categories` do piloto VSEO;
 - `private.snapshots` e `private.manifests` do incidente histórico;
+- definições históricas de `reconcile_and_finalize_onboarding()` acopladas a UUIDs;
 - `public.rpc_registrar_compra_test`;
-- `public.reconcile_and_finalize_onboarding` (RPC histórica acoplada a UUIDs do banco anterior);
 - overloads legados de `public.get_company_subscription_context` removidos no estado final;
 - UUIDs e dados vinculados ao banco anterior;
 - grant global de execução de funções para `authenticated`;
 - criação/configuração de Auth, Storage, Edge Functions e Secrets.
 
-## Limites
+## Rollback planejado
 
-Este pacote não foi executado em PostgreSQL ou Supabase. A síntese é estática e permanece
-fora de `supabase/migrations/`, impedindo aplicação automática. Antes de qualquer uso deve
-passar por revisão SQL independente, validação em banco efêmero autorizado e certificação humana.
+Como a primeira aplicação autorizada deverá ocorrer em um projeto Supabase staging vazio,
+o rollback recomendado é descartar integralmente esse projeto staging e recriá-lo vazio.
+Não existe rollback in-place neste pacote, pois ele poderia preservar estado parcial e
+produzir uma falsa equivalência. Nenhuma ação de rollback foi executada nesta fase.
 
-O runtime ainda referencia `reconcile_and_finalize_onboarding`; essa dependência precisa ser
-removida ou substituída em uma fase de código separada antes da validação em staging.
+## Limites e próximo gate
 
-## Próximo gate
+O pacote permanece fora de `supabase/migrations/`, impedindo aplicação automática. Antes
+de qualquer uso requer revisão SQL independente, autorização humana e execução controlada
+em staging vazio, seguida de certificação material. Cloudflare, DNS e produção continuam
+fora de escopo.
 
-`PHASE_2A_CANONICAL_BASELINE_CANDIDATE_REQUIRES_STATIC_CERTIFICATION`
+`PHASE_2B_REPOSITORY_CONTRACTS_CERTIFIED_READY_FOR_HUMAN_REVIEW`
