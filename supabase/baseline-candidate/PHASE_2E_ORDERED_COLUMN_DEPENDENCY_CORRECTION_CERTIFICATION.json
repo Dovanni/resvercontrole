@@ -1,0 +1,71 @@
+{
+  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2E-ORDERED-COLUMN-DEPENDENCY-CORRECTION-CERTIFICATION-v1",
+  "mode": "REPOSITORY_ONLY",
+  "source_branch": "migration/cloudflare-staging",
+  "source_head_before_phase_2e": "1d99a2827fada4c1a3ce83a4b4654276f3eb5c19",
+  "target_project_ref": "hoalgniwydgydqaugqph",
+  "authorized_scope": [
+    "move only the existing empresa_id additions for payment_routing_rules and categorias_contas_pagar",
+    "place each addition before the constraint that consumes it",
+    "preserve the final architecture",
+    "validate all recognized constraint and index column references in real execution order",
+    "recalculate hashes and update the plan and certifications",
+    "block database application pending integral approval"
+  ],
+  "moved_statements": [
+    {
+      "table": "payment_routing_rules",
+      "statement": "ALTER TABLE public.payment_routing_rules ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);",
+      "line_before": 849,
+      "line_after": 742,
+      "dependent_constraint_line_after": 746,
+      "precedes_dependency": true
+    },
+    {
+      "table": "categorias_contas_pagar",
+      "statement": "ALTER TABLE public.categorias_contas_pagar ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);",
+      "line_before": 843,
+      "line_after": 749,
+      "dependent_constraint_line_after": 753,
+      "precedes_dependency": true
+    }
+  ],
+  "schema_proof": {
+    "sha256_before": "1d30590ca0e0573917ddef9d6d0b77135d9ad39b17d3f4a570dc6b2a0c2c1e57",
+    "sha256_after": "546bb8cd3ad2e58bc3a96443ccf75b5d4e2c03588b64294d99a7223fc9263380",
+    "bytes_before": 54341,
+    "bytes_after": 54341,
+    "lines_before": 1019,
+    "lines_after": 1019,
+    "sorted_lines_sha256_before": "88d7605a3c7104a9992ab791f88c7b6d673839db447591b7cd46084144694bc0",
+    "sorted_lines_sha256_after": "88d7605a3c7104a9992ab791f88c7b6d673839db447591b7cd46084144694bc0",
+    "line_multiset_equal": true,
+    "statements_added": 0,
+    "statements_removed": 0,
+    "statements_rewritten": 0,
+    "statements_relocated": 2,
+    "final_architecture_changed": false
+  },
+  "unchanged_sql_artifacts": {
+    "00000000000001_vejamais_canonical_functions_candidate.sql": "2536e26c30a0894ff49281f9c95f85a5006f96cc75c868bcfa54c72ed8b41888",
+    "00000000000002_vejamais_canonical_security_candidate.sql": "7df0c5f61615481c35940108052e3292d70ad4a1c91660e09f8c17d7ae3509bb"
+  },
+  "preflight": {
+    "checks_total": 100,
+    "checks_passed": 100,
+    "checks_failed": 0,
+    "constraints_scanned_sequentially": 186,
+    "indexes_scanned_sequentially": 57,
+    "column_references_scanned_sequentially": 372,
+    "sequential_dependency_failures": 0
+  },
+  "database_connections": 0,
+  "sql_executions": 0,
+  "supabase_actions": 0,
+  "cloudflare_actions": 0,
+  "dns_actions": 0,
+  "production_actions": 0,
+  "automatic_github_integrations": 0,
+  "application_blocked_pending_human_approval": true,
+  "decision": "PHASE_2E_ORDERED_COLUMN_DEPENDENCIES_STATICALLY_CERTIFIED_AWAITING_HUMAN_APPROVAL"
+}

@@ -46,6 +46,162 @@ function maskDollarBodies(sql) {
   return sql.replace(/(\$[A-Za-z_][A-Za-z0-9_]*\$|\$\$)[\s\S]*?\1/g, '$1__BODY__$1');
 }
 
+function splitSqlStatements(sql) {
+  const statements = [];
+  let state = 'normal', dollar = '', start = 0;
+  for (let i = 0; i < sql.length; i++) {
+    const c = sql[i], n = sql[i + 1];
+    if (state === 'line') { if (c === '\n') state = 'normal'; continue; }
+    if (state === 'block') { if (c === '*' && n === '/') { state = 'normal'; i++; } continue; }
+    if (state === 'single') { if (c === "'" && n === "'") { i++; continue; } if (c === "'") state = 'normal'; continue; }
+    if (state === 'double') { if (c === '"' && n === '"') { i++; continue; } if (c === '"') state = 'normal'; continue; }
+    if (state === 'dollar') { if (sql.startsWith(dollar, i)) { i += dollar.length - 1; state = 'normal'; } continue; }
+    if (c === '-' && n === '-') { state = 'line'; i++; continue; }
+    if (c === '/' && n === '*') { state = 'block'; i++; continue; }
+    if (c === "'") { state = 'single'; continue; }
+    if (c === '"') { state = 'double'; continue; }
+    if (c === '$') {
+      const m = sql.slice(i).match(/^\$[A-Za-z_][A-Za-z0-9_]*\$|^\$\$/);
+      if (m) { dollar = m[0]; state = 'dollar'; i += dollar.length - 1; continue; }
+    }
+    if (c === ';') {
+      const statement = sql.slice(start, i + 1).trim();
+      if (statement) statements.push(statement);
+      start = i + 1;
+    }
+  }
+  const tail = sql.slice(start).trim();
+  if (tail) statements.push(tail);
+  return statements;
+}
+
+function splitTopLevelCsv(value) {
+  const parts = [];
+  let state = 'normal', depth = 0, start = 0;
+  for (let i = 0; i < value.length; i++) {
+    const c = value[i], n = value[i + 1];
+    if (state === 'single') { if (c === "'" && n === "'") { i++; continue; } if (c === "'") state = 'normal'; continue; }
+    if (state === 'double') { if (c === '"' && n === '"') { i++; continue; } if (c === '"') state = 'normal'; continue; }
+    if (c === "'") { state = 'single'; continue; }
+    if (c === '"') { state = 'double'; continue; }
+    if (c === '(') depth++;
+    else if (c === ')') depth--;
+    else if (c === ',' && depth === 0) { parts.push(value.slice(start, i).trim()); start = i + 1; }
+  }
+  parts.push(value.slice(start).trim());
+  return parts.filter(Boolean);
+}
+
+function balancedParenthesized(value, openIndex) {
+  let state = 'normal', depth = 0;
+  for (let i = openIndex; i < value.length; i++) {
+    const c = value[i], n = value[i + 1];
+    if (state === 'single') { if (c === "'" && n === "'") { i++; continue; } if (c === "'") state = 'normal'; continue; }
+    if (state === 'double') { if (c === '"' && n === '"') { i++; continue; } if (c === '"') state = 'normal'; continue; }
+    if (c === "'") { state = 'single'; continue; }
+    if (c === '"') { state = 'double'; continue; }
+    if (c === '(') depth++;
+    else if (c === ')' && --depth === 0) return value.slice(openIndex + 1, i);
+  }
+  return '';
+}
+
+function knownColumnReferences(fragment, finalColumns) {
+  const masked = fragment
+    .replace(/--.*$/gm, ' ')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/'(?:''|[^'])*'/g, ' ')
+    .replace(/"(?:""|[^"])*"/g, ' ');
+  return [...new Set(
+    [...masked.matchAll(/\b([a-z_][a-z0-9_]*)\b/gi)]
+      .map((match) => match[1].toLowerCase())
+      .filter((name) => finalColumns.has(name))
+  )];
+}
+
+function validateSequentialConstraintAndIndexColumns(sql, finalTableColumns) {
+  const available = new Map();
+  const issues = [];
+  let constraintsScanned = 0, indexesScanned = 0, columnReferencesScanned = 0;
+
+  const validate = (table, fragment, kind) => {
+    const finalColumns = finalTableColumns.get(table) || new Set();
+    const currentColumns = available.get(table) || new Set();
+    const references = knownColumnReferences(fragment, finalColumns);
+    columnReferencesScanned += references.length;
+    for (const column of references) {
+      if (!currentColumns.has(column)) issues.push({ kind, table, column });
+    }
+  };
+
+  for (const statement of splitSqlStatements(sql)) {
+    const create = statement.match(/\bCREATE TABLE(?: IF NOT EXISTS)? public\.([a-z_][a-z0-9_]*)\s*\(/i);
+    if (create) {
+      const table = create[1].toLowerCase();
+      const openIndex = statement.indexOf('(', create.index);
+      const body = balancedParenthesized(statement, openIndex);
+      const segments = splitTopLevelCsv(body);
+      const columns = new Set();
+      for (const segment of segments) {
+        const cleanSegment = segment.replace(/--.*$/gm, ' ').trim();
+        if (/^(?:CONSTRAINT|PRIMARY\s+KEY|UNIQUE|CHECK|FOREIGN\s+KEY|EXCLUDE)\b/i.test(cleanSegment)) continue;
+        const column = cleanSegment.match(/^\s*([a-z_][a-z0-9_]*)\s+/i)?.[1]?.toLowerCase();
+        if (column) columns.add(column);
+      }
+      available.set(table, columns);
+      for (const segment of segments) {
+        const cleanSegment = segment.replace(/--.*$/gm, ' ').trim();
+        if (/^(?:CONSTRAINT|PRIMARY\s+KEY|UNIQUE|CHECK|FOREIGN\s+KEY|EXCLUDE)\b/i.test(cleanSegment)) {
+          constraintsScanned++;
+          validate(table, cleanSegment, 'CREATE_TABLE_CONSTRAINT');
+        } else if (/\b(?:PRIMARY\s+KEY|UNIQUE|CHECK|REFERENCES)\b/i.test(cleanSegment)) {
+          constraintsScanned++;
+          const column = cleanSegment.match(/^\s*([a-z_][a-z0-9_]*)\s+/i)?.[1]?.toLowerCase();
+          if (column && !columns.has(column)) issues.push({ kind: 'INLINE_COLUMN_CONSTRAINT', table, column });
+          validate(table, cleanSegment, 'INLINE_COLUMN_CONSTRAINT');
+        }
+      }
+      continue;
+    }
+
+    const addColumn = statement.match(/\bALTER TABLE public\.([a-z_][a-z0-9_]*)\s+ADD COLUMN(?: IF NOT EXISTS)?\s+([a-z_][a-z0-9_]*)/i);
+    if (addColumn) {
+      const table = addColumn[1].toLowerCase(), column = addColumn[2].toLowerCase();
+      if (!available.has(table)) issues.push({ kind: 'ADD_COLUMN_TARGET', table, column });
+      else available.get(table).add(column);
+      if (/\b(?:PRIMARY\s+KEY|UNIQUE|CHECK|REFERENCES)\b/i.test(statement)) {
+        constraintsScanned++;
+        validate(table, statement, 'ADD_COLUMN_CONSTRAINT');
+      }
+      continue;
+    }
+
+    const dropColumn = statement.match(/\bALTER TABLE public\.([a-z_][a-z0-9_]*)\s+DROP COLUMN(?: IF EXISTS)?\s+([a-z_][a-z0-9_]*)/i);
+    if (dropColumn) {
+      available.get(dropColumn[1].toLowerCase())?.delete(dropColumn[2].toLowerCase());
+      continue;
+    }
+
+    const addConstraint = statement.match(/\bALTER TABLE public\.([a-z_][a-z0-9_]*)\s+ADD CONSTRAINT\s+([a-z_][a-z0-9_]*)/i);
+    if (addConstraint) {
+      const table = addConstraint[1].toLowerCase();
+      constraintsScanned++;
+      if (!available.has(table)) issues.push({ kind: 'CONSTRAINT_TARGET', table, constraint: addConstraint[2] });
+      validate(table, statement, 'ALTER_TABLE_CONSTRAINT');
+      continue;
+    }
+
+    const createIndex = statement.match(/\bCREATE(?: UNIQUE)? INDEX(?: IF NOT EXISTS)?\s+([a-z_][a-z0-9_]*)\s+ON public\.([a-z_][a-z0-9_]*)/i);
+    if (createIndex) {
+      const table = createIndex[2].toLowerCase();
+      indexesScanned++;
+      if (!available.has(table)) issues.push({ kind: 'INDEX_TARGET', table, index: createIndex[1] });
+      validate(table, statement, 'INDEX');
+    }
+  }
+  return { issues, constraintsScanned, indexesScanned, columnReferencesScanned };
+}
+
 for (const [key, sql] of Object.entries(text)) {
   const scan = lexicalScan(sql);
   check(scan.valid, `SQL_LEXICAL_${key.toUpperCase()}`, scan.error || `top_level_semicolons=${scan.semicolons}`);
@@ -66,6 +222,12 @@ const tableColumns = new Map(tableMatches.map((match) => [
 for (const add of text.schema.matchAll(/ALTER TABLE public\.([a-z_][a-z0-9_]*)\s+ADD COLUMN(?: IF NOT EXISTS)?\s+([a-z_][a-z0-9_]*)/gi)) {
   tableColumns.get(add[1])?.add(add[2]);
 }
+
+const sequentialDependencies = validateSequentialConstraintAndIndexColumns(text.schema, tableColumns);
+check(sequentialDependencies.issues.length === 0, 'SEQUENTIAL_CONSTRAINT_INDEX_COLUMNS_EXIST', JSON.stringify(sequentialDependencies.issues));
+check(sequentialDependencies.constraintsScanned > 0, 'SEQUENTIAL_CONSTRAINTS_SCANNED', `count=${sequentialDependencies.constraintsScanned}`);
+check(sequentialDependencies.indexesScanned === 57, 'SEQUENTIAL_INDEXES_SCANNED', `count=${sequentialDependencies.indexesScanned}`);
+check(sequentialDependencies.columnReferencesScanned > 0, 'SEQUENTIAL_COLUMN_REFERENCES_SCANNED', `count=${sequentialDependencies.columnReferencesScanned}`);
 
 const forwardReferences = [];
 for (let i = 0; i < tableMatches.length; i++) {
@@ -137,9 +299,21 @@ for (const [key, name] of Object.entries(files)) {
 }
 check(applicationPlan.target_class === 'NEW_EMPTY_SUPABASE_STAGING_ONLY', 'PLAN_TARGET_IS_EMPTY_STAGING_ONLY');
 check(applicationPlan.rollback?.strategy === 'DISCARD_AND_RECREATE_EMPTY_STAGING_PROJECT' && applicationPlan.rollback?.in_place_rollback_allowed === false, 'PLAN_ROLLBACK_IS_DISCARD_ONLY');
+const phase2dHeader = '-- Phase 2-D certified for controlled application exclusively to empty Supabase staging hoalgniwydgydqaugqph; executable SQL unchanged.';
+check(text.schema.split('\n')[1] === phase2dHeader, 'DECLARATIVE_HEADER_SCHEMA_PRESERVED');
+check(text.functions.split('\n')[1] === phase2dHeader, 'DECLARATIVE_HEADER_FUNCTIONS_PRESERVED');
+check(text.security.split('\n')[1] === phase2dHeader, 'DECLARATIVE_HEADER_SECURITY_PRESERVED');
+check(applicationPlan.target_project_ref === 'hoalgniwydgydqaugqph', 'PLAN_TARGET_PROJECT_REF_EXACT');
+check(applicationPlan.status === 'ORDER_CORRECTED_STATICALLY_CERTIFIED_AWAITING_HUMAN_APPROVAL', 'PLAN_APPLICATION_BLOCKED_PENDING_APPROVAL');
+check(
+  applicationPlan.phase_2e_order_correction?.final_architecture_changed === false
+    && applicationPlan.phase_2e_order_correction?.moved_existing_statements_only?.length === 2
+    && applicationPlan.phase_2e_order_correction?.application_blocked_pending_human_approval === true,
+  'PLAN_PHASE_2E_SCOPE_EXACT'
+);
 
 const result = {
-  protocol: 'VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2C-FINAL-STATIC-PREFLIGHT-v1',
+  protocol: 'VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2E-ORDERED-COLUMN-DEPENDENCY-PREFLIGHT-v1',
   mode: 'REPOSITORY_ONLY_NO_DATABASE_EXECUTION',
   checks_total: checks.length,
   checks_passed: checks.filter((item) => item.pass).length,
@@ -153,6 +327,10 @@ const result = {
     rls_tables: rlsTargets.length,
     policies: policies.length,
     indexes: indexNames.length,
+    sequential_constraints_scanned: sequentialDependencies.constraintsScanned,
+    sequential_indexes_scanned: sequentialDependencies.indexesScanned,
+    sequential_column_references_scanned: sequentialDependencies.columnReferencesScanned,
+    sequential_dependency_failures: sequentialDependencies.issues.length,
     security_definer_functions: securityDefinerBlocks.length,
     explicit_function_grants: grantFunctions.length,
   },
@@ -169,8 +347,8 @@ const result = {
   rollback: 'discard_and_recreate_empty_staging_project; never continue from partial state',
   prohibited_actions: { database_connections: 0, sql_executions: 0, supabase_actions: 0, cloudflare_actions: 0, dns_actions: 0, production_actions: 0 },
   decision: failures.length === 0
-    ? 'PHASE_2C_CANONICAL_BASELINE_STATIC_PREFLIGHT_CERTIFIED_READY_FOR_CONTROLLED_EMPTY_STAGING_APPLICATION'
-    : 'PHASE_2C_CANONICAL_BASELINE_STATIC_PREFLIGHT_BLOCKED',
+    ? 'PHASE_2E_ORDERED_COLUMN_DEPENDENCIES_STATICALLY_CERTIFIED_READY_FOR_NEW_CONTROLLED_EMPTY_STAGING_APPLICATION'
+    : 'PHASE_2E_ORDERED_COLUMN_DEPENDENCIES_STATIC_PREFLIGHT_BLOCKED',
 };
 console.log(JSON.stringify(result, null, 2));
 process.exitCode = failures.length ? 1 : 0;

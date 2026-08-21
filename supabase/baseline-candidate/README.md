@@ -1,6 +1,6 @@
 # VEJAMAIS ERP — Baseline Canônico Candidate v3
 
-Status: **PREFLIGHT ESTÁTICO APROVADO — AINDA NÃO EXECUTAR SEM NOVA AUTORIZAÇÃO**
+Status: **FASE 2-E APROVADA — APLICAÇÃO BLOQUEADA ATÉ NOVA AUTORIZAÇÃO HUMANA**
 
 Este pacote foi sintetizado estaticamente a partir das 173 migrations da branch
 `migration/cloudflare-staging` e reconciliado com os contratos do runtime e os tipos
@@ -61,6 +61,17 @@ produzir uma falsa equivalência. Nenhuma ação de rollback foi executada nesta
 Consulte `PREFLIGHT_CERTIFICATION.json` e execute
 `node scripts/migration/verify-canonical-preflight.mjs` antes de qualquer gate futuro.
 
+## Correção de ordem Fase 2-E
+
+- as adições já existentes de `empresa_id` em `payment_routing_rules` e
+  `categorias_contas_pagar` foram movidas para antes das constraints que as utilizam;
+- nenhuma instrução executável foi adicionada, removida ou reescrita;
+- linhas, bytes e multiconjunto de linhas do schema permaneceram idênticos;
+- o preflight agora simula a ordem real e valida colunas usadas por constraints e índices;
+- 100 verificações aprovadas, incluindo 186 constraints, 57 índices e 372 referências
+  sequenciais de coluna, com zero falhas;
+- functions e security permaneceram byte a byte inalterados.
+
 ## Limites e próximo gate
 
 O pacote permanece fora de `supabase/migrations/`, impedindo aplicação automática. Antes
@@ -68,4 +79,4 @@ de qualquer uso requer revisão SQL independente, autorização humana e execuç
 em staging vazio, seguida de certificação material. Cloudflare, DNS e produção continuam
 fora de escopo.
 
-`PHASE_2C_CANONICAL_BASELINE_STATIC_PREFLIGHT_CERTIFIED_READY_FOR_CONTROLLED_EMPTY_STAGING_APPLICATION`
+`PHASE_2E_ORDERED_COLUMN_DEPENDENCIES_STATICALLY_CERTIFIED_AWAITING_HUMAN_APPROVAL`

@@ -1,19 +1,26 @@
 {
-  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2D-DECLARATIVE-RECTIFICATION-PREFLIGHT-v1",
+  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2E-ORDERED-COLUMN-DEPENDENCY-PREFLIGHT-v1",
   "audit_mode": "REPOSITORY_ONLY_NO_DATABASE_EXECUTION",
   "source_branch": "migration/cloudflare-staging",
-  "source_head_before_phase_2d": "dc03835c1b9184f7b6dd6bd53d89f19893e4ea82",
+  "source_head_before_phase_2e": "1d99a2827fada4c1a3ce83a4b4654276f3eb5c19",
   "target_project_ref": "hoalgniwydgydqaugqph",
-  "checks_total": 96,
-  "checks_passed": 96,
+  "checks_total": 100,
+  "checks_passed": 100,
   "checks_failed": 0,
   "phase_2c_static_checks_reexecuted": 90,
-  "phase_2d_declarative_checks": 6,
-  "executable_sql_changed": false,
-  "changed_lines_per_sql": [
-    2
-  ],
-  "syntax_validation_scope": "static lexical balance, statement boundaries, prohibited top-level statements and dependency validation; no PostgreSQL server execution",
+  "phase_2d_declarative_checks_reexecuted": 6,
+  "phase_2e_sequential_dependency_checks": 4,
+  "executable_sql_changed": true,
+  "change_classification": "ORDER_ONLY_RELOCATION_OF_TWO_EXISTING_ADD_COLUMN_STATEMENTS",
+  "final_architecture_changed": false,
+  "schema_line_multiset_sha256_before": "88d7605a3c7104a9992ab791f88c7b6d673839db447591b7cd46084144694bc0",
+  "schema_line_multiset_sha256_after": "88d7605a3c7104a9992ab791f88c7b6d673839db447591b7cd46084144694bc0",
+  "schema_line_multiset_equal": true,
+  "schema_lines_before": 1019,
+  "schema_lines_after": 1019,
+  "schema_bytes_before": 54341,
+  "schema_bytes_after": 54341,
+  "syntax_validation_scope": "static lexical balance, statement boundaries, prohibited top-level statements, table topology, and real-order validation of every recognized constraint and index column reference; no PostgreSQL server execution",
   "metrics": {
     "tables": 38,
     "forward_table_references": 0,
@@ -22,26 +29,31 @@
     "rls_tables": 38,
     "policies": 45,
     "indexes": 57,
+    "constraints_scanned_sequentially": 186,
+    "indexes_scanned_sequentially": 57,
+    "column_references_scanned_sequentially": 372,
+    "sequential_dependency_failures": 0,
     "security_definer_functions": 54,
     "explicit_function_grants": 10
   },
   "artifact_sha256": {
-    "00000000000000_vejamais_canonical_schema_candidate.sql": "1d30590ca0e0573917ddef9d6d0b77135d9ad39b17d3f4a570dc6b2a0c2c1e57",
+    "00000000000000_vejamais_canonical_schema_candidate.sql": "546bb8cd3ad2e58bc3a96443ccf75b5d4e2c03588b64294d99a7223fc9263380",
     "00000000000001_vejamais_canonical_functions_candidate.sql": "2536e26c30a0894ff49281f9c95f85a5006f96cc75c868bcfa54c72ed8b41888",
     "00000000000002_vejamais_canonical_security_candidate.sql": "7df0c5f61615481c35940108052e3292d70ad4a1c91660e09f8c17d7ae3509bb"
   },
-  "executable_payload_sha256": {
-    "00000000000000_vejamais_canonical_schema_candidate.sql": "565a8739c95e942b0a169c7610bad38387872abc4f73cef439c64027785b1afd",
-    "00000000000001_vejamais_canonical_functions_candidate.sql": "9be089fdb2764ec9d04f1e46b6de1ef37a6808d9f7447ccdc230b81faf656abc",
-    "00000000000002_vejamais_canonical_security_candidate.sql": "53e8d3bd6800aeeb296ae91bd5c5e017ea3c3152b3760f90cf2d13e4fec1047e"
+  "phase_2d_artifact_byte_equality": {
+    "functions": true,
+    "security": true
   },
+  "application_blocked_pending_human_approval": true,
   "prohibited_actions": {
     "database_connections": 0,
     "sql_executions": 0,
     "supabase_actions": 0,
     "cloudflare_actions": 0,
     "dns_actions": 0,
-    "production_actions": 0
+    "production_actions": 0,
+    "automatic_github_integrations": 0
   },
-  "decision": "PHASE_2D_DECLARATIVE_HEADERS_RECTIFIED_EXECUTABLE_PAYLOAD_BYTE_EQUAL_READY_FOR_CONTROLLED_EMPTY_STAGING_APPLICATION"
+  "decision": "PHASE_2E_ORDERED_COLUMN_DEPENDENCIES_STATICALLY_CERTIFIED_AWAITING_HUMAN_APPROVAL"
 }

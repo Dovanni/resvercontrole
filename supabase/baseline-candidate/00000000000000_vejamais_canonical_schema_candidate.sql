@@ -739,12 +739,14 @@ ALTER TABLE public.controle_vendas_diario ADD COLUMN IF NOT EXISTS empresa_id UU
 ALTER TABLE public.controle_vendas_diario ALTER COLUMN empresa_id SET NOT NULL;
 
 -- source: 20260808164303_659f4c89-ac74-4aca-8faa-fa5ac53e4436.sql | structural projection: public.payment_routing_rules
+ALTER TABLE public.payment_routing_rules ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
 ALTER TABLE public.payment_routing_rules DROP CONSTRAINT IF EXISTS payment_routing_rules_user_id_payment_method_key;
 
 -- source: 20260808164303_659f4c89-ac74-4aca-8faa-fa5ac53e4436.sql | structural projection: public.payment_routing_rules
 ALTER TABLE public.payment_routing_rules ADD CONSTRAINT payment_routing_rules_empresa_id_payment_method_key UNIQUE (empresa_id, payment_method);
 
 -- source: 20260808164303_659f4c89-ac74-4aca-8faa-fa5ac53e4436.sql | structural projection: public.categorias_contas_pagar
+ALTER TABLE public.categorias_contas_pagar ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
 ALTER TABLE public.categorias_contas_pagar DROP CONSTRAINT IF EXISTS categorias_contas_pagar_user_id_nome_key;
 
 -- source: 20260808164303_659f4c89-ac74-4aca-8faa-fa5ac53e4436.sql | structural projection: public.categorias_contas_pagar
@@ -840,13 +842,11 @@ ALTER TABLE public.bank_movements ADD COLUMN empresa_id UUID NOT NULL REFERENCES
 ALTER TABLE public.cartoes_credito ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
 ALTER TABLE public.cartoes_faturas ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
 ALTER TABLE public.cartoes_lancamentos ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
-ALTER TABLE public.categorias_contas_pagar ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
 ALTER TABLE public.compras ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
 ALTER TABLE public.compras_itens ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
 ALTER TABLE public.customers ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
 ALTER TABLE public.finance_entries ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
 ALTER TABLE public.payables ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
-ALTER TABLE public.payment_routing_rules ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
 ALTER TABLE public.products ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
 ALTER TABLE public.receivables ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
 ALTER TABLE public.sale_items ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);

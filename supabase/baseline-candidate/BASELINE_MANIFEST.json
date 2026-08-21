@@ -1,9 +1,11 @@
 {
-  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2D-CANONICAL-BASELINE-v1",
-  "status": "DECLARATIVE_HEADERS_RECTIFIED_STATIC_PREFLIGHT_CERTIFIED_NOT_EXECUTED",
+  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2E-CANONICAL-BASELINE-v1",
+  "status": "ORDER_CORRECTED_STATIC_PREFLIGHT_CERTIFIED_AWAITING_HUMAN_APPROVAL",
   "source_branch": "migration/cloudflare-staging",
   "source_main_head": "1c878ee6e59ba6c2ba80a191dabf711e7ff89067",
   "phase_2a_head": "0cd60f0381cde251aa97f0538dcb0d0209c2416c",
+  "phase_2c_head": "dc03835c1b9184f7b6dd6bd53d89f19893e4ea82",
+  "phase_2d_head": "1d99a2827fada4c1a3ce83a4b4654276f3eb5c19",
   "source_migrations": 173,
   "final_public_table_count": 38,
   "typed_relationship_count": 52,
@@ -34,18 +36,26 @@
     "aligned accept_company_invitation to its one-argument contract",
     "propagated authenticated server client instead of global browser client",
     "removed authenticated grant from internal ensure_empresa_defaults",
-    "removed stale test RPC and dropped-column generated types"
+    "removed stale test RPC and dropped-column generated types",
+    "moved existing empresa_id additions for payment_routing_rules and categorias_contas_pagar before their consuming constraints"
   ],
   "application_contract_blockers": [],
-  "static_preflight_checks": 96,
+  "static_preflight_checks": 100,
   "static_preflight_failures": 0,
   "forward_table_references": 0,
+  "sequential_dependency_validation": {
+    "constraints_scanned": 186,
+    "indexes_scanned": 57,
+    "column_references_scanned": 372,
+    "failures": 0
+  },
   "application_order": [
     "00000000000000_vejamais_canonical_schema_candidate.sql",
     "00000000000001_vejamais_canonical_functions_candidate.sql",
     "00000000000002_vejamais_canonical_security_candidate.sql"
   ],
-  "rollback_strategy": "discard_and_recreate_empty_staging_project; no in-place rollback",
+  "application_blocked_pending_human_approval": true,
+  "rollback_strategy": "discard_and_recreate_empty staging project; no in-place rollback",
   "storage_buckets_required_separately": [
     "product-photos",
     "company-logos",
@@ -58,7 +68,7 @@
   "operational_data_included": false,
   "files": {
     "00000000000000_vejamais_canonical_schema_candidate.sql": {
-      "sha256": "1d30590ca0e0573917ddef9d6d0b77135d9ad39b17d3f4a570dc6b2a0c2c1e57",
+      "sha256": "546bb8cd3ad2e58bc3a96443ccf75b5d4e2c03588b64294d99a7223fc9263380",
       "bytes": 54341,
       "lines": 1019
     },
@@ -78,26 +88,35 @@
       "lines": 52
     },
     "README.md": {
-      "sha256": "11d109b55abff4eb8e3c9d30417c7022b00215ca368dde08b7a573c4f59b7bd7",
-      "bytes": 3540,
-      "lines": 71
+      "sha256": "75041c25b46028aa4ce0ebf251bbb9324fc1edbf1ccc30e412f36e730987c28c",
+      "bytes": 4149,
+      "lines": 82
     },
     "APPLICATION_PLAN.json": {
-      "sha256": "4276a71aca14b3b5d0fdd49d4c0fe1e924be87f932a3ef51e4d1c436da78cc5e",
-      "bytes": 3670,
-      "lines": 90
+      "sha256": "73841ba16b6957665a1eb550652d3750fccc58f2669e5c3d0d6758187983cc8a",
+      "bytes": 4462,
+      "lines": 103
     },
     "PREFLIGHT_CERTIFICATION.json": {
-      "sha256": "e560f8026fbd16057c870e232f6e59fd6d4291f402212e5f55fb6f01c5ebfba5",
-      "bytes": 2148,
-      "lines": 47
+      "sha256": "972da08df485c5d98aae689a097e96714a41dc9fc8869fa07488fc38e3af10f1",
+      "bytes": 2640,
+      "lines": 59
     },
     "PHASE_2D_DECLARATIVE_RECTIFICATION_CERTIFICATION.json": {
       "sha256": "488c12816082337cfef471b6be9df4abdeb8754e55b6756499b9cff4b6448cfa",
       "bytes": 2994,
       "lines": 71
+    },
+    "PHASE_2E_ORDERED_COLUMN_DEPENDENCY_CORRECTION_CERTIFICATION.json": {
+      "sha256": "0759c3afbac85000451e8dca439c3f66b1c7ec76bce688f903a6174059c0414e",
+      "bytes": 3052,
+      "lines": 71
+    },
+    "scripts/migration/verify-canonical-preflight.mjs": {
+      "sha256": "fb031a6d95958dbc88e7d7389dfc512bfc4f17b1d365d5e9d5b40289d9d3928e",
+      "bytes": 20934,
+      "lines": 354
     }
   },
-  "phase_2c_head": "dc03835c1b9184f7b6dd6bd53d89f19893e4ea82",
-  "phase_2d_target_project_ref": "hoalgniwydgydqaugqph"
+  "target_project_ref": "hoalgniwydgydqaugqph"
 }

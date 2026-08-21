@@ -1,13 +1,13 @@
 {
-  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2D-APPLICATION-PACKAGE-v1",
-  "status": "DECLARATIVE_HEADERS_RECTIFIED_STATICALLY_CERTIFIED_NOT_EXECUTED",
+  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2E-APPLICATION-PACKAGE-v1",
+  "status": "ORDER_CORRECTED_STATICALLY_CERTIFIED_AWAITING_HUMAN_APPROVAL",
   "source_branch": "migration/cloudflare-staging",
   "target_class": "NEW_EMPTY_SUPABASE_STAGING_ONLY",
   "application_order": [
     {
       "step": 1,
       "file": "00000000000000_vejamais_canonical_schema_candidate.sql",
-      "sha256": "1d30590ca0e0573917ddef9d6d0b77135d9ad39b17d3f4a570dc6b2a0c2c1e57",
+      "sha256": "546bb8cd3ad2e58bc3a96443ccf75b5d4e2c03588b64294d99a7223fc9263380",
       "purpose": "types_tables_constraints_indexes"
     },
     {
@@ -29,6 +29,8 @@
     "target public schema contains no application tables or operational data",
     "all three file SHA-256 values exactly match this plan",
     "repository preflight exits successfully with zero failures",
+    "Phase 2-E sequential constraint and index dependency checks pass with zero failures",
+    "new explicit human authorization is recorded after Phase 2-E certification",
     "verified backup or disposable-project confirmation exists",
     "target project reference is exactly hoalgniwydgydqaugqph; no credentials are stored in Git"
   ],
@@ -36,6 +38,7 @@
     "any precondition is false or unverifiable",
     "target is not staging or is not empty",
     "any artifact hash differs",
+    "Phase 2-E certification is absent or has any sequential dependency failure",
     "application order differs",
     "any statement returns warning requiring human judgment or any SQL error",
     "any expected object count or contract differs after a step",
@@ -86,5 +89,15 @@
       "00000000000001_vejamais_canonical_functions_candidate.sql": "9be089fdb2764ec9d04f1e46b6de1ef37a6808d9f7447ccdc230b81faf656abc",
       "00000000000002_vejamais_canonical_security_candidate.sql": "53e8d3bd6800aeeb296ae91bd5c5e017ea3c3152b3760f90cf2d13e4fec1047e"
     }
+  },
+  "phase_2e_order_correction": {
+    "source_head_before_phase_2e": "1d99a2827fada4c1a3ce83a4b4654276f3eb5c19",
+    "final_architecture_changed": false,
+    "moved_existing_statements_only": [
+      "ALTER TABLE public.payment_routing_rules ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);",
+      "ALTER TABLE public.categorias_contas_pagar ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);"
+    ],
+    "sequential_preflight_required": true,
+    "application_blocked_pending_human_approval": true
   }
 }
