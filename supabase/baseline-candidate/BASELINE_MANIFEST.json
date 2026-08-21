@@ -1,78 +1,48 @@
 {
-  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2A-CANONICAL-BASELINE-v1",
-  "status": "CANDIDATE_NOT_EXECUTABLE_NOT_CERTIFIED",
+  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2B-CANONICAL-BASELINE-v1",
+  "status": "REPOSITORY_CONTRACTS_CERTIFIED_NOT_EXECUTED",
   "source_branch": "migration/cloudflare-staging",
-  "source_head": "1c878ee6e59ba6c2ba80a191dabf711e7ff89067",
+  "source_main_head": "1c878ee6e59ba6c2ba80a191dabf711e7ff89067",
+  "phase_2a_head": "0cd60f0381cde251aa97f0538dcb0d0209c2416c",
   "source_migrations": 173,
-  "source_bytes": 547019,
-  "final_public_tables": [
-    "aportes_financeiros",
-    "audit_log",
-    "auth_rate_limits",
-    "bank_accounts",
-    "bank_movements",
-    "cartoes_credito",
-    "cartoes_faturas",
-    "cartoes_lancamentos",
-    "categorias_contas_pagar",
-    "checkout_attempts",
-    "company_invitations",
-    "company_settings",
-    "compras",
-    "compras_itens",
-    "controle_vendas_diario",
-    "controle_vendas_fornecedor",
-    "controle_vendas_fornecedor_historico",
-    "customers",
-    "dre_classificacoes",
-    "dre_regras",
-    "empresas",
-    "finance_entries",
-    "payables",
-    "payment_events",
-    "payment_routing_rules",
-    "pending_onboardings",
-    "plans",
-    "products",
-    "profiles",
-    "rate_limits",
-    "receivables",
-    "sale_items",
-    "sales",
-    "stripe_webhook_runtime_diagnostics",
-    "subscriptions",
-    "suppliers",
-    "user_company_access",
-    "user_roles"
-  ],
   "final_public_table_count": 38,
-  "function_count": 54,
+  "typed_relationship_count": 52,
+  "function_count": 55,
   "trigger_count": 39,
   "policy_count": 45,
-  "index_count": 39,
-  "structural_alter_count": 56,
+  "index_count": 47,
+  "rls_table_count": 38,
+  "runtime_table_contracts": 25,
+  "runtime_rpc_contracts": 15,
+  "runtime_contract_mismatches": 0,
   "excluded_objects": [
     "blog_categories",
     "blog_posts",
     "manifests",
     "snapshots"
   ],
+  "excluded_historical_definitions": [
+    "reconcile_and_finalize_onboarding definitions containing database UUID mappings",
+    "get_company_subscription_context legacy overloads"
+  ],
   "excluded_functions": [
-    "reconcile_and_finalize_onboarding",
     "rpc_registrar_compra_test"
   ],
-  "application_contract_blockers": [
-    {
-      "code": "APP_USES_EXCLUDED_INCIDENT_RPC",
-      "object": "public.reconcile_and_finalize_onboarding()",
-      "reason": "Historical definitions contain database-specific UUID mappings; the application still references this RPC and must be remediated before staging validation."
-    },
-    {
-      "code": "LEGACY_SUBSCRIPTION_RPC_DROPPED",
-      "object": "public.get_company_subscription_context(uuid[, uuid])",
-      "reason": "Both public overloads are dropped by the final migration state; only get_company_subscription_context_admin(uuid, uuid) remains."
-    }
+  "compatibility_corrections": [
+    "projected final columns previously hidden in dynamic DO blocks",
+    "added safe identity-derived reconcile_and_finalize_onboarding()",
+    "aligned accept_company_invitation to its one-argument contract",
+    "propagated authenticated server client instead of global browser client",
+    "removed authenticated grant from internal ensure_empresa_defaults",
+    "removed stale test RPC and dropped-column generated types"
   ],
+  "application_contract_blockers": [],
+  "application_order": [
+    "00000000000000_vejamais_canonical_schema_candidate.sql",
+    "00000000000001_vejamais_canonical_functions_candidate.sql",
+    "00000000000002_vejamais_canonical_security_candidate.sql"
+  ],
+  "rollback_strategy": "discard_and_recreate_empty_staging_project; no in-place rollback",
   "storage_buckets_required_separately": [
     "product-photos",
     "company-logos",
@@ -85,19 +55,29 @@
   "operational_data_included": false,
   "files": {
     "00000000000000_vejamais_canonical_schema_candidate.sql": {
-      "sha256": "d2e3a1d8be85ea012ce84579a7bd9b25f953961f55be00badce5c1de12183951",
-      "bytes": 50970,
-      "lines": 979
+      "sha256": "78b342404d6f485561b7c0cacc781a9613f57e1ec95b74b2e9057ab814b4e39f",
+      "bytes": 54911,
+      "lines": 1027
     },
     "00000000000001_vejamais_canonical_functions_candidate.sql": {
-      "sha256": "0e0ea2b14603129fde05e996a777e45bae0d6b0dd2c8a89a853eda7a9f3b5a4d",
-      "bytes": 108037,
-      "lines": 2914
+      "sha256": "b150ab69134d08c76943d0e9a7aecc92d1d15d440c0f117e29038012da892fd7",
+      "bytes": 109743,
+      "lines": 2973
     },
     "00000000000002_vejamais_canonical_security_candidate.sql": {
-      "sha256": "282af5a421b108d3f8347112dbfaee684ee0d71b20ee57b28c7e62c043dbadac",
+      "sha256": "1c52b461c90e0c51cfe8b501a4aa5abb99283ddc7747eff371dcb6ae5393d45b",
       "bytes": 16559,
       "lines": 292
+    },
+    "CONTRACT_INVENTORY.json": {
+      "sha256": "39cd260a37b3e0d958f4e8591ce60a443822a6af7eedaca98715b67eb83044ec",
+      "bytes": 1607,
+      "lines": 52
+    },
+    "README.md": {
+      "sha256": "e8f9471ec902b4ccedd324219837cbb887b4c91b5f46617f54d69572cc60f189",
+      "bytes": 2753,
+      "lines": 57
     }
   }
 }
