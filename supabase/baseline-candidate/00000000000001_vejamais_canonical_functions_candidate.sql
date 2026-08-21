@@ -1,5 +1,5 @@
 -- VEJAMAIS ERP — CANONICAL BASELINE CANDIDATE v1
--- Repository-only artifact. DO NOT APPLY. NOT CERTIFIED FOR DATABASE EXECUTION.
+-- Phase 2-D certified for controlled application exclusively to empty Supabase staging hoalgniwydgydqaugqph; executable SQL unchanged.
 -- Synthesized statically from 173 byte-attested historical migrations.
 -- Operational DML, historical data corrections, blog pilot objects, private incident
 -- snapshots, duplicate migrations and test RPCs are intentionally excluded.

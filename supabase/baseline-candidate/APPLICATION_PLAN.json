@@ -1,25 +1,25 @@
 {
-  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2C-APPLICATION-PACKAGE-v1",
-  "status": "STATICALLY_CERTIFIED_NOT_EXECUTED",
+  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2D-APPLICATION-PACKAGE-v1",
+  "status": "DECLARATIVE_HEADERS_RECTIFIED_STATICALLY_CERTIFIED_NOT_EXECUTED",
   "source_branch": "migration/cloudflare-staging",
   "target_class": "NEW_EMPTY_SUPABASE_STAGING_ONLY",
   "application_order": [
     {
       "step": 1,
       "file": "00000000000000_vejamais_canonical_schema_candidate.sql",
-      "sha256": "42836d0b043d91a84816a55f3821a1bad42ebec5a73e7ef76dcca955251c73c3",
+      "sha256": "1d30590ca0e0573917ddef9d6d0b77135d9ad39b17d3f4a570dc6b2a0c2c1e57",
       "purpose": "types_tables_constraints_indexes"
     },
     {
       "step": 2,
       "file": "00000000000001_vejamais_canonical_functions_candidate.sql",
-      "sha256": "b150ab69134d08c76943d0e9a7aecc92d1d15d440c0f117e29038012da892fd7",
+      "sha256": "2536e26c30a0894ff49281f9c95f85a5006f96cc75c868bcfa54c72ed8b41888",
       "purpose": "functions_and_triggers"
     },
     {
       "step": 3,
       "file": "00000000000002_vejamais_canonical_security_candidate.sql",
-      "sha256": "1c52b461c90e0c51cfe8b501a4aa5abb99283ddc7747eff371dcb6ae5393d45b",
+      "sha256": "7df0c5f61615481c35940108052e3292d70ad4a1c91660e09f8c17d7ae3509bb",
       "purpose": "rls_policies_and_grants"
     }
   ],
@@ -30,7 +30,7 @@
     "all three file SHA-256 values exactly match this plan",
     "repository preflight exits successfully with zero failures",
     "verified backup or disposable-project confirmation exists",
-    "application operator records target project reference without placing credentials in Git"
+    "target project reference is exactly hoalgniwydgydqaugqph; no credentials are stored in Git"
   ],
   "stop_criteria": [
     "any precondition is false or unverifiable",
@@ -42,9 +42,22 @@
     "any unexpected object, privilege, policy or dependency is observed"
   ],
   "post_step_gates": {
-    "after_step_1": ["38 public tables", "all constraints and 57 indexes created", "zero partial-error continuation"],
-    "after_step_2": ["55 functions", "39 triggers", "54 SECURITY DEFINER functions with explicit search_path"],
-    "after_step_3": ["RLS on 38 tables", "45 policies", "10 explicit authenticated function grants", "no global authenticated function execute"]
+    "after_step_1": [
+      "38 public tables",
+      "all constraints and 57 indexes created",
+      "zero partial-error continuation"
+    ],
+    "after_step_2": [
+      "55 functions",
+      "39 triggers",
+      "54 SECURITY DEFINER functions with explicit search_path"
+    ],
+    "after_step_3": [
+      "RLS on 38 tables",
+      "45 policies",
+      "10 explicit authenticated function grants",
+      "no global authenticated function execute"
+    ]
   },
   "rollback": {
     "strategy": "DISCARD_AND_RECREATE_EMPTY_STAGING_PROJECT",
@@ -59,5 +72,19 @@
     "Edge Functions",
     "server secrets",
     "Cloudflare, DNS and production configuration"
-  ]
+  ],
+  "source_head_before_phase_2d": "dc03835c1b9184f7b6dd6bd53d89f19893e4ea82",
+  "target_project_ref": "hoalgniwydgydqaugqph",
+  "declarative_header_policy": {
+    "certified_for": "CONTROLLED_EMPTY_STAGING_APPLICATION_ONLY",
+    "executable_sql_changed": false,
+    "changed_lines_per_sql": [
+      2
+    ],
+    "executable_payload_sha256": {
+      "00000000000000_vejamais_canonical_schema_candidate.sql": "565a8739c95e942b0a169c7610bad38387872abc4f73cef439c64027785b1afd",
+      "00000000000001_vejamais_canonical_functions_candidate.sql": "9be089fdb2764ec9d04f1e46b6de1ef37a6808d9f7447ccdc230b81faf656abc",
+      "00000000000002_vejamais_canonical_security_candidate.sql": "53e8d3bd6800aeeb296ae91bd5c5e017ea3c3152b3760f90cf2d13e4fec1047e"
+    }
+  }
 }
