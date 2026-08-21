@@ -30,23 +30,6 @@ CREATE TYPE public.rpc_purchase_payable_input AS (
   bank_account_id uuid
 );
 
--- source: 20260619235639_ea8cd248-5c49-4ff7-b04a-5510f2b202dd.sql | object: public.aportes_financeiros
-CREATE TABLE IF NOT EXISTS public.aportes_financeiros (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  customer_id uuid REFERENCES public.customers(id) ON DELETE SET NULL,
-  bank_account_id uuid REFERENCES public.bank_accounts(id) ON DELETE SET NULL,
-  bank_movement_id uuid REFERENCES public.bank_movements(id) ON DELETE SET NULL,
-  aporte_type text NOT NULL DEFAULT 'investidor',
-  amount numeric(14,2) NOT NULL CHECK (amount > 0),
-  movement_date date NOT NULL DEFAULT CURRENT_DATE,
-  description text,
-  notes text,
-  status text NOT NULL DEFAULT 'recebido',
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
 -- source: 20260620005951_3c08501e-92ee-43eb-b230-7a801bafb8dc.sql | object: public.audit_log
 CREATE TABLE IF NOT EXISTS public.audit_log (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -92,75 +75,6 @@ CREATE TABLE public.bank_accounts (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
--- source: 20260617012255_d7e23bc3-3295-4778-b4fb-1e2f704b45c0.sql | object: public.bank_movements
-CREATE TABLE public.bank_movements (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  account_id uuid NOT NULL REFERENCES public.bank_accounts(id) ON DELETE CASCADE,
-  movement_date date NOT NULL DEFAULT (now()::date),
-  type text NOT NULL CHECK (type IN ('entrada','saida','transferencia')),
-  category text NOT NULL,
-  description text NOT NULL,
-  amount numeric(14,2) NOT NULL,
-  destination_account_id uuid REFERENCES public.bank_accounts(id) ON DELETE SET NULL,
-  origin text NOT NULL DEFAULT 'manual' CHECK (origin IN ('manual','payable','receivable','transfer')),
-  reference_id uuid,
-  notes text,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
--- source: 20260618003809_45d879f6-9304-417c-8d89-550d5a3fd24c.sql | object: public.cartoes_credito
-CREATE TABLE public.cartoes_credito (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  nome text NOT NULL,
-  bandeira text NOT NULL,
-  limite_total numeric(14,2) NOT NULL DEFAULT 0,
-  dia_vencimento integer NOT NULL CHECK (dia_vencimento BETWEEN 1 AND 31),
-  dia_fechamento integer NOT NULL CHECK (dia_fechamento BETWEEN 1 AND 31),
-  cor text NOT NULL DEFAULT '#7c3aed',
-  conta_bancaria_id uuid REFERENCES public.bank_accounts(id) ON DELETE SET NULL,
-  status text NOT NULL DEFAULT 'ativo',
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
--- source: 20260618003809_45d879f6-9304-417c-8d89-550d5a3fd24c.sql | object: public.cartoes_faturas
-CREATE TABLE public.cartoes_faturas (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  cartao_id uuid NOT NULL REFERENCES public.cartoes_credito(id) ON DELETE CASCADE,
-  mes integer NOT NULL CHECK (mes BETWEEN 1 AND 12),
-  ano integer NOT NULL,
-  valor_total numeric(14,2) NOT NULL DEFAULT 0,
-  status text NOT NULL DEFAULT 'aberta',
-  data_pagamento date,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (cartao_id, ano, mes)
-);
-
--- source: 20260618003809_45d879f6-9304-417c-8d89-550d5a3fd24c.sql | object: public.cartoes_lancamentos
-CREATE TABLE public.cartoes_lancamentos (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  cartao_id uuid NOT NULL REFERENCES public.cartoes_credito(id) ON DELETE CASCADE,
-  data date NOT NULL,
-  descricao text NOT NULL,
-  categoria text NOT NULL CHECK (categoria IN ('combustivel','casa','pessoal')),
-  valor numeric(14,2) NOT NULL,
-  parcelado boolean NOT NULL DEFAULT false,
-  total_parcelas integer NOT NULL DEFAULT 1,
-  parcela_atual integer NOT NULL DEFAULT 1,
-  grupo_parcela uuid,
-  mes_fatura integer NOT NULL,
-  ano_fatura integer NOT NULL,
-  observacoes text,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
 -- source: 20260617221702_08d2fa92-e44a-4958-9cf8-b75653eb06d9.sql | object: public.categorias_contas_pagar
 CREATE TABLE public.categorias_contas_pagar (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -171,37 +85,6 @@ CREATE TABLE public.categorias_contas_pagar (
   UNIQUE (user_id, nome)
 );
 
--- source: 20260809032053_ec238ebc-e305-426e-98cb-36000d5ce04e.sql | object: public.checkout_attempts
-CREATE TABLE public.checkout_attempts (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    provider TEXT NOT NULL,
-    empresa_id UUID NOT NULL REFERENCES public.empresas(id),
-    subscription_id UUID NOT NULL REFERENCES public.subscriptions(id),
-    created_by_user_id UUID NOT NULL,
-    idempotency_key TEXT NOT NULL UNIQUE,
-    provider_checkout_session_id TEXT UNIQUE,
-    provider_customer_id TEXT,
-    status TEXT NOT NULL CHECK (status IN ('creating', 'open', 'completed', 'expired', 'cancelled', 'failed')),
-    expires_at TIMESTAMPTZ,
-    last_error_code TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- source: 20260806235353_017bf93e-5b22-4892-b934-c198d5c6d7ac.sql | object: public.company_invitations
-CREATE TABLE IF NOT EXISTS public.company_invitations (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    empresa_id UUID NOT NULL REFERENCES public.empresas(id) ON DELETE CASCADE,
-    email TEXT NOT NULL,
-    role public.app_role NOT NULL DEFAULT 'vendedor',
-    token_hash TEXT NOT NULL,
-    invited_by UUID NOT NULL REFERENCES auth.users(id),
-    status TEXT NOT NULL DEFAULT 'pending',
-    expires_at TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '7 days'),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    accepted_at TIMESTAMPTZ
-);
-
 -- source: 20260616215411_25ada916-2e42-410c-a1a9-a47819029dce.sql | object: public.company_settings
 CREATE TABLE public.company_settings (
   user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -210,41 +93,6 @@ CREATE TABLE public.company_settings (
   logo_url text,
   theme text NOT NULL DEFAULT 'light' CHECK (theme IN ('light','dark')),
   updated_at timestamptz NOT NULL DEFAULT now()
-);
-
--- source: 20260618005921_414315c7-4ece-4d34-bac6-e710a982434e.sql | object: public.compras
-CREATE TABLE public.compras (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  fornecedor_id uuid REFERENCES public.suppliers(id) ON DELETE SET NULL,
-  data_compra date NOT NULL DEFAULT CURRENT_DATE,
-  numero_nf text,
-  condicao_pagamento text NOT NULL DEFAULT 'a_vista',
-  forma_pagamento text,
-  bank_account_id uuid REFERENCES public.bank_accounts(id) ON DELETE SET NULL,
-  parcelas integer NOT NULL DEFAULT 1,
-  dia_vencimento integer,
-  data_vencimento date,
-  subtotal numeric(12,2) NOT NULL DEFAULT 0,
-  desconto numeric(12,2) NOT NULL DEFAULT 0,
-  frete numeric(12,2) NOT NULL DEFAULT 0,
-  total numeric(12,2) NOT NULL DEFAULT 0,
-  observacoes text,
-  status text NOT NULL DEFAULT 'confirmada',
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
-
--- source: 20260618005921_414315c7-4ece-4d34-bac6-e710a982434e.sql | object: public.compras_itens
-CREATE TABLE public.compras_itens (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  compra_id uuid NOT NULL REFERENCES public.compras(id) ON DELETE CASCADE,
-  produto_id uuid NOT NULL REFERENCES public.products(id) ON DELETE RESTRICT,
-  quantidade numeric(12,3) NOT NULL,
-  preco_unitario numeric(12,2) NOT NULL,
-  subtotal numeric(12,2) NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now()
 );
 
 -- source: 20260617002237_80220513-bc4e-43be-b99e-a474b31267e4.sql | object: public.controle_vendas_diario
@@ -371,66 +219,6 @@ CREATE TABLE IF NOT EXISTS public.empresas (
     owner_id UUID REFERENCES auth.users(id) NOT NULL
 );
 
--- source: 20260616212546_83c62ddb-7c1a-4959-81bd-79319b6bf67c.sql | object: public.finance_entries
-CREATE TABLE public.finance_entries (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  type TEXT NOT NULL CHECK (type IN ('income','expense')),
-  category TEXT NOT NULL DEFAULT 'outros',
-  amount NUMERIC(12,2) NOT NULL,
-  description TEXT,
-  sale_id UUID REFERENCES public.sales(id) ON DELETE CASCADE,
-  entry_date TIMESTAMPTZ NOT NULL DEFAULT now(),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- source: 20260616213419_069279da-c7e6-448d-a23b-4a6899e98df5.sql | object: public.payables
-CREATE TABLE public.payables (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  supplier_id UUID REFERENCES public.suppliers(id) ON DELETE SET NULL,
-  description TEXT NOT NULL,
-  category TEXT NOT NULL DEFAULT 'fornecedor',
-  amount NUMERIC(12,2) NOT NULL,
-  due_date DATE NOT NULL,
-  payment_method TEXT,
-  status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente','pago','atrasado','cancelado')),
-  paid_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
-  paid_at TIMESTAMPTZ,
-  recurrence TEXT NOT NULL DEFAULT 'nenhuma' CHECK (recurrence IN ('nenhuma','semanal','mensal')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- source: 20260808211557_0e6933d5-b96f-42c2-b37a-e6835149ea31.sql | object: public.payment_events
-CREATE TABLE IF NOT EXISTS public.payment_events (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    provider text NOT NULL,
-    provider_event_id text NOT NULL UNIQUE,
-    event_type text NOT NULL,
-    empresa_id uuid REFERENCES public.empresas(id),
-    subscription_id uuid REFERENCES public.subscriptions(id),
-    payload_sha256 text NOT NULL,
-    processing_status text NOT NULL DEFAULT 'pending',
-    processing_attempts integer NOT NULL DEFAULT 0,
-    processed_at timestamptz,
-    sanitized_error_code text,
-    created_at timestamptz DEFAULT now(),
-    updated_at timestamptz DEFAULT now()
-);
-
--- source: 20260617014243_516061f3-55a6-45c7-8403-d7b9f1e0f41f.sql | object: public.payment_routing_rules
-CREATE TABLE IF NOT EXISTS public.payment_routing_rules (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  payment_method text NOT NULL,
-  bank_account_id uuid REFERENCES public.bank_accounts(id) ON DELETE SET NULL,
-  fixo boolean NOT NULL DEFAULT false,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (user_id, payment_method)
-);
-
 -- source: 20260807224646_3a0e178a-3af3-4776-aed1-dc7695a9136a.sql | object: public.pending_onboardings
 CREATE TABLE IF NOT EXISTS public.pending_onboardings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -504,6 +292,170 @@ CREATE TABLE IF NOT EXISTS public.rate_limits (
     expires_at TIMESTAMPTZ NOT NULL
 );
 
+-- source: 20260616212546_83c62ddb-7c1a-4959-81bd-79319b6bf67c.sql | object: public.sales
+CREATE TABLE public.sales (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  customer_name TEXT,
+  payment_method TEXT NOT NULL DEFAULT 'dinheiro',
+  total NUMERIC(12,2) NOT NULL DEFAULT 0,
+  discount NUMERIC(12,2) NOT NULL DEFAULT 0,
+  notes TEXT,
+  sold_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- source: 20260810223044_10e683fa-8346-4c15-b61c-63442c18203e.sql | object: public.stripe_webhook_runtime_diagnostics
+CREATE TABLE public.stripe_webhook_runtime_diagnostics (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    trace_id uuid NOT NULL,
+    event_id_hash text NOT NULL,
+    event_type text NOT NULL,
+    stage text NOT NULL,
+    reason_code text,
+    http_status int,
+    created_at timestamptz DEFAULT now() NOT NULL
+);
+
+-- source: 20260616213419_069279da-c7e6-448d-a23b-4a6899e98df5.sql | object: public.suppliers
+CREATE TABLE public.suppliers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  document TEXT,
+  contact_name TEXT,
+  phone TEXT,
+  email TEXT,
+  delivery_days INTEGER DEFAULT 0,
+  payment_terms TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- source: 20260616215411_25ada916-2e42-410c-a1a9-a47819029dce.sql | object: public.user_roles
+CREATE TABLE public.user_roles (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  role public.app_role NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (user_id, role)
+);
+
+-- source: 20260617012255_d7e23bc3-3295-4778-b4fb-1e2f704b45c0.sql | object: public.bank_movements
+CREATE TABLE public.bank_movements (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  account_id uuid NOT NULL REFERENCES public.bank_accounts(id) ON DELETE CASCADE,
+  movement_date date NOT NULL DEFAULT (now()::date),
+  type text NOT NULL CHECK (type IN ('entrada','saida','transferencia')),
+  category text NOT NULL,
+  description text NOT NULL,
+  amount numeric(14,2) NOT NULL,
+  destination_account_id uuid REFERENCES public.bank_accounts(id) ON DELETE SET NULL,
+  origin text NOT NULL DEFAULT 'manual' CHECK (origin IN ('manual','payable','receivable','transfer')),
+  reference_id uuid,
+  notes text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- source: 20260618003809_45d879f6-9304-417c-8d89-550d5a3fd24c.sql | object: public.cartoes_credito
+CREATE TABLE public.cartoes_credito (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  nome text NOT NULL,
+  bandeira text NOT NULL,
+  limite_total numeric(14,2) NOT NULL DEFAULT 0,
+  dia_vencimento integer NOT NULL CHECK (dia_vencimento BETWEEN 1 AND 31),
+  dia_fechamento integer NOT NULL CHECK (dia_fechamento BETWEEN 1 AND 31),
+  cor text NOT NULL DEFAULT '#7c3aed',
+  conta_bancaria_id uuid REFERENCES public.bank_accounts(id) ON DELETE SET NULL,
+  status text NOT NULL DEFAULT 'ativo',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- source: 20260806235353_017bf93e-5b22-4892-b934-c198d5c6d7ac.sql | object: public.company_invitations
+CREATE TABLE IF NOT EXISTS public.company_invitations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    empresa_id UUID NOT NULL REFERENCES public.empresas(id) ON DELETE CASCADE,
+    email TEXT NOT NULL,
+    role public.app_role NOT NULL DEFAULT 'vendedor',
+    token_hash TEXT NOT NULL,
+    invited_by UUID NOT NULL REFERENCES auth.users(id),
+    status TEXT NOT NULL DEFAULT 'pending',
+    expires_at TIMESTAMPTZ NOT NULL DEFAULT (now() + interval '7 days'),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    accepted_at TIMESTAMPTZ
+);
+
+-- source: 20260618005921_414315c7-4ece-4d34-bac6-e710a982434e.sql | object: public.compras
+CREATE TABLE public.compras (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  fornecedor_id uuid REFERENCES public.suppliers(id) ON DELETE SET NULL,
+  data_compra date NOT NULL DEFAULT CURRENT_DATE,
+  numero_nf text,
+  condicao_pagamento text NOT NULL DEFAULT 'a_vista',
+  forma_pagamento text,
+  bank_account_id uuid REFERENCES public.bank_accounts(id) ON DELETE SET NULL,
+  parcelas integer NOT NULL DEFAULT 1,
+  dia_vencimento integer,
+  data_vencimento date,
+  subtotal numeric(12,2) NOT NULL DEFAULT 0,
+  desconto numeric(12,2) NOT NULL DEFAULT 0,
+  frete numeric(12,2) NOT NULL DEFAULT 0,
+  total numeric(12,2) NOT NULL DEFAULT 0,
+  observacoes text,
+  status text NOT NULL DEFAULT 'confirmada',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- source: 20260616212546_83c62ddb-7c1a-4959-81bd-79319b6bf67c.sql | object: public.finance_entries
+CREATE TABLE public.finance_entries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL CHECK (type IN ('income','expense')),
+  category TEXT NOT NULL DEFAULT 'outros',
+  amount NUMERIC(12,2) NOT NULL,
+  description TEXT,
+  sale_id UUID REFERENCES public.sales(id) ON DELETE CASCADE,
+  entry_date TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- source: 20260616213419_069279da-c7e6-448d-a23b-4a6899e98df5.sql | object: public.payables
+CREATE TABLE public.payables (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  supplier_id UUID REFERENCES public.suppliers(id) ON DELETE SET NULL,
+  description TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'fornecedor',
+  amount NUMERIC(12,2) NOT NULL,
+  due_date DATE NOT NULL,
+  payment_method TEXT,
+  status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente','pago','atrasado','cancelado')),
+  paid_amount NUMERIC(12,2) NOT NULL DEFAULT 0,
+  paid_at TIMESTAMPTZ,
+  recurrence TEXT NOT NULL DEFAULT 'nenhuma' CHECK (recurrence IN ('nenhuma','semanal','mensal')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- source: 20260617014243_516061f3-55a6-45c7-8403-d7b9f1e0f41f.sql | object: public.payment_routing_rules
+CREATE TABLE IF NOT EXISTS public.payment_routing_rules (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  payment_method text NOT NULL,
+  bank_account_id uuid REFERENCES public.bank_accounts(id) ON DELETE SET NULL,
+  fixo boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (user_id, payment_method)
+);
+
 -- source: 20260616214246_53c304ae-016a-44fe-86ce-7d7427d857d9.sql | object: public.receivables
 CREATE TABLE public.receivables (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -534,31 +486,6 @@ CREATE TABLE public.sale_items (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- source: 20260616212546_83c62ddb-7c1a-4959-81bd-79319b6bf67c.sql | object: public.sales
-CREATE TABLE public.sales (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  customer_name TEXT,
-  payment_method TEXT NOT NULL DEFAULT 'dinheiro',
-  total NUMERIC(12,2) NOT NULL DEFAULT 0,
-  discount NUMERIC(12,2) NOT NULL DEFAULT 0,
-  notes TEXT,
-  sold_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
--- source: 20260810223044_10e683fa-8346-4c15-b61c-63442c18203e.sql | object: public.stripe_webhook_runtime_diagnostics
-CREATE TABLE public.stripe_webhook_runtime_diagnostics (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    trace_id uuid NOT NULL,
-    event_id_hash text NOT NULL,
-    event_type text NOT NULL,
-    stage text NOT NULL,
-    reason_code text,
-    http_status int,
-    created_at timestamptz DEFAULT now() NOT NULL
-);
-
 -- source: 20260808211557_0e6933d5-b96f-42c2-b37a-e6835149ea31.sql | object: public.subscriptions
 CREATE TABLE IF NOT EXISTS public.subscriptions (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -582,22 +509,6 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
     updated_at timestamptz DEFAULT now()
 );
 
--- source: 20260616213419_069279da-c7e6-448d-a23b-4a6899e98df5.sql | object: public.suppliers
-CREATE TABLE public.suppliers (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  document TEXT,
-  contact_name TEXT,
-  phone TEXT,
-  email TEXT,
-  delivery_days INTEGER DEFAULT 0,
-  payment_terms TEXT,
-  notes TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
 -- source: 20260806000000_vmeap_wave_a_structural.sql | object: public.user_company_access
 CREATE TABLE IF NOT EXISTS public.user_company_access (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -609,13 +520,102 @@ CREATE TABLE IF NOT EXISTS public.user_company_access (
     UNIQUE(user_id, empresa_id)
 );
 
--- source: 20260616215411_25ada916-2e42-410c-a1a9-a47819029dce.sql | object: public.user_roles
-CREATE TABLE public.user_roles (
+-- source: 20260619235639_ea8cd248-5c49-4ff7-b04a-5510f2b202dd.sql | object: public.aportes_financeiros
+CREATE TABLE IF NOT EXISTS public.aportes_financeiros (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  customer_id uuid REFERENCES public.customers(id) ON DELETE SET NULL,
+  bank_account_id uuid REFERENCES public.bank_accounts(id) ON DELETE SET NULL,
+  bank_movement_id uuid REFERENCES public.bank_movements(id) ON DELETE SET NULL,
+  aporte_type text NOT NULL DEFAULT 'investidor',
+  amount numeric(14,2) NOT NULL CHECK (amount > 0),
+  movement_date date NOT NULL DEFAULT CURRENT_DATE,
+  description text,
+  notes text,
+  status text NOT NULL DEFAULT 'recebido',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- source: 20260618003809_45d879f6-9304-417c-8d89-550d5a3fd24c.sql | object: public.cartoes_faturas
+CREATE TABLE public.cartoes_faturas (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  role public.app_role NOT NULL,
+  cartao_id uuid NOT NULL REFERENCES public.cartoes_credito(id) ON DELETE CASCADE,
+  mes integer NOT NULL CHECK (mes BETWEEN 1 AND 12),
+  ano integer NOT NULL,
+  valor_total numeric(14,2) NOT NULL DEFAULT 0,
+  status text NOT NULL DEFAULT 'aberta',
+  data_pagamento date,
   created_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (user_id, role)
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (cartao_id, ano, mes)
+);
+
+-- source: 20260618003809_45d879f6-9304-417c-8d89-550d5a3fd24c.sql | object: public.cartoes_lancamentos
+CREATE TABLE public.cartoes_lancamentos (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  cartao_id uuid NOT NULL REFERENCES public.cartoes_credito(id) ON DELETE CASCADE,
+  data date NOT NULL,
+  descricao text NOT NULL,
+  categoria text NOT NULL CHECK (categoria IN ('combustivel','casa','pessoal')),
+  valor numeric(14,2) NOT NULL,
+  parcelado boolean NOT NULL DEFAULT false,
+  total_parcelas integer NOT NULL DEFAULT 1,
+  parcela_atual integer NOT NULL DEFAULT 1,
+  grupo_parcela uuid,
+  mes_fatura integer NOT NULL,
+  ano_fatura integer NOT NULL,
+  observacoes text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- source: 20260809032053_ec238ebc-e305-426e-98cb-36000d5ce04e.sql | object: public.checkout_attempts
+CREATE TABLE public.checkout_attempts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    provider TEXT NOT NULL,
+    empresa_id UUID NOT NULL REFERENCES public.empresas(id),
+    subscription_id UUID NOT NULL REFERENCES public.subscriptions(id),
+    created_by_user_id UUID NOT NULL,
+    idempotency_key TEXT NOT NULL UNIQUE,
+    provider_checkout_session_id TEXT UNIQUE,
+    provider_customer_id TEXT,
+    status TEXT NOT NULL CHECK (status IN ('creating', 'open', 'completed', 'expired', 'cancelled', 'failed')),
+    expires_at TIMESTAMPTZ,
+    last_error_code TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- source: 20260618005921_414315c7-4ece-4d34-bac6-e710a982434e.sql | object: public.compras_itens
+CREATE TABLE public.compras_itens (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  compra_id uuid NOT NULL REFERENCES public.compras(id) ON DELETE CASCADE,
+  produto_id uuid NOT NULL REFERENCES public.products(id) ON DELETE RESTRICT,
+  quantidade numeric(12,3) NOT NULL,
+  preco_unitario numeric(12,2) NOT NULL,
+  subtotal numeric(12,2) NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- source: 20260808211557_0e6933d5-b96f-42c2-b37a-e6835149ea31.sql | object: public.payment_events
+CREATE TABLE IF NOT EXISTS public.payment_events (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    provider text NOT NULL,
+    provider_event_id text NOT NULL UNIQUE,
+    event_type text NOT NULL,
+    empresa_id uuid REFERENCES public.empresas(id),
+    subscription_id uuid REFERENCES public.subscriptions(id),
+    payload_sha256 text NOT NULL,
+    processing_status text NOT NULL DEFAULT 'pending',
+    processing_attempts integer NOT NULL DEFAULT 0,
+    processed_at timestamptz,
+    sanitized_error_code text,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
 );
 
 -- source: 20260616213419_069279da-c7e6-448d-a23b-4a6899e98df5.sql | structural projection: public.sales
@@ -645,14 +645,6 @@ ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS bank_account_id uuid REFERENCE
 
 -- source: 20260617020940_25c0c4d7-74e8-4f0c-84e7-3696025a11ad.sql | structural projection: public.bank_movements
 ALTER TABLE public.bank_movements DROP CONSTRAINT IF EXISTS bank_movements_origin_check;
-
--- source: 20260617020940_25c0c4d7-74e8-4f0c-84e7-3696025a11ad.sql | structural projection: public.bank_movements
-ALTER TABLE public.bank_movements ADD CONSTRAINT bank_movements_origin_check
-  CHECK (origin = ANY (ARRAY['manual'::text,'payable'::text,'receivable'::text,'transfer'::text,'saldo_inicial'::text]));
-
--- source: 20260617161918_a19b5592-77d4-42d5-a75e-1be43b952e9f.sql | structural projection: public.bank_movements
-ALTER TABLE public.bank_movements ADD CONSTRAINT bank_movements_origin_check
-  CHECK (origin = ANY (ARRAY['manual','payable','receivable','transfer','saldo_inicial','sale','sale_cancellation']));
 
 -- source: 20260618140528_253f68bf-d2b4-4bdb-9bcc-7489c267c073.sql | structural projection: public.sales
 ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS mercado_pago_fees NUMERIC DEFAULT 0;
