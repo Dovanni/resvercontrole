@@ -1,0 +1,52 @@
+{
+  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2B-CONTRACT-INVENTORY-v1",
+  "mode": "REPOSITORY_ONLY",
+  "source_files_scanned": 165,
+  "public_tables": 38,
+  "generated_type_tables": 38,
+  "typed_relationships": 52,
+  "runtime_tables_used": 25,
+  "runtime_tables_missing_from_baseline": [],
+  "canonical_functions": 55,
+  "runtime_rpc_names": 15,
+  "runtime_rpcs_missing_from_baseline": [],
+  "rpc_argument_mismatches": [],
+  "triggers": 39,
+  "trigger_functions_missing": [],
+  "policies": 45,
+  "rls_tables": 38,
+  "authenticated_function_grants": [
+    "accept_company_invitation",
+    "can_company_invite_member",
+    "check_current_user_is_active_member",
+    "check_current_user_is_admin",
+    "get_my_multiempresa_context",
+    "list_my_company_members",
+    "reconcile_and_finalize_onboarding",
+    "rpc_editar_compra_pendente",
+    "rpc_registrar_compra",
+    "rpc_registrar_venda"
+  ],
+  "storage_buckets_required_separately": [
+    "company-logos",
+    "product-photos",
+    "public-assets"
+  ],
+  "compatibility_corrections": [
+    "explicit_projection_of_final_dynamic_columns",
+    "safe_reconcile_and_finalize_onboarding_contract",
+    "accept_company_invitation_single_argument_contract",
+    "authenticated_server_client_propagation",
+    "removed_excessive_ensure_defaults_authenticated_grant",
+    "removed_stale_test_rpc_type",
+    "removed_finally_dropped_diagnostic_column_type"
+  ],
+  "prohibited_actions": {
+    "database_connections": 0,
+    "sql_executions": 0,
+    "supabase_actions": 0,
+    "cloudflare_actions": 0,
+    "dns_actions": 0,
+    "production_actions": 0
+  }
+}
