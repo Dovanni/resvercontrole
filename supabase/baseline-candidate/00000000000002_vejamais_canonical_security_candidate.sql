@@ -281,7 +281,7 @@ GRANT EXECUTE ON FUNCTION public.get_my_multiempresa_context() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.list_my_company_members(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.can_company_invite_member(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.accept_company_invitation(text) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.ensure_empresa_defaults(uuid, uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.reconcile_and_finalize_onboarding() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.check_current_user_is_active_member(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.check_current_user_is_admin(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.rpc_registrar_venda(uuid, jsonb, public.rpc_sale_item_input[], text) TO authenticated;
