@@ -1,6 +1,6 @@
-# VEJAMAIS ERP — Baseline Canônico Candidate v2
+# VEJAMAIS ERP — Baseline Canônico Candidate v3
 
-Status: **CANDIDATO REPOSITORY-ONLY — NÃO EXECUTAR**
+Status: **PREFLIGHT ESTÁTICO APROVADO — AINDA NÃO EXECUTAR SEM NOVA AUTORIZAÇÃO**
 
 Este pacote foi sintetizado estaticamente a partir das 173 migrations da branch
 `migration/cloudflare-staging` e reconciliado com os contratos do runtime e os tipos
@@ -14,6 +14,10 @@ gerados na Fase 2-B. Nenhum SQL foi executado e nenhuma conexão externa foi rea
 
 Essa ordem preserva as dependências: tipos/tabelas/constraints/índices, depois funções e
 triggers, por último RLS, policies e grants.
+
+Os 38 blocos de criação de tabelas estão em ordem topológica: não existem referências a
+tabelas públicas ainda não criadas. O pacote exato, hashes, precondições, critérios de
+interrupção e rollback estão em `APPLICATION_PLAN.json`.
 
 ## Conteúdo reconciliado
 
@@ -47,6 +51,16 @@ o rollback recomendado é descartar integralmente esse projeto staging e recriá
 Não existe rollback in-place neste pacote, pois ele poderia preservar estado parcial e
 produzir uma falsa equivalência. Nenhuma ação de rollback foi executada nesta fase.
 
+## Preflight Fase 2-C
+
+- 90 verificações estáticas aprovadas, zero falhas;
+- duplicações materiais de constraint removidas, preservando somente a definição final;
+- sintaxe validada estaticamente quanto a delimitadores, statements e dependências;
+- nenhuma validação foi executada por um servidor PostgreSQL nesta fase.
+
+Consulte `PREFLIGHT_CERTIFICATION.json` e execute
+`node scripts/migration/verify-canonical-preflight.mjs` antes de qualquer gate futuro.
+
 ## Limites e próximo gate
 
 O pacote permanece fora de `supabase/migrations/`, impedindo aplicação automática. Antes
@@ -54,4 +68,4 @@ de qualquer uso requer revisão SQL independente, autorização humana e execuç
 em staging vazio, seguida de certificação material. Cloudflare, DNS e produção continuam
 fora de escopo.
 
-`PHASE_2B_REPOSITORY_CONTRACTS_CERTIFIED_READY_FOR_HUMAN_REVIEW`
+`PHASE_2C_CANONICAL_BASELINE_STATIC_PREFLIGHT_CERTIFIED_READY_FOR_CONTROLLED_EMPTY_STAGING_APPLICATION`
