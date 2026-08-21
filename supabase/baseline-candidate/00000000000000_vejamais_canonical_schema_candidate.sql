@@ -839,6 +839,35 @@ ALTER TABLE public.stripe_webhook_runtime_diagnostics ADD CONSTRAINT stripe_webh
 -- source: 20260811001000_stripe_webhook_runtime_diagnostics_remote_schema_correction.sql | structural projection: public.stripe_webhook_runtime_diagnostics
 ALTER TABLE public.stripe_webhook_runtime_diagnostics ALTER COLUMN expires_at SET DEFAULT (now() + interval '7 days');
 
+-- Phase 2-B canonical projection of final columns originally introduced inside
+-- dynamic DO blocks. This baseline targets an empty staging database, so no
+-- historical backfill or operational DML is required or included.
+ALTER TABLE public.aportes_financeiros ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+ALTER TABLE public.bank_accounts ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+ALTER TABLE public.bank_movements ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+ALTER TABLE public.cartoes_credito ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+ALTER TABLE public.cartoes_faturas ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+ALTER TABLE public.cartoes_lancamentos ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+ALTER TABLE public.categorias_contas_pagar ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+ALTER TABLE public.compras ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+ALTER TABLE public.compras_itens ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+ALTER TABLE public.customers ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+ALTER TABLE public.finance_entries ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+ALTER TABLE public.payables ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+ALTER TABLE public.payment_routing_rules ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+ALTER TABLE public.products ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+ALTER TABLE public.receivables ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+ALTER TABLE public.sale_items ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+ALTER TABLE public.sales ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+ALTER TABLE public.suppliers ADD COLUMN empresa_id UUID NOT NULL REFERENCES public.empresas(id);
+
+ALTER TABLE public.checkout_attempts ADD COLUMN livemode BOOLEAN NOT NULL;
+ALTER TABLE public.payment_events ADD COLUMN provider_event_created_at BIGINT;
+ALTER TABLE public.subscriptions ADD COLUMN stripe_last_event_created BIGINT;
+ALTER TABLE public.subscriptions ADD COLUMN stripe_last_event_priority INTEGER;
+ALTER TABLE public.subscriptions ADD COLUMN stripe_last_event_id TEXT;
+ALTER TABLE public.subscriptions ADD COLUMN stripe_last_event_type TEXT;
+
 -- source: 20260812000000_checkout_attempts_isolation.sql | structural projection: public.checkout_attempts
 ALTER TABLE public.checkout_attempts ALTER COLUMN livemode SET NOT NULL;
 
@@ -847,6 +876,25 @@ ALTER TABLE public.sales ADD COLUMN IF NOT EXISTS idempotency_key TEXT;
 
 -- source: 20260816133125_22b6bda5-9bd2-4774-9630-38a7a0d8728b.sql | structural projection: public.compras
 ALTER TABLE public.compras ADD COLUMN IF NOT EXISTS idempotency_key TEXT;
+
+CREATE INDEX idx_aportes_financeiros_empresa_id ON public.aportes_financeiros (empresa_id);
+CREATE INDEX idx_bank_accounts_empresa_id ON public.bank_accounts (empresa_id);
+CREATE INDEX idx_bank_movements_empresa_id ON public.bank_movements (empresa_id);
+CREATE INDEX idx_cartoes_credito_empresa_id ON public.cartoes_credito (empresa_id);
+CREATE INDEX idx_cartoes_faturas_empresa_id ON public.cartoes_faturas (empresa_id);
+CREATE INDEX idx_cartoes_lancamentos_empresa_id ON public.cartoes_lancamentos (empresa_id);
+CREATE INDEX idx_categorias_contas_pagar_empresa_id ON public.categorias_contas_pagar (empresa_id);
+CREATE INDEX idx_compras_empresa_id ON public.compras (empresa_id);
+CREATE INDEX idx_compras_itens_empresa_id ON public.compras_itens (empresa_id);
+CREATE INDEX idx_customers_empresa_id ON public.customers (empresa_id);
+CREATE INDEX idx_finance_entries_empresa_id ON public.finance_entries (empresa_id);
+CREATE INDEX idx_payables_empresa_id ON public.payables (empresa_id);
+CREATE INDEX idx_payment_routing_rules_empresa_id ON public.payment_routing_rules (empresa_id);
+CREATE INDEX idx_products_empresa_id ON public.products (empresa_id);
+CREATE INDEX idx_receivables_empresa_id ON public.receivables (empresa_id);
+CREATE INDEX idx_sale_items_empresa_id ON public.sale_items (empresa_id);
+CREATE INDEX idx_sales_empresa_id ON public.sales (empresa_id);
+CREATE INDEX idx_suppliers_empresa_id ON public.suppliers (empresa_id);
 
 -- source: 20260616212546_83c62ddb-7c1a-4959-81bd-79319b6bf67c.sql | final index: products_user_idx
 CREATE INDEX products_user_idx ON public.products(user_id);
