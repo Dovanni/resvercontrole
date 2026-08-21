@@ -1887,7 +1887,6 @@ export type Database = {
       stripe_webhook_runtime_diagnostics: {
         Row: {
           created_at: string
-          error_payload: Json | null
           event_id_hash: string
           event_type: string
           http_status: number | null
@@ -1898,7 +1897,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          error_payload?: Json | null
           event_id_hash: string
           event_type: string
           http_status?: number | null
@@ -1909,7 +1907,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          error_payload?: Json | null
           event_id_hash?: string
           event_type?: string
           http_status?: number | null
@@ -2452,17 +2449,6 @@ export type Database = {
           p_empresa_id: string
           p_idempotency_key: string
           p_items: Database["public"]["CompositeTypes"]["rpc_purchase_item_input"][]
-          p_payables: Database["public"]["CompositeTypes"]["rpc_purchase_payable_input"][]
-          p_payload: Json
-        }
-        Returns: string
-      }
-      rpc_registrar_compra_test: {
-        Args: {
-          p_empresa_id: string
-          p_idempotency_key: string
-          p_items: Database["public"]["CompositeTypes"]["rpc_purchase_item_input"][]
-          p_mock_user_id: string
           p_payables: Database["public"]["CompositeTypes"]["rpc_purchase_payable_input"][]
           p_payload: Json
         }
