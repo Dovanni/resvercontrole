@@ -1,0 +1,103 @@
+{
+  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2A-CANONICAL-BASELINE-v1",
+  "status": "CANDIDATE_NOT_EXECUTABLE_NOT_CERTIFIED",
+  "source_branch": "migration/cloudflare-staging",
+  "source_head": "1c878ee6e59ba6c2ba80a191dabf711e7ff89067",
+  "source_migrations": 173,
+  "source_bytes": 547019,
+  "final_public_tables": [
+    "aportes_financeiros",
+    "audit_log",
+    "auth_rate_limits",
+    "bank_accounts",
+    "bank_movements",
+    "cartoes_credito",
+    "cartoes_faturas",
+    "cartoes_lancamentos",
+    "categorias_contas_pagar",
+    "checkout_attempts",
+    "company_invitations",
+    "company_settings",
+    "compras",
+    "compras_itens",
+    "controle_vendas_diario",
+    "controle_vendas_fornecedor",
+    "controle_vendas_fornecedor_historico",
+    "customers",
+    "dre_classificacoes",
+    "dre_regras",
+    "empresas",
+    "finance_entries",
+    "payables",
+    "payment_events",
+    "payment_routing_rules",
+    "pending_onboardings",
+    "plans",
+    "products",
+    "profiles",
+    "rate_limits",
+    "receivables",
+    "sale_items",
+    "sales",
+    "stripe_webhook_runtime_diagnostics",
+    "subscriptions",
+    "suppliers",
+    "user_company_access",
+    "user_roles"
+  ],
+  "final_public_table_count": 38,
+  "function_count": 54,
+  "trigger_count": 39,
+  "policy_count": 45,
+  "index_count": 39,
+  "structural_alter_count": 56,
+  "excluded_objects": [
+    "blog_categories",
+    "blog_posts",
+    "manifests",
+    "snapshots"
+  ],
+  "excluded_functions": [
+    "reconcile_and_finalize_onboarding",
+    "rpc_registrar_compra_test"
+  ],
+  "application_contract_blockers": [
+    {
+      "code": "APP_USES_EXCLUDED_INCIDENT_RPC",
+      "object": "public.reconcile_and_finalize_onboarding()",
+      "reason": "Historical definitions contain database-specific UUID mappings; the application still references this RPC and must be remediated before staging validation."
+    },
+    {
+      "code": "LEGACY_SUBSCRIPTION_RPC_DROPPED",
+      "object": "public.get_company_subscription_context(uuid[, uuid])",
+      "reason": "Both public overloads are dropped by the final migration state; only get_company_subscription_context_admin(uuid, uuid) remains."
+    }
+  ],
+  "storage_buckets_required_separately": [
+    "product-photos",
+    "company-logos",
+    "public-assets"
+  ],
+  "auth_configuration_included": false,
+  "storage_bucket_creation_included": false,
+  "edge_functions_included": false,
+  "server_secrets_included": false,
+  "operational_data_included": false,
+  "files": {
+    "00000000000000_vejamais_canonical_schema_candidate.sql": {
+      "sha256": "d2e3a1d8be85ea012ce84579a7bd9b25f953961f55be00badce5c1de12183951",
+      "bytes": 50970,
+      "lines": 979
+    },
+    "00000000000001_vejamais_canonical_functions_candidate.sql": {
+      "sha256": "0e0ea2b14603129fde05e996a777e45bae0d6b0dd2c8a89a853eda7a9f3b5a4d",
+      "bytes": 108037,
+      "lines": 2914
+    },
+    "00000000000002_vejamais_canonical_security_candidate.sql": {
+      "sha256": "282af5a421b108d3f8347112dbfaee684ee0d71b20ee57b28c7e62c043dbadac",
+      "bytes": 16559,
+      "lines": 292
+    }
+  }
+}
