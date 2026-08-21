@@ -1,0 +1,36 @@
+{
+  "protocol": "VEJAMAIS-CLOUDFLARE-MIGRATION-PHASE-2A-STATIC-CERTIFICATION-v1",
+  "audit_mode": "REPOSITORY_ONLY_STATIC_READ",
+  "candidate_status": "STATICALLY_CERTIFIED_NOT_EXECUTED",
+  "source_branch": "migration/cloudflare-staging",
+  "source_head": "1c878ee6e59ba6c2ba80a191dabf711e7ff89067",
+  "checks_total": 26,
+  "checks_passed": 26,
+  "checks_failed": 0,
+  "failed_checks": [],
+  "metrics": {
+    "public_tables": 38,
+    "functions": 54,
+    "security_definer_functions": 53,
+    "hardened_security_definer_functions": 53,
+    "triggers": 39,
+    "policies": 45,
+    "rls_tables": 38
+  },
+  "artifact_sha256": {
+    "00000000000000_vejamais_canonical_schema_candidate.sql": "d2e3a1d8be85ea012ce84579a7bd9b25f953961f55be00badce5c1de12183951",
+    "00000000000001_vejamais_canonical_functions_candidate.sql": "0e0ea2b14603129fde05e996a777e45bae0d6b0dd2c8a89a853eda7a9f3b5a4d",
+    "00000000000002_vejamais_canonical_security_candidate.sql": "282af5a421b108d3f8347112dbfaee684ee0d71b20ee57b28c7e62c043dbadac",
+    "BASELINE_MANIFEST.json": "af7215960ca53945e05492f2b4ea229a803dc63ba789bf77fc76216df7ea8f44",
+    "README.md": "8e35a111e3f16e1c984a159a822e958b79314b4c007d1c658c546ab0da5a0d4f"
+  },
+  "prohibited_actions": {
+    "database_connections": 0,
+    "sql_executions": 0,
+    "supabase_actions": 0,
+    "cloudflare_actions": 0,
+    "dns_actions": 0,
+    "production_actions": 0
+  },
+  "decision": "PHASE_2A_CANONICAL_BASELINE_STATICALLY_CERTIFIED_REQUIRES_HUMAN_REVIEW"
+}
