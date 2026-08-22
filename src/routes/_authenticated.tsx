@@ -13,9 +13,12 @@ import { WhatsAppSupport } from "@/components/WhatsAppSupport";
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) throw redirect({ to: "/auth" });
-    return { user: data.session.user };
+    // getSession() only reads the locally stored session. getUser() asks
+    // Supabase Auth to validate the current access token before granting
+    // access to protected routes.
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) throw redirect({ to: "/auth" });
+    return { user: data.user };
   },
   component: AuthedLayout,
 });
