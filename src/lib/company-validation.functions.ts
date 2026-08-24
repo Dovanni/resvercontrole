@@ -8,37 +8,6 @@ const validateCnpjSchema = z.object({
   cnpj: z.string().min(1),
 });
 
-function sanitizeDiagnosticText(value: unknown): string | null {
-  if (value === null || value === undefined) return null;
-
-  return String(value)
-    .replace(/eyJ[A-Za-z0-9._-]+/g, "[REDACTED_JWT]")
-    .replace(/sb_(?:publishable|secret)_[A-Za-z0-9_-]+/g, "[REDACTED_SUPABASE_KEY]")
-    .slice(0, 500);
-}
-
-function getSupabaseRuntimeIdentity() {
-  const supabaseUrl = process.env.SUPABASE_URL || "";
-  let projectRef = "UNRESOLVED";
-
-  if (supabaseUrl) {
-    try {
-      const hostname = new URL(supabaseUrl).hostname;
-      projectRef = hostname.endsWith(".supabase.co")
-        ? hostname.slice(0, -".supabase.co".length)
-        : "NON_SUPABASE_HOST";
-    } catch {
-      projectRef = "INVALID_URL";
-    }
-  }
-
-  return {
-    supabase_url_present: Boolean(supabaseUrl),
-    supabase_project_ref: projectRef,
-    service_role_present: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
-  };
-}
-
 // Interface para o retorno simplificado (allowlisted)
 export interface CompanyValidationResult {
   cnpj: string;
@@ -75,49 +44,13 @@ export const validateCnpj = createServerFn({ method: "POST" })
     }
 
     // 2. Rate Limit Persistente via Supabase RPC
-    let allowed: boolean | null = null;
-    let rateError: any = null;
-
-    try {
-      const rateResult = await supabaseAdmin.rpc('check_rate_limit_persistent', {
-        _key: `rate:cnpj:fn:${normalized}`,
-        _limit: 10,
-        _window_interval: '24 hours'
-      });
-
-      allowed = rateResult.data as boolean | null;
-      rateError = rateResult.error;
-    } catch (runtimeError: any) {
-      console.error('[VCRL-G2.3] CNPJ rate-limit RPC diagnostic', {
-        trace_id: traceId,
-        stage: 'rpc_invocation_exception',
-        ...getSupabaseRuntimeIdentity(),
-        rpc: 'check_rate_limit_persistent',
-        runtime_error_name: sanitizeDiagnosticText(runtimeError?.name),
-        runtime_error_message: sanitizeDiagnosticText(runtimeError?.message),
-      });
-
-      throw new Error(JSON.stringify({ 
-        error: "RATE_LIMITED", 
-        reason_code: "RATE_LIMIT_EXCEEDED",
-        trace_id: traceId 
-      }));
-    }
+    const { data: allowed, error: rateError } = await supabaseAdmin.rpc('check_rate_limit_persistent', {
+      _key: `rate:cnpj:fn:${normalized}`,
+      _limit: 10,
+      _window_interval: '24 hours'
+    });
 
     if (rateError || !allowed) {
-      console.error('[VCRL-G2.3] CNPJ rate-limit RPC diagnostic', {
-        trace_id: traceId,
-        stage: 'rpc_response_rejected',
-        ...getSupabaseRuntimeIdentity(),
-        rpc: 'check_rate_limit_persistent',
-        rpc_allowed: allowed === true,
-        rpc_error_present: Boolean(rateError),
-        rpc_error_code: sanitizeDiagnosticText(rateError?.code),
-        rpc_error_message: sanitizeDiagnosticText(rateError?.message),
-        rpc_error_details: sanitizeDiagnosticText(rateError?.details),
-        rpc_error_hint: sanitizeDiagnosticText(rateError?.hint),
-      });
-
       throw new Error(JSON.stringify({ 
         error: "RATE_LIMITED", 
         reason_code: "RATE_LIMIT_EXCEEDED",
