@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { normalizeCnpj, validateCnpj as validateCnpjCheck } from "@/lib/cnpj-validator";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import crypto from "crypto";
 
 const validateCnpjSchema = z.object({
@@ -42,6 +41,9 @@ export const validateCnpj = createServerFn({ method: "POST" })
         trace_id: traceId 
       }));
     }
+
+    // Carregar cliente administrativo apenas no runtime server-side.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // 2. Rate Limit Persistente via Supabase RPC
     const { data: allowed, error: rateError } = await supabaseAdmin.rpc('check_rate_limit_persistent', {
