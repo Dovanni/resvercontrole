@@ -5,6 +5,20 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
+function classifyServiceKey(value: string): 'MODERN_SECRET' | 'LEGACY_JWT' | 'OTHER' {
+  if (value.startsWith('sb_secret_')) return 'MODERN_SECRET';
+  if (value.startsWith('eyJ')) return 'LEGACY_JWT';
+  return 'OTHER';
+}
+
+function safeHost(value: string): string {
+  try {
+    return new URL(value).host;
+  } catch {
+    return 'INVALID_URL';
+  }
+}
+
 function createSupabaseAdminClient() {
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -19,12 +33,43 @@ function createSupabaseAdminClient() {
     throw new Error(message);
   }
 
+  const supabaseHost = safeHost(SUPABASE_URL);
+  console.info('[VCRL-G2.16.2] Supabase runtime target fingerprint', {
+    supabase_host: supabaseHost,
+    service_key_present: true,
+    service_key_format: classifyServiceKey(SUPABASE_SERVICE_ROLE_KEY),
+  });
+
+  const instrumentedFetch: typeof fetch = async (input, init) => {
+    let requestHost = 'UNRESOLVED';
+    try {
+      const requestUrl = typeof input === 'string'
+        ? input
+        : input instanceof URL
+          ? input.toString()
+          : input.url;
+      requestHost = new URL(requestUrl).host;
+    } catch {
+      requestHost = 'INVALID_URL';
+    }
+
+    console.info('[VCRL-G2.16.2] Supabase transport fetch started', {
+      fetch_started: true,
+      target_host: requestHost,
+    });
+
+    return fetch(input, init);
+  };
+
   return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: {
       storage: undefined,
       persistSession: false,
       autoRefreshToken: false,
-    }
+    },
+    global: {
+      fetch: instrumentedFetch,
+    },
   });
 }
 
