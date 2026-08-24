@@ -7,6 +7,15 @@ const validateCnpjSchema = z.object({
   cnpj: z.string().min(1),
 });
 
+function sanitizeRpcDiagnostic(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+
+  return String(value)
+    .replace(/eyJ[A-Za-z0-9._-]+/g, "[REDACTED_JWT]")
+    .replace(/sb_(?:publishable|secret)_[A-Za-z0-9_-]+/g, "[REDACTED_SUPABASE_KEY]")
+    .slice(0, 500);
+}
+
 // Interface para o retorno simplificado (allowlisted)
 export interface CompanyValidationResult {
   cnpj: string;
@@ -52,7 +61,26 @@ export const validateCnpj = createServerFn({ method: "POST" })
       _window_interval: '24 hours'
     });
 
-    if (rateError || !allowed) {
+    // Erro técnico da RPC não deve ser mascarado como limite excedido.
+    if (rateError) {
+      console.error('[VCRL-G2.9] CNPJ rate-limit RPC failure', {
+        trace_id: traceId,
+        rpc: 'check_rate_limit_persistent',
+        rpc_error_code: sanitizeRpcDiagnostic(rateError.code),
+        rpc_error_message: sanitizeRpcDiagnostic(rateError.message),
+        rpc_error_details: sanitizeRpcDiagnostic(rateError.details),
+        rpc_error_hint: sanitizeRpcDiagnostic(rateError.hint),
+      });
+
+      throw new Error(JSON.stringify({
+        error: "CNPJ_VALIDATION_UNAVAILABLE",
+        reason_code: "RATE_LIMIT_RPC_ERROR",
+        trace_id: traceId
+      }));
+    }
+
+    // Apenas allowed=false representa rate limit efetivamente excedido.
+    if (!allowed) {
       throw new Error(JSON.stringify({ 
         error: "RATE_LIMITED", 
         reason_code: "RATE_LIMIT_EXCEEDED",
