@@ -1,5 +1,6 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
-import { getMathChallenge, type MathChallenge } from "@/lib/security.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { getMathChallenge, type MathChallenge } from "@/lib/math-challenge.functions";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -16,11 +17,12 @@ export const MathChallengeField = forwardRef<{ refresh: () => void }, MathChalle
   const [challenge, setChallenge] = useState<MathChallenge | null>(null);
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
+  const fetchChallenge = useServerFn(getMathChallenge);
 
   const load = async () => {
     setLoading(true);
     try {
-      const res = await getMathChallenge();
+      const res = await fetchChallenge();
       setChallenge(res.challenge);
       setAnswer("");
     } catch (error) {
@@ -52,11 +54,11 @@ export const MathChallengeField = forwardRef<{ refresh: () => void }, MathChalle
         <Label htmlFor="math-answer" className="text-sm font-semibold">
           Desafio de segurança: {challenge.question}
         </Label>
-        <Button 
-          type="button" 
-          variant="ghost" 
-          size="icon" 
-          className="size-8" 
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-8"
           onClick={load}
           disabled={loading}
           title="Novo desafio"
