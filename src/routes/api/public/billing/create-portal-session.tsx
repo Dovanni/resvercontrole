@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { supabaseAdmin } from '@/integrations/supabase/client.server';
+import { getSupabaseAdmin } from '@/integrations/supabase/client.server';
 import { createStripePortalSessionImpl } from '@/lib/billing-portal.server';
 import { isValidOrigin } from '@/lib/billing-status.server';
 
@@ -12,6 +12,7 @@ export const Route = createFileRoute('/api/public/billing/create-portal-session'
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const supabaseAdmin = getSupabaseAdmin();
         try {
           const body = await request.json();
           const params = portalSchema.safeParse(body);

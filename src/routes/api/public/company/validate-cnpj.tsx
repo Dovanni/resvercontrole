@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { normalizeCnpj, validateCnpj } from "@/lib/cnpj-validator";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getSupabaseAdmin } from "@/integrations/supabase/client.server";
 import crypto from "crypto";
 
 export interface SanitizedCompany {
@@ -19,6 +19,7 @@ export const Route = createFileRoute("/api/public/company/validate-cnpj")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const supabaseAdmin = getSupabaseAdmin();
         const traceId = crypto.randomUUID();
         try {
           const body = await request.json();
