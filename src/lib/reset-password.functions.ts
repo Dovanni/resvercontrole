@@ -1,9 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getSupabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const checkResetPasswordContext = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { userId } = context as any;
+    const supabaseAdmin = getSupabaseAdmin();
     
     if (!userId) {
       return { 
@@ -35,7 +36,7 @@ export const checkResetPasswordContext = createServerFn({ method: "GET" })
           
         if (!membership) {
           return { 
-            allowed: false, 
+            allowed: false,
             reason: "Conta em estado inválido ou convite expirado." 
           };
         }
@@ -48,7 +49,7 @@ export const checkResetPasswordContext = createServerFn({ method: "GET" })
     } catch (error) {
       console.error("Erro ao validar contexto de reset-password:", error);
       return { 
-        allowed: false, 
+        allowed: false,
         reason: "Erro ao validar sua solicitação. Tente novamente." 
       };
     }
