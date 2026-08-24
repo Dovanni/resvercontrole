@@ -42,6 +42,10 @@ export const validateCnpj = createServerFn({ method: "POST" })
     const rawCnpj = data.cnpj;
     const normalized = normalizeCnpj(rawCnpj);
 
+    console.info('[VCRL-G2.11] validateCnpj start', {
+      trace_id: traceId,
+    });
+
     // 1. Validar formato e DV
     if (!validateCnpjCheck(normalized)) {
       throw new Error(JSON.stringify({ 
@@ -59,6 +63,18 @@ export const validateCnpj = createServerFn({ method: "POST" })
       _key: `rate:cnpj:fn:${normalized}`,
       _limit: 10,
       _window_interval: '24 hours'
+    });
+
+    console.info('[VCRL-G2.11] RPC result shape', {
+      trace_id: traceId,
+      allowed_type: typeof allowed,
+      allowed_is_null: allowed === null,
+      rate_error_type: typeof rateError,
+      rate_error_constructor: rateError?.constructor?.name ?? null,
+      rate_error_has_code: Boolean(rateError && 'code' in rateError),
+      rate_error_has_message: Boolean(rateError && 'message' in rateError),
+      rate_error_has_details: Boolean(rateError && 'details' in rateError),
+      rate_error_has_hint: Boolean(rateError && 'hint' in rateError),
     });
 
     // Erro técnico da RPC não deve ser mascarado como limite excedido.
@@ -166,6 +182,10 @@ export const validateCnpj = createServerFn({ method: "POST" })
         version: "2026.1",
         trace_id: traceId
       };
+
+      console.info('[VCRL-G2.11] validateCnpj success', {
+        trace_id: traceId,
+      });
 
       return result;
     } catch (err: any) {
