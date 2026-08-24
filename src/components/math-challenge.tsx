@@ -1,5 +1,4 @@
 import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { getMathChallenge, type MathChallenge } from "@/lib/security.functions";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,13 +15,12 @@ export const MathChallengeField = forwardRef<{ refresh: () => void }, MathChalle
   ({ onVerify, className, required = true }, ref) => {
   const [challenge, setChallenge] = useState<MathChallenge | null>(null);
   const [answer, setAnswer] = useState("");
-  const fetchChallenge = useServerFn(getMathChallenge);
   const [loading, setLoading] = useState(false);
 
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetchChallenge();
+      const res = await getMathChallenge();
       setChallenge(res.challenge);
       setAnswer("");
     } catch (error) {
