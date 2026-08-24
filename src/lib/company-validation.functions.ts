@@ -58,6 +58,28 @@ export const validateCnpj = createServerFn({ method: "POST" })
     // Carregar cliente administrativo apenas no runtime server-side.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // VCRL-G2.12.2 — prova temporária estritamente read-only de conectividade
+    // Worker -> Supabase/PostgREST, independente da RPC de rate limit.
+    // Nenhum dado retornado é registrado em log.
+    const { data: readProbeData, error: readProbeError } = await supabaseAdmin
+      .from('empresas')
+      .select('id')
+      .limit(1);
+
+    console.info('[VCRL-G2.12.2] Worker Supabase read probe', {
+      trace_id: traceId,
+      read_ok: !readProbeError,
+      data_is_array: Array.isArray(readProbeData),
+      data_length: Array.isArray(readProbeData) ? readProbeData.length : null,
+      error_present: Boolean(readProbeError),
+      error_type: typeof readProbeError,
+      error_constructor: readProbeError?.constructor?.name ?? null,
+      error_has_code: Boolean(readProbeError && 'code' in readProbeError),
+      error_has_message: Boolean(readProbeError && 'message' in readProbeError),
+      error_has_details: Boolean(readProbeError && 'details' in readProbeError),
+      error_has_hint: Boolean(readProbeError && 'hint' in readProbeError),
+    });
+
     // 2. Rate Limit Persistente via Supabase RPC
     const { data: allowed, error: rateError } = await supabaseAdmin.rpc('check_rate_limit_persistent', {
       _key: `rate:cnpj:fn:${normalized}`,
