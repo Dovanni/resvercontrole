@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import crypto from "crypto";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 // Tipos e Interfaces
 export interface MathChallenge {
@@ -117,6 +116,8 @@ function hashIdentity(value: string) {
  * Consulta o estado atual de rate limiting no Supabase (Persistente).
  */
 export async function checkRateLimitPersistent(scope: string, email?: string) {
+  const { getSupabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const supabaseAdmin = getSupabaseAdmin();
   const request = (globalThis as any).request as Request;
   const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
   
@@ -156,6 +157,8 @@ export async function checkRateLimitPersistent(scope: string, email?: string) {
  * Registra uma falha de autenticação no Supabase (Persistente).
  */
 export async function recordRateLimitFailure(scope: string, email: string, policy: { limit: number, cooldowns: number[], windowMs: number }) {
+  const { getSupabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const supabaseAdmin = getSupabaseAdmin();
   const request = (globalThis as any).request as Request;
   const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
   
@@ -197,13 +200,15 @@ export async function recordRateLimitFailure(scope: string, email: string, polic
  * Reseta o estado de rate limit após sucesso (Persistente).
  */
 export async function clearRateLimitPersistent(scope: string, email: string) {
+  const { getSupabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const supabaseAdmin = getSupabaseAdmin();
   const request = (globalThis as any).request as Request;
   const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
   
   const ipHash = hashIdentity(clientIp);
   const emailHash = hashIdentity(email);
 
-    await Promise.all([
+  await Promise.all([
     supabaseAdmin.rpc('reset_auth_rate_limit', {
       p_scope: scope,
       p_identity_kind: 'ip',

@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { checkRateLimit } from "./security.functions";
@@ -23,15 +22,15 @@ export const completeCompanyOnboarding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => onboardingSchema.parse(data))
   .handler(async ({ data, context }) => {
+    const { getSupabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = getSupabaseAdmin();
     const { userId } = context;
     const request = (globalThis as any).request as Request;
     const clientIp = request?.headers.get('x-forwarded-for') || 'unknown';
 
-    // Anti-bot/Rate limit para onboarding
     const allowed = await checkRateLimit(`onboarding:user:${userId}`, 5, 60 * 60 * 1000);
     if (!allowed) throw new Error("Muitas tentativas de configuração. Aguarde.");
 
-    // 1. Verificar se já possui empresa (idempotência)
     const { data: existing } = await supabaseAdmin
       .from("user_company_access")
       .select("empresa_id")
@@ -43,7 +42,6 @@ export const completeCompanyOnboarding = createServerFn({ method: "POST" })
       return { success: true, empresa_id: existing.empresa_id, already_onboarded: true };
     }
 
-    // 2. Criar Empresa
     const { data: empresa, error: empError } = await supabaseAdmin
       .from("empresas")
       .insert({
@@ -57,7 +55,6 @@ export const completeCompanyOnboarding = createServerFn({ method: "POST" })
 
     if (empError) throw new Error(`Erro ao criar empresa: ${empError.message}`);
 
-    // 3. Criar Membership Admin
     const { error: accessError } = await supabaseAdmin
       .from("user_company_access")
       .insert({
@@ -69,8 +66,5 @@ export const completeCompanyOnboarding = createServerFn({ method: "POST" })
 
     if (accessError) throw new Error(`Erro ao vincular administrador: ${accessError.message}`);
 
-    // 4. Registrar Consentimento (Audit Log simplificado na própria tabela de empresas ou logs se existir)
-    // Por ora, apenas registramos que o onboarding foi concluído com sucesso.
-    
     return { success: true, empresa_id: empresa.id };
   });

@@ -1,9 +1,9 @@
 import Stripe from 'stripe';
-import { supabaseAdmin } from '@/integrations/supabase/client.server';
+import { getSupabaseAdmin } from '@/integrations/supabase/client.server';
 import { getStripeClient } from './stripe.server';
 
 export async function createStripePortalSessionImpl(empresaId: string, origin: string, host: string | null) {
-  // 1. Obter informações da empresa e do cliente Stripe
+  const supabaseAdmin = getSupabaseAdmin();
   const { data: sub, error: subError } = await supabaseAdmin
     .from('subscriptions')
     .select('stripe_customer_id, status')
@@ -15,7 +15,6 @@ export async function createStripePortalSessionImpl(empresaId: string, origin: s
     throw new Error('CUSTOMER_NOT_FOUND');
   }
 
-  // 2. Identificar ambiente (Sandbox/Live) e obter a chave correspondente
   const isProduction = host === 'www.vejamais.com.br' || host === 'vejamais.com.br';
   const stripeKey = isProduction 
     ? process.env['STRIPE_RESTRICTED_KEY_LIVE'] 
@@ -26,7 +25,6 @@ export async function createStripePortalSessionImpl(empresaId: string, origin: s
     throw new Error('STRIPE_CONFIG_MISSING');
   }
 
-  // 3. Transporte REST direto para o Stripe (Bypass SDK para máxima confiabilidade em Workers)
   const returnUrl = `https://www.vejamais.com.br/configuracoes/assinatura`;
 
   try {
