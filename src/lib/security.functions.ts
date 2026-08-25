@@ -85,11 +85,22 @@ export async function verifyTurnstile(token: string) {
     const outcome = await result.json();
 
     if (!outcome.success) {
+      console.error('[VCRL-G2.37A] Turnstile siteverify rejected token [sanitized]', {
+        success: Boolean(outcome?.success),
+        error_codes: Array.isArray(outcome?.['error-codes']) ? outcome['error-codes'] : [],
+        hostname: typeof outcome?.hostname === 'string' ? outcome.hostname : null,
+        action: typeof outcome?.action === 'string' ? outcome.action : null,
+        challenge_ts: typeof outcome?.challenge_ts === 'string' ? outcome.challenge_ts : null,
+      });
       return { success: false, error: 'Desafio inválido' };
     }
 
     if (outcome.hostname && !HOSTNAME_ALLOWLIST.includes(outcome.hostname)) {
-      console.error(`Hostname não autorizado: ${outcome.hostname}`);
+      console.error('[VCRL-G2.37A] Turnstile hostname rejected [sanitized]', {
+        hostname: outcome.hostname,
+        action: typeof outcome?.action === 'string' ? outcome.action : null,
+        challenge_ts: typeof outcome?.challenge_ts === 'string' ? outcome.challenge_ts : null,
+      });
       return { success: false, error: 'Origem não autorizada' };
     }
 
