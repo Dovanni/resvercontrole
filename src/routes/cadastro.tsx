@@ -28,7 +28,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { validateCnpj } from '@/lib/company-validation.functions';
-import { supabase } from '@/integrations/supabase/client';
+import { createCompanyOnboarding } from '@/lib/company-onboarding.functions';
 import { cn } from '@/lib/utils';
 import { VejamaisMark } from '@/components/vejamais-logo';
 import { TurnstileWidget, type TurnstileWidgetRef } from '@/components/turnstile-widget';
@@ -143,35 +143,49 @@ function CadastroPage() {
       return;
     }
 
+    if (!turnstileToken || !mathToken || !mathAnswer) {
+      toast.error('Verificação obrigatória', { description: 'Conclua os desafios de segurança antes de continuar.' });
+      return;
+    }
+
     setBusy(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-company-onboarding', {
-        body: {
+      const data = await createCompanyOnboarding({
+        data: {
           nomeAdmin,
           empresaNome,
+          razaoSocial: validatedData.razao_social || empresaNome,
           email,
           cnpj: cnpj.replace(/[^\w]/g, ''),
           turnstileToken,
           mathToken,
-          mathAnswer
+          mathAnswer,
+          termsAccepted: true,
+          privacyAccepted: true,
         }
       });
-
-      if (error) throw error;
       
       if (!data.success) {
-        if (data.retryAfter) setRetryAfter(data.retryAfter);
-        throw new Error(data.error || 'Erro ao processar cadastro');
+        throw new Error('Erro ao processar cadastro');
       }
 
-      toast.success('Empresa criada com sucesso!', {
-        description: 'Enviamos um email de confirmação para você.'
+      toast.success('Cadastro preparado com sucesso!', {
+        description: data.message || 'Enviamos um e-mail de confirmação para você.'
       });
       
       navigate({ to: '/login' });
     } catch (error: any) {
-      toast.error('Falha no cadastro', { description: error.message });
+      let errorMessage = error?.message || 'Não foi possível concluir o cadastro.';
+      try {
+        const parsed = JSON.parse(errorMessage);
+        if (parsed.retryAfter) setRetryAfter(parsed.retryAfter);
+        errorMessage = parsed.message || parsed.error || errorMessage;
+      } catch {
+        // Preserve the sanitized server message.
+      }
+      toast.error('Falha no cadastro', { description: errorMessage });
       turnstileRef.current?.reset();
+      setTurnstileToken(null);
       mathChallengeRef.current?.refresh();
     } finally {
       setBusy(false);
@@ -404,7 +418,7 @@ function CadastroPage() {
                     </div>
                   </div>
 
-                  <MathChallengeField onVerify={(t: string, a: string) => { setMathToken(t); setMathAnswer(a); }} />
+                  <MathChallengeField ref={mathChallengeRef} onVerify={(t: string, a: string) => { setMathToken(t); setMathAnswer(a); }} />
                   <TurnstileWidget ref={turnstileRef} onVerify={setTurnstileToken} />
 
                   <Button 
