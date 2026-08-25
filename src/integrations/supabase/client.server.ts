@@ -2,73 +2,65 @@
 // Server-side Supabase client with service role key - bypasses RLS.
 // Use this for admin operations in server functions and server routes only.
 // For user-authenticated queries (with RLS), use the auth middleware instead.
+import { env } from 'cloudflare:workers';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-function classifyServiceKey(value: string): 'MODERN_SECRET' | 'LEGACY_JWT' | 'OTHER' {
-  if (value.startsWith('sb_secret_')) return 'MODERN_SECRET';
-  if (value.startsWith('eyJ')) return 'LEGACY_JWT';
-  return 'OTHER';
+const CANONICAL_SUPABASE_URL = 'https://hoalgniwydgydqaugqph.supabase.co';
+const CANONICAL_SUPABASE_HOST = 'hoalgniwydgydqaugqph.supabase.co';
+
+function readRuntimeString(name: string): string | undefined {
+  const value = (env as unknown as Record<string, unknown>)[name];
+  return typeof value === 'string' ? value.trim() : undefined;
 }
 
-function safeHost(value: string): string {
-  try {
-    return new URL(value).host;
-  } catch {
-    return 'INVALID_URL';
+function normalizeSecret(value: string): string {
+  const trimmed = value.trim();
+  if (
+    trimmed.length >= 2 &&
+    ((trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+      (trimmed.startsWith("'") && trimmed.endsWith("'")))
+  ) {
+    return trimmed.slice(1, -1).trim();
   }
+  return trimmed;
+}
+
+function isRecognizedAdminKey(value: string): boolean {
+  return value.startsWith('sb_secret_') || value.startsWith('eyJ');
 }
 
 function createSupabaseAdminClient() {
-  const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const runtimeUrl = readRuntimeString('SUPABASE_URL');
+  const rawServiceRoleKey = readRuntimeString('SUPABASE_SERVICE_ROLE_KEY');
 
-  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    const missing = [
-      ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
-      ...(!SUPABASE_SERVICE_ROLE_KEY ? ['SUPABASE_SERVICE_ROLE_KEY'] : []),
-    ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Connect Supabase in Lovable Cloud.`;
-    console.error(`[Supabase] ${message}`);
-    throw new Error(message);
+  if (!rawServiceRoleKey) {
+    throw new Error('Missing Cloudflare runtime secret: SUPABASE_SERVICE_ROLE_KEY');
   }
 
-  const supabaseHost = safeHost(SUPABASE_URL);
-  console.info('[VCRL-G2.16.2] Supabase runtime target fingerprint', {
-    supabase_host: supabaseHost,
-    service_key_present: true,
-    service_key_format: classifyServiceKey(SUPABASE_SERVICE_ROLE_KEY),
-  });
-
-  const instrumentedFetch: typeof fetch = async (input, init) => {
-    let requestHost = 'UNRESOLVED';
+  if (runtimeUrl) {
+    let runtimeHost: string;
     try {
-      const requestUrl = typeof input === 'string'
-        ? input
-        : input instanceof URL
-          ? input.toString()
-          : input.url;
-      requestHost = new URL(requestUrl).host;
+      runtimeHost = new URL(runtimeUrl).host;
     } catch {
-      requestHost = 'INVALID_URL';
+      throw new Error('Invalid Cloudflare runtime variable: SUPABASE_URL');
     }
 
-    console.info('[VCRL-G2.16.2] Supabase transport fetch started', {
-      fetch_started: true,
-      target_host: requestHost,
-    });
+    if (runtimeHost !== CANONICAL_SUPABASE_HOST) {
+      throw new Error('Cloudflare SUPABASE_URL does not match the canonical VEJAMAIS Supabase project');
+    }
+  }
 
-    return fetch(input, init);
-  };
+  const serviceRoleKey = normalizeSecret(rawServiceRoleKey);
+  if (!isRecognizedAdminKey(serviceRoleKey)) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not a recognized administrative Supabase key format');
+  }
 
-  return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  return createClient<Database>(CANONICAL_SUPABASE_URL, serviceRoleKey, {
     auth: {
       storage: undefined,
       persistSession: false,
       autoRefreshToken: false,
-    },
-    global: {
-      fetch: instrumentedFetch,
     },
   });
 }
