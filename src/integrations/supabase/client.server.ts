@@ -2,7 +2,6 @@
 // Server-side Supabase client with service role key - bypasses RLS.
 // Use this for admin operations in server functions and server routes only.
 // For user-authenticated queries (with RLS), use the auth middleware instead.
-import { env } from 'cloudflare:workers';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
@@ -10,7 +9,7 @@ const CANONICAL_SUPABASE_URL = 'https://hoalgniwydgydqaugqph.supabase.co';
 const CANONICAL_SUPABASE_HOST = 'hoalgniwydgydqaugqph.supabase.co';
 
 function readRuntimeString(name: string): string | undefined {
-  const value = (env as unknown as Record<string, unknown>)[name];
+  const value = process.env[name];
   return typeof value === 'string' ? value.trim() : undefined;
 }
 
@@ -34,7 +33,7 @@ export function getSupabaseServiceRoleKey(): string {
   const rawServiceRoleKey = readRuntimeString('SUPABASE_SERVICE_ROLE_KEY');
 
   if (!rawServiceRoleKey) {
-    throw new Error('Missing Cloudflare runtime secret: SUPABASE_SERVICE_ROLE_KEY');
+    throw new Error('Missing runtime secret: SUPABASE_SERVICE_ROLE_KEY');
   }
 
   const serviceRoleKey = normalizeSecret(rawServiceRoleKey);
@@ -53,11 +52,11 @@ function createSupabaseAdminClient() {
     try {
       runtimeHost = new URL(runtimeUrl).host;
     } catch {
-      throw new Error('Invalid Cloudflare runtime variable: SUPABASE_URL');
+      throw new Error('Invalid runtime variable: SUPABASE_URL');
     }
 
     if (runtimeHost !== CANONICAL_SUPABASE_HOST) {
-      throw new Error('Cloudflare SUPABASE_URL does not match the canonical VEJAMAIS Supabase project');
+      throw new Error('SUPABASE_URL does not match the canonical VEJAMAIS Supabase project');
     }
   }
 
