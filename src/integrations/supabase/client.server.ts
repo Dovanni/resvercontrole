@@ -30,13 +30,23 @@ function isRecognizedAdminKey(value: string): boolean {
   return value.startsWith('sb_secret_') || value.startsWith('eyJ');
 }
 
-function createSupabaseAdminClient() {
-  const runtimeUrl = readRuntimeString('SUPABASE_URL');
+export function getSupabaseServiceRoleKey(): string {
   const rawServiceRoleKey = readRuntimeString('SUPABASE_SERVICE_ROLE_KEY');
 
   if (!rawServiceRoleKey) {
     throw new Error('Missing Cloudflare runtime secret: SUPABASE_SERVICE_ROLE_KEY');
   }
+
+  const serviceRoleKey = normalizeSecret(rawServiceRoleKey);
+  if (!isRecognizedAdminKey(serviceRoleKey)) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not a recognized administrative Supabase key format');
+  }
+
+  return serviceRoleKey;
+}
+
+function createSupabaseAdminClient() {
+  const runtimeUrl = readRuntimeString('SUPABASE_URL');
 
   if (runtimeUrl) {
     let runtimeHost: string;
@@ -51,10 +61,7 @@ function createSupabaseAdminClient() {
     }
   }
 
-  const serviceRoleKey = normalizeSecret(rawServiceRoleKey);
-  if (!isRecognizedAdminKey(serviceRoleKey)) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not a recognized administrative Supabase key format');
-  }
+  const serviceRoleKey = getSupabaseServiceRoleKey();
 
   return createClient<Database>(CANONICAL_SUPABASE_URL, serviceRoleKey, {
     auth: {

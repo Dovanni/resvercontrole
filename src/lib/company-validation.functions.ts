@@ -1,5 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { env } from "cloudflare:workers";
 import { z } from "zod";
 import { normalizeCnpj, validateCnpj as validateCnpjCheck } from "@/lib/cnpj-validator";
 import crypto from "crypto";
@@ -19,32 +18,22 @@ function sanitizeRpcDiagnostic(value: unknown): string | null {
     .slice(0, 500);
 }
 
-function readRuntimeSecret(name: string): string | undefined {
-  const value = (env as unknown as Record<string, unknown>)[name];
-  if (typeof value !== "string") return undefined;
-
-  const trimmed = value.trim();
-  if (
-    trimmed.length >= 2 &&
-    ((trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-      (trimmed.startsWith("'") && trimmed.endsWith("'")))
-  ) {
-    return trimmed.slice(1, -1).trim();
-  }
-
-  return trimmed;
+async function getRuntimeServiceRoleKey(): Promise<string> {
+  const { getSupabaseServiceRoleKey } = await import("@/integrations/supabase/client.server");
+  return getSupabaseServiceRoleKey();
 }
 
 async function checkCnpjRateLimitDirect(normalized: string, traceId: string): Promise<boolean> {
-  const serviceRoleKey = readRuntimeSecret("SUPABASE_SERVICE_ROLE_KEY");
-
-  if (!serviceRoleKey) {
+  let serviceRoleKey: string;
+  try {
+    serviceRoleKey = await getRuntimeServiceRoleKey();
+  } catch (error) {
     console.error("[VCRL-G2.21] Direct rate-limit RPC transport failure", {
       trace_id: traceId,
       rpc: "check_rate_limit_persistent",
       http_status: null,
       response_ok: false,
-      error_message: "Missing Cloudflare runtime secret: SUPABASE_SERVICE_ROLE_KEY",
+      error_message: sanitizeRpcDiagnostic(error instanceof Error ? error.message : error),
     });
 
     throw new Error(JSON.stringify({
