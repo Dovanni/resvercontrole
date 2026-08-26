@@ -75,7 +75,12 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetRef, TurnstileWidgetPro
           theme: 'light',
         }}
         onSuccess={onVerify}
-        onError={() => setError(true)}
+        onError={(errorCode: string) => {
+          console.error('[VCRL-G2.39] Turnstile client error [sanitized]', {
+            error_code: errorCode,
+          });
+          setError(true);
+        }}
         onExpire={() => onVerify(null)}
       />
     </div>
