@@ -43,7 +43,6 @@ export const Route = createFileRoute('/api/public/billing/context')({
             });
           }
 
-          // Validar acesso à empresa (Membership)
           const { data: membership, error: memberError } = await supabaseAdmin
             .from('user_company_access')
             .select('role')
@@ -61,7 +60,6 @@ export const Route = createFileRoute('/api/public/billing/context')({
           const host = request.headers.get('host');
           const origin = request.headers.get('origin') || request.headers.get('referer');
 
-          // Consulta atômica de assinatura e status de checkout
           const [subContext, checkoutStatus] = await Promise.all([
             getCompanySubscriptionContextImpl(empresaId),
             getCheckoutStatusImpl(empresaId, host, origin)
@@ -74,13 +72,9 @@ export const Route = createFileRoute('/api/public/billing/context')({
             });
           }
 
-          // Identificação Institucional Segura (Server-side canonical authority)
-          // ID da Matriz autorizado para modo administrativo institucional
-          const INSTITUTIONAL_MATRIX_IDS = [
-            'c610705d-e900-4b6f-8460-1a0633b7962a',
-            '55bdfa1d-263d-4099-b2f9-35dea74719f7'
-          ];
-          const isInstitutional = INSTITUTIONAL_MATRIX_IDS.includes(empresaId);
+          // A autoridade canônica do modo institucional vem do Supabase/RPC,
+          // não de uma lista local de IDs que pode ficar obsoleta após migrações.
+          const isInstitutional = (subContext as any).billing_mode === 'institutional';
 
           const responseData = {
             subscription: {
