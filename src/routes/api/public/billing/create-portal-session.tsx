@@ -34,7 +34,6 @@ export const Route = createFileRoute('/api/public/billing/create-portal-session'
             return new Response(JSON.stringify({ error: 'UNAUTHENTICATED' }), { status: 401 });
           }
 
-          // Validar acesso (Membership Admin)
           const { data: membership, error: memberError } = await supabaseAdmin
             .from('user_company_access')
             .select('role')
@@ -44,6 +43,22 @@ export const Route = createFileRoute('/api/public/billing/create-portal-session'
 
           if (memberError || !membership || membership.role !== 'admin') {
             return new Response(JSON.stringify({ error: 'FORBIDDEN' }), { status: 403 });
+          }
+
+          const { data: context, error: contextError } = await supabaseAdmin.rpc('get_company_subscription_context_admin', {
+            p_empresa_id: empresaId,
+            p_verified_user_id: user.id,
+          });
+
+          if (contextError || !context) {
+            return new Response(JSON.stringify({ error: 'COMPANY_ACCESS_DENIED' }), { status: 403 });
+          }
+
+          if ((context as any).billing_mode === 'institutional') {
+            return new Response(JSON.stringify({ error: 'INSTITUTIONAL_MODE' }), {
+              status: 403,
+              headers: { 'Content-Type': 'application/json' }
+            });
           }
 
           const origin = request.headers.get('origin') || request.headers.get('referer');
