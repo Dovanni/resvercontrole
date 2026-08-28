@@ -141,16 +141,18 @@ function ControleVendasPage() {
   });
 
   const { data: fornecedorRow } = useQuery({
-    queryKey: ["controle-vendas-fornecedor", YEAR, mes],
+    queryKey: ["controle-vendas-fornecedor", YEAR, mes, empresaId],
+    enabled: !!empresaId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("controle_vendas_fornecedor")
+      const { data, error } = await (supabase
+        .from("controle_vendas_fornecedor") as any)
         .select("*")
+        .eq("empresa_id", empresaId)
         .eq("ano", YEAR)
         .eq("mes", mes)
         .maybeSingle();
       if (error) throw error;
-      return data as { id: string; valor_fornecedor: number } | null;
+      return data as { id: string; empresa_id: string; valor_fornecedor: number } | null;
     },
   });
 
@@ -244,11 +246,13 @@ function ControleVendasPage() {
   });
 
   const { data: historico = [] } = useQuery({
-    queryKey: ["controle-vendas-fornecedor-historico", YEAR, mes],
+    queryKey: ["controle-vendas-fornecedor-historico", YEAR, mes, empresaId],
+    enabled: !!empresaId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("controle_vendas_fornecedor_historico")
+      const { data, error } = await (supabase
+        .from("controle_vendas_fornecedor_historico") as any)
         .select("*")
+        .eq("empresa_id", empresaId)
         .eq("ano", YEAR)
         .eq("mes", mes)
         .order("created_at", { ascending: false });
@@ -265,21 +269,22 @@ function ControleVendasPage() {
       const { data: userRes } = await supabase.auth.getUser();
       const user_id = userRes.user?.id;
       if (!user_id) throw new Error("Sem usuário");
+      if (!empresaId) throw new Error("Empresa não selecionada");
       const novoValor = num(fornecedorInput);
       const valorAnterior = Number(fornecedorRow?.valor_fornecedor ?? 0);
       const isEdit = editingFornecedor && fornecedorRow && novoValor !== valorAnterior;
 
-      const payload = { user_id, mes, ano: YEAR, valor_fornecedor: novoValor };
-      const { error } = await supabase
-        .from("controle_vendas_fornecedor")
-        .upsert(payload, { onConflict: "user_id,mes,ano" });
+      const payload = { user_id, empresa_id: empresaId, mes, ano: YEAR, valor_fornecedor: novoValor };
+      const { error } = await (supabase
+        .from("controle_vendas_fornecedor") as any)
+        .upsert(payload, { onConflict: "empresa_id,mes,ano" });
       if (error) throw error;
 
       if (isEdit) {
-        const { error: hErr } = await supabase
-          .from("controle_vendas_fornecedor_historico")
+        const { error: hErr } = await (supabase
+          .from("controle_vendas_fornecedor_historico") as any)
           .insert({
-            user_id, mes, ano: YEAR,
+            user_id, empresa_id: empresaId, mes, ano: YEAR,
             valor_anterior: valorAnterior,
             valor_novo: novoValor,
             motivo: motivoAlteracao || null,
@@ -375,9 +380,10 @@ function ControleVendasPage() {
   const exportPdfAnual = async () => {
     const ano = YEAR;
     try {
+      if (!empresaId) throw new Error("Empresa não selecionada");
       const [diarioRes, fornRes] = await Promise.all([
-        supabase.from("controle_vendas_diario").select("mes,receber,lucro,custo,frete_empresa").eq("ano", ano),
-        supabase.from("controle_vendas_fornecedor").select("mes,valor_fornecedor").eq("ano", ano),
+        supabase.from("controle_vendas_diario").select("mes,receber,lucro,custo,frete_empresa").eq("ano", ano).eq("empresa_id", empresaId),
+        (supabase.from("controle_vendas_fornecedor") as any).select("mes,valor_fornecedor").eq("ano", ano).eq("empresa_id", empresaId),
       ]);
       if (diarioRes.error) throw diarioRes.error;
       if (fornRes.error) throw fornRes.error;
@@ -1243,4 +1249,3 @@ function HelpDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: b
     </Dialog>
   );
 }
-
