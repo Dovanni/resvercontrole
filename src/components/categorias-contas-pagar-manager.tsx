@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,23 +12,29 @@ import { useConfirm } from "@/components/confirm-dialog";
 export type Categoria = { id: string; nome: string; padrao: boolean };
 
 export function useCategoriasContasPagar() {
+  const { empresaId } = useMultiempresa();
+
   return useQuery({
-    queryKey: ["categorias-contas-pagar"],
+    queryKey: ["categorias-contas-pagar", empresaId],
     queryFn: async () => {
+      if (!empresaId) throw new Error("Empresa ativa não encontrada");
       const { data, error } = await supabase
         .from("categorias_contas_pagar" as any)
         .select("id,nome,padrao")
+        .eq("empresa_id", empresaId)
         .order("padrao", { ascending: false })
         .order("nome");
       if (error) throw error;
       return (data ?? []) as unknown as Categoria[];
     },
+    enabled: !!empresaId,
   });
 }
 
 export function CategoriasManagerInline() {
   const qc = useQueryClient();
   const confirm = useConfirm();
+  const { empresaId } = useMultiempresa();
   const { data: cats } = useCategoriasContasPagar();
   const [novaCategoria, setNovaCategoria] = useState("");
   const [busca, setBusca] = useState("");
@@ -44,17 +51,22 @@ export function CategoriasManagerInline() {
       const nome = nomeRaw.trim();
       if (nome.length < 2) throw new Error("Nome deve ter no mínimo 2 caracteres");
       if (existingLower.has(nome.toLowerCase())) throw new Error("Esta categoria já existe");
+      if (!empresaId) throw new Error("Empresa ativa não encontrada");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
       const { error } = await supabase.from("categorias_contas_pagar" as any)
-        .insert({ user_id: user.id, nome, padrao: false });
+        .insert({ user_id: user.id, empresa_id: empresaId, nome, padrao: false });
       if (error) {
         console.error("Erro ao inserir categoria:", error);
         if (error.code === "23505") throw new Error("Esta categoria já existe");
         throw new Error(error.message);
       }
     },
-    onSuccess: () => { setNovaCategoria(""); toast.success("Categoria criada"); qc.invalidateQueries({ queryKey: ["categorias-contas-pagar"] }); },
+    onSuccess: () => {
+      setNovaCategoria("");
+      toast.success("Categoria criada");
+      qc.invalidateQueries({ queryKey: ["categorias-contas-pagar", empresaId] });
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -62,26 +74,42 @@ export function CategoriasManagerInline() {
     mutationFn: async ({ id, nome }: { id: string; nome: string }) => {
       const n = nome.trim();
       if (n.length < 2) throw new Error("Nome deve ter no mínimo 2 caracteres");
+      if (!empresaId) throw new Error("Empresa ativa não encontrada");
       const dup = (cats ?? []).find((c) => c.id !== id && c.nome.trim().toLowerCase() === n.toLowerCase());
       if (dup) throw new Error("Já existe uma categoria com esse nome");
       const { error } = await supabase.from("categorias_contas_pagar" as any)
-        .update({ nome: n }).eq("id", id);
+        .update({ nome: n })
+        .eq("id", id)
+        .eq("empresa_id", empresaId);
       if (error) throw error;
     },
-    onSuccess: () => { setEditId(null); toast.success("Renomeada"); qc.invalidateQueries({ queryKey: ["categorias-contas-pagar"] }); },
+    onSuccess: () => {
+      setEditId(null);
+      toast.success("Renomeada");
+      qc.invalidateQueries({ queryKey: ["categorias-contas-pagar", empresaId] });
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
   const remove = useMutation({
     mutationFn: async (cat: Categoria) => {
+      if (!empresaId) throw new Error("Empresa ativa não encontrada");
       const { count, error: cErr } = await supabase.from("payables")
-        .select("id", { count: "exact", head: true }).eq("category", cat.nome);
+        .select("id", { count: "exact", head: true })
+        .eq("empresa_id", empresaId)
+        .eq("category", cat.nome);
       if (cErr) throw cErr;
       if ((count ?? 0) > 0) throw new Error(`Categoria em uso por ${count} conta(s)`);
-      const { error } = await supabase.from("categorias_contas_pagar" as any).delete().eq("id", cat.id);
+      const { error } = await supabase.from("categorias_contas_pagar" as any)
+        .delete()
+        .eq("id", cat.id)
+        .eq("empresa_id", empresaId);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Excluída"); qc.invalidateQueries({ queryKey: ["categorias-contas-pagar"] }); },
+    onSuccess: () => {
+      toast.success("Excluída");
+      qc.invalidateQueries({ queryKey: ["categorias-contas-pagar", empresaId] });
+    },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -89,7 +117,7 @@ export function CategoriasManagerInline() {
   const all = cats ?? [];
   const padrao = all.filter((c) => c.padrao && (!filtro || c.nome.toLowerCase().includes(filtro)));
   const custom = all.filter((c) => !c.padrao && (!filtro || c.nome.toLowerCase().includes(filtro)));
-  const podeAdicionar = novaCategoria.trim().length >= 2;
+  const podeAdicionar = novaCategoria.trim().length >= 2 && !!empresaId;
 
   const handleAdicionar = () => {
     if (!podeAdicionar) return;
