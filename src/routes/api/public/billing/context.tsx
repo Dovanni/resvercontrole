@@ -78,7 +78,9 @@ export const Route = createFileRoute('/api/public/billing/context')({
 
           const responseData = {
             subscription: {
-              status: subContext.status,
+              // Para a UX institucional evitamos os fluxos comerciais/portal no cliente.
+              // O estado canônico no banco permanece ACTIVE + access_mode=full.
+              status: isInstitutional ? 'none' : subContext.status,
               plan_code: subContext.plan_code,
               plan_name: subContext.plan_name,
               current_user_count: subContext.current_user_count,
