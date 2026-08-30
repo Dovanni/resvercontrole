@@ -66,13 +66,13 @@ const num = (s: string) => {
 };
 
 // Fórmulas oficiais (definitivas):
-// RECEBER = LOJA (fixo)
-// LUCRO   = RECEBER + FRETE_CLIENTE - CUSTO - JUROS_ML - FRETE_EMPRESA
+// RECEBER = LOJA (fixo; o frete cobrado do cliente já compõe o total recebido da venda)
+// LUCRO   = RECEBER - CUSTO - JUROS_ML - FRETE_EMPRESA
 // MARGEM  = LUCRO / RECEBER * 100
 // RATEIO (mensal) = TOTAL_FORNECEDOR - SUM(CUSTO)
 const calcReceber = (loja: number) => loja;
-const calcLucro = (loja: number, custo: number, freteEmp: number, juros: number, freteCli: number) =>
-  loja + freteCli - custo - juros - freteEmp;
+const calcLucro = (loja: number, custo: number, freteEmp: number, juros: number, _freteCli: number) =>
+  loja - custo - juros - freteEmp;
 const calcMargem = (lucro: number, receber: number) => {
   return receber > 0 ? (lucro * 100) / receber : 0;
 };
@@ -1184,7 +1184,7 @@ function HelpDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: b
             <ul className="space-y-2">
               <li><span className="text-emerald-600 font-medium">🟢 RECEBER</span> — Total das vendas do mês (soma da coluna Loja).</li>
               <li><span className="text-emerald-600 font-medium">🟢 LUCRO</span> — O que sobrou depois de todos os custos.
-                <div className="mt-1 rounded-md bg-muted px-3 py-2 font-mono text-xs">Loja + Frete Cliente − Custo − Juros ML − Frete Empresa</div>
+                <div className="mt-1 rounded-md bg-muted px-3 py-2 font-mono text-xs">Receber − Custo − Juros ML − Frete Empresa</div>
               </li>
               <li><span className="text-blue-600 font-medium">🔵 MARGEM %</span> — Percentual de lucro sobre o recebido.
                 <div className="mt-1 rounded-md bg-muted px-3 py-2 font-mono text-xs">Lucro ÷ Receber × 100</div>
@@ -1206,7 +1206,7 @@ function HelpDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: b
               <li><b>Custo (R$)</b> — calculado pelo custo real de cada produto vendido; ajustável manualmente.</li>
               <li><b>Juros ML (R$)</b> — taxa do Mercado Livre. Deixe zero se não usou ML.</li>
               <li><b>Frete Empresa (R$)</b> — valor pago aos Correios. Não entra no total da venda; apenas reduz o lucro.</li>
-              <li><b>Frete Cliente (R$)</b> — valor cobrado do cliente pelo frete; entra no lucro como receita adicional.</li>
+              <li><b>Frete Cliente (R$)</b> — valor cobrado do cliente pelo frete; é exibido para composição e auditoria, mas não é somado novamente ao lucro porque já está incorporado ao valor recebido da venda.</li>
               <li>Veja a <b>prévia</b> em tempo real: A receber, Lucro e Margem do dia antes de salvar.</li>
               <li>Clique em <b>Salvar</b>.</li>
             </ol>
