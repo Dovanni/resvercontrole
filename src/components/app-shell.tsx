@@ -19,6 +19,7 @@ const ALL_NAV: { to: string; label: string; icon: any; perm: Permission }[] = [
   { to: "/clientes", label: "Clientes", icon: Users, perm: "view:clients" },
   { to: "/fornecedores", label: "Fornecedores", icon: Truck, perm: "view:suppliers" },
   { to: "/produtos", label: "Produtos", icon: Package, perm: "view:products" },
+  { to: "/kardex-produtos", label: "Kardex de produtos", icon: Package, perm: "view:products" },
   { to: "/vendas", label: "Vendas", icon: ShoppingBag, perm: "view:sales" },
   { to: "/controle-vendas", label: "Controle de vendas", icon: TrendingUp, perm: "view:sales" },
   { to: "/compras", label: "Compras", icon: ShoppingCart, perm: "view:payables" },
