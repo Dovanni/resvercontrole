@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { brl } from "@/lib/format";
 import { toast } from "sonner";
-import { Package, Plus } from "lucide-react";
+import { HelpCircle, Package, Plus } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/kardex-produtos")({
   head: () => ({ meta: [{ title: "Kardex de Produtos — Vejamais" }] }),
@@ -94,6 +94,7 @@ function KardexProdutosPage() {
   const [productId, setProductId] = useState("todos");
   const [movementFilter, setMovementFilter] = useState("todos");
   const [openAdjust, setOpenAdjust] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const [adjustMode, setAdjustMode] = useState<AdjustmentMode>("manual");
   const [adjustProduct, setAdjustProduct] = useState("");
   const [adjustDirection, setAdjustDirection] = useState<"entrada" | "saida">("entrada");
@@ -231,101 +232,182 @@ function KardexProdutosPage() {
       <PageHeader
         title="Kardex de Produtos"
         subtitle="Histórico físico de entradas, saídas, compras, vendas e ajustes por item"
-        action={isAdmin ? (
-          <Dialog open={openAdjust} onOpenChange={(open) => { setOpenAdjust(open); if (!open) resetAdjustForm(); }}>
-            <DialogTrigger asChild>
-              <Button><Plus className="size-4 mr-1" /> Movimentação física</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader><DialogTitle>Registrar movimentação física</DialogTitle></DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label>Operação</Label>
-                  <Select value={adjustMode} onValueChange={(v) => { setAdjustMode(v as AdjustmentMode); setInventoryCount(""); setAdjustReason(""); }}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="manual">Entrada / saída manual</SelectItem>
-                      <SelectItem value="implantacao">Inventário de implantação</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Produto</Label>
-                  <Select value={adjustProduct} onValueChange={(v) => { setAdjustProduct(v); setInventoryCount(""); }}>
-                    <SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger>
-                    <SelectContent>{products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}{p.sku ? ` (${p.sku})` : ""} — estoque {p.stock}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-
-                {adjustMode === "manual" ? (
-                  <div className="grid grid-cols-2 gap-3">
+        action={(
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="ghost" onClick={() => setShowHelp(true)}>
+              <HelpCircle className="size-4" /> Como funciona esta etapa
+            </Button>
+            {isAdmin && (
+              <Dialog open={openAdjust} onOpenChange={(open) => { setOpenAdjust(open); if (!open) resetAdjustForm(); }}>
+                <DialogTrigger asChild>
+                  <Button><Plus className="size-4 mr-1" /> Movimentação física</Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader><DialogTitle>Registrar movimentação física</DialogTitle></DialogHeader>
+                  <div className="space-y-4">
                     <div>
-                      <Label>Movimento</Label>
-                      <Select value={adjustDirection} onValueChange={(v) => setAdjustDirection(v as "entrada" | "saida")}>
+                      <Label>Operação</Label>
+                      <Select value={adjustMode} onValueChange={(v) => { setAdjustMode(v as AdjustmentMode); setInventoryCount(""); setAdjustReason(""); }}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="entrada">Entrada física</SelectItem>
-                          <SelectItem value="saida">Saída física</SelectItem>
+                          <SelectItem value="manual">Entrada / saída manual</SelectItem>
+                          <SelectItem value="implantacao">Inventário de implantação</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label>Quantidade</Label>
-                      <Input type="number" min={1} step={1} inputMode="numeric" value={adjustQuantity} onChange={(e) => setAdjustQuantity(e.target.value)} />
+                      <Label>Produto</Label>
+                      <Select value={adjustProduct} onValueChange={(v) => { setAdjustProduct(v); setInventoryCount(""); }}>
+                        <SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger>
+                        <SelectContent>{products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}{p.sku ? ` (${p.sku})` : ""} — estoque {p.stock}</SelectItem>)}</SelectContent>
+                      </Select>
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label>Estoque atual</Label>
-                        <Input value={selectedAdjustProduct ? String(selectedAdjustProduct.stock) : "—"} disabled />
-                      </div>
-                      <div>
-                        <Label>Quantidade física contada</Label>
-                        <Input type="number" min={0} step={1} inputMode="numeric" value={inventoryCount} onChange={(e) => setInventoryCount(e.target.value)} placeholder="Informe a contagem" />
-                      </div>
-                    </div>
-                    {selectedAdjustProduct && inventoryDifference != null && (
-                      <div className="rounded-md border bg-muted/30 p-3 text-sm">
-                        <div className="font-medium">Prévia do ajuste</div>
-                        <div className="mt-1 text-muted-foreground">
-                          Estoque atual: <strong>{selectedAdjustProduct.stock}</strong> → Contagem física: <strong>{countedInventory}</strong>
+
+                    {adjustMode === "manual" ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label>Movimento</Label>
+                          <Select value={adjustDirection} onValueChange={(v) => setAdjustDirection(v as "entrada" | "saida")}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="entrada">Entrada física</SelectItem>
+                              <SelectItem value="saida">Saída física</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
-                        <div className="mt-1">
-                          {inventoryDifference > 0 && <>Entrada automática de <strong>+{inventoryDifference}</strong> unidade(s).</>}
-                          {inventoryDifference < 0 && <>Saída automática de <strong>{Math.abs(inventoryDifference)}</strong> unidade(s).</>}
-                          {inventoryDifference === 0 && <>Nenhuma diferença encontrada. Nenhuma movimentação será necessária.</>}
+                        <div>
+                          <Label>Quantidade</Label>
+                          <Input type="number" min={1} step={1} inputMode="numeric" value={adjustQuantity} onChange={(e) => setAdjustQuantity(e.target.value)} />
                         </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label>Estoque atual</Label>
+                            <Input value={selectedAdjustProduct ? String(selectedAdjustProduct.stock) : "—"} disabled />
+                          </div>
+                          <div>
+                            <Label>Quantidade física contada</Label>
+                            <Input type="number" min={0} step={1} inputMode="numeric" value={inventoryCount} onChange={(e) => setInventoryCount(e.target.value)} placeholder="Informe a contagem" />
+                          </div>
+                        </div>
+                        {selectedAdjustProduct && inventoryDifference != null && (
+                          <div className="rounded-md border bg-muted/30 p-3 text-sm">
+                            <div className="font-medium">Prévia do ajuste</div>
+                            <div className="mt-1 text-muted-foreground">
+                              Estoque atual: <strong>{selectedAdjustProduct.stock}</strong> → Contagem física: <strong>{countedInventory}</strong>
+                            </div>
+                            <div className="mt-1">
+                              {inventoryDifference > 0 && <>Entrada automática de <strong>+{inventoryDifference}</strong> unidade(s).</>}
+                              {inventoryDifference < 0 && <>Saída automática de <strong>{Math.abs(inventoryDifference)}</strong> unidade(s).</>}
+                              {inventoryDifference === 0 && <>Nenhuma diferença encontrada. Nenhuma movimentação será necessária.</>}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
-                  </div>
-                )}
 
-                <div>
-                  <Label>Documento / referência</Label>
-                  <Input value={adjustDocument} onChange={(e) => setAdjustDocument(e.target.value)} placeholder={adjustMode === "implantacao" ? "Ex.: Inventário inicial 08/2026" : "Ex.: Inventário 08/2026, avaria, devolução"} />
-                </div>
-                {adjustMode === "manual" && (
-                  <div>
-                    <Label>Motivo *</Label>
-                    <Textarea value={adjustReason} onChange={(e) => setAdjustReason(e.target.value)} placeholder="Descreva o motivo da entrada ou saída física" />
+                    <div>
+                      <Label>Documento / referência</Label>
+                      <Input value={adjustDocument} onChange={(e) => setAdjustDocument(e.target.value)} placeholder={adjustMode === "implantacao" ? "Ex.: Inventário inicial 08/2026" : "Ex.: Inventário 08/2026, avaria, devolução"} />
+                    </div>
+                    {adjustMode === "manual" && (
+                      <div>
+                        <Label>Motivo *</Label>
+                        <Textarea value={adjustReason} onChange={(e) => setAdjustReason(e.target.value)} placeholder="Descreva o motivo da entrada ou saída física" />
+                      </div>
+                    )}
+                    <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
+                      {adjustMode === "implantacao"
+                        ? "O ERP compara a contagem física com o estoque atual e registra somente a diferença no Kardex. Esta operação não cria compra, venda ou movimentação financeira."
+                        : "Esta operação altera o estoque físico do produto e grava o antes/depois no Kardex. Somente administradores da empresa podem executá-la."}
+                    </div>
                   </div>
-                )}
-                <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
-                  {adjustMode === "implantacao"
-                    ? "O ERP compara a contagem física com o estoque atual e registra somente a diferença no Kardex. Esta operação não cria compra, venda ou movimentação financeira."
-                    : "Esta operação altera o estoque físico do produto e grava o antes/depois no Kardex. Somente administradores da empresa podem executá-la."}
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setOpenAdjust(false)} disabled={adjust.isPending}>Cancelar</Button>
-                <Button onClick={() => adjust.mutate()} disabled={adjust.isPending || (adjustMode === "implantacao" && inventoryDifference === 0)}>{adjust.isPending ? "Registrando…" : adjustMode === "implantacao" ? "Registrar inventário" : "Registrar movimento"}</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        ) : undefined}
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setOpenAdjust(false)} disabled={adjust.isPending}>Cancelar</Button>
+                    <Button onClick={() => adjust.mutate()} disabled={adjust.isPending || (adjustMode === "implantacao" && inventoryDifference === 0)}>{adjust.isPending ? "Registrando…" : adjustMode === "implantacao" ? "Registrar inventário" : "Registrar movimento"}</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
+        )}
       />
+
+      <Dialog open={showHelp} onOpenChange={setShowHelp}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl">📦 Kardex de Produtos — Controle Físico do Estoque</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 text-sm leading-relaxed">
+            <section>
+              <h3 className="font-semibold text-base mb-1">🎯 Objetivo desta etapa</h3>
+              <p>O Kardex registra o histórico físico de cada produto, mostrando quando houve entrada ou saída, a origem do movimento, o documento relacionado e, quando disponível, o saldo antes e depois da operação.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">📊 Como interpretar os quatro indicadores</h3>
+              <ul className="list-disc pl-5 space-y-1">
+                <li><strong>Estoque físico atual</strong> — soma do estoque atual dos produtos selecionados. Quando um produto é filtrado, mostra somente o saldo atual daquele item.</li>
+                <li><strong>Entradas físicas no período</strong> — total de unidades que entraram fisicamente dentro do período filtrado.</li>
+                <li><strong>Saídas físicas no período</strong> — total de unidades que saíram fisicamente dentro do período filtrado.</li>
+                <li><strong>Movimentações no período</strong> — quantidade de registros de movimentação encontrados, e não a soma das unidades.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">🔎 Filtros e períodos</h3>
+              <p>Use os atalhos Dia, Mês, 30 dias e Ano ou informe manualmente as datas De/Até. Os filtros Produto e Movimento/origem permitem analisar um item específico, somente entradas, somente saídas ou uma origem determinada.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">🔄 Origens das movimentações</h3>
+              <ul className="list-disc pl-5 space-y-1">
+                <li><strong>Compra</strong> — gera entrada física do produto.</li>
+                <li><strong>Venda</strong> — gera saída física do produto.</li>
+                <li><strong>Estorno de venda</strong> — registra a reversão física correspondente.</li>
+                <li><strong>Ajuste físico</strong> — movimentação manual ou inventário feito por administrador.</li>
+                <li><strong>Ajuste do sistema</strong> — alteração de estoque capturada automaticamente pelo Kardex quando aplicável.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">🧮 Saldo anterior e saldo após</h3>
+              <p>Nos movimentos operacionais novos, o Kardex registra o estoque imediatamente antes e depois da alteração. Exemplo: saldo anterior 24, saída física 10, saldo após 14.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">🧾 Registros “Reconstruídos”</h3>
+              <p>Registros identificados como <strong>Reconstruído</strong> foram recuperados de documentos históricos de compras ou outras fontes existentes antes da implantação do Kardex. Por segurança, quando não existe evidência suficiente, o ERP não inventa saldo anterior ou saldo posterior.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">✍️ Entrada / saída manual</h3>
+              <p>Use esta operação somente quando houver uma movimentação física que não tenha sido gerada automaticamente por compra ou venda, como avaria, devolução, perda, correção ou outra ocorrência real. Informe produto, direção, quantidade, referência e motivo. O registro fica auditado no Kardex.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">📋 Inventário de implantação</h3>
+              <p>Use o inventário quando a empresa já operava antes da implantação do controle físico e o estoque do sistema precisa ser reconciliado com a contagem real. Informe a quantidade física contada e o ERP registra somente a diferença necessária.</p>
+              <div className="mt-2 rounded-md border bg-muted/30 p-3">
+                <strong>Exemplo:</strong> estoque no sistema = 24; contagem física = 14. O Kardex registra automaticamente uma saída de 10 unidades e o saldo passa para 14.
+              </div>
+              <p className="mt-2">O inventário de implantação não cria compra, venda nem movimentação financeira; ele apenas reconcilia o estoque físico.</p>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">✅ Boas práticas</h3>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Não registrar manualmente uma entrada que já veio de uma compra.</li>
+                <li>Não registrar manualmente uma saída que já veio de uma venda.</li>
+                <li>Utilizar motivo e documento/referência claros nos ajustes.</li>
+                <li>Usar o Inventário de implantação para acertar saldos herdados do período anterior ao Kardex.</li>
+                <li>Conferir sempre o saldo anterior e o saldo após antes de interpretar uma divergência.</li>
+              </ul>
+            </section>
+            <section>
+              <h3 className="font-semibold text-base mb-1">⚠️ Importante</h3>
+              <p>A Movimentação física altera o estoque real do produto. Por isso, somente administradores da empresa podem executá-la. O tutorial e os filtros podem ser utilizados para consulta e conferência do histórico.</p>
+            </section>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowHelp(false)}>Entendi ✓</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="flex flex-wrap gap-2 mb-4">
         {(["dia", "mes", "30d", "ano"] as const).map((p) => (
