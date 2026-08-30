@@ -47,6 +47,7 @@ type StockMovement = {
 };
 
 type Period = "dia" | "mes" | "30d" | "ano" | "custom";
+type AdjustmentMode = "manual" | "implantacao";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const toYmd = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -93,9 +94,11 @@ function KardexProdutosPage() {
   const [productId, setProductId] = useState("todos");
   const [movementFilter, setMovementFilter] = useState("todos");
   const [openAdjust, setOpenAdjust] = useState(false);
+  const [adjustMode, setAdjustMode] = useState<AdjustmentMode>("manual");
   const [adjustProduct, setAdjustProduct] = useState("");
   const [adjustDirection, setAdjustDirection] = useState<"entrada" | "saida">("entrada");
   const [adjustQuantity, setAdjustQuantity] = useState("1");
+  const [inventoryCount, setInventoryCount] = useState("");
   const [adjustDocument, setAdjustDocument] = useState("");
   const [adjustReason, setAdjustReason] = useState("");
 
@@ -160,32 +163,61 @@ function KardexProdutosPage() {
     ? products.reduce((sum, p) => sum + Number(p.stock || 0), 0)
     : Number(productMap.get(productId)?.stock || 0);
 
+  const selectedAdjustProduct = productMap.get(adjustProduct);
+  const countedInventory = inventoryCount === "" ? null : Number(inventoryCount);
+  const inventoryDifference = selectedAdjustProduct && countedInventory != null && Number.isInteger(countedInventory) && countedInventory >= 0
+    ? countedInventory - Number(selectedAdjustProduct.stock || 0)
+    : null;
+
+  const resetAdjustForm = () => {
+    setAdjustMode("manual");
+    setAdjustProduct("");
+    setAdjustDirection("entrada");
+    setAdjustQuantity("1");
+    setInventoryCount("");
+    setAdjustDocument("");
+    setAdjustReason("");
+  };
+
   const adjust = useMutation({
     mutationFn: async () => {
       if (!empresaId) throw new Error("Empresa ativa não identificada.");
       if (!adjustProduct) throw new Error("Selecione o produto.");
-      const quantity = Number(adjustQuantity);
-      if (!Number.isInteger(quantity) || quantity <= 0) throw new Error("A quantidade física deve ser um número inteiro maior que zero.");
-      if (!adjustReason.trim()) throw new Error("Informe o motivo do ajuste físico.");
+
+      let direction: "entrada" | "saida" = adjustDirection;
+      let quantity = Number(adjustQuantity);
+      let reason = adjustReason.trim();
+      let document = adjustDocument.trim() || null;
+
+      if (adjustMode === "implantacao") {
+        if (!selectedAdjustProduct) throw new Error("Produto não encontrado.");
+        const counted = Number(inventoryCount);
+        if (!Number.isInteger(counted) || counted < 0) throw new Error("A quantidade física contada deve ser um número inteiro igual ou maior que zero.");
+        const difference = counted - Number(selectedAdjustProduct.stock || 0);
+        if (difference === 0) throw new Error("O estoque informado é igual ao estoque atual. Nenhum ajuste é necessário.");
+        direction = difference > 0 ? "entrada" : "saida";
+        quantity = Math.abs(difference);
+        reason = `Inventário de implantação: estoque do sistema ${Number(selectedAdjustProduct.stock || 0)}, contagem física ${counted}.`;
+        document = document || `Inventário de implantação ${toYmd(new Date())}`;
+      } else {
+        if (!Number.isInteger(quantity) || quantity <= 0) throw new Error("A quantidade física deve ser um número inteiro maior que zero.");
+        if (!reason) throw new Error("Informe o motivo do ajuste físico.");
+      }
 
       const { error } = await (supabase.rpc as any)("rpc_registrar_ajuste_estoque", {
         p_empresa_id: empresaId,
         p_product_id: adjustProduct,
-        p_direction: adjustDirection,
+        p_direction: direction,
         p_quantity: quantity,
-        p_reason: adjustReason.trim(),
-        p_document: adjustDocument.trim() || null,
+        p_reason: reason,
+        p_document: document,
       });
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Movimentação física registrada no Kardex.");
+      toast.success(adjustMode === "implantacao" ? "Inventário de implantação registrado no Kardex." : "Movimentação física registrada no Kardex.");
       setOpenAdjust(false);
-      setAdjustProduct("");
-      setAdjustDirection("entrada");
-      setAdjustQuantity("1");
-      setAdjustDocument("");
-      setAdjustReason("");
+      resetAdjustForm();
       qc.invalidateQueries({ queryKey: ["stock-movements", empresaId] });
       qc.invalidateQueries({ queryKey: ["products-kardex", empresaId] });
       qc.invalidateQueries({ queryKey: ["products", empresaId] });
@@ -200,7 +232,7 @@ function KardexProdutosPage() {
         title="Kardex de Produtos"
         subtitle="Histórico físico de entradas, saídas, compras, vendas e ajustes por item"
         action={isAdmin ? (
-          <Dialog open={openAdjust} onOpenChange={setOpenAdjust}>
+          <Dialog open={openAdjust} onOpenChange={(open) => { setOpenAdjust(open); if (!open) resetAdjustForm(); }}>
             <DialogTrigger asChild>
               <Button><Plus className="size-4 mr-1" /> Movimentação física</Button>
             </DialogTrigger>
@@ -208,43 +240,87 @@ function KardexProdutosPage() {
               <DialogHeader><DialogTitle>Registrar movimentação física</DialogTitle></DialogHeader>
               <div className="space-y-4">
                 <div>
+                  <Label>Operação</Label>
+                  <Select value={adjustMode} onValueChange={(v) => { setAdjustMode(v as AdjustmentMode); setInventoryCount(""); setAdjustReason(""); }}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manual">Entrada / saída manual</SelectItem>
+                      <SelectItem value="implantacao">Inventário de implantação</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
                   <Label>Produto</Label>
-                  <Select value={adjustProduct} onValueChange={setAdjustProduct}>
+                  <Select value={adjustProduct} onValueChange={(v) => { setAdjustProduct(v); setInventoryCount(""); }}>
                     <SelectTrigger><SelectValue placeholder="Selecione o produto" /></SelectTrigger>
                     <SelectContent>{products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}{p.sku ? ` (${p.sku})` : ""} — estoque {p.stock}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label>Movimento</Label>
-                    <Select value={adjustDirection} onValueChange={(v) => setAdjustDirection(v as "entrada" | "saida")}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="entrada">Entrada física</SelectItem>
-                        <SelectItem value="saida">Saída física</SelectItem>
-                      </SelectContent>
-                    </Select>
+
+                {adjustMode === "manual" ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Movimento</Label>
+                      <Select value={adjustDirection} onValueChange={(v) => setAdjustDirection(v as "entrada" | "saida")}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="entrada">Entrada física</SelectItem>
+                          <SelectItem value="saida">Saída física</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Quantidade</Label>
+                      <Input type="number" min={1} step={1} inputMode="numeric" value={adjustQuantity} onChange={(e) => setAdjustQuantity(e.target.value)} />
+                    </div>
                   </div>
-                  <div>
-                    <Label>Quantidade</Label>
-                    <Input type="number" min={1} step={1} inputMode="numeric" value={adjustQuantity} onChange={(e) => setAdjustQuantity(e.target.value)} />
+                ) : (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label>Estoque atual</Label>
+                        <Input value={selectedAdjustProduct ? String(selectedAdjustProduct.stock) : "—"} disabled />
+                      </div>
+                      <div>
+                        <Label>Quantidade física contada</Label>
+                        <Input type="number" min={0} step={1} inputMode="numeric" value={inventoryCount} onChange={(e) => setInventoryCount(e.target.value)} placeholder="Informe a contagem" />
+                      </div>
+                    </div>
+                    {selectedAdjustProduct && inventoryDifference != null && (
+                      <div className="rounded-md border bg-muted/30 p-3 text-sm">
+                        <div className="font-medium">Prévia do ajuste</div>
+                        <div className="mt-1 text-muted-foreground">
+                          Estoque atual: <strong>{selectedAdjustProduct.stock}</strong> → Contagem física: <strong>{countedInventory}</strong>
+                        </div>
+                        <div className="mt-1">
+                          {inventoryDifference > 0 && <>Entrada automática de <strong>+{inventoryDifference}</strong> unidade(s).</>}
+                          {inventoryDifference < 0 && <>Saída automática de <strong>{Math.abs(inventoryDifference)}</strong> unidade(s).</>}
+                          {inventoryDifference === 0 && <>Nenhuma diferença encontrada. Nenhuma movimentação será necessária.</>}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
+
                 <div>
                   <Label>Documento / referência</Label>
-                  <Input value={adjustDocument} onChange={(e) => setAdjustDocument(e.target.value)} placeholder="Ex.: Inventário 08/2026, avaria, devolução" />
+                  <Input value={adjustDocument} onChange={(e) => setAdjustDocument(e.target.value)} placeholder={adjustMode === "implantacao" ? "Ex.: Inventário inicial 08/2026" : "Ex.: Inventário 08/2026, avaria, devolução"} />
                 </div>
-                <div>
-                  <Label>Motivo *</Label>
-                  <Textarea value={adjustReason} onChange={(e) => setAdjustReason(e.target.value)} placeholder="Descreva o motivo da entrada ou saída física" />
-                </div>
+                {adjustMode === "manual" && (
+                  <div>
+                    <Label>Motivo *</Label>
+                    <Textarea value={adjustReason} onChange={(e) => setAdjustReason(e.target.value)} placeholder="Descreva o motivo da entrada ou saída física" />
+                  </div>
+                )}
                 <div className="rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
-                  Esta operação altera o estoque físico do produto e grava o antes/depois no Kardex. Somente administradores da empresa podem executá-la.
+                  {adjustMode === "implantacao"
+                    ? "O ERP compara a contagem física com o estoque atual e registra somente a diferença no Kardex. Esta operação não cria compra, venda ou movimentação financeira."
+                    : "Esta operação altera o estoque físico do produto e grava o antes/depois no Kardex. Somente administradores da empresa podem executá-la."}
                 </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setOpenAdjust(false)} disabled={adjust.isPending}>Cancelar</Button>
-                <Button onClick={() => adjust.mutate()} disabled={adjust.isPending}>{adjust.isPending ? "Registrando…" : "Registrar movimento"}</Button>
+                <Button onClick={() => adjust.mutate()} disabled={adjust.isPending || (adjustMode === "implantacao" && inventoryDifference === 0)}>{adjust.isPending ? "Registrando…" : adjustMode === "implantacao" ? "Registrar inventário" : "Registrar movimento"}</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
