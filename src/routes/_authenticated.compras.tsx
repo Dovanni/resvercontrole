@@ -45,6 +45,38 @@ type Compra = {
 };
 
 type Item = { produto_id: string; quantidade: number; preco_unitario: number; subtotal: number };
+type PeriodoRapido = "dia" | "mes" | "30dias" | "ano" | "custom";
+
+const pad2 = (value: number) => String(value).padStart(2, "0");
+const localDateKey = (date: Date) => `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
+
+const rangeForPeriod = (periodo: Exclude<PeriodoRapido, "custom">, base = new Date()) => {
+  const y = base.getFullYear();
+  const m = base.getMonth();
+
+  if (periodo === "dia") {
+    const today = localDateKey(base);
+    return { de: today, ate: today };
+  }
+
+  if (periodo === "mes") {
+    return {
+      de: localDateKey(new Date(y, m, 1)),
+      ate: localDateKey(new Date(y, m + 1, 0)),
+    };
+  }
+
+  if (periodo === "30dias") {
+    const start = new Date(y, m, base.getDate());
+    start.setDate(start.getDate() - 29);
+    return { de: localDateKey(start), ate: localDateKey(base) };
+  }
+
+  return {
+    de: localDateKey(new Date(y, 0, 1)),
+    ate: localDateKey(new Date(y, 11, 31)),
+  };
+};
 
 function ComprasPage() {
   const { user } = useAuth();
@@ -57,8 +89,10 @@ function ComprasPage() {
   const [verCompra, setVerCompra] = useState<Compra | null>(null);
   const [fFornecedor, setFFornecedor] = useState("todos");
   const [fStatus, setFStatus] = useState("todos");
-  const [fDe, setFDe] = useState("");
-  const [fAte, setFAte] = useState("");
+  const initialMonthRange = useMemo(() => rangeForPeriod("mes"), []);
+  const [fDe, setFDe] = useState(initialMonthRange.de);
+  const [fAte, setFAte] = useState(initialMonthRange.ate);
+  const [periodoAtivo, setPeriodoAtivo] = useState<PeriodoRapido>("mes");
 
   const { data: compras = [] } = useQuery({
     queryKey: ["compras", empresaId],
@@ -123,21 +157,70 @@ function ComprasPage() {
     return "pendente";
   };
 
+  const periodoInvalido = Boolean(fDe && fAte && fDe > fAte);
+
   const comprasFiltradas = useMemo(() => compras.filter((c) => {
+    if (periodoInvalido) return false;
     if (fFornecedor !== "todos" && c.fornecedor_id !== fFornecedor) return false;
     if (fDe && c.data_compra < fDe) return false;
     if (fAte && c.data_compra > fAte) return false;
     if (fStatus !== "todos" && compraStatus(c) !== fStatus) return false;
     return true;
-  }), [compras, fFornecedor, fStatus, fDe, fAte, payables]);
+  }), [compras, fFornecedor, fStatus, fDe, fAte, payables, periodoInvalido]);
 
-  // Resumo do mês
-  const hoje = new Date();
-  const mesIni = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10);
-  const totalMes = compras.filter((c) => c.data_compra >= mesIni && c.status !== "cancelada").reduce((s, c) => s + Number(c.total), 0);
-  const pagoMes = payables.filter((p: any) => p.status === "pago" && p.description?.includes("Compra #") && (p as any).due_date >= mesIni).reduce((s: number, p: any) => s + Number(p.paid_amount || 0), 0);
-  const pendenteTot = payables.filter((p: any) => p.status === "pendente" && p.description?.includes("Compra #")).reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
-  const fornAtivos = new Set(compras.filter((c) => c.data_compra >= mesIni && c.status !== "cancelada").map((c) => c.fornecedor_id).filter(Boolean)).size;
+  const resumoPeriodo = useMemo(() => {
+    let comprado = 0;
+    let pago = 0;
+    let pendente = 0;
+    const fornecedoresAtivos = new Set<string>();
+
+    for (const compra of comprasFiltradas) {
+      if (compra.status === "cancelada") continue;
+
+      comprado += Number(compra.total) || 0;
+      if (compra.fornecedor_id) fornecedoresAtivos.add(compra.fornecedor_id);
+
+      const parcelas = compraPayables(compra);
+      if (parcelas.length === 0) {
+        // Mantém o comportamento conservador do status da compra: sem parcela vinculada,
+        // a compra é considerada pendente até reconciliação/baixa explícita.
+        pendente += Number(compra.total) || 0;
+        continue;
+      }
+
+      for (const parcela of parcelas) {
+        if (parcela.status === "cancelado") continue;
+        const amount = Number(parcela.amount) || 0;
+        const paidAmount = Math.min(amount, Math.max(0, Number(parcela.paid_amount) || 0));
+        pago += paidAmount;
+        pendente += Math.max(0, amount - paidAmount);
+      }
+    }
+
+    return {
+      comprado,
+      pago,
+      pendente,
+      fornecedores: fornecedoresAtivos.size,
+    };
+  }, [comprasFiltradas, payables]);
+
+  const aplicarPeriodoRapido = (periodo: Exclude<PeriodoRapido, "custom">) => {
+    const range = rangeForPeriod(periodo);
+    setFDe(range.de);
+    setFAte(range.ate);
+    setPeriodoAtivo(periodo);
+  };
+
+  const alterarDataDe = (value: string) => {
+    setFDe(value);
+    setPeriodoAtivo("custom");
+  };
+
+  const alterarDataAte = (value: string) => {
+    setFAte(value);
+    setPeriodoAtivo("custom");
+  };
 
   const cancelar = useMutation({
     mutationFn: async (c: Compra) => {
@@ -195,41 +278,59 @@ function ComprasPage() {
         </div>
       } />
 
-      {/* Resumo */}
-      <div className="grid md:grid-cols-4 gap-4 mb-6">
-        <Card className="shadow-soft"><CardContent className="p-5"><div className="text-xs text-muted-foreground">Comprado no mês</div><div className="text-2xl font-display mt-1">{brl(totalMes)}</div></CardContent></Card>
-        <Card className="shadow-soft"><CardContent className="p-5"><div className="text-xs text-muted-foreground">Pago no mês</div><div className="text-2xl font-display mt-1 text-success">{brl(pagoMes)}</div></CardContent></Card>
-        <Card className="shadow-soft"><CardContent className="p-5"><div className="text-xs text-muted-foreground">Pendente total</div><div className="text-2xl font-display mt-1 text-destructive">{brl(pendenteTot)}</div></CardContent></Card>
-        <Card className="shadow-soft"><CardContent className="p-5"><div className="text-xs text-muted-foreground">Fornecedores no mês</div><div className="text-2xl font-display mt-1">{fornAtivos}</div></CardContent></Card>
-      </div>
+      {/* Filtros rápidos de período — controlam tabela e os quatro cards */}
+      <Card className="shadow-soft mb-4">
+        <CardContent className="p-4">
+          <div className="flex flex-wrap items-center gap-2 mb-4">
+            <span className="text-xs font-medium text-muted-foreground mr-1">Período rápido</span>
+            <Button size="sm" variant={periodoAtivo === "dia" ? "default" : "outline"} onClick={() => aplicarPeriodoRapido("dia")}>Dia</Button>
+            <Button size="sm" variant={periodoAtivo === "mes" ? "default" : "outline"} onClick={() => aplicarPeriodoRapido("mes")}>Mês</Button>
+            <Button size="sm" variant={periodoAtivo === "30dias" ? "default" : "outline"} onClick={() => aplicarPeriodoRapido("30dias")}>30 dias</Button>
+            <Button size="sm" variant={periodoAtivo === "ano" ? "default" : "outline"} onClick={() => aplicarPeriodoRapido("ano")}>Ano</Button>
+            {periodoAtivo === "custom" && <Badge variant="outline">Período personalizado</Badge>}
+          </div>
 
-      {/* Filtros */}
-      <Card className="shadow-soft mb-4"><CardContent className="p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
-        <div><Label className="text-xs">De</Label><Input type="date" value={fDe} onChange={(e) => setFDe(e.target.value)} /></div>
-        <div><Label className="text-xs">Até</Label><Input type="date" value={fAte} onChange={(e) => setFAte(e.target.value)} /></div>
-        <div><Label className="text-xs">Fornecedor</Label>
-          <Select value={fFornecedor} onValueChange={setFFornecedor}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos</SelectItem>
-              {fornecedores.map((f: any) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div><Label className="text-xs">Status</Label>
-          <Select value={fStatus} onValueChange={setFStatus}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">Todos</SelectItem>
-              <SelectItem value="pago">Pago</SelectItem>
-              <SelectItem value="pendente">Pendente</SelectItem>
-              <SelectItem value="atrasado">Atrasado</SelectItem>
-              <SelectItem value="parcial">Parcial</SelectItem>
-              <SelectItem value="cancelado">Cancelado</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </CardContent></Card>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div><Label className="text-xs">De</Label><Input type="date" value={fDe} onChange={(e) => alterarDataDe(e.target.value)} /></div>
+            <div><Label className="text-xs">Até</Label><Input type="date" value={fAte} onChange={(e) => alterarDataAte(e.target.value)} /></div>
+            <div><Label className="text-xs">Fornecedor</Label>
+              <Select value={fFornecedor} onValueChange={setFFornecedor}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  {fornecedores.map((f: any) => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label className="text-xs">Status</Label>
+              <Select value={fStatus} onValueChange={setFStatus}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todos">Todos</SelectItem>
+                  <SelectItem value="pago">Pago</SelectItem>
+                  <SelectItem value="pendente">Pendente</SelectItem>
+                  <SelectItem value="atrasado">Atrasado</SelectItem>
+                  <SelectItem value="parcial">Parcial</SelectItem>
+                  <SelectItem value="cancelado">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {periodoInvalido && (
+              <div className="md:col-span-4 text-xs text-destructive font-medium">
+                A data inicial não pode ser posterior à data final.
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Resumo sincronizado com o mesmo período, fornecedor e status da tabela */}
+      <div className="grid md:grid-cols-4 gap-4 mb-6">
+        <Card className="shadow-soft"><CardContent className="p-5"><div className="text-xs text-muted-foreground">Comprado no período</div><div className="text-2xl font-display mt-1">{brl(resumoPeriodo.comprado)}</div></CardContent></Card>
+        <Card className="shadow-soft"><CardContent className="p-5"><div className="text-xs text-muted-foreground">Pago no período</div><div className="text-2xl font-display mt-1 text-success">{brl(resumoPeriodo.pago)}</div></CardContent></Card>
+        <Card className="shadow-soft"><CardContent className="p-5"><div className="text-xs text-muted-foreground">Pendente no período</div><div className="text-2xl font-display mt-1 text-destructive">{brl(resumoPeriodo.pendente)}</div></CardContent></Card>
+        <Card className="shadow-soft"><CardContent className="p-5"><div className="text-xs text-muted-foreground">Fornecedores no período</div><div className="text-2xl font-display mt-1">{resumoPeriodo.fornecedores}</div></CardContent></Card>
+      </div>
 
       <Card className="shadow-soft"><CardContent className="p-0">
         <Table>
@@ -243,7 +344,7 @@ function ComprasPage() {
             <TableHead className="text-right">Ações</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {comprasFiltradas.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhuma compra registrada.</TableCell></TableRow>}
+            {comprasFiltradas.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nenhuma compra registrada para os filtros selecionados.</TableCell></TableRow>}
             {comprasFiltradas.map((c) => {
               const st = compraStatus(c);
               return (
