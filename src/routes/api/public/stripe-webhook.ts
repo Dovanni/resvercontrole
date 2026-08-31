@@ -118,7 +118,7 @@ async function safeLogDiagnostic(
     clearTimeout(timeout);
 
     if (!response.ok) {
-        throw new Error(`Diagnostic RPC failed with status ${response.status}`);
+      throw new Error(`Diagnostic RPC failed with status ${response.status}`);
     }
   } catch (err) {
     // Fail-open: Não derruba o handler principal
@@ -172,15 +172,16 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
         try {
           const signature = request.headers.get('stripe-signature');
           if (!signature) {
-             // Sem escrita diagnóstica antes da assinatura
+            // Sem escrita diagnóstica antes da assinatura
             return new Response(JSON.stringify({ error: 'UNAUTHORIZED', trace_id: traceId }), { status: 401 });
           }
 
-          const restrictedKey = process.env['STRIPE_RESTRICTED_KEY_TEST'] || process.env['STRIPE_RESTRICTED_KEY'];
-          const endpointSecret = process.env['STRIPE_WEBHOOK_SECRET_TEST'] || process.env['STRIPE_WEBHOOK_SECRET'] || '';
+          // Environment-hardening: this route is sandbox-only and consumes only *_TEST.
+          const restrictedKey = process.env['STRIPE_RESTRICTED_KEY_TEST'];
+          const endpointSecret = process.env['STRIPE_WEBHOOK_SECRET_TEST'];
 
-          if (!restrictedKey) {
-            console.error(`[${traceId}] Configuration Error: Missing STRIPE_RESTRICTED_KEY_TEST`);
+          if (!restrictedKey || !endpointSecret) {
+            console.error(`[${traceId}] Configuration Error: Missing sandbox Stripe credentials`);
             return new Response(JSON.stringify({ error: 'INTERNAL_ERROR', trace_id: traceId }), { status: 500 });
           }
 
@@ -217,8 +218,9 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
           eventId = event.id;
           eventType = event.type;
 
-          if (event.livemode && process.env['STRIPE_LIVE_BILLING_ENABLED'] !== 'true') {
-             return new Response(JSON.stringify({ error: 'LIVEMODE_REJECTED', trace_id: traceId }), { status: 400 });
+          // Permanent boundary: live events are never accepted on the sandbox route.
+          if (event.livemode) {
+            return new Response(JSON.stringify({ error: 'LIVEMODE_REJECTED', trace_id: traceId }), { status: 400 });
           }
 
           // --- FAST PATH: checkout.session.expired ---
@@ -227,7 +229,7 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
             currentStage = 'FAST_PATH_ENTERED';
 
             const rawObject: unknown = event.data.object;
-            
+
             // Validar contrato sem asserção insegura
             if (!validateCheckoutSessionContract(rawObject)) {
               return await createSanitizedResponse(400, traceId, currentStage, 'PAYLOAD_CONTRACT_FAILED', eventId, eventType);
@@ -298,7 +300,7 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
               });
             } catch (err) {
               if (err instanceof Error && err.name === 'AbortError') {
-                 return await createSanitizedResponse(503, traceId, currentStage, 'RPC_TRANSPORT_RETRYABLE', eventId, eventType);
+                return await createSanitizedResponse(503, traceId, currentStage, 'RPC_TRANSPORT_RETRYABLE', eventId, eventType);
               }
               // Se falhou antes do fetch (ex: JSON.stringify), ou falha de rede
               const isSerializationError = currentStage === 'RPC_REQUEST_PREPARED';
@@ -357,7 +359,6 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
           }
           // --- END FAST PATH ---
 
-
           const supportedEvents = [
             'checkout.session.completed',
             'checkout.session.expired',
@@ -388,14 +389,13 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
 
           const supabaseUrl = process.env['VITE_SUPABASE_URL'];
           const supabaseServiceRoleKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
-          
-          const isLive = event.livemode;
-          const priceEnterpriseMonthly = isLive 
-            ? process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY_LIVE']
-            : (process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY_TEST'] || process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY']);
-          
+
+          // Permanent sandbox boundary: this route never resolves a live or generic price.
+          const isLive = false;
+          const priceEnterpriseMonthly = process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY_TEST'];
+
           if (!supabaseUrl || !supabaseServiceRoleKey || !priceEnterpriseMonthly) {
-            console.error(`[${traceId}] Configuration Error: Missing Supabase/Stripe env vars`);
+            console.error(`[${traceId}] Configuration Error: Missing Supabase/Stripe sandbox env vars`);
             return await createSanitizedResponse(500, traceId, currentStage, 'UNEXPECTED_HANDLER_FAILURE', eventId, eventType);
           }
 
@@ -407,11 +407,11 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
             internalSubscriptionId = legacySubscriptionId;
           }
 
-          const effectiveMetadata = { 
+          const effectiveMetadata = {
             ...metadata,
-            internal_subscription_id: internalSubscriptionId 
+            internal_subscription_id: internalSubscriptionId
           };
-          
+
           const payload: WebhookRpcPayload = {
             p_provider_event_id: event.id,
             p_event_type: event.type,
@@ -463,7 +463,7 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
             } catch (e) {
               errorDetail = 'COULD_NOT_READ_ERROR_BODY';
             }
-            
+
             if (errorDetail.includes('UNLINKED') || rpcResponse.status === 503) {
               return await createSanitizedResponse(503, traceId, currentStage, 'RPC_REJECTED_RETRYABLE', eventId, eventType);
             }
@@ -471,18 +471,18 @@ export const Route = createFileRoute('/api/public/stripe-webhook')({
           }
 
           const result = (await rpcResponse.json()) as { status?: string };
-          
+
           if (result.status === 'failed_retryable') {
-             return await createSanitizedResponse(503, traceId, currentStage, 'RPC_REJECTED_RETRYABLE', eventId, eventType);
+            return await createSanitizedResponse(503, traceId, currentStage, 'RPC_REJECTED_RETRYABLE', eventId, eventType);
           }
-          
+
           if (result.status === 'rejected_permanent') {
             return await createSanitizedResponse(200, traceId, currentStage, 'RPC_REJECTED_PERMANENT', eventId, eventType);
           }
 
           // CHECKPOINT 5: HTTP_RESPONSE_READY (Final)
           return await createSanitizedResponse(200, traceId, 'HTTP_RESPONSE_READY', undefined, eventId, eventType);
-          
+
         } catch (err) {
           console.error(`[${traceId}] Unexpected Handler Failure`, err);
           return await createSanitizedResponse(500, traceId, currentStage, 'UNEXPECTED_HANDLER_FAILURE', eventId, eventType);
