@@ -1,11 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useBillingContext } from "@/hooks/use-subscription-context";
 import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { PageHeader } from "@/components/app-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, CreditCard, Users, Clock, AlertCircle, Sparkles, ShieldCheck } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Check, CreditCard, Users, Clock, AlertCircle, Sparkles, ShieldCheck, HelpCircle } from "lucide-react";
 import { format, isAfter } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +28,7 @@ export const Route = createFileRoute("/_authenticated/configuracoes/assinatura")
 export function SubscriptionSettingsPage() {
   const { empresaId } = useMultiempresa();
   const { data: context, isLoading, error, refetch } = useBillingContext(empresaId);
+  const [showHelp, setShowHelp] = useState(false);
   const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
   const checkoutStatusParam = searchParams.get("checkout");
 
@@ -85,7 +95,144 @@ export function SubscriptionSettingsPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
-      <PageHeader title="Assinatura" subtitle={isInstitutional ? "Configurações institucionais da plataforma" : "Controle seu plano, limites e faturamento"} />
+      <PageHeader
+        title="Assinatura"
+        subtitle={isInstitutional ? "Configurações institucionais da plataforma" : "Controle seu plano, limites e faturamento"}
+        action={!isInstitutional ? (
+          <Button variant="outline" size="sm" onClick={() => setShowHelp(true)}>
+            <HelpCircle className="mr-2 size-4" />
+            Como funciona esta etapa?
+          </Button>
+        ) : undefined}
+      />
+
+      {!isInstitutional && (
+        <Dialog open={showHelp} onOpenChange={setShowHelp}>
+          <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-xl">
+                <HelpCircle className="size-5 text-primary" />
+                Como funciona esta etapa?
+              </DialogTitle>
+              <DialogDescription>
+                Entenda o período gratuito, a contratação do Plano Empresarial, a cobrança mensal e como cancelar ou continuar sua assinatura com segurança.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-5 text-sm">
+              <section className="rounded-xl border bg-muted/20 p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">1</span>
+                  <h3 className="font-semibold">Plano gratuito — período de avaliação de 30 dias</h3>
+                </div>
+                <div className="space-y-2 text-muted-foreground">
+                  <p>Ao iniciar sua empresa no VEJAMAIS ERP, você recebe um período gratuito de 30 dias para conhecer e utilizar os recursos disponíveis na avaliação.</p>
+                  <ul className="ml-5 list-disc space-y-1">
+                    <li>Você acompanha nesta página a data de término e quantos dias ainda restam.</li>
+                    <li>Durante a avaliação, você pode contratar o Plano Empresarial a qualquer momento.</li>
+                    <li>Contratar antes do fim da avaliação não elimina os dias gratuitos restantes.</li>
+                    <li>A primeira cobrança somente ocorre após o término do período gratuito indicado na sua assinatura.</li>
+                  </ul>
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-foreground">
+                    <strong>Exemplo:</strong> se ainda faltarem 20 dias e você contratar hoje, esses 20 dias continuam válidos. A cobrança ficará para depois do término da avaliação.
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-xl border bg-muted/20 p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">2</span>
+                  <h3 className="font-semibold">Plano Empresarial — R$ 35,90 por mês</h3>
+                </div>
+                <div className="space-y-2 text-muted-foreground">
+                  <p>Para continuar utilizando os recursos comerciais após o período gratuito, você pode contratar o Plano Empresarial por R$ 35,90 ao mês.</p>
+                  <ul className="ml-5 list-disc space-y-1">
+                    <li>O pagamento é processado em ambiente seguro pela Stripe.</li>
+                    <li>Após a contratação, esta página passa a informar que o Plano Empresarial está contratado.</li>
+                    <li>Se a avaliação ainda estiver ativa, ela continua normalmente até a data exibida.</li>
+                    <li>Depois do início das cobranças, a assinatura é renovada mensalmente enquanto permanecer ativa.</li>
+                  </ul>
+                  <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 p-3 text-green-900">
+                    <ShieldCheck className="mt-0.5 size-4 shrink-0" />
+                    <span>Os dados sensíveis do cartão são tratados no ambiente seguro de pagamento da Stripe, e não diretamente nesta tela do VEJAMAIS ERP.</span>
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-xl border bg-muted/20 p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">3</span>
+                  <h3 className="font-semibold">Gerenciar assinatura e forma de pagamento</h3>
+                </div>
+                <div className="space-y-2 text-muted-foreground">
+                  <p>Quando o Plano Empresarial estiver contratado, utilize o botão <strong className="text-foreground">Gerenciar assinatura</strong> para acessar o portal seguro da Stripe.</p>
+                  <p>Nesse portal você poderá consultar sua assinatura, atualizar a forma de pagamento, acompanhar informações de faturamento e acessar as opções de cancelamento disponíveis.</p>
+                  <div className="rounded-lg border bg-background p-3 font-medium text-foreground">
+                    VEJAMAIS ERP → Gerenciar assinatura → Portal seguro da Stripe
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-xl border border-amber-200 bg-amber-50/60 p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-amber-100 text-xs font-bold text-amber-700">4</span>
+                  <h3 className="font-semibold text-amber-950">Como cancelar a assinatura</h3>
+                </div>
+                <div className="space-y-2 text-amber-900/80">
+                  <p>Se você decidir não continuar com o Plano Empresarial, abra <strong className="text-amber-950">Gerenciar assinatura</strong> e selecione a opção de cancelamento no portal da Stripe.</p>
+                  <ul className="ml-5 list-disc space-y-1">
+                    <li>O cancelamento pode ser solicitado antes da próxima renovação.</li>
+                    <li>Quando o encerramento estiver programado para uma data futura, o acesso permanece disponível até a data indicada.</li>
+                    <li>Após o encerramento efetivo, não haverá nova renovação recorrente daquela assinatura.</li>
+                    <li>O VEJAMAIS ERP mostrará o estado do cancelamento assim que a confirmação da Stripe for refletida na assinatura.</li>
+                  </ul>
+                  <div className="rounded-lg border border-amber-200 bg-white/70 p-3 font-medium text-amber-950">
+                    Exemplo: “Cancelamento agendado — acesso disponível até 29/09/2026”.
+                  </div>
+                </div>
+              </section>
+
+              <section className="rounded-xl border border-blue-200 bg-blue-50/60 p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">5</span>
+                  <h3 className="font-semibold text-blue-950">Mudei de ideia — como continuar com a assinatura?</h3>
+                </div>
+                <div className="space-y-2 text-blue-900/80">
+                  <p>Enquanto o cancelamento ainda estiver apenas agendado e a assinatura não tiver terminado, entre novamente em <strong className="text-blue-950">Gerenciar assinatura</strong>.</p>
+                  <p>No portal da Stripe, utilize a opção apresentada para <strong className="text-blue-950">não cancelar/continuar a assinatura</strong>. Depois da confirmação, o cancelamento agendado será removido e o plano continuará normalmente.</p>
+                </div>
+              </section>
+
+              <section className="rounded-xl border bg-muted/20 p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">6</span>
+                  <h3 className="font-semibold">O que acontece quando o cancelamento se torna definitivo?</h3>
+                </div>
+                <div className="space-y-2 text-muted-foreground">
+                  <p>Quando chegar a data efetiva de encerramento, a assinatura passa para a situação de cancelada e as regras de acesso previstas para uma assinatura encerrada passam a valer.</p>
+                  <p>Para voltar a utilizar os recursos comerciais que dependem de uma assinatura ativa, siga as opções de reativação ou nova contratação que estiverem disponíveis no VEJAMAIS ERP.</p>
+                </div>
+              </section>
+
+              <section className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+                <h3 className="mb-2 font-semibold text-primary">Resumo importante</h3>
+                <ul className="ml-5 list-disc space-y-1 text-muted-foreground">
+                  <li>Você não perde os dias restantes da avaliação ao contratar antecipadamente.</li>
+                  <li>A cobrança mensal do Plano Empresarial é de R$ 35,90.</li>
+                  <li>O gerenciamento da assinatura e do cartão ocorre no portal seguro da Stripe.</li>
+                  <li>Se cancelar, você verá até quando o acesso continuará disponível quando houver encerramento agendado.</li>
+                  <li>Antes do encerramento efetivo, você poderá voltar ao portal e optar por continuar com a assinatura.</li>
+                </ul>
+              </section>
+            </div>
+
+            <DialogFooter className="gap-2 pt-2 sm:items-center sm:justify-between">
+              <WhatsAppSupport variant="link" message="Olá! Preciso de ajuda para entender minha assinatura do VEJAMAIS." />
+              <Button onClick={() => setShowHelp(false)}>Entendi, fechar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {checkoutStatusParam === 'cancel' && !isInstitutional && canStartCheckout && (
         <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
