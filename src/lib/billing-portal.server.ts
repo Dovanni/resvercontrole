@@ -1,6 +1,5 @@
-import Stripe from 'stripe';
 import { getSupabaseAdmin } from '@/integrations/supabase/client.server';
-import { getStripeClient } from './stripe.server';
+import { getBillingEnvironment } from './billing-status.server';
 
 export async function createStripePortalSessionImpl(empresaId: string, origin: string, host: string | null) {
   const supabaseAdmin = getSupabaseAdmin();
@@ -15,17 +14,19 @@ export async function createStripePortalSessionImpl(empresaId: string, origin: s
     throw new Error('CUSTOMER_NOT_FOUND');
   }
 
-  const isProduction = host === 'www.vejamais.com.br' || host === 'vejamais.com.br';
-  const stripeKey = isProduction 
-    ? process.env['STRIPE_RESTRICTED_KEY_LIVE'] 
+  const billingEnvironment = getBillingEnvironment(host);
+  const isProduction = billingEnvironment === 'live';
+  const stripeKey = isProduction
+    ? process.env['STRIPE_RESTRICTED_KEY_LIVE']
     : (process.env['STRIPE_RESTRICTED_KEY_TEST'] || process.env['STRIPE_RESTRICTED_KEY']);
 
   if (!stripeKey) {
-    console.error(`[PortalSession] Stripe key missing for production=${isProduction}`);
+    console.error(`[PortalSession] Stripe key missing for environment=${billingEnvironment}`);
     throw new Error('STRIPE_CONFIG_MISSING');
   }
 
-  const returnUrl = `https://www.vejamais.com.br/configuracoes/assinatura`;
+  const returnOrigin = new URL(origin).origin;
+  const returnUrl = `${returnOrigin}/configuracoes/assinatura`;
 
   try {
     const params = new URLSearchParams();
