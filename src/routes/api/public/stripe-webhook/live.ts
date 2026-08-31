@@ -1,13 +1,6 @@
 import Stripe from 'stripe';
 import { createFileRoute } from '@tanstack/react-router';
-import { validateCheckoutSessionContract } from '@/lib/stripe-guards.server';
 
-/**
- * PROTOCOLO: VEJAMAIS_STRIPE_DEFINITIVE_MONETIZATION_IMPLEMENTATION
- * Rota dedicada para produção (Live) com validação estrita.
- */
-
-// Reutilizar tipos do handler principal para consistência
 type AllowedStage =
   | 'SIGNATURE_VALIDATED'
   | 'FAST_PATH_ENTERED'
@@ -61,6 +54,28 @@ interface WebhookRpcPayload {
   p_canonical_amount: number;
 }
 
+function isObject(val: unknown): val is Record<string, any> {
+  return typeof val === 'object' && val !== null && !Array.isArray(val);
+}
+
+function metadataFromObject(obj: Record<string, any>): Record<string, string | undefined> {
+  if (isObject(obj.metadata)) return obj.metadata as Record<string, string | undefined>;
+  return {};
+}
+
+function invoiceSubscriptionContext(obj: Record<string, any>) {
+  const topLevelSubscription = typeof obj.subscription === 'string' ? obj.subscription : null;
+  const parent = isObject(obj.parent) ? obj.parent : null;
+  const subscriptionDetails = parent && isObject(parent.subscription_details) ? parent.subscription_details : null;
+  const nestedSubscription = subscriptionDetails && typeof subscriptionDetails.subscription === 'string'
+    ? subscriptionDetails.subscription
+    : null;
+  const nestedMetadata = subscriptionDetails && isObject(subscriptionDetails.metadata)
+    ? subscriptionDetails.metadata as Record<string, string | undefined>
+    : {};
+  return { subscription: topLevelSubscription || nestedSubscription, metadata: nestedMetadata };
+}
+
 async function safeLogDiagnostic(
   trace_id: string,
   event_id: string | undefined,
@@ -72,21 +87,18 @@ async function safeLogDiagnostic(
   const supabaseUrl = process.env['VITE_SUPABASE_URL'];
   const supabaseServiceRoleKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
   const diagnosticsEnabled = process.env['STRIPE_WEBHOOK_DIAGNOSTICS_ENABLED'] === 'true';
-
   if (!diagnosticsEnabled || !supabaseUrl || !supabaseServiceRoleKey) return;
 
   try {
     let eventHash = '0000000000000000000000000000000000000000000000000000000000000000';
     if (event_id) {
-      const msgUint8 = new TextEncoder().encode(event_id);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      eventHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+      const bytes = new TextEncoder().encode(event_id);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', bytes);
+      eventHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
     }
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 300);
-
     await fetch(`${supabaseUrl}/rest/v1/rpc/log_stripe_webhook_diagnostic`, {
       method: 'POST',
       headers: {
@@ -105,8 +117,8 @@ async function safeLogDiagnostic(
       signal: controller.signal
     });
     clearTimeout(timeout);
-  } catch (err) {
-    // Fail-open
+  } catch {
+    // Diagnostics are fail-open and never influence billing state.
   }
 }
 
@@ -126,15 +138,8 @@ async function createSanitizedResponse(
     reason_code,
   }), {
     status,
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'no-store',
-    },
+    headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
   });
-}
-
-function isObject(val: unknown): val is Record<string, unknown> {
-  return typeof val === 'object' && val !== null && !Array.isArray(val);
 }
 
 export const Route = createFileRoute('/api/public/stripe-webhook/live')({
@@ -144,30 +149,23 @@ export const Route = createFileRoute('/api/public/stripe-webhook/live')({
         const traceId = crypto.randomUUID();
         let currentStage: AllowedStage = 'SIGNATURE_VALIDATED';
         let eventId: string | undefined;
-        let eventType: string = 'UNKNOWN';
+        let eventType = 'UNKNOWN';
 
         try {
           const signature = request.headers.get('stripe-signature');
-          if (!signature) {
-            return new Response(JSON.stringify({ error: 'UNAUTHORIZED', trace_id: traceId }), { status: 401 });
-          }
+          if (!signature) return new Response(JSON.stringify({ error: 'UNAUTHORIZED', trace_id: traceId }), { status: 401 });
 
           const restrictedKeyLive = process.env['STRIPE_RESTRICTED_KEY_LIVE'];
           const endpointSecretLive = process.env['STRIPE_WEBHOOK_SECRET_LIVE'];
-
           if (!restrictedKeyLive || !endpointSecretLive) {
-            console.error(`[${traceId}] Configuration Error: Missing STRIPE_RESTRICTED_KEY_LIVE or STRIPE_WEBHOOK_SECRET_LIVE`);
             return new Response(JSON.stringify({ error: 'INTERNAL_ERROR', trace_id: traceId }), { status: 500 });
           }
 
-          const stripe = new Stripe(restrictedKeyLive, {
-            httpClient: Stripe.createFetchHttpClient(),
-          });
-
+          const stripe = new Stripe(restrictedKeyLive, { httpClient: Stripe.createFetchHttpClient() });
           let bodyText: string;
           try {
             bodyText = await request.text();
-          } catch (err) {
+          } catch {
             return new Response(JSON.stringify({ error: 'BAD_REQUEST', trace_id: traceId }), { status: 400 });
           }
 
@@ -180,16 +178,14 @@ export const Route = createFileRoute('/api/public/stripe-webhook/live')({
               undefined,
               Stripe.createSubtleCryptoProvider()
             );
-          } catch (err) {
+          } catch {
             return new Response(JSON.stringify({ error: 'INVALID_SIGNATURE', trace_id: traceId }), { status: 400 });
           }
 
           eventId = event.id;
           eventType = event.type;
-
-          // REQUISITO: Aceitar exclusivamente livemode = true
           if (!event.livemode) {
-            return await createSanitizedResponse(400, traceId, currentStage, 'LIVEMODE_REJECTED', eventId, eventType);
+            return createSanitizedResponse(400, traceId, currentStage, 'LIVEMODE_REJECTED', eventId, eventType);
           }
 
           const supportedEvents = [
@@ -201,16 +197,14 @@ export const Route = createFileRoute('/api/public/stripe-webhook/live')({
             'invoice.paid',
             'invoice.payment_failed'
           ];
-
           if (!supportedEvents.includes(event.type)) {
-            return new Response(JSON.stringify({ error: 'UNSUPPORTED_EVENT', trace_id: traceId }), { status: 200 });
+            return createSanitizedResponse(200, traceId, currentStage, 'UNSUPPORTED_EVENT', eventId, eventType);
           }
 
           await safeLogDiagnostic(traceId, eventId, eventType, currentStage);
-
           const eventObject = event.data.object;
           if (!isObject(eventObject)) {
-            return await createSanitizedResponse(400, traceId, currentStage, 'PAYLOAD_CONTRACT_FAILED', eventId, eventType);
+            return createSanitizedResponse(400, traceId, currentStage, 'PAYLOAD_CONTRACT_FAILED', eventId, eventType);
           }
 
           currentStage = 'PAYLOAD_SANITIZED';
@@ -219,31 +213,63 @@ export const Route = createFileRoute('/api/public/stripe-webhook/live')({
           const supabaseUrl = process.env['VITE_SUPABASE_URL'];
           const supabaseServiceRoleKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
           const priceEnterpriseMonthlyLive = process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY_LIVE'];
-          
           if (!supabaseUrl || !supabaseServiceRoleKey || !priceEnterpriseMonthlyLive) {
-            console.error(`[${traceId}] Configuration Error: Missing Supabase/Stripe Live env vars`);
-            return await createSanitizedResponse(500, traceId, currentStage, 'UNEXPECTED_HANDLER_FAILURE', eventId, eventType);
+            return createSanitizedResponse(500, traceId, currentStage, 'SERVER_CONFIGURATION_MISSING', eventId, eventType);
           }
 
-          const metadata = (eventObject.metadata as Record<string, string | undefined>) || {};
-          let internalSubscriptionId = metadata.internal_subscription_id || metadata.subscription_id;
+          // Canonical live contract: exact price, BRL, R$ 35.90 for subscription events.
+          if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
+            const firstItem = isObject(eventObject.items) && Array.isArray(eventObject.items.data)
+              ? eventObject.items.data[0]
+              : null;
+            const price = isObject(firstItem) && isObject(firstItem.price) ? firstItem.price : null;
+            if (!price || price.id !== priceEnterpriseMonthlyLive || String(price.currency || '').toLowerCase() !== 'brl' || Number(price.unit_amount) !== 3590) {
+              return createSanitizedResponse(400, traceId, currentStage, 'PAYLOAD_CONTRACT_FAILED', eventId, eventType);
+            }
+          }
+
+          const invoiceContext = invoiceSubscriptionContext(eventObject);
+          if (event.type === 'invoice.paid' || event.type === 'invoice.payment_failed') {
+            const currency = String(eventObject.currency || '').toLowerCase();
+            const amountPaid = Number(eventObject.amount_paid ?? 0);
+            const amountDue = Number(eventObject.amount_due ?? 0);
+            if (currency !== 'brl') {
+              return createSanitizedResponse(400, traceId, currentStage, 'PAYLOAD_CONTRACT_FAILED', eventId, eventType);
+            }
+
+            // Stripe creates a zero-value invoice when a trial starts. It must never activate paid access.
+            if (event.type === 'invoice.paid' && amountPaid === 0) {
+              return createSanitizedResponse(200, traceId, 'HTTP_RESPONSE_READY', undefined, eventId, eventType);
+            }
+            if (event.type === 'invoice.paid' && amountPaid !== 3590) {
+              return createSanitizedResponse(400, traceId, currentStage, 'PAYLOAD_CONTRACT_FAILED', eventId, eventType);
+            }
+            if (event.type === 'invoice.payment_failed' && amountDue !== 3590) {
+              return createSanitizedResponse(400, traceId, currentStage, 'PAYLOAD_CONTRACT_FAILED', eventId, eventType);
+            }
+          }
+
+          const directMetadata = metadataFromObject(eventObject);
+          const metadata = Object.keys(directMetadata).length > 0 ? directMetadata : invoiceContext.metadata;
+          const internalSubscriptionId = metadata.internal_subscription_id || metadata.subscription_id;
+          const stripeSubscription = eventObject.subscription || invoiceContext.subscription;
 
           const payload: WebhookRpcPayload = {
             p_provider_event_id: event.id,
             p_event_type: event.type,
             p_payload_sha256: null,
-            p_livemode: true, // Forçar autoridade Live
+            p_livemode: true,
             p_event_data: {
               id: String(eventObject.id || ''),
               object: eventObject,
               customer: eventObject.customer,
-              subscription: eventObject.subscription,
+              subscription: stripeSubscription,
               status: eventObject.status,
               metadata: { ...metadata, internal_subscription_id: internalSubscriptionId },
               plan_code: metadata.plan_code || 'enterprise_monthly'
             },
             p_event_created: event.created,
-            p_canonical_plan_code: metadata.plan_code || 'enterprise_monthly',
+            p_canonical_plan_code: 'enterprise_monthly',
             p_canonical_price_id: priceEnterpriseMonthlyLive,
             p_canonical_currency: 'brl',
             p_canonical_amount: 3590
@@ -251,7 +277,6 @@ export const Route = createFileRoute('/api/public/stripe-webhook/live')({
 
           currentStage = 'RPC_CALL_STARTED';
           await safeLogDiagnostic(traceId, eventId, eventType, currentStage);
-
           const rpcResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/process_stripe_webhook_event`, {
             method: 'POST',
             headers: {
@@ -264,21 +289,22 @@ export const Route = createFileRoute('/api/public/stripe-webhook/live')({
 
           currentStage = 'RPC_RESPONSE_RECEIVED';
           await safeLogDiagnostic(traceId, eventId, eventType, currentStage);
-
           if (!rpcResponse.ok) {
-            return await createSanitizedResponse(503, traceId, currentStage, 'RPC_TRANSPORT_RETRYABLE', eventId, eventType);
+            return createSanitizedResponse(503, traceId, currentStage, 'RPC_TRANSPORT_RETRYABLE', eventId, eventType);
           }
 
           const result = (await rpcResponse.json()) as { status?: string };
           if (result.status === 'failed_retryable') {
-            return await createSanitizedResponse(503, traceId, currentStage, 'RPC_REJECTED_RETRYABLE', eventId, eventType);
+            return createSanitizedResponse(503, traceId, currentStage, 'RPC_REJECTED_RETRYABLE', eventId, eventType);
+          }
+          if (result.status === 'rejected_permanent') {
+            return createSanitizedResponse(400, traceId, currentStage, 'RPC_REJECTED_PERMANENT', eventId, eventType);
           }
 
-          return await createSanitizedResponse(200, traceId, 'HTTP_RESPONSE_READY', undefined, eventId, eventType);
-          
+          return createSanitizedResponse(200, traceId, 'HTTP_RESPONSE_READY', undefined, eventId, eventType);
         } catch (err) {
           console.error(`[${traceId}] Unexpected Live Handler Failure`, err);
-          return await createSanitizedResponse(500, traceId, currentStage, 'UNEXPECTED_HANDLER_FAILURE', eventId, eventType);
+          return createSanitizedResponse(500, traceId, currentStage, 'UNEXPECTED_HANDLER_FAILURE', eventId, eventType);
         }
       },
       GET: async () => new Response('Method Not Allowed', { status: 405 }),
