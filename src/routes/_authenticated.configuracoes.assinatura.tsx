@@ -154,6 +154,44 @@ export function SubscriptionSettingsPage() {
                 </p>
                 <div className="mt-3 space-y-1.5">
                   <p className="text-[10px] text-muted-foreground italic font-medium leading-relaxed flex items-center gap-1"><ShieldCheck className="size-3 text-green-500" />Assinatura protegida e processada pela Stripe</p>
+                  <Button
+                    variant="outline"
+                    onClick={async (e) => {
+                      const btn = e.currentTarget;
+                      if (btn.disabled) return;
+                      btn.disabled = true;
+                      const originalText = btn.innerText;
+                      btn.innerText = "Carregando portal seguro...";
+                      try {
+                        const { data: { session } } = await supabase.auth.getSession();
+                        const response = await fetch('/api/public/billing/create-portal-session', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token || ''}` },
+                          body: JSON.stringify({ empresaId })
+                        });
+                        if (!response.ok) {
+                          console.error("Portal session failed:", await response.json());
+                          btn.disabled = false;
+                          btn.innerText = originalText;
+                          return;
+                        }
+                        const result = await response.json();
+                        if (result && typeof result.url === 'string') {
+                          const url = new URL(result.url);
+                          if (url.protocol === "https:" && url.hostname === "billing.stripe.com") window.location.assign(result.url);
+                          else {
+                            btn.disabled = false;
+                            btn.innerText = originalText;
+                          }
+                        }
+                      } catch (err) {
+                        console.error("Portal session error:", err);
+                        btn.disabled = false;
+                        btn.innerText = originalText;
+                      }
+                    }}
+                    className="w-full sm:w-auto"
+                  >Gerenciar assinatura</Button>
                   {status?.environment !== 'live' && <p className="text-[10px] text-amber-600 font-bold bg-amber-50 p-1 px-2 rounded border border-amber-200 w-fit">AMBIENTE DE TESTE (SANDBOX) — NENHUMA COBRANÇA REAL</p>}
                 </div>
               </div>
