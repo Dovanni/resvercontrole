@@ -99,17 +99,19 @@ export async function createStripeCheckoutSessionImpl(empresaId: string, traceId
     return { status: 'checkout_disabled', message: 'Production checkout disabled' };
   }
 
+  // Environment-hardening: never fall back from sandbox to a generic Stripe price.
   const STRIPE_PRICE_ENTERPRISE_MONTHLY = isProduction
     ? process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY_LIVE']
-    : (process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY_TEST'] || process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY']);
+    : process.env['STRIPE_PRICE_ENTERPRISE_MONTHLY_TEST'];
 
   if (!STRIPE_PRICE_ENTERPRISE_MONTHLY) {
     return { status: 'configuration_pending', message: 'Missing Stripe price' };
   }
 
+  // Environment-hardening: sandbox consumes only *_TEST; live consumes only *_LIVE.
   const STRIPE_KEY = isProduction
     ? process.env['STRIPE_RESTRICTED_KEY_LIVE']
-    : (process.env['STRIPE_RESTRICTED_KEY_TEST'] || process.env['STRIPE_RESTRICTED_KEY']);
+    : process.env['STRIPE_RESTRICTED_KEY_TEST'];
 
   if (!STRIPE_KEY) {
     throw new Error(JSON.stringify({
