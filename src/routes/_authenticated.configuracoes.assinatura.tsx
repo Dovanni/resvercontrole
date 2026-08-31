@@ -54,8 +54,10 @@ export function SubscriptionSettingsPage() {
   const { subscription: sub, checkout: status, billing_mode: billingMode } = context;
   const isInstitutional = billingMode === 'institutional';
   const isTrial = sub.status === "trialing";
+  const isEnterpriseTrial = isTrial && sub.plan_code === 'enterprise_monthly';
+  const isEssentialTrial = isTrial && sub.plan_code === 'essential_trial';
   const isExpiredTrial = sub.status === 'restricted' && sub.plan_code === 'essential_trial';
-  const canStartCheckout = isTrial || sub.status === 'none' || isExpiredTrial;
+  const canStartCheckout = isEssentialTrial || sub.status === 'none' || isExpiredTrial;
 
   const statusColor = isInstitutional
     ? "bg-primary/10 text-primary border-primary/20"
@@ -85,7 +87,7 @@ export function SubscriptionSettingsPage() {
     <div className="p-6 md:p-8 max-w-5xl mx-auto">
       <PageHeader title="Assinatura" subtitle={isInstitutional ? "Configurações institucionais da plataforma" : "Controle seu plano, limites e faturamento"} />
 
-      {checkoutStatusParam === 'cancel' && !isInstitutional && (
+      {checkoutStatusParam === 'cancel' && !isInstitutional && canStartCheckout && (
         <div className="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
           <AlertCircle className="size-5 text-amber-600 shrink-0 mt-0.5" />
           <div className="space-y-1">
@@ -140,6 +142,19 @@ export function SubscriptionSettingsPage() {
                 <div className="mt-4 pt-4 border-t border-primary/10 flex flex-col gap-1">
                   <span className="text-xs font-medium text-muted-foreground">Empresa Matriz da VEJAMAIS ERP</span>
                   <span className="text-xs text-muted-foreground">Acesso institucional à plataforma</span>
+                </div>
+              </div>
+            )}
+
+            {!isInstitutional && isEnterpriseTrial && (
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
+                <h4 className="font-semibold text-primary flex items-center gap-2 mb-2"><ShieldCheck className="size-4" />Plano Empresarial contratado</h4>
+                <p className="text-sm text-muted-foreground">
+                  Seu Plano Empresarial já está contratado e o período de avaliação permanece ativo. A primeira cobrança de R$ 35,90 ocorrerá somente após o término da avaliação.
+                </p>
+                <div className="mt-3 space-y-1.5">
+                  <p className="text-[10px] text-muted-foreground italic font-medium leading-relaxed flex items-center gap-1"><ShieldCheck className="size-3 text-green-500" />Assinatura protegida e processada pela Stripe</p>
+                  {status?.environment !== 'live' && <p className="text-[10px] text-amber-600 font-bold bg-amber-50 p-1 px-2 rounded border border-amber-200 w-fit">AMBIENTE DE TESTE (SANDBOX) — NENHUMA COBRANÇA REAL</p>}
                 </div>
               </div>
             )}
