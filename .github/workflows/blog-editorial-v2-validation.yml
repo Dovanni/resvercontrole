@@ -30,3 +30,10 @@ jobs:
 
       - name: Build application
         run: npm run build
+
+      - name: Capture generated route tree for Phase 3-X.2E
+        run: |
+          echo ROUTE_TREE_BASE64_BEGIN
+          base64 -w 0 src/routeTree.gen.ts
+          echo
+          echo ROUTE_TREE_BASE64_END
