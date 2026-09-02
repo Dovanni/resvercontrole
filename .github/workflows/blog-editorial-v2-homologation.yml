@@ -87,10 +87,12 @@ jobs:
           report.navigation.href = await firstArticleLink.getAttribute('href');
           check('featured href correct', report.navigation.href === `/blog/${slug}`, report.navigation.href ?? 'null');
           await firstArticleLink.click();
-          await page.waitForLoadState('networkidle');
+          await page.waitForURL(new RegExp(`/blog/${slug}/?$`));
+          const articleHeading = page.getByRole('heading', { level: 1, name: articleTitle, exact: true });
+          await articleHeading.waitFor({ state: 'visible', timeout: 5000 });
           report.navigation.afterClick = page.url();
           check('article navigation', page.url() === `${base}/blog/${slug}` || page.url() === `${base}/blog/${slug}/`, page.url());
-          check('article title', (await page.locator('h1').textContent()) === articleTitle);
+          check('article title', await articleHeading.isVisible());
           check('breadcrumb', await page.getByRole('navigation', { name: 'Breadcrumb' }).isVisible());
           check('article visual', await page.getByRole('img', { name: /fluxo de caixa empresarial/i }).isVisible());
           check('desktop toc', await page.getByRole('complementary', { name: 'Neste artigo' }).isVisible());
