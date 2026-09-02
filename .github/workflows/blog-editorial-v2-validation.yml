@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate-blog-v2:
@@ -31,9 +31,27 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Capture generated route tree for Phase 3-X.2E
+      - name: Commit officially generated route tree when changed
         run: |
-          echo ROUTE_TREE_BASE64_BEGIN
-          base64 -w 0 src/routeTree.gen.ts
-          echo
-          echo ROUTE_TREE_BASE64_END
+          if git diff --quiet -- src/routeTree.gen.ts; then
+            echo "routeTree.gen.ts already synchronized"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/routeTree.gen.ts
+            git commit -m "chore(router): sync generated route tree"
+            git push origin HEAD:feature/blog-editorial-v2
+          fi
+
+      - name: Read live robots.txt for Phase 3-X.2E
+        run: |
+          echo ROBOTS_HTTP_BEGIN
+          curl --fail-with-body --silent --show-error --location --max-time 20 \
+            --dump-header /tmp/robots-headers.txt \
+            --output /tmp/robots-body.txt \
+            https://vejamais.com.br/robots.txt || true
+          echo "--- headers ---"
+          cat /tmp/robots-headers.txt 2>/dev/null || true
+          echo "--- body ---"
+          cat /tmp/robots-body.txt 2>/dev/null || true
+          echo ROBOTS_HTTP_END
