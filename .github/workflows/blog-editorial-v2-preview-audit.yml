@@ -32,15 +32,16 @@ jobs:
       - name: Build application
         run: npm run build
 
-      - name: Install Playwright Chromium
+      - name: Install Playwright only in runner
         run: |
-          npx -y playwright@1.55.0 install --with-deps chromium
+          npm install --no-save --no-package-lock playwright@1.55.0
+          npx playwright install --with-deps chromium
 
-      - name: Start isolated preview
+      - name: Start isolated development server
         run: |
-          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/blog-preview.log 2>&1 &
+          npm run dev -- --host 127.0.0.1 --port 4173 > /tmp/blog-preview.log 2>&1 &
           echo $! > /tmp/blog-preview.pid
-          for i in {1..30}; do
+          for i in {1..45}; do
             if curl -fsS http://127.0.0.1:4173/blog >/dev/null; then
               exit 0
             fi
@@ -52,7 +53,7 @@ jobs:
       - name: Run browser audit
         run: |
           mkdir -p audit-output
-          cat > /tmp/blog-audit.mjs <<'EOF'
+          cat > .blog-audit.mjs <<'EOF'
           import { chromium } from 'playwright';
           import fs from 'node:fs';
 
@@ -116,7 +117,7 @@ jobs:
           fs.writeFileSync('audit-output/report.json', JSON.stringify(report, null, 2));
           await browser.close();
           EOF
-          npx -y -p playwright@1.55.0 node /tmp/blog-audit.mjs
+          node .blog-audit.mjs
 
       - name: Upload audit evidence
         if: always()
@@ -126,6 +127,6 @@ jobs:
           path: audit-output/
           retention-days: 14
 
-      - name: Show preview log on failure
+      - name: Show server log on failure
         if: failure()
         run: cat /tmp/blog-preview.log || true
