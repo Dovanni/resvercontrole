@@ -37,6 +37,7 @@ const COMMAND_LABELS: Record<EditorialCommandKind, string> = {
   submit_review: "Simular envio para revisão",
   request_changes: "Simular solicitar ajustes",
   approve_revision: "Simular aprovação",
+  return_to_draft: "Simular retorno para draft",
   schedule: "Simular agendamento",
   publish: "Simular publicação",
   archive: "Simular arquivamento",
