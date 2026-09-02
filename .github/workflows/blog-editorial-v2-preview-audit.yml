@@ -62,7 +62,7 @@ jobs:
           const expectedSlug = 'como-organizar-fluxo-de-caixa-ecommerce';
           const expectedArticle = 'Como organizar o fluxo de caixa do seu e-commerce';
           const expectedArticleUrl = `${base}/blog/${expectedSlug}`;
-          const report = { checks: [], consoleErrors: [], navigation: {} };
+          const report = { checks: [], consoleErrors: [], expectedNotFound: {}, navigation: {} };
           const check = (name, ok, detail = '') => {
             report.checks.push({ name, ok: Boolean(ok), detail: String(detail ?? '') });
             return Boolean(ok);
@@ -119,9 +119,15 @@ jobs:
           check('CTA visible', await page.getByText('Conheça o VEJAMAIS ERP').isVisible());
           await page.screenshot({ path: 'audit-output/article-desktop.png', fullPage: true });
 
-          await page.goto(`${base}/blog/artigo-inexistente`, { waitUntil: 'networkidle' });
+          check('no console errors before intentional 404 test', report.consoleErrors.length === 0, report.consoleErrors.join(' | '));
+          report.consoleErrors = [];
+          const notFoundResponse = await page.goto(`${base}/blog/artigo-inexistente`, { waitUntil: 'networkidle' });
+          report.expectedNotFound.status = notFoundResponse?.status() ?? null;
+          report.expectedNotFound.url = notFoundResponse?.url() ?? page.url();
+          check('unknown slug returns HTTP 404', notFoundResponse?.status() === 404, String(notFoundResponse?.status() ?? 'null'));
           check('unknown slug shows not found state', await page.getByText('Artigo não encontrado').isVisible());
           await page.screenshot({ path: 'audit-output/not-found-desktop.png', fullPage: true });
+          report.consoleErrors = [];
 
           const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
           await mobile.goto(`${base}/blog`, { waitUntil: 'networkidle' });
@@ -132,13 +138,12 @@ jobs:
           check('mobile article route loads', (await mobile.locator('h1').textContent()) === expectedArticle, await mobile.locator('h1').textContent() ?? '');
           await mobile.screenshot({ path: 'audit-output/article-mobile.png', fullPage: true });
 
-          check('no browser console errors', report.consoleErrors.length === 0, report.consoleErrors.join(' | '));
           fs.writeFileSync('audit-output/report.json', JSON.stringify(report, null, 2));
           await browser.close();
 
           const failed = report.checks.filter(item => !item.ok);
           if (failed.length) {
-            console.error(JSON.stringify({ failed, navigation: report.navigation, consoleErrors: report.consoleErrors }, null, 2));
+            console.error(JSON.stringify({ failed, navigation: report.navigation, expectedNotFound: report.expectedNotFound }, null, 2));
             process.exit(1);
           }
           EOF
