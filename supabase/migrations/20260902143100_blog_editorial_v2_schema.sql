@@ -1,7 +1,7 @@
 -- VEJAMAIS ERP — Blog Editorial V2
--- Fase 3-I — Migration repository-only
+-- Fase 3-I.2 — Migration canônica repository-only
 -- IMPORTANTE: este arquivo foi preparado para revisão e NÃO deve ser aplicado
--- ao Supabase sem auditoria e autorização explícita.
+-- ao Supabase sem auditoria em banco descartável e autorização explícita.
 
 begin;
 
@@ -82,6 +82,7 @@ create table public.blog_posts (
   category_id uuid references public.blog_categories(id) on delete restrict,
   author_id uuid references public.blog_authors(id) on delete restrict,
   status text not null default 'draft',
+  revision_number integer not null default 1,
   scheduled_at timestamptz,
   published_at timestamptz,
   featured_image_path text,
@@ -101,6 +102,7 @@ create table public.blog_posts (
   constraint blog_posts_excerpt_not_blank_check check (btrim(excerpt) <> ''),
   constraint blog_posts_content_array_check check (jsonb_typeof(content) = 'array'),
   constraint blog_posts_status_check check (status in ('draft', 'review', 'scheduled', 'published', 'archived')),
+  constraint blog_posts_revision_number_check check (revision_number > 0),
   constraint blog_posts_reading_time_check check (reading_time_minutes > 0),
   constraint blog_posts_scheduled_contract_check check (status <> 'scheduled' or scheduled_at is not null),
   constraint blog_posts_published_contract_check check (status <> 'published' or published_at is not null)
@@ -152,13 +154,15 @@ create index blog_workflow_events_post_created_idx on public.blog_workflow_event
 create table public.blog_post_reviews (
   id uuid primary key default gen_random_uuid(),
   post_id uuid not null references public.blog_posts(id) on delete cascade,
+  revision_number integer not null,
   reviewer_user_id uuid not null default auth.uid() references auth.users(id) on delete restrict,
   decision text not null,
   notes text,
   created_at timestamptz not null default now(),
+  constraint blog_post_reviews_revision_number_check check (revision_number > 0),
   constraint blog_post_reviews_decision_check check (decision in ('approved', 'changes_requested'))
 );
-create index blog_post_reviews_post_created_idx on public.blog_post_reviews (post_id, created_at desc);
+create index blog_post_reviews_post_revision_created_idx on public.blog_post_reviews (post_id, revision_number, created_at desc, id desc);
 create index blog_post_reviews_reviewer_created_idx on public.blog_post_reviews (reviewer_user_id, created_at desc);
 
 create or replace function blog_private.has_editorial_role(_roles text[])
@@ -179,15 +183,14 @@ returns boolean language sql stable security definer
 set search_path = pg_catalog, public, blog_private, pg_temp
 as $$
   select auth.uid() is not null
-     and (
-       blog_private.has_editorial_role(array['owner','editor'])
-       or (
-         blog_private.has_editorial_role(array['author'])
-         and exists (
-           select 1 from public.blog_posts p
-           where p.id = _post_id and p.created_by = auth.uid() and p.status = 'draft'
+     and exists (
+       select 1
+       from public.blog_posts p
+       where p.id = _post_id
+         and (
+           (p.status <> 'published' and blog_private.has_editorial_role(array['owner','editor']))
+           or (p.status = 'draft' and p.created_by = auth.uid() and blog_private.has_editorial_role(array['author']))
          )
-       )
      );
 $$;
 revoke all on function blog_private.can_edit_post(uuid) from public;
@@ -202,8 +205,6 @@ declare
   _post_id uuid;
 begin
   if auth.uid() is null then return false; end if;
-  if blog_private.has_editorial_role(array['owner','editor']) then return true; end if;
-  if not blog_private.has_editorial_role(array['author']) then return false; end if;
   if split_part(_object_name, '/', 1) <> 'posts' then return false; end if;
   _post_text := split_part(_object_name, '/', 2);
   if _post_text !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$' then return false; end if;
@@ -221,20 +222,37 @@ as $$
 declare
   _uid uuid := auth.uid();
   _owner_or_editor boolean := false;
+  _is_author boolean := false;
   _author_own boolean := false;
+  _member_author_id uuid;
   _content_changed boolean := false;
+  _latest_review_decision text;
+  _latest_reviewer uuid;
 begin
   if _uid is not null then
     _owner_or_editor := blog_private.has_editorial_role(array['owner','editor']);
+    _is_author := blog_private.has_editorial_role(array['author']);
+    if _is_author then
+      select m.author_id into _member_author_id
+      from public.blog_editorial_members m
+      where m.user_id = _uid and m.active = true and m.role = 'author';
+    end if;
   end if;
 
   if tg_op = 'INSERT' then
     if _uid is not null then
       new.created_by := _uid;
       new.updated_by := _uid;
+      new.revision_number := 1;
+      new.reviewed_by := null;
+      new.published_by := null;
+      new.published_at := null;
+      new.scheduled_at := null;
       if new.status <> 'draft' then raise exception 'BLOG_INITIAL_STATUS_MUST_BE_DRAFT'; end if;
-      if not (_owner_or_editor or blog_private.has_editorial_role(array['author'])) then
-        raise exception 'BLOG_EDITORIAL_WRITE_FORBIDDEN';
+      if not (_owner_or_editor or _is_author) then raise exception 'BLOG_EDITORIAL_WRITE_FORBIDDEN'; end if;
+      if _is_author and not _owner_or_editor then
+        if _member_author_id is null then raise exception 'BLOG_AUTHOR_PROFILE_REQUIRED'; end if;
+        if new.author_id is distinct from _member_author_id then raise exception 'BLOG_AUTHOR_ID_MUST_MATCH_EDITORIAL_MEMBER'; end if;
       end if;
     end if;
     return new;
@@ -245,13 +263,38 @@ begin
     new.updated_by := _uid;
     new.published_by := old.published_by;
     new.reviewed_by := old.reviewed_by;
-    _author_own := blog_private.has_editorial_role(array['author']) and old.created_by = _uid;
+    _author_own := _is_author and old.created_by = _uid;
+
+    if _author_own and not _owner_or_editor then
+      if _member_author_id is null then raise exception 'BLOG_AUTHOR_PROFILE_REQUIRED'; end if;
+      if new.author_id is distinct from _member_author_id then raise exception 'BLOG_AUTHOR_ID_MUST_MATCH_EDITORIAL_MEMBER'; end if;
+    end if;
+
+    _content_changed := new.slug is distinct from old.slug
+      or new.title is distinct from old.title
+      or new.excerpt is distinct from old.excerpt
+      or new.content is distinct from old.content
+      or new.category_id is distinct from old.category_id
+      or new.author_id is distinct from old.author_id
+      or new.featured_image_path is distinct from old.featured_image_path
+      or new.featured_image_alt is distinct from old.featured_image_alt
+      or new.meta_title is distinct from old.meta_title
+      or new.meta_description is distinct from old.meta_description
+      or new.focus_keyword is distinct from old.focus_keyword
+      or new.reading_time_minutes is distinct from old.reading_time_minutes;
+
+    if _content_changed then
+      new.revision_number := old.revision_number + 1;
+      new.reviewed_by := null;
+    else
+      new.revision_number := old.revision_number;
+    end if;
 
     if old.status = new.status then
-      if _owner_or_editor then null;
+      if _owner_or_editor and old.status in ('draft','review') then null;
+      elsif _owner_or_editor and old.status = 'scheduled' and not _content_changed then null;
       elsif _author_own and old.status = 'draft' then null;
-      else raise exception 'BLOG_EDITORIAL_WRITE_FORBIDDEN';
-      end if;
+      else raise exception 'BLOG_EDITORIAL_WRITE_FORBIDDEN'; end if;
     else
       case old.status
         when 'draft' then
@@ -259,10 +302,35 @@ begin
           elsif new.status = 'archived' and _owner_or_editor then null;
           else raise exception 'BLOG_INVALID_STATUS_TRANSITION: % -> %', old.status, new.status; end if;
         when 'review' then
-          if new.status in ('draft','scheduled','published','archived') and _owner_or_editor then null;
+          if new.status in ('draft','archived') and _owner_or_editor then null;
+          elsif new.status in ('scheduled','published') and _owner_or_editor then
+            select r.decision, r.reviewer_user_id
+              into _latest_review_decision, _latest_reviewer
+            from public.blog_post_reviews r
+            where r.post_id = old.id and r.revision_number = new.revision_number
+            order by r.created_at desc, r.id desc
+            limit 1;
+            if _latest_review_decision is distinct from 'approved' or _latest_reviewer is null then
+              raise exception 'BLOG_CURRENT_REVISION_REQUIRES_APPROVAL';
+            end if;
+            new.reviewed_by := _latest_reviewer;
           else raise exception 'BLOG_INVALID_STATUS_TRANSITION: % -> %', old.status, new.status; end if;
         when 'scheduled' then
-          if new.status in ('review','published','archived') and _owner_or_editor then null;
+          if new.status in ('review','archived') and _owner_or_editor then null;
+          elsif new.status = 'published' and _owner_or_editor then
+            if old.scheduled_at is null or now() < old.scheduled_at then
+              raise exception 'BLOG_SCHEDULED_PUBLICATION_NOT_DUE';
+            end if;
+            select r.decision, r.reviewer_user_id
+              into _latest_review_decision, _latest_reviewer
+            from public.blog_post_reviews r
+            where r.post_id = old.id and r.revision_number = new.revision_number
+            order by r.created_at desc, r.id desc
+            limit 1;
+            if _latest_review_decision is distinct from 'approved' or _latest_reviewer is null then
+              raise exception 'BLOG_CURRENT_REVISION_REQUIRES_APPROVAL';
+            end if;
+            new.reviewed_by := _latest_reviewer;
           else raise exception 'BLOG_INVALID_STATUS_TRANSITION: % -> %', old.status, new.status; end if;
         when 'published' then
           if new.status in ('review','archived') and _owner_or_editor then null;
@@ -275,18 +343,6 @@ begin
     end if;
   end if;
 
-  _content_changed := new.slug is distinct from old.slug
-    or new.title is distinct from old.title
-    or new.excerpt is distinct from old.excerpt
-    or new.content is distinct from old.content
-    or new.category_id is distinct from old.category_id
-    or new.author_id is distinct from old.author_id
-    or new.featured_image_path is distinct from old.featured_image_path
-    or new.featured_image_alt is distinct from old.featured_image_alt
-    or new.meta_title is distinct from old.meta_title
-    or new.meta_description is distinct from old.meta_description
-    or new.focus_keyword is distinct from old.focus_keyword;
-
   if old.status = 'published' and new.status = 'published' and _content_changed then
     raise exception 'BLOG_PUBLISHED_CONTENT_REQUIRES_REVIEW_TRANSITION';
   end if;
@@ -294,6 +350,8 @@ begin
   if new.status = 'scheduled' then
     if new.scheduled_at is null then raise exception 'BLOG_SCHEDULE_REQUIRES_SCHEDULED_AT'; end if;
     if _uid is not null and new.scheduled_at <= now() then raise exception 'BLOG_SCHEDULE_MUST_BE_FUTURE'; end if;
+  elsif old.status = 'scheduled' and new.status = 'review' then
+    new.scheduled_at := null;
   end if;
 
   if new.status = 'published' then
@@ -312,24 +370,55 @@ end;
 $$;
 revoke all on function blog_private.guard_blog_post_write() from public;
 
+create or replace function blog_private.guard_blog_review_insert()
+returns trigger language plpgsql security definer
+set search_path = pg_catalog, public, blog_private, pg_temp
+as $$
+declare
+  _uid uuid := auth.uid();
+  _post_status text;
+  _current_revision integer;
+  _revision_creator uuid;
+begin
+  if _uid is null then raise exception 'BLOG_REVIEW_AUTH_REQUIRED'; end if;
+
+  select p.status, p.revision_number
+    into _post_status, _current_revision
+  from public.blog_posts p
+  where p.id = new.post_id;
+
+  if not found then raise exception 'BLOG_POST_NOT_FOUND'; end if;
+  if _post_status <> 'review' then raise exception 'BLOG_REVIEW_REQUIRES_REVIEW_STATUS'; end if;
+
+  select r.created_by into _revision_creator
+  from public.blog_post_revisions r
+  where r.post_id = new.post_id and r.revision_number = _current_revision;
+
+  if not found then raise exception 'BLOG_REVISION_NOT_FOUND'; end if;
+  if _revision_creator = _uid then raise exception 'BLOG_FOUR_EYES_SELF_REVIEW_FORBIDDEN'; end if;
+
+  new.reviewer_user_id := _uid;
+  new.revision_number := _current_revision;
+  return new;
+end;
+$$;
+revoke all on function blog_private.guard_blog_review_insert() from public;
+
 create or replace function blog_private.capture_blog_post_revision()
 returns trigger language plpgsql security definer
 set search_path = pg_catalog, public, blog_private, pg_temp
 as $$
-declare _next_revision integer;
 begin
-  select coalesce(max(r.revision_number), 0) + 1 into _next_revision
-  from public.blog_post_revisions r where r.post_id = new.id;
-  insert into public.blog_post_revisions (post_id, revision_number, snapshot, created_by, reason)
-  values (
-    new.id,
-    _next_revision,
-    to_jsonb(new),
-    coalesce(auth.uid(), new.updated_by, new.created_by),
-    case when tg_op = 'INSERT' then 'initial'
-         when old.status is distinct from new.status then 'status_change'
-         else 'content_update' end
-  );
+  if tg_op = 'INSERT' or old.revision_number is distinct from new.revision_number then
+    insert into public.blog_post_revisions (post_id, revision_number, snapshot, created_by, reason)
+    values (
+      new.id,
+      new.revision_number,
+      to_jsonb(new),
+      coalesce(auth.uid(), new.updated_by, new.created_by),
+      case when tg_op = 'INSERT' then 'initial' else 'content_update' end
+    );
+  end if;
   return new;
 end;
 $$;
@@ -360,6 +449,8 @@ create trigger blog_posts_90_capture_revision after insert or update on public.b
 for each row execute function blog_private.capture_blog_post_revision();
 create trigger blog_posts_91_capture_workflow after insert or update on public.blog_posts
 for each row execute function blog_private.capture_blog_workflow_event();
+create trigger blog_post_reviews_10_guard_insert before insert on public.blog_post_reviews
+for each row execute function blog_private.guard_blog_review_insert();
 create trigger blog_categories_set_updated_at before update on public.blog_categories
 for each row execute function public.set_updated_at();
 create trigger blog_tags_set_updated_at before update on public.blog_tags
