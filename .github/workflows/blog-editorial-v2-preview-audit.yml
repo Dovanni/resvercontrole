@@ -1,0 +1,131 @@
+name: Blog Editorial V2 Preview Audit
+
+on:
+  push:
+    branches:
+      - feature/blog-editorial-v2
+    paths:
+      - 'src/features/blog/**'
+      - 'src/routes/blog/**'
+      - '.github/workflows/blog-editorial-v2-preview-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build application
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        run: |
+          npx -y playwright@1.55.0 install --with-deps chromium
+
+      - name: Start isolated preview
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/blog-preview.log 2>&1 &
+          echo $! > /tmp/blog-preview.pid
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:4173/blog >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/blog-preview.log
+          exit 1
+
+      - name: Run browser audit
+        run: |
+          mkdir -p audit-output
+          cat > /tmp/blog-audit.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs';
+
+          const base = 'http://127.0.0.1:4173';
+          const expectedArticle = 'Como organizar o fluxo de caixa do seu e-commerce';
+          const report = { checks: [], consoleErrors: [] };
+          const check = (name, ok, detail = '') => {
+            report.checks.push({ name, ok, detail });
+            if (!ok) throw new Error(`${name}: ${detail}`);
+          };
+
+          const browser = await chromium.launch({ headless: true });
+          const context = await browser.newContext({ viewport: { width: 1440, height: 1200 } });
+          const page = await context.newPage();
+          page.on('console', msg => {
+            if (msg.type() === 'error') report.consoleErrors.push(msg.text());
+          });
+
+          await page.goto(`${base}/blog`, { waitUntil: 'networkidle' });
+          check('blog page loads', (await page.locator('h1').first().textContent())?.includes('Gestão mais clara') === true);
+          check('preview banner visible', await page.getByText('BLOG EDITORIAL V2 — PREVIEW ISOLADO — NÃO PUBLICADO').isVisible());
+          check('three article cards visible', await page.locator('article').count() === 3, `count=${await page.locator('article').count()}`);
+          check('robots noindex present', (await page.locator('meta[name="robots"]').getAttribute('content'))?.includes('noindex') === true);
+          check('canonical blog present', (await page.locator('link[rel="canonical"]').getAttribute('href')) === 'https://vejamais.com.br/blog');
+          await page.screenshot({ path: 'audit-output/blog-desktop.png', fullPage: true });
+
+          const search = page.getByLabel('Buscar artigos');
+          await search.fill('estoque');
+          check('search filters to one article', await page.locator('article').count() === 1, `count=${await page.locator('article').count()}`);
+          check('search result is inventory article', (await page.locator('article h2').textContent())?.includes('estoque') === true);
+          await search.fill('');
+
+          await page.getByRole('button', { name: 'Gestão Financeira' }).click();
+          check('category filter returns one article', await page.locator('article').count() === 1, `count=${await page.locator('article').count()}`);
+          await page.getByRole('button', { name: 'Todas' }).click();
+
+          await page.getByRole('link', { name: 'Ler artigo' }).first().click();
+          await page.waitForLoadState('networkidle');
+          check('article route loads', (await page.locator('h1').textContent()) === expectedArticle, await page.locator('h1').textContent() ?? '');
+          check('breadcrumb visible', await page.getByRole('navigation', { name: 'Breadcrumb' }).isVisible());
+          check('article canonical correct', (await page.locator('link[rel="canonical"]').getAttribute('href')) === 'https://vejamais.com.br/blog/como-organizar-fluxo-de-caixa-ecommerce');
+          check('article robots noindex present', (await page.locator('meta[name="robots"]').getAttribute('content'))?.includes('noindex') === true);
+          check('BlogPosting JSON-LD present', (await page.locator('script[type="application/ld+json"]').allTextContents()).some(v => v.includes('BlogPosting')));
+          check('BreadcrumbList JSON-LD present', (await page.locator('script[type="application/ld+json"]').allTextContents()).some(v => v.includes('BreadcrumbList')));
+          check('CTA visible', await page.getByText('Conheça o VEJAMAIS ERP').isVisible());
+          await page.screenshot({ path: 'audit-output/article-desktop.png', fullPage: true });
+
+          await page.goto(`${base}/blog/artigo-inexistente`, { waitUntil: 'networkidle' });
+          check('unknown slug shows not found state', await page.getByText('Artigo não encontrado').isVisible());
+
+          const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
+          await mobile.goto(`${base}/blog`, { waitUntil: 'networkidle' });
+          check('mobile blog has no horizontal overflow', await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), `${await mobile.evaluate(() => document.documentElement.scrollWidth)}px`);
+          await mobile.screenshot({ path: 'audit-output/blog-mobile.png', fullPage: true });
+          await mobile.getByRole('link', { name: 'Ler artigo' }).first().click();
+          await mobile.waitForLoadState('networkidle');
+          check('mobile article has no horizontal overflow', await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), `${await mobile.evaluate(() => document.documentElement.scrollWidth)}px`);
+          await mobile.screenshot({ path: 'audit-output/article-mobile.png', fullPage: true });
+
+          check('no browser console errors', report.consoleErrors.length === 0, report.consoleErrors.join(' | '));
+          fs.writeFileSync('audit-output/report.json', JSON.stringify(report, null, 2));
+          await browser.close();
+          EOF
+          npx -y -p playwright@1.55.0 node /tmp/blog-audit.mjs
+
+      - name: Upload audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blog-editorial-v2-preview-audit
+          path: audit-output/
+          retention-days: 14
+
+      - name: Show preview log on failure
+        if: failure()
+        run: cat /tmp/blog-preview.log || true
