@@ -1,0 +1,169 @@
+name: Blog Editorial V2 Homologation
+
+on:
+  push:
+    branches:
+      - feature/blog-editorial-v2
+    paths:
+      - 'src/components/blog/**'
+      - 'src/features/blog/**'
+      - 'src/routes/blog/**'
+      - '.github/workflows/blog-editorial-v2-homologation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  homologate-blog-v2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run repository contracts
+        run: npx vitest run src/features/blog/blog.test.ts
+
+      - name: Build application
+        run: npm run build
+
+      - name: Install Playwright only in runner
+        run: |
+          npm install --no-save --no-package-lock playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start isolated development server
+        run: |
+          npm run dev -- --host 127.0.0.1 --port 4173 > /tmp/blog-v2-homologation.log 2>&1 &
+          echo $! > /tmp/blog-v2-homologation.pid
+          for i in {1..45}; do
+            if curl -fsS http://127.0.0.1:4173/blog >/dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/blog-v2-homologation.log
+          exit 1
+
+      - name: Run browser homologation
+        run: |
+          mkdir -p homologation-output
+          cat > .blog-v2-homologation.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs';
+
+          const base = 'http://127.0.0.1:4173';
+          const slug = 'como-organizar-fluxo-de-caixa-empresa';
+          const articleTitle = 'Como organizar o fluxo de caixa da empresa';
+          const report = { checks: [], consoleErrors: [], expected404: {}, navigation: {} };
+          const check = (name, ok, detail = '') => {
+            report.checks.push({ name, ok: Boolean(ok), detail: String(detail ?? '') });
+            return Boolean(ok);
+          };
+
+          const browser = await chromium.launch({ headless: true });
+          const context = await browser.newContext({ viewport: { width: 1440, height: 1200 } });
+          const page = await context.newPage();
+          page.on('console', (msg) => {
+            if (msg.type() === 'error') report.consoleErrors.push(msg.text());
+          });
+
+          await page.goto(`${base}/blog`, { waitUntil: 'networkidle' });
+          check('blog route loads', (await page.locator('h1').first().textContent()) === 'Gestão mais clara para decisões melhores');
+          check('preview banner visible', await page.getByText('Blog Editorial V2 — Preview isolado — Não publicado', { exact: true }).isVisible());
+          check('brand header visible', await page.getByLabel('VEJAMAIS ERP — página inicial').isVisible());
+          check('hero principles visible', await page.getByText('Aplicável', { exact: true }).isVisible() && await page.getByText('Organizado', { exact: true }).isVisible() && await page.getByText('Editorial', { exact: true }).isVisible());
+          check('featured editorial visible', await page.getByText('Destaque editorial', { exact: true }).isVisible());
+          check('initial content count is three', await page.getByText('3 artigos encontrados', { exact: true }).isVisible());
+          check('blog robots noindex', (await page.locator('meta[name="robots"]').getAttribute('content'))?.includes('noindex') === true);
+          check('blog canonical correct', (await page.locator('link[rel="canonical"]').getAttribute('href')) === 'https://vejamais.com.br/blog');
+          check('blog twitter card present', (await page.locator('meta[name="twitter:card"]').getAttribute('content')) === 'summary_large_image');
+          await page.screenshot({ path: 'homologation-output/blog-desktop.png', fullPage: true });
+
+          const search = page.getByLabel('Buscar artigos');
+          await search.fill('estoque');
+          check('search returns inventory article', await page.getByText('Como evitar divergências no estoque da sua empresa', { exact: true }).isVisible());
+          check('search count becomes one', await page.getByText('1 artigo encontrado', { exact: true }).isVisible());
+          check('clear filters becomes visible', await page.getByRole('button', { name: 'Limpar filtros' }).isVisible());
+          await page.getByRole('button', { name: 'Limpar filtros' }).click();
+          check('clear filters restores three', await page.getByText('3 artigos encontrados', { exact: true }).isVisible());
+
+          await page.getByRole('button', { name: 'Gestão Multiempresa' }).click();
+          check('category filter returns multiempresa article', await page.getByText('Gestão multiempresa: como centralizar sem misturar contextos', { exact: true }).isVisible());
+          check('category filter count is one', await page.getByText('1 artigo encontrado', { exact: true }).isVisible());
+          await page.getByRole('button', { name: 'Limpar filtros' }).click();
+
+          const firstArticleLink = page.getByRole('link', { name: /Ler artigo/ }).first();
+          report.navigation.href = await firstArticleLink.getAttribute('href');
+          check('featured article href correct', report.navigation.href === `/blog/${slug}`, report.navigation.href ?? 'null');
+          await firstArticleLink.click();
+          await page.waitForLoadState('networkidle');
+          report.navigation.afterClick = page.url();
+          check('featured article navigation works', page.url() === `${base}/blog/${slug}` || page.url() === `${base}/blog/${slug}/`, page.url());
+          check('article title correct', (await page.locator('h1').textContent()) === articleTitle);
+          check('breadcrumb visible', await page.getByRole('navigation', { name: 'Breadcrumb' }).isVisible());
+          check('article visual present', await page.getByRole('img', { name: /fluxo de caixa empresarial/i }).isVisible());
+          check('desktop article table of contents visible', await page.getByRole('complementary', { name: 'Neste artigo' }).isVisible());
+          check('article has five numbered sections', await page.locator('section[id^="secao-"]').count() === 5, `count=${await page.locator('section[id^="secao-"]').count()}`);
+          check('contextual CTA visible', await page.getByText('Leve essa rotina para um contexto de gestão mais organizado', { exact: true }).isVisible());
+          check('related articles section visible', await page.getByRole('heading', { name: 'Artigos relacionados', exact: true }).isVisible());
+          check('two related article cards visible', await page.locator('section[aria-labelledby="related-title"] article').count() === 2, `count=${await page.locator('section[aria-labelledby="related-title"] article').count()}`);
+          check('article robots noindex', (await page.locator('meta[name="robots"]').getAttribute('content'))?.includes('noindex') === true);
+          check('article canonical correct', (await page.locator('link[rel="canonical"]').getAttribute('href')) === `https://vejamais.com.br/blog/${slug}`);
+          check('BlogPosting JSON-LD present', (await page.locator('script[type="application/ld+json"]').allTextContents()).some((v) => v.includes('BlogPosting')));
+          check('BreadcrumbList JSON-LD present', (await page.locator('script[type="application/ld+json"]').allTextContents()).some((v) => v.includes('BreadcrumbList')));
+          check('no console errors before expected 404', report.consoleErrors.length === 0, report.consoleErrors.join(' | '));
+          await page.screenshot({ path: 'homologation-output/article-desktop.png', fullPage: true });
+
+          report.consoleErrors = [];
+          const notFoundResponse = await page.goto(`${base}/blog/artigo-inexistente`, { waitUntil: 'networkidle' });
+          report.expected404.status = notFoundResponse?.status() ?? null;
+          check('unknown slug returns HTTP 404', notFoundResponse?.status() === 404, String(notFoundResponse?.status() ?? 'null'));
+          check('unknown slug renders editorial 404', await page.getByText('Artigo não encontrado', { exact: true }).isVisible());
+          check('404 keeps branded shell', await page.getByLabel('VEJAMAIS ERP — página inicial').isVisible());
+          await page.screenshot({ path: 'homologation-output/not-found-desktop.png', fullPage: true });
+
+          const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
+          await mobile.goto(`${base}/blog`, { waitUntil: 'networkidle' });
+          check('mobile blog no horizontal overflow', await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), `${await mobile.evaluate(() => document.documentElement.scrollWidth)}px`);
+          check('mobile blog CTA visible', await mobile.getByRole('link', { name: /Conhecer o ERP/ }).isVisible());
+          await mobile.screenshot({ path: 'homologation-output/blog-mobile.png', fullPage: true });
+
+          await mobile.goto(`${base}/blog/${slug}`, { waitUntil: 'networkidle' });
+          check('mobile article no horizontal overflow', await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), `${await mobile.evaluate(() => document.documentElement.scrollWidth)}px`);
+          check('mobile article title correct', (await mobile.locator('h1').textContent()) === articleTitle);
+          check('mobile hides desktop table of contents', await mobile.getByRole('complementary', { name: 'Neste artigo' }).isHidden());
+          check('mobile related articles visible', await mobile.getByRole('heading', { name: 'Artigos relacionados', exact: true }).isVisible());
+          await mobile.screenshot({ path: 'homologation-output/article-mobile.png', fullPage: true });
+
+          fs.writeFileSync('homologation-output/report.json', JSON.stringify(report, null, 2));
+          await browser.close();
+
+          const failed = report.checks.filter((item) => !item.ok);
+          if (failed.length) {
+            console.error(JSON.stringify({ failed, navigation: report.navigation, expected404: report.expected404 }, null, 2));
+            process.exit(1);
+          }
+          EOF
+          node .blog-v2-homologation.mjs
+
+      - name: Upload homologation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blog-editorial-v2-homologation
+          path: homologation-output/
+          retention-days: 14
+
+      - name: Show server log on failure
+        if: failure()
+        run: cat /tmp/blog-v2-homologation.log || true
