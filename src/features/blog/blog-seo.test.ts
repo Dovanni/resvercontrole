@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildBlogPostingJsonLd, buildBlogSitemapXml, blogCanonicalUrl } from "./blog-seo";
+import {
+  BLOG_SITEMAP_URL,
+  buildBlogPostingJsonLd,
+  buildBlogRobotsTxtProposal,
+  buildBlogSitemapXml,
+  blogCanonicalUrl,
+} from "./blog-seo";
 import type { BlogArticle } from "./types";
 
 const article: BlogArticle = {
@@ -29,5 +35,25 @@ describe("Blog public SEO contracts", () => {
     const xml = buildBlogSitemapXml([article]);
     expect(xml).toContain("https://vejamais.com.br/blog/fluxo-de-caixa");
     expect(xml).not.toContain("draft");
+  });
+
+  it("keeps an empty editorial sitemap valid before the first publication", () => {
+    const xml = buildBlogSitemapXml([]);
+    expect(xml).toContain("<urlset");
+    expect(xml).toContain("<loc>https://vejamais.com.br/blog</loc>");
+    expect(xml).not.toContain("/blog/fluxo-de-caixa");
+  });
+
+  it("adds the isolated sitemap to a robots proposal without replacing legacy directives", () => {
+    const existing = "User-agent: *\nDisallow: /legacy-private/\nSitemap: https://vejamais.com.br/sitemap.xml\n";
+    const proposed = buildBlogRobotsTxtProposal(existing);
+    expect(proposed).toContain("Disallow: /legacy-private/");
+    expect(proposed).toContain("Sitemap: https://vejamais.com.br/sitemap.xml");
+    expect(proposed).toContain(`Sitemap: ${BLOG_SITEMAP_URL}`);
+  });
+
+  it("does not duplicate the blog sitemap directive", () => {
+    const existing = `User-agent: *\nSitemap: ${BLOG_SITEMAP_URL}\n`;
+    expect(buildBlogRobotsTxtProposal(existing).match(/sitemap-blog\.xml/g)).toHaveLength(1);
   });
 });
