@@ -2,9 +2,20 @@ import type { BlogArticle } from "./types";
 
 export const BLOG_PUBLIC_ORIGIN = "https://vejamais.com.br";
 export const BLOG_PUBLIC_PATH = "/blog";
+export const BLOG_SITEMAP_PATH = "/sitemap-blog.xml";
+export const BLOG_SITEMAP_URL = `${BLOG_PUBLIC_ORIGIN}${BLOG_SITEMAP_PATH}`;
 
 export function blogCanonicalUrl(slug?: string) {
   return slug ? `${BLOG_PUBLIC_ORIGIN}${BLOG_PUBLIC_PATH}/${encodeURIComponent(slug)}` : `${BLOG_PUBLIC_ORIGIN}${BLOG_PUBLIC_PATH}`;
+}
+
+function escapeXml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
 }
 
 export function buildBlogPostingJsonLd(article: BlogArticle) {
@@ -84,10 +95,29 @@ export function buildPublishedArticleHead(article: BlogArticle) {
   };
 }
 
+/**
+ * This builder receives only the already-filtered published read model.
+ * Draft/review/scheduled content must never be passed to it.
+ */
 export function buildBlogSitemapXml(articles: BlogArticle[]) {
   const urls = [
-    `<url><loc>${blogCanonicalUrl()}</loc></url>`,
-    ...articles.map((article) => `<url><loc>${blogCanonicalUrl(article.slug)}</loc><lastmod>${new Date(article.updatedAt).toISOString()}</lastmod></url>`),
+    `<url><loc>${escapeXml(blogCanonicalUrl())}</loc></url>`,
+    ...articles.map(
+      (article) =>
+        `<url><loc>${escapeXml(blogCanonicalUrl(article.slug))}</loc><lastmod>${escapeXml(new Date(article.updatedAt).toISOString())}</lastmod></url>`,
+    ),
   ];
+
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join("")}</urlset>`;
+}
+
+/**
+ * Proposal only. Do not publish this as /robots.txt until the historical/live
+ * robots contract has been explicitly reconciled. Keeping it here lets the
+ * future change be reviewed without replacing unknown legacy directives.
+ */
+export function buildBlogRobotsTxtProposal(existingRobotsText: string) {
+  const normalized = existingRobotsText.trimEnd();
+  if (normalized.includes(BLOG_SITEMAP_URL)) return `${normalized}\n`;
+  return `${normalized}${normalized ? "\n\n" : ""}Sitemap: ${BLOG_SITEMAP_URL}\n`;
 }
