@@ -8,6 +8,7 @@ export type EditorialCommandKind =
   | "submit_review"
   | "request_changes"
   | "approve_revision"
+  | "return_to_draft"
   | "schedule"
   | "publish"
   | "archive"
@@ -147,12 +148,11 @@ export function availableEditorialCommands(actor: EditorialActor, form: Editoria
   const ownerOrEditor = actor.role === "owner" || actor.role === "editor";
   const authorOwnDraft = actor.role === "author" && form.status === "draft" && form.createdByUserId === actor.userId;
 
-  if ((ownerOrEditor && ["draft", "review"].includes(form.status)) || authorOwnDraft) commands.push("save_draft");
-  if (form.status === "draft" && (ownerOrEditor || authorOwnDraft)) commands.push("submit_review");
+  if (form.status === "draft" && (ownerOrEditor || authorOwnDraft)) commands.push("save_draft", "submit_review");
   if (form.status === "review" && ["owner", "editor", "reviewer"].includes(actor.role)) {
     commands.push("request_changes", "approve_revision");
   }
-  if (form.status === "review" && ownerOrEditor) commands.push("schedule", "publish", "archive");
+  if (form.status === "review" && ownerOrEditor) commands.push("return_to_draft", "schedule", "publish", "archive");
   if (form.status === "scheduled" && ownerOrEditor) commands.push("publish", "archive");
   if (form.status === "published" && ownerOrEditor) commands.push("archive");
   if (form.status === "archived" && ownerOrEditor) commands.push("restore_draft");
@@ -183,7 +183,7 @@ export function planEditorialCommand(
       issues.push(...validateEditorialDraft(form));
       break;
     case "request_changes":
-      toStatus = "draft";
+      toStatus = "review";
       if (form.status !== "review") issues.push(issue("workflow", "BLOG_REVIEW_STATUS_REQUIRED", "Solicitar ajustes exige status de revisão."));
       if (form.createdByUserId === actor.userId) issues.push(issue("workflow", "BLOG_FOUR_EYES_SELF_REVIEW_FORBIDDEN", "Quem criou a revisão não pode revisar a própria revisão."));
       break;
@@ -191,6 +191,10 @@ export function planEditorialCommand(
       toStatus = "review";
       if (form.status !== "review") issues.push(issue("workflow", "BLOG_REVIEW_STATUS_REQUIRED", "Aprovação exige status de revisão."));
       if (form.createdByUserId === actor.userId) issues.push(issue("workflow", "BLOG_FOUR_EYES_SELF_REVIEW_FORBIDDEN", "Quem criou a revisão não pode aprovar a própria revisão."));
+      break;
+    case "return_to_draft":
+      toStatus = "draft";
+      if (form.status !== "review") issues.push(issue("workflow", "BLOG_REVIEW_STATUS_REQUIRED", "Retornar para draft exige status de revisão."));
       break;
     case "schedule":
       toStatus = "scheduled";
@@ -228,16 +232,15 @@ export function planEditorialCommand(
 
 export function simulateEditorialCommand(form: EditorialEditorForm, plan: EditorialCommandPlan): EditorialEditorForm {
   if (!plan.allowedByClientContract) return form;
-  if (plan.command === "approve_revision") {
-    return { ...form, latestReviewDecision: "approved" };
-  }
-  if (plan.command === "request_changes") {
-    return { ...form, status: "draft", latestReviewDecision: "changes_requested", scheduledAt: "" };
+  if (plan.command === "approve_revision") return { ...form, latestReviewDecision: "approved" };
+  if (plan.command === "request_changes") return { ...form, latestReviewDecision: "changes_requested" };
+  if (plan.command === "return_to_draft") {
+    return { ...form, status: "draft", latestReviewDecision: null, latestReviewerUserId: null, scheduledAt: "" };
   }
   return {
     ...form,
     status: plan.toStatus,
-    scheduledAt: plan.toStatus === "scheduled" ? form.scheduledAt : plan.toStatus === "review" ? "" : form.scheduledAt,
+    scheduledAt: plan.toStatus === "review" ? "" : form.scheduledAt,
   };
 }
 
