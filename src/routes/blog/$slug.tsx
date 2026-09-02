@@ -5,11 +5,14 @@ import {
   EditorialArticleCard,
   EditorialVisual,
 } from "@/components/blog/editorial-ui";
-import { BLOG_ARTICLES, getBlogArticleBySlug } from "@/features/blog/articles";
+import {
+  getPreviewBlogArticleBySlug,
+  getRelatedPreviewBlogArticles,
+} from "@/features/blog/blog.repository";
 
 export const Route = createFileRoute("/blog/$slug")({
   loader: ({ params }) => {
-    const article = getBlogArticleBySlug(params.slug);
+    const article = getPreviewBlogArticleBySlug(params.slug);
     if (!article) throw notFound();
     return article;
   },
@@ -75,16 +78,7 @@ function BlogArticlePage() {
     timeZone: "America/Sao_Paulo",
   }).format(new Date(article.publishedAt));
 
-  const relatedArticles = BLOG_ARTICLES.filter((candidate) => candidate.slug !== article.slug)
-    .map((candidate) => ({
-      article: candidate,
-      score:
-        (candidate.category === article.category ? 3 : 0) +
-        candidate.tags.filter((tag) => article.tags.includes(tag)).length,
-    }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 2)
-    .map((item) => item.article);
+  const relatedArticles = getRelatedPreviewBlogArticles(article);
 
   return (
     <BlogShell>
