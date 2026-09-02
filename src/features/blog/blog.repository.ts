@@ -191,6 +191,12 @@ async function countRows(table: string, status?: BlogPostStatus) {
 
 /** Read-only summary for the protected editorial shell. */
 export async function getEditorialDashboardSnapshot(): Promise<EditorialDashboardSnapshot> {
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError || !authData.user) throw authError ?? new Error("BLOG_EDITORIAL_AUTH_REQUIRED");
+
+  const member = await getCurrentEditorialMember(authData.user.id);
+  if (!member) throw new Error("BLOG_EDITORIAL_ACCESS_DENIED");
+
   const [draft, review, scheduled, published, archived, categories, tags, authors] = await Promise.all([
     countRows("blog_posts", "draft"),
     countRows("blog_posts", "review"),
