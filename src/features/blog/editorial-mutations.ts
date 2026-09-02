@@ -73,7 +73,19 @@ export interface StatusMutationPayload {
 }
 
 export function createDraft(actor: EditorialActor, form: EditorialEditorForm): EditorialMutationEnvelope<DraftMutationPayload> {
-  const draftForm = { ...form, status: "draft" as const };
+  // New drafts are planned as being created by the current editorial actor.
+  // This mirrors the database trigger that replaces created_by with auth.uid().
+  const draftForm: EditorialEditorForm = {
+    ...form,
+    id: null,
+    status: "draft",
+    createdByUserId: actor.userId,
+    revisionNumber: 1,
+    latestReviewDecision: null,
+    latestReviewerUserId: null,
+    scheduledAt: "",
+    publishedAt: "",
+  };
   const plan = planEditorialCommand(actor, draftForm, "save_draft");
   return envelope("createDraft", actor, draftForm, plan, draftPayload(draftForm));
 }
