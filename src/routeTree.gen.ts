@@ -9,74 +9,63 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as CadastroRouteImport } from './routes/cadastro'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AtivarContaRouteImport } from './routes/ativar-conta'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedVendasRouteImport } from './routes/_authenticated.vendas'
-import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated.relatorios'
-import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated.produtos'
-import { Route as AuthenticatedMinhaEmpresaRouteImport } from './routes/_authenticated.minha-empresa'
-import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticated.importar'
-import { Route as AuthenticatedFornecedoresRouteImport } from './routes/_authenticated.fornecedores'
-import { Route as AuthenticatedFluxoCaixaRouteImport } from './routes/_authenticated.fluxo-caixa'
-import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated.financeiro'
-import { Route as AuthenticatedDreRouteImport } from './routes/_authenticated.dre'
-import { Route as AuthenticatedDespesasAnuaisRouteImport } from './routes/_authenticated.despesas-anuais'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
-import { Route as AuthenticatedCurvaAbcRouteImport } from './routes/_authenticated.curva-abc'
-import { Route as AuthenticatedControleVendasRouteImport } from './routes/_authenticated.controle-vendas'
-import { Route as AuthenticatedContasReceberRouteImport } from './routes/_authenticated.contas-receber'
-import { Route as AuthenticatedContasPagarRouteImport } from './routes/_authenticated.contas-pagar'
-import { Route as AuthenticatedContasBancariasRouteImport } from './routes/_authenticated.contas-bancarias'
-import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated.configuracoes'
-import { Route as AuthenticatedComprasRouteImport } from './routes/_authenticated.compras'
-import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated.clientes'
-import { Route as AuthenticatedCategoriasRouteImport } from './routes/_authenticated.categorias'
-import { Route as AuthenticatedCartoesCreditoRouteImport } from './routes/_authenticated.cartoes-credito'
-import { Route as AuthenticatedBiRouteImport } from './routes/_authenticated.bi'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
+import { Route as AtivarContaRouteImport } from './routes/ativar-conta'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CadastroRouteImport } from './routes/cadastro'
+import { Route as EditorialRouteImport } from './routes/editorial'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SitemapBlogDotxmlRouteImport } from './routes/sitemap-blog[.]xml'
 import { Route as AuthenticatedBalanceteRouteImport } from './routes/_authenticated.balancete'
+import { Route as AuthenticatedBiRouteImport } from './routes/_authenticated.bi'
+import { Route as AuthenticatedCartoesCreditoRouteImport } from './routes/_authenticated.cartoes-credito'
+import { Route as AuthenticatedCategoriasRouteImport } from './routes/_authenticated.categorias'
+import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated.clientes'
+import { Route as AuthenticatedComprasRouteImport } from './routes/_authenticated.compras'
+import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated.configuracoes'
+import { Route as AuthenticatedContasBancariasRouteImport } from './routes/_authenticated.contas-bancarias'
+import { Route as AuthenticatedContasPagarRouteImport } from './routes/_authenticated.contas-pagar'
+import { Route as AuthenticatedContasReceberRouteImport } from './routes/_authenticated.contas-receber'
+import { Route as AuthenticatedControleVendasRouteImport } from './routes/_authenticated.controle-vendas'
+import { Route as AuthenticatedCurvaAbcRouteImport } from './routes/_authenticated.curva-abc'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated.dashboard'
+import { Route as AuthenticatedDespesasAnuaisRouteImport } from './routes/_authenticated.despesas-anuais'
+import { Route as AuthenticatedDreRouteImport } from './routes/_authenticated.dre'
+import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated.financeiro'
+import { Route as AuthenticatedFluxoCaixaRouteImport } from './routes/_authenticated.fluxo-caixa'
+import { Route as AuthenticatedFornecedoresRouteImport } from './routes/_authenticated.fornecedores'
+import { Route as AuthenticatedImportarRouteImport } from './routes/_authenticated.importar'
+import { Route as AuthenticatedMinhaEmpresaRouteImport } from './routes/_authenticated.minha-empresa'
+import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated.produtos'
+import { Route as AuthenticatedRelatoriosRouteImport } from './routes/_authenticated.relatorios'
+import { Route as AuthenticatedVendasRouteImport } from './routes/_authenticated.vendas'
+import { Route as BlogIndexRouteImport } from './routes/blog/index'
+import { Route as BlogSlugRouteImport } from './routes/blog/$slug'
+import { Route as EditorialEditorRouteImport } from './routes/editorial_.editor'
+import { Route as AuthenticatedConfiguracoesAssinaturaRouteImport } from './routes/_authenticated.configuracoes.assinatura'
+import { Route as AuthenticatedConfiguracoesCategoriasRouteImport } from './routes/_authenticated.configuracoes.categorias'
+import { Route as ApiPublicAcceptInvitationRouteImport } from './routes/api/public/accept-invitation'
+import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
 import { Route as AuthCallbackIndexRouteImport } from './routes/auth/callback/index'
 import { Route as AuthCallbackRecoveryRouteImport } from './routes/auth/callback/recovery'
-import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
-import { Route as ApiPublicAcceptInvitationRouteImport } from './routes/api/public/accept-invitation'
-import { Route as AuthenticatedConfiguracoesCategoriasRouteImport } from './routes/_authenticated.configuracoes.categorias'
-import { Route as AuthenticatedConfiguracoesAssinaturaRouteImport } from './routes/_authenticated.configuracoes.assinatura'
-import { Route as ApiPublicStripeWebhookLiveRouteImport } from './routes/api/public/stripe-webhook/live'
-import { Route as ApiPublicCompanyValidateCnpjRouteImport } from './routes/api/public/company/validate-cnpj'
-import { Route as ApiPublicBillingCreatePortalSessionRouteImport } from './routes/api/public/billing/create-portal-session'
-import { Route as ApiPublicBillingCreateCheckoutV2RouteImport } from './routes/api/public/billing/create-checkout-v2'
-import { Route as ApiPublicBillingCreateCheckoutRouteImport } from './routes/api/public/billing/create-checkout'
-import { Route as ApiPublicBillingContextRouteImport } from './routes/api/public/billing/context'
 import { Route as ApiPublicBillingCheckoutStatusRouteImport } from './routes/api/public/billing/checkout-status'
+import { Route as ApiPublicBillingContextRouteImport } from './routes/api/public/billing/context'
+import { Route as ApiPublicBillingCreateCheckoutRouteImport } from './routes/api/public/billing/create-checkout'
+import { Route as ApiPublicBillingCreateCheckoutV2RouteImport } from './routes/api/public/billing/create-checkout-v2'
+import { Route as ApiPublicBillingCreatePortalSessionRouteImport } from './routes/api/public/billing/create-portal-session'
+import { Route as ApiPublicCompanyValidateCnpjRouteImport } from './routes/api/public/company/validate-cnpj'
+import { Route as ApiPublicStripeWebhookLiveRouteImport } from './routes/api/public/stripe-webhook/live'
 
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
-  id: '/recuperar-senha',
-  path: '/recuperar-senha',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CadastroRoute = CadastroRouteImport.update({
-  id: '/cadastro',
-  path: '/cadastro',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AtivarContaRoute = AtivarContaRouteImport.update({
@@ -84,121 +73,49 @@ const AtivarContaRoute = AtivarContaRouteImport.update({
   path: '/ativar-conta',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const CadastroRoute = CadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedVendasRoute = AuthenticatedVendasRouteImport.update({
-  id: '/vendas',
-  path: '/vendas',
+const EditorialRoute = EditorialRouteImport.update({
+  id: '/editorial',
+  path: '/editorial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecuperarSenhaRoute = RecuperarSenhaRouteImport.update({
+  id: '/recuperar-senha',
+  path: '/recuperar-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapBlogDotxmlRoute = SitemapBlogDotxmlRouteImport.update({
+  id: '/sitemap-blog.xml',
+  path: '/sitemap-blog.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedBalanceteRoute = AuthenticatedBalanceteRouteImport.update({
+  id: '/balancete',
+  path: '/balancete',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
-  id: '/relatorios',
-  path: '/relatorios',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedProdutosRoute = AuthenticatedProdutosRouteImport.update({
-  id: '/produtos',
-  path: '/produtos',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedMinhaEmpresaRoute =
-  AuthenticatedMinhaEmpresaRouteImport.update({
-    id: '/minha-empresa',
-    path: '/minha-empresa',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedImportarRoute = AuthenticatedImportarRouteImport.update({
-  id: '/importar',
-  path: '/importar',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedFornecedoresRoute =
-  AuthenticatedFornecedoresRouteImport.update({
-    id: '/fornecedores',
-    path: '/fornecedores',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedFluxoCaixaRoute = AuthenticatedFluxoCaixaRouteImport.update({
-  id: '/fluxo-caixa',
-  path: '/fluxo-caixa',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
-  id: '/financeiro',
-  path: '/financeiro',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedDreRoute = AuthenticatedDreRouteImport.update({
-  id: '/dre',
-  path: '/dre',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedDespesasAnuaisRoute =
-  AuthenticatedDespesasAnuaisRouteImport.update({
-    id: '/despesas-anuais',
-    path: '/despesas-anuais',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedCurvaAbcRoute = AuthenticatedCurvaAbcRouteImport.update({
-  id: '/curva-abc',
-  path: '/curva-abc',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedControleVendasRoute =
-  AuthenticatedControleVendasRouteImport.update({
-    id: '/controle-vendas',
-    path: '/controle-vendas',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedContasReceberRoute =
-  AuthenticatedContasReceberRouteImport.update({
-    id: '/contas-receber',
-    path: '/contas-receber',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedContasPagarRoute =
-  AuthenticatedContasPagarRouteImport.update({
-    id: '/contas-pagar',
-    path: '/contas-pagar',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedContasBancariasRoute =
-  AuthenticatedContasBancariasRouteImport.update({
-    id: '/contas-bancarias',
-    path: '/contas-bancarias',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedConfiguracoesRoute =
-  AuthenticatedConfiguracoesRouteImport.update({
-    id: '/configuracoes',
-    path: '/configuracoes',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedComprasRoute = AuthenticatedComprasRouteImport.update({
-  id: '/compras',
-  path: '/compras',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
-  id: '/clientes',
-  path: '/clientes',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedCategoriasRoute = AuthenticatedCategoriasRouteImport.update({
-  id: '/categorias',
-  path: '/categorias',
+const AuthenticatedBiRoute = AuthenticatedBiRouteImport.update({
+  id: '/bi',
+  path: '/bi',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedCartoesCreditoRoute =
@@ -207,15 +124,151 @@ const AuthenticatedCartoesCreditoRoute =
     path: '/cartoes-credito',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedBiRoute = AuthenticatedBiRouteImport.update({
-  id: '/bi',
-  path: '/bi',
+const AuthenticatedCategoriasRoute = AuthenticatedCategoriasRouteImport.update({
+  id: '/categorias',
+  path: '/categorias',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedBalanceteRoute = AuthenticatedBalanceteRouteImport.update({
-  id: '/balancete',
-  path: '/balancete',
+const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
+  id: '/clientes',
+  path: '/clientes',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedComprasRoute = AuthenticatedComprasRouteImport.update({
+  id: '/compras',
+  path: '/compras',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedConfiguracoesRoute =
+  AuthenticatedConfiguracoesRouteImport.update({
+    id: '/configuracoes',
+    path: '/configuracoes',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedContasBancariasRoute =
+  AuthenticatedContasBancariasRouteImport.update({
+    id: '/contas-bancarias',
+    path: '/contas-bancarias',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedContasPagarRoute =
+  AuthenticatedContasPagarRouteImport.update({
+    id: '/contas-pagar',
+    path: '/contas-pagar',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedContasReceberRoute =
+  AuthenticatedContasReceberRouteImport.update({
+    id: '/contas-receber',
+    path: '/contas-receber',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedControleVendasRoute =
+  AuthenticatedControleVendasRouteImport.update({
+    id: '/controle-vendas',
+    path: '/controle-vendas',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedCurvaAbcRoute = AuthenticatedCurvaAbcRouteImport.update({
+  id: '/curva-abc',
+  path: '/curva-abc',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDespesasAnuaisRoute =
+  AuthenticatedDespesasAnuaisRouteImport.update({
+    id: '/despesas-anuais',
+    path: '/despesas-anuais',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedDreRoute = AuthenticatedDreRouteImport.update({
+  id: '/dre',
+  path: '/dre',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedFluxoCaixaRoute = AuthenticatedFluxoCaixaRouteImport.update({
+  id: '/fluxo-caixa',
+  path: '/fluxo-caixa',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedFornecedoresRoute =
+  AuthenticatedFornecedoresRouteImport.update({
+    id: '/fornecedores',
+    path: '/fornecedores',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedImportarRoute = AuthenticatedImportarRouteImport.update({
+  id: '/importar',
+  path: '/importar',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedMinhaEmpresaRoute =
+  AuthenticatedMinhaEmpresaRouteImport.update({
+    id: '/minha-empresa',
+    path: '/minha-empresa',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedProdutosRoute = AuthenticatedProdutosRouteImport.update({
+  id: '/produtos',
+  path: '/produtos',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedRelatoriosRoute = AuthenticatedRelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedVendasRoute = AuthenticatedVendasRouteImport.update({
+  id: '/vendas',
+  path: '/vendas',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EditorialEditorRoute = EditorialEditorRouteImport.update({
+  id: '/editorial_/editor',
+  path: '/editorial/editor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedConfiguracoesAssinaturaRoute =
+  AuthenticatedConfiguracoesAssinaturaRouteImport.update({
+    id: '/assinatura',
+    path: '/assinatura',
+    getParentRoute: () => AuthenticatedConfiguracoesRoute,
+  } as any)
+const AuthenticatedConfiguracoesCategoriasRoute =
+  AuthenticatedConfiguracoesCategoriasRouteImport.update({
+    id: '/categorias',
+    path: '/categorias',
+    getParentRoute: () => AuthenticatedConfiguracoesRoute,
+  } as any)
+const ApiPublicAcceptInvitationRoute =
+  ApiPublicAcceptInvitationRouteImport.update({
+    id: '/api/public/accept-invitation',
+    path: '/api/public/accept-invitation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
+  id: '/api/public/stripe-webhook',
+  path: '/api/public/stripe-webhook',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackIndexRoute = AuthCallbackIndexRouteImport.update({
   id: '/callback/',
@@ -227,45 +280,21 @@ const AuthCallbackRecoveryRoute = AuthCallbackRecoveryRouteImport.update({
   path: '/callback/recovery',
   getParentRoute: () => AuthRoute,
 } as any)
-const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
-  id: '/api/public/stripe-webhook',
-  path: '/api/public/stripe-webhook',
+const ApiPublicBillingCheckoutStatusRoute =
+  ApiPublicBillingCheckoutStatusRouteImport.update({
+    id: '/api/public/billing/checkout-status',
+    path: '/api/public/billing/checkout-status',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicBillingContextRoute = ApiPublicBillingContextRouteImport.update({
+  id: '/api/public/billing/context',
+  path: '/api/public/billing/context',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicAcceptInvitationRoute =
-  ApiPublicAcceptInvitationRouteImport.update({
-    id: '/api/public/accept-invitation',
-    path: '/api/public/accept-invitation',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const AuthenticatedConfiguracoesCategoriasRoute =
-  AuthenticatedConfiguracoesCategoriasRouteImport.update({
-    id: '/categorias',
-    path: '/categorias',
-    getParentRoute: () => AuthenticatedConfiguracoesRoute,
-  } as any)
-const AuthenticatedConfiguracoesAssinaturaRoute =
-  AuthenticatedConfiguracoesAssinaturaRouteImport.update({
-    id: '/assinatura',
-    path: '/assinatura',
-    getParentRoute: () => AuthenticatedConfiguracoesRoute,
-  } as any)
-const ApiPublicStripeWebhookLiveRoute =
-  ApiPublicStripeWebhookLiveRouteImport.update({
-    id: '/live',
-    path: '/live',
-    getParentRoute: () => ApiPublicStripeWebhookRoute,
-  } as any)
-const ApiPublicCompanyValidateCnpjRoute =
-  ApiPublicCompanyValidateCnpjRouteImport.update({
-    id: '/api/public/company/validate-cnpj',
-    path: '/api/public/company/validate-cnpj',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicBillingCreatePortalSessionRoute =
-  ApiPublicBillingCreatePortalSessionRouteImport.update({
-    id: '/api/public/billing/create-portal-session',
-    path: '/api/public/billing/create-portal-session',
+const ApiPublicBillingCreateCheckoutRoute =
+  ApiPublicBillingCreateCheckoutRouteImport.update({
+    id: '/api/public/billing/create-checkout',
+    path: '/api/public/billing/create-checkout',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicBillingCreateCheckoutV2Route =
@@ -274,22 +303,23 @@ const ApiPublicBillingCreateCheckoutV2Route =
     path: '/api/public/billing/create-checkout-v2',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicBillingCreateCheckoutRoute =
-  ApiPublicBillingCreateCheckoutRouteImport.update({
-    id: '/api/public/billing/create-checkout',
-    path: '/api/public/billing/create-checkout',
+const ApiPublicBillingCreatePortalSessionRoute =
+  ApiPublicBillingCreatePortalSessionRouteImport.update({
+    id: '/api/public/billing/create-portal-session',
+    path: '/api/public/billing/create-portal-session',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicBillingContextRoute = ApiPublicBillingContextRouteImport.update({
-  id: '/api/public/billing/context',
-  path: '/api/public/billing/context',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicBillingCheckoutStatusRoute =
-  ApiPublicBillingCheckoutStatusRouteImport.update({
-    id: '/api/public/billing/checkout-status',
-    path: '/api/public/billing/checkout-status',
+const ApiPublicCompanyValidateCnpjRoute =
+  ApiPublicCompanyValidateCnpjRouteImport.update({
+    id: '/api/public/company/validate-cnpj',
+    path: '/api/public/company/validate-cnpj',
     getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicStripeWebhookLiveRoute =
+  ApiPublicStripeWebhookLiveRouteImport.update({
+    id: '/live',
+    path: '/live',
+    getParentRoute: () => ApiPublicStripeWebhookRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -297,9 +327,11 @@ export interface FileRoutesByFullPath {
   '/ativar-conta': typeof AtivarContaRoute
   '/auth': typeof AuthRouteWithChildren
   '/cadastro': typeof CadastroRoute
+  '/editorial': typeof EditorialRoute
   '/login': typeof LoginRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap-blog.xml': typeof SitemapBlogDotxmlRoute
   '/balancete': typeof AuthenticatedBalanceteRoute
   '/bi': typeof AuthenticatedBiRoute
   '/cartoes-credito': typeof AuthenticatedCartoesCreditoRoute
@@ -323,6 +355,9 @@ export interface FileRoutesByFullPath {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/vendas': typeof AuthenticatedVendasRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/editorial/editor': typeof EditorialEditorRoute
+  '/blog/': typeof BlogIndexRoute
   '/configuracoes/assinatura': typeof AuthenticatedConfiguracoesAssinaturaRoute
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
@@ -342,9 +377,11 @@ export interface FileRoutesByTo {
   '/ativar-conta': typeof AtivarContaRoute
   '/auth': typeof AuthRouteWithChildren
   '/cadastro': typeof CadastroRoute
+  '/editorial': typeof EditorialRoute
   '/login': typeof LoginRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap-blog.xml': typeof SitemapBlogDotxmlRoute
   '/balancete': typeof AuthenticatedBalanceteRoute
   '/bi': typeof AuthenticatedBiRoute
   '/cartoes-credito': typeof AuthenticatedCartoesCreditoRoute
@@ -368,6 +405,9 @@ export interface FileRoutesByTo {
   '/produtos': typeof AuthenticatedProdutosRoute
   '/relatorios': typeof AuthenticatedRelatoriosRoute
   '/vendas': typeof AuthenticatedVendasRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/editorial/editor': typeof EditorialEditorRoute
+  '/blog': typeof BlogIndexRoute
   '/configuracoes/assinatura': typeof AuthenticatedConfiguracoesAssinaturaRoute
   '/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
@@ -389,9 +429,11 @@ export interface FileRoutesById {
   '/ativar-conta': typeof AtivarContaRoute
   '/auth': typeof AuthRouteWithChildren
   '/cadastro': typeof CadastroRoute
+  '/editorial': typeof EditorialRoute
   '/login': typeof LoginRoute
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap-blog.xml': typeof SitemapBlogDotxmlRoute
   '/_authenticated/balancete': typeof AuthenticatedBalanceteRoute
   '/_authenticated/bi': typeof AuthenticatedBiRoute
   '/_authenticated/cartoes-credito': typeof AuthenticatedCartoesCreditoRoute
@@ -415,6 +457,9 @@ export interface FileRoutesById {
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
   '/_authenticated/relatorios': typeof AuthenticatedRelatoriosRoute
   '/_authenticated/vendas': typeof AuthenticatedVendasRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/editorial_/editor': typeof EditorialEditorRoute
+  '/blog/': typeof BlogIndexRoute
   '/_authenticated/configuracoes/assinatura': typeof AuthenticatedConfiguracoesAssinaturaRoute
   '/_authenticated/configuracoes/categorias': typeof AuthenticatedConfiguracoesCategoriasRoute
   '/api/public/accept-invitation': typeof ApiPublicAcceptInvitationRoute
@@ -436,9 +481,11 @@ export interface FileRouteTypes {
     | '/ativar-conta'
     | '/auth'
     | '/cadastro'
+    | '/editorial'
     | '/login'
     | '/recuperar-senha'
     | '/reset-password'
+    | '/sitemap-blog.xml'
     | '/balancete'
     | '/bi'
     | '/cartoes-credito'
@@ -462,6 +509,9 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/relatorios'
     | '/vendas'
+    | '/blog/$slug'
+    | '/editorial/editor'
+    | '/blog/'
     | '/configuracoes/assinatura'
     | '/configuracoes/categorias'
     | '/api/public/accept-invitation'
@@ -481,9 +531,11 @@ export interface FileRouteTypes {
     | '/ativar-conta'
     | '/auth'
     | '/cadastro'
+    | '/editorial'
     | '/login'
     | '/recuperar-senha'
     | '/reset-password'
+    | '/sitemap-blog.xml'
     | '/balancete'
     | '/bi'
     | '/cartoes-credito'
@@ -507,6 +559,9 @@ export interface FileRouteTypes {
     | '/produtos'
     | '/relatorios'
     | '/vendas'
+    | '/blog/$slug'
+    | '/editorial/editor'
+    | '/blog'
     | '/configuracoes/assinatura'
     | '/configuracoes/categorias'
     | '/api/public/accept-invitation'
@@ -527,9 +582,11 @@ export interface FileRouteTypes {
     | '/ativar-conta'
     | '/auth'
     | '/cadastro'
+    | '/editorial'
     | '/login'
     | '/recuperar-senha'
     | '/reset-password'
+    | '/sitemap-blog.xml'
     | '/_authenticated/balancete'
     | '/_authenticated/bi'
     | '/_authenticated/cartoes-credito'
@@ -553,6 +610,9 @@ export interface FileRouteTypes {
     | '/_authenticated/produtos'
     | '/_authenticated/relatorios'
     | '/_authenticated/vendas'
+    | '/blog/$slug'
+    | '/editorial_/editor'
+    | '/blog/'
     | '/_authenticated/configuracoes/assinatura'
     | '/_authenticated/configuracoes/categorias'
     | '/api/public/accept-invitation'
@@ -574,9 +634,14 @@ export interface RootRouteChildren {
   AtivarContaRoute: typeof AtivarContaRoute
   AuthRoute: typeof AuthRouteWithChildren
   CadastroRoute: typeof CadastroRoute
+  EditorialRoute: typeof EditorialRoute
   LoginRoute: typeof LoginRoute
   RecuperarSenhaRoute: typeof RecuperarSenhaRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SitemapBlogDotxmlRoute: typeof SitemapBlogDotxmlRoute
+  BlogSlugRoute: typeof BlogSlugRoute
+  EditorialEditorRoute: typeof EditorialEditorRoute
+  BlogIndexRoute: typeof BlogIndexRoute
   ApiPublicAcceptInvitationRoute: typeof ApiPublicAcceptInvitationRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRouteWithChildren
   ApiPublicBillingCheckoutStatusRoute: typeof ApiPublicBillingCheckoutStatusRoute
@@ -589,46 +654,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/recuperar-senha': {
-      id: '/recuperar-senha'
-      path: '/recuperar-senha'
-      fullPath: '/recuperar-senha'
-      preLoaderRoute: typeof RecuperarSenhaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cadastro': {
-      id: '/cadastro'
-      path: '/cadastro'
-      fullPath: '/cadastro'
-      preLoaderRoute: typeof CadastroRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ativar-conta': {
-      id: '/ativar-conta'
-      path: '/ativar-conta'
-      fullPath: '/ativar-conta'
-      preLoaderRoute: typeof AtivarContaRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -638,158 +668,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/ativar-conta': {
+      id: '/ativar-conta'
+      path: '/ativar-conta'
+      fullPath: '/ativar-conta'
+      preLoaderRoute: typeof AtivarContaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/vendas': {
-      id: '/_authenticated/vendas'
-      path: '/vendas'
-      fullPath: '/vendas'
-      preLoaderRoute: typeof AuthenticatedVendasRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/relatorios': {
-      id: '/_authenticated/relatorios'
-      path: '/relatorios'
-      fullPath: '/relatorios'
-      preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/cadastro': {
+      id: '/cadastro'
+      path: '/cadastro'
+      fullPath: '/cadastro'
+      preLoaderRoute: typeof CadastroRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/produtos': {
-      id: '/_authenticated/produtos'
-      path: '/produtos'
-      fullPath: '/produtos'
-      preLoaderRoute: typeof AuthenticatedProdutosRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/editorial': {
+      id: '/editorial'
+      path: '/editorial'
+      fullPath: '/editorial'
+      preLoaderRoute: typeof EditorialRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/minha-empresa': {
-      id: '/_authenticated/minha-empresa'
-      path: '/minha-empresa'
-      fullPath: '/minha-empresa'
-      preLoaderRoute: typeof AuthenticatedMinhaEmpresaRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/importar': {
-      id: '/_authenticated/importar'
-      path: '/importar'
-      fullPath: '/importar'
-      preLoaderRoute: typeof AuthenticatedImportarRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/recuperar-senha': {
+      id: '/recuperar-senha'
+      path: '/recuperar-senha'
+      fullPath: '/recuperar-senha'
+      preLoaderRoute: typeof RecuperarSenhaRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/fornecedores': {
-      id: '/_authenticated/fornecedores'
-      path: '/fornecedores'
-      fullPath: '/fornecedores'
-      preLoaderRoute: typeof AuthenticatedFornecedoresRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/fluxo-caixa': {
-      id: '/_authenticated/fluxo-caixa'
-      path: '/fluxo-caixa'
-      fullPath: '/fluxo-caixa'
-      preLoaderRoute: typeof AuthenticatedFluxoCaixaRouteImport
-      parentRoute: typeof AuthenticatedRoute
+    '/sitemap-blog.xml': {
+      id: '/sitemap-blog.xml'
+      path: '/sitemap-blog.xml'
+      fullPath: '/sitemap-blog.xml'
+      preLoaderRoute: typeof SitemapBlogDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/financeiro': {
-      id: '/_authenticated/financeiro'
-      path: '/financeiro'
-      fullPath: '/financeiro'
-      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/dre': {
-      id: '/_authenticated/dre'
-      path: '/dre'
-      fullPath: '/dre'
-      preLoaderRoute: typeof AuthenticatedDreRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/despesas-anuais': {
-      id: '/_authenticated/despesas-anuais'
-      path: '/despesas-anuais'
-      fullPath: '/despesas-anuais'
-      preLoaderRoute: typeof AuthenticatedDespesasAnuaisRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/curva-abc': {
-      id: '/_authenticated/curva-abc'
-      path: '/curva-abc'
-      fullPath: '/curva-abc'
-      preLoaderRoute: typeof AuthenticatedCurvaAbcRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/controle-vendas': {
-      id: '/_authenticated/controle-vendas'
-      path: '/controle-vendas'
-      fullPath: '/controle-vendas'
-      preLoaderRoute: typeof AuthenticatedControleVendasRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/contas-receber': {
-      id: '/_authenticated/contas-receber'
-      path: '/contas-receber'
-      fullPath: '/contas-receber'
-      preLoaderRoute: typeof AuthenticatedContasReceberRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/contas-pagar': {
-      id: '/_authenticated/contas-pagar'
-      path: '/contas-pagar'
-      fullPath: '/contas-pagar'
-      preLoaderRoute: typeof AuthenticatedContasPagarRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/contas-bancarias': {
-      id: '/_authenticated/contas-bancarias'
-      path: '/contas-bancarias'
-      fullPath: '/contas-bancarias'
-      preLoaderRoute: typeof AuthenticatedContasBancariasRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/configuracoes': {
-      id: '/_authenticated/configuracoes'
-      path: '/configuracoes'
-      fullPath: '/configuracoes'
-      preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/compras': {
-      id: '/_authenticated/compras'
-      path: '/compras'
-      fullPath: '/compras'
-      preLoaderRoute: typeof AuthenticatedComprasRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/clientes': {
-      id: '/_authenticated/clientes'
-      path: '/clientes'
-      fullPath: '/clientes'
-      preLoaderRoute: typeof AuthenticatedClientesRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/categorias': {
-      id: '/_authenticated/categorias'
-      path: '/categorias'
-      fullPath: '/categorias'
-      preLoaderRoute: typeof AuthenticatedCategoriasRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/cartoes-credito': {
-      id: '/_authenticated/cartoes-credito'
-      path: '/cartoes-credito'
-      fullPath: '/cartoes-credito'
-      preLoaderRoute: typeof AuthenticatedCartoesCreditoRouteImport
+    '/_authenticated/balancete': {
+      id: '/_authenticated/balancete'
+      path: '/balancete'
+      fullPath: '/balancete'
+      preLoaderRoute: typeof AuthenticatedBalanceteRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/bi': {
@@ -799,12 +738,201 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBiRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/balancete': {
-      id: '/_authenticated/balancete'
-      path: '/balancete'
-      fullPath: '/balancete'
-      preLoaderRoute: typeof AuthenticatedBalanceteRouteImport
+    '/_authenticated/cartoes-credito': {
+      id: '/_authenticated/cartoes-credito'
+      path: '/cartoes-credito'
+      fullPath: '/cartoes-credito'
+      preLoaderRoute: typeof AuthenticatedCartoesCreditoRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/categorias': {
+      id: '/_authenticated/categorias'
+      path: '/categorias'
+      fullPath: '/categorias'
+      preLoaderRoute: typeof AuthenticatedCategoriasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/clientes': {
+      id: '/_authenticated/clientes'
+      path: '/clientes'
+      fullPath: '/clientes'
+      preLoaderRoute: typeof AuthenticatedClientesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/compras': {
+      id: '/_authenticated/compras'
+      path: '/compras'
+      fullPath: '/compras'
+      preLoaderRoute: typeof AuthenticatedComprasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/configuracoes': {
+      id: '/_authenticated/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/contas-bancarias': {
+      id: '/_authenticated/contas-bancarias'
+      path: '/contas-bancarias'
+      fullPath: '/contas-bancarias'
+      preLoaderRoute: typeof AuthenticatedContasBancariasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/contas-pagar': {
+      id: '/_authenticated/contas-pagar'
+      path: '/contas-pagar'
+      fullPath: '/contas-pagar'
+      preLoaderRoute: typeof AuthenticatedContasPagarRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/contas-receber': {
+      id: '/_authenticated/contas-receber'
+      path: '/contas-receber'
+      fullPath: '/contas-receber'
+      preLoaderRoute: typeof AuthenticatedContasReceberRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/controle-vendas': {
+      id: '/_authenticated/controle-vendas'
+      path: '/controle-vendas'
+      fullPath: '/controle-vendas'
+      preLoaderRoute: typeof AuthenticatedControleVendasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/curva-abc': {
+      id: '/_authenticated/curva-abc'
+      path: '/curva-abc'
+      fullPath: '/curva-abc'
+      preLoaderRoute: typeof AuthenticatedCurvaAbcRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/despesas-anuais': {
+      id: '/_authenticated/despesas-anuais'
+      path: '/despesas-anuais'
+      fullPath: '/despesas-anuais'
+      preLoaderRoute: typeof AuthenticatedDespesasAnuaisRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dre': {
+      id: '/_authenticated/dre'
+      path: '/dre'
+      fullPath: '/dre'
+      preLoaderRoute: typeof AuthenticatedDreRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/financeiro': {
+      id: '/_authenticated/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/fluxo-caixa': {
+      id: '/_authenticated/fluxo-caixa'
+      path: '/fluxo-caixa'
+      fullPath: '/fluxo-caixa'
+      preLoaderRoute: typeof AuthenticatedFluxoCaixaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/fornecedores': {
+      id: '/_authenticated/fornecedores'
+      path: '/fornecedores'
+      fullPath: '/fornecedores'
+      preLoaderRoute: typeof AuthenticatedFornecedoresRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/importar': {
+      id: '/_authenticated/importar'
+      path: '/importar'
+      fullPath: '/importar'
+      preLoaderRoute: typeof AuthenticatedImportarRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/minha-empresa': {
+      id: '/_authenticated/minha-empresa'
+      path: '/minha-empresa'
+      fullPath: '/minha-empresa'
+      preLoaderRoute: typeof AuthenticatedMinhaEmpresaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/produtos': {
+      id: '/_authenticated/produtos'
+      path: '/produtos'
+      fullPath: '/produtos'
+      preLoaderRoute: typeof AuthenticatedProdutosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/relatorios': {
+      id: '/_authenticated/relatorios'
+      path: '/relatorios'
+      fullPath: '/relatorios'
+      preLoaderRoute: typeof AuthenticatedRelatoriosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/vendas': {
+      id: '/_authenticated/vendas'
+      path: '/vendas'
+      fullPath: '/vendas'
+      preLoaderRoute: typeof AuthenticatedVendasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/editorial_/editor': {
+      id: '/editorial_/editor'
+      path: '/editorial/editor'
+      fullPath: '/editorial/editor'
+      preLoaderRoute: typeof EditorialEditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/configuracoes/assinatura': {
+      id: '/_authenticated/configuracoes/assinatura'
+      path: '/assinatura'
+      fullPath: '/configuracoes/assinatura'
+      preLoaderRoute: typeof AuthenticatedConfiguracoesAssinaturaRouteImport
+      parentRoute: typeof AuthenticatedConfiguracoesRoute
+    }
+    '/_authenticated/configuracoes/categorias': {
+      id: '/_authenticated/configuracoes/categorias'
+      path: '/categorias'
+      fullPath: '/configuracoes/categorias'
+      preLoaderRoute: typeof AuthenticatedConfiguracoesCategoriasRouteImport
+      parentRoute: typeof AuthenticatedConfiguracoesRoute
+    }
+    '/api/public/accept-invitation': {
+      id: '/api/public/accept-invitation'
+      path: '/api/public/accept-invitation'
+      fullPath: '/api/public/accept-invitation'
+      preLoaderRoute: typeof ApiPublicAcceptInvitationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/stripe-webhook': {
+      id: '/api/public/stripe-webhook'
+      path: '/api/public/stripe-webhook'
+      fullPath: '/api/public/stripe-webhook'
+      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/auth/callback/': {
       id: '/auth/callback/'
@@ -820,67 +948,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRecoveryRouteImport
       parentRoute: typeof AuthRoute
     }
-    '/api/public/stripe-webhook': {
-      id: '/api/public/stripe-webhook'
-      path: '/api/public/stripe-webhook'
-      fullPath: '/api/public/stripe-webhook'
-      preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/accept-invitation': {
-      id: '/api/public/accept-invitation'
-      path: '/api/public/accept-invitation'
-      fullPath: '/api/public/accept-invitation'
-      preLoaderRoute: typeof ApiPublicAcceptInvitationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/configuracoes/categorias': {
-      id: '/_authenticated/configuracoes/categorias'
-      path: '/categorias'
-      fullPath: '/configuracoes/categorias'
-      preLoaderRoute: typeof AuthenticatedConfiguracoesCategoriasRouteImport
-      parentRoute: typeof AuthenticatedConfiguracoesRoute
-    }
-    '/_authenticated/configuracoes/assinatura': {
-      id: '/_authenticated/configuracoes/assinatura'
-      path: '/assinatura'
-      fullPath: '/configuracoes/assinatura'
-      preLoaderRoute: typeof AuthenticatedConfiguracoesAssinaturaRouteImport
-      parentRoute: typeof AuthenticatedConfiguracoesRoute
-    }
-    '/api/public/stripe-webhook/live': {
-      id: '/api/public/stripe-webhook/live'
-      path: '/live'
-      fullPath: '/api/public/stripe-webhook/live'
-      preLoaderRoute: typeof ApiPublicStripeWebhookLiveRouteImport
-      parentRoute: typeof ApiPublicStripeWebhookRoute
-    }
-    '/api/public/company/validate-cnpj': {
-      id: '/api/public/company/validate-cnpj'
-      path: '/api/public/company/validate-cnpj'
-      fullPath: '/api/public/company/validate-cnpj'
-      preLoaderRoute: typeof ApiPublicCompanyValidateCnpjRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/billing/create-portal-session': {
-      id: '/api/public/billing/create-portal-session'
-      path: '/api/public/billing/create-portal-session'
-      fullPath: '/api/public/billing/create-portal-session'
-      preLoaderRoute: typeof ApiPublicBillingCreatePortalSessionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/billing/create-checkout-v2': {
-      id: '/api/public/billing/create-checkout-v2'
-      path: '/api/public/billing/create-checkout-v2'
-      fullPath: '/api/public/billing/create-checkout-v2'
-      preLoaderRoute: typeof ApiPublicBillingCreateCheckoutV2RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/billing/create-checkout': {
-      id: '/api/public/billing/create-checkout'
-      path: '/api/public/billing/create-checkout'
-      fullPath: '/api/public/billing/create-checkout'
-      preLoaderRoute: typeof ApiPublicBillingCreateCheckoutRouteImport
+    '/api/public/billing/checkout-status': {
+      id: '/api/public/billing/checkout-status'
+      path: '/api/public/billing/checkout-status'
+      fullPath: '/api/public/billing/checkout-status'
+      preLoaderRoute: typeof ApiPublicBillingCheckoutStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/billing/context': {
@@ -890,12 +962,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicBillingContextRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/billing/checkout-status': {
-      id: '/api/public/billing/checkout-status'
-      path: '/api/public/billing/checkout-status'
-      fullPath: '/api/public/billing/checkout-status'
-      preLoaderRoute: typeof ApiPublicBillingCheckoutStatusRouteImport
+    '/api/public/billing/create-checkout': {
+      id: '/api/public/billing/create-checkout'
+      path: '/api/public/billing/create-checkout'
+      fullPath: '/api/public/billing/create-checkout'
+      preLoaderRoute: typeof ApiPublicBillingCreateCheckoutRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/public/billing/create-checkout-v2': {
+      id: '/api/public/billing/create-checkout-v2'
+      path: '/api/public/billing/create-checkout-v2'
+      fullPath: '/api/public/billing/create-checkout-v2'
+      preLoaderRoute: typeof ApiPublicBillingCreateCheckoutV2RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/billing/create-portal-session': {
+      id: '/api/public/billing/create-portal-session'
+      path: '/api/public/billing/create-portal-session'
+      fullPath: '/api/public/billing/create-portal-session'
+      preLoaderRoute: typeof ApiPublicBillingCreatePortalSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/company/validate-cnpj': {
+      id: '/api/public/company/validate-cnpj'
+      path: '/api/public/company/validate-cnpj'
+      fullPath: '/api/public/company/validate-cnpj'
+      preLoaderRoute: typeof ApiPublicCompanyValidateCnpjRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/stripe-webhook/live': {
+      id: '/api/public/stripe-webhook/live'
+      path: '/live'
+      fullPath: '/api/public/stripe-webhook/live'
+      preLoaderRoute: typeof ApiPublicStripeWebhookLiveRouteImport
+      parentRoute: typeof ApiPublicStripeWebhookRoute
     }
   }
 }
@@ -1006,9 +1106,14 @@ const rootRouteChildren: RootRouteChildren = {
   AtivarContaRoute: AtivarContaRoute,
   AuthRoute: AuthRouteWithChildren,
   CadastroRoute: CadastroRoute,
+  EditorialRoute: EditorialRoute,
   LoginRoute: LoginRoute,
   RecuperarSenhaRoute: RecuperarSenhaRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SitemapBlogDotxmlRoute: SitemapBlogDotxmlRoute,
+  BlogSlugRoute: BlogSlugRoute,
+  EditorialEditorRoute: EditorialEditorRoute,
+  BlogIndexRoute: BlogIndexRoute,
   ApiPublicAcceptInvitationRoute: ApiPublicAcceptInvitationRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRouteWithChildren,
   ApiPublicBillingCheckoutStatusRoute: ApiPublicBillingCheckoutStatusRoute,
