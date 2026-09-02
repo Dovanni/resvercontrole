@@ -6,6 +6,13 @@ import {
   listPreviewBlogArticles,
   mapPublishedBlogPost,
 } from "./blog.repository";
+import {
+  articleToEditorialForm,
+  availableEditorialCommands,
+  planEditorialCommand,
+  simulateEditorialCommand,
+  validateEditorialPublishingRequirements,
+} from "./editorial-workflow";
 
 describe("Blog Editorial V2 repository-only contracts", () => {
   it("keeps the initial preview content local and available through the repository", () => {
@@ -123,5 +130,95 @@ describe("Blog Editorial V2 repository-only contracts", () => {
         featured_image_alt: null,
       }),
     ).toThrow("BLOG_REPOSITORY_EXPECTED_PUBLISHED_POST");
+  });
+});
+
+describe("Fase 3-M repository-only editorial workflow", () => {
+  const author = { userId: "author-user", role: "author" as const, authorId: "author-profile" };
+  const editor = { userId: "editor-user", role: "editor" as const, authorId: null };
+  const reviewer = { userId: "reviewer-user", role: "reviewer" as const, authorId: null };
+
+  function draft(createdByUserId = author.userId) {
+    return { ...articleToEditorialForm(listPreviewBlogArticles()[0]), createdByUserId };
+  }
+
+  it("keeps every command explicitly non-persistent", () => {
+    const plan = planEditorialCommand(author, draft(), "submit_review");
+    expect(plan.allowedByClientContract).toBe(true);
+    expect(plan.persistence).toBe("disabled_repository_only");
+    expect(plan.note).toContain("Nenhuma mutação Supabase");
+  });
+
+  it("allows an author to edit and submit only the author's own draft", () => {
+    expect(availableEditorialCommands(author, draft())).toContain("submit_review");
+    expect(availableEditorialCommands(author, draft("other-user"))).not.toContain("submit_review");
+  });
+
+  it("simulates draft to review without mutating the original form", () => {
+    const original = draft();
+    const plan = planEditorialCommand(author, original, "submit_review");
+    const next = simulateEditorialCommand(original, plan);
+
+    expect(original.status).toBe("draft");
+    expect(next.status).toBe("review");
+    expect(next).not.toBe(original);
+  });
+
+  it("enforces four-eyes review in the client contract", () => {
+    const review = { ...draft(reviewer.userId), status: "review" as const };
+    const plan = planEditorialCommand(reviewer, review, "approve_revision");
+
+    expect(plan.allowedByClientContract).toBe(false);
+    expect(plan.issues.some((current) => current.code === "BLOG_FOUR_EYES_SELF_REVIEW_FORBIDDEN")).toBe(true);
+  });
+
+  it("requires current approval before schedule or publish", () => {
+    const review = { ...draft(), status: "review" as const };
+    const plan = planEditorialCommand(editor, review, "publish");
+
+    expect(plan.allowedByClientContract).toBe(false);
+    expect(plan.issues.some((current) => current.code === "BLOG_CURRENT_REVISION_REQUIRES_APPROVAL")).toBe(true);
+  });
+
+  it("requires a future timestamp for scheduling", () => {
+    const review = {
+      ...draft(),
+      status: "review" as const,
+      latestReviewDecision: "approved" as const,
+      latestReviewerUserId: reviewer.userId,
+      scheduledAt: "2026-09-02T12:00:00-03:00",
+    };
+    const plan = planEditorialCommand(editor, review, "schedule", new Date("2026-09-02T15:00:00-03:00"));
+
+    expect(plan.allowedByClientContract).toBe(false);
+    expect(plan.issues.some((current) => current.code === "BLOG_SCHEDULE_MUST_BE_FUTURE")).toBe(true);
+  });
+
+  it("mirrors publishing requirements before a publish simulation", () => {
+    const incomplete = {
+      ...draft(),
+      status: "review" as const,
+      category: "",
+      author: "",
+      metaTitle: "",
+      metaDescription: "",
+      sections: [],
+    };
+
+    const codes = validateEditorialPublishingRequirements(incomplete).map((current) => current.code);
+    expect(codes).toContain("BLOG_CATEGORY_REQUIRED");
+    expect(codes).toContain("BLOG_AUTHOR_REQUIRED");
+    expect(codes).toContain("BLOG_META_TITLE_REQUIRED");
+    expect(codes).toContain("BLOG_META_DESCRIPTION_REQUIRED");
+    expect(codes).toContain("BLOG_CONTENT_REQUIRED");
+  });
+
+  it("allows owner/editor archive and restore transitions while authors cannot", () => {
+    const published = { ...draft(), status: "published" as const };
+    const archived = { ...draft(), status: "archived" as const };
+
+    expect(availableEditorialCommands(editor, published)).toContain("archive");
+    expect(availableEditorialCommands(editor, archived)).toContain("restore_draft");
+    expect(availableEditorialCommands(author, published)).not.toContain("archive");
   });
 });
