@@ -53,16 +53,19 @@ jobs:
       - name: Run browser audit
         run: |
           mkdir -p audit-output
+          cp src/routeTree.gen.ts audit-output/routeTree.generated.ts || true
           cat > .blog-audit.mjs <<'EOF'
           import { chromium } from 'playwright';
           import fs from 'node:fs';
 
           const base = 'http://127.0.0.1:4173';
+          const expectedSlug = 'como-organizar-fluxo-de-caixa-ecommerce';
           const expectedArticle = 'Como organizar o fluxo de caixa do seu e-commerce';
-          const report = { checks: [], consoleErrors: [] };
+          const expectedArticleUrl = `${base}/blog/${expectedSlug}`;
+          const report = { checks: [], consoleErrors: [], navigation: {} };
           const check = (name, ok, detail = '') => {
-            report.checks.push({ name, ok, detail });
-            if (!ok) throw new Error(`${name}: ${detail}`);
+            report.checks.push({ name, ok: Boolean(ok), detail: String(detail ?? '') });
+            return Boolean(ok);
           };
 
           const browser = await chromium.launch({ headless: true });
@@ -90,11 +93,26 @@ jobs:
           check('category filter returns one article', await page.locator('article').count() === 1, `count=${await page.locator('article').count()}`);
           await page.getByRole('button', { name: 'Todas' }).click();
 
-          await page.getByRole('link', { name: 'Ler artigo' }).first().click();
-          await page.waitForLoadState('networkidle');
-          check('article route loads', (await page.locator('h1').textContent()) === expectedArticle, await page.locator('h1').textContent() ?? '');
+          const firstLink = page.getByRole('link', { name: 'Ler artigo' }).first();
+          const href = await firstLink.getAttribute('href');
+          report.navigation.href = href;
+          report.navigation.beforeClick = page.url();
+          check('article link href is canonical local path', href === `/blog/${expectedSlug}`, href ?? 'null');
+          await firstLink.click();
+          await page.waitForTimeout(800);
+          report.navigation.afterClick = page.url();
+          const clickNavigated = page.url() === expectedArticleUrl || page.url() === `${expectedArticleUrl}/`;
+          check('article click navigates', clickNavigated, page.url());
+
+          if (!clickNavigated) {
+            await page.goto(expectedArticleUrl, { waitUntil: 'networkidle' });
+          } else {
+            await page.waitForLoadState('networkidle');
+          }
+
+          check('article route loads directly', (await page.locator('h1').textContent()) === expectedArticle, await page.locator('h1').textContent() ?? '');
           check('breadcrumb visible', await page.getByRole('navigation', { name: 'Breadcrumb' }).isVisible());
-          check('article canonical correct', (await page.locator('link[rel="canonical"]').getAttribute('href')) === 'https://vejamais.com.br/blog/como-organizar-fluxo-de-caixa-ecommerce');
+          check('article canonical correct', (await page.locator('link[rel="canonical"]').getAttribute('href')) === `https://vejamais.com.br/blog/${expectedSlug}`);
           check('article robots noindex present', (await page.locator('meta[name="robots"]').getAttribute('content'))?.includes('noindex') === true);
           check('BlogPosting JSON-LD present', (await page.locator('script[type="application/ld+json"]').allTextContents()).some(v => v.includes('BlogPosting')));
           check('BreadcrumbList JSON-LD present', (await page.locator('script[type="application/ld+json"]').allTextContents()).some(v => v.includes('BreadcrumbList')));
@@ -103,19 +121,26 @@ jobs:
 
           await page.goto(`${base}/blog/artigo-inexistente`, { waitUntil: 'networkidle' });
           check('unknown slug shows not found state', await page.getByText('Artigo não encontrado').isVisible());
+          await page.screenshot({ path: 'audit-output/not-found-desktop.png', fullPage: true });
 
           const mobile = await browser.newPage({ viewport: { width: 390, height: 844 } });
           await mobile.goto(`${base}/blog`, { waitUntil: 'networkidle' });
           check('mobile blog has no horizontal overflow', await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), `${await mobile.evaluate(() => document.documentElement.scrollWidth)}px`);
           await mobile.screenshot({ path: 'audit-output/blog-mobile.png', fullPage: true });
-          await mobile.getByRole('link', { name: 'Ler artigo' }).first().click();
-          await mobile.waitForLoadState('networkidle');
+          await mobile.goto(expectedArticleUrl, { waitUntil: 'networkidle' });
           check('mobile article has no horizontal overflow', await mobile.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), `${await mobile.evaluate(() => document.documentElement.scrollWidth)}px`);
+          check('mobile article route loads', (await mobile.locator('h1').textContent()) === expectedArticle, await mobile.locator('h1').textContent() ?? '');
           await mobile.screenshot({ path: 'audit-output/article-mobile.png', fullPage: true });
 
           check('no browser console errors', report.consoleErrors.length === 0, report.consoleErrors.join(' | '));
           fs.writeFileSync('audit-output/report.json', JSON.stringify(report, null, 2));
           await browser.close();
+
+          const failed = report.checks.filter(item => !item.ok);
+          if (failed.length) {
+            console.error(JSON.stringify({ failed, navigation: report.navigation, consoleErrors: report.consoleErrors }, null, 2));
+            process.exit(1);
+          }
           EOF
           node .blog-audit.mjs
 
