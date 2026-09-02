@@ -6,7 +6,9 @@ import {
   EditorialArticleCard,
   SearchField,
 } from "@/components/blog/editorial-ui";
-import { BLOG_ARTICLES } from "@/features/blog/articles";
+import { listPreviewBlogArticles } from "@/features/blog/blog.repository";
+
+const PREVIEW_ARTICLES = listPreviewBlogArticles();
 
 export const Route = createFileRoute("/blog/")({
   head: () => ({
@@ -38,13 +40,13 @@ function BlogIndexPage() {
   const [category, setCategory] = useState("Todas");
 
   const categories = useMemo(
-    () => ["Todas", ...Array.from(new Set(BLOG_ARTICLES.map((article) => article.category)))],
+    () => ["Todas", ...Array.from(new Set(PREVIEW_ARTICLES.map((article) => article.category)))],
     [],
   );
 
   const filteredArticles = useMemo(() => {
     const normalizedSearch = search.trim().toLocaleLowerCase("pt-BR");
-    return BLOG_ARTICLES.filter((article) => {
+    return PREVIEW_ARTICLES.filter((article) => {
       const matchesCategory = category === "Todas" || article.category === category;
       const matchesSearch =
         !normalizedSearch ||
