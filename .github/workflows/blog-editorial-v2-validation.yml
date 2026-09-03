@@ -1,0 +1,38 @@
+name: Blog Editorial V2 Validation
+
+on:
+  push:
+    branches:
+      - feature/blog-editorial-v2
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-blog-v2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run Blog Editorial V2 contract tests
+        run: npx vitest run src/features/blog/*.test.ts
+
+      - name: Build application
+        run: npm run build
+
+      - name: Verify generated route tree is synchronized
+        run: git diff --exit-code -- src/routeTree.gen.ts
