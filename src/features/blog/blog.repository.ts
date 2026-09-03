@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { blogSupabase } from "./blog-supabase.client";
 import { BLOG_ARTICLES } from "./articles";
 import type { BlogArticle, BlogArticleSection, BlogPostStatus } from "./types";
 
@@ -79,7 +79,7 @@ function normalizeSections(content: unknown): BlogArticleSection[] {
 
 function publicStorageUrl(path: string | null) {
   if (!path) return undefined;
-  return supabase.storage.from("blog-media").getPublicUrl(path).data.publicUrl;
+  return blogSupabase.storage.from("blog-media").getPublicUrl(path).data.publicUrl;
 }
 
 export function mapPublishedBlogPost(row: BlogPostRow): BlogArticle {
@@ -142,7 +142,7 @@ export function getRelatedPreviewBlogArticles(article: BlogArticle, limit = 2) {
 
 /** Public reader: RLS independently enforces status/published_at visibility. */
 export async function listPublishedBlogArticles(): Promise<BlogArticle[]> {
-  const { data, error } = await supabase
+  const { data, error } = await blogSupabase
     .from("blog_posts" as any)
     .select(BLOG_POST_SELECT)
     .eq("status", "published")
@@ -154,7 +154,7 @@ export async function listPublishedBlogArticles(): Promise<BlogArticle[]> {
 }
 
 export async function getPublishedBlogArticleBySlug(slug: string): Promise<BlogArticle | undefined> {
-  const { data, error } = await supabase
+  const { data, error } = await blogSupabase
     .from("blog_posts" as any)
     .select(BLOG_POST_SELECT)
     .eq("slug", slug)
@@ -167,7 +167,7 @@ export async function getPublishedBlogArticleBySlug(slug: string): Promise<BlogA
 }
 
 export async function getCurrentEditorialMember(userId: string): Promise<EditorialMember | null> {
-  const { data, error } = await supabase
+  const { data, error } = await blogSupabase
     .from("blog_editorial_members" as any)
     .select("user_id, role, author_id, active")
     .eq("user_id", userId)
@@ -182,7 +182,7 @@ export async function getCurrentEditorialMember(userId: string): Promise<Editori
 }
 
 async function countRows(table: string, status?: BlogPostStatus) {
-  let query = supabase.from(table as any).select("*", { count: "exact", head: true });
+  let query = blogSupabase.from(table as any).select("*", { count: "exact", head: true });
   if (status) query = query.eq("status", status);
   const { count, error } = await query;
   if (error) throw error;
@@ -191,7 +191,7 @@ async function countRows(table: string, status?: BlogPostStatus) {
 
 /** Read-only summary for the protected editorial shell. */
 export async function getEditorialDashboardSnapshot(): Promise<EditorialDashboardSnapshot> {
-  const { data: authData, error: authError } = await supabase.auth.getUser();
+  const { data: authData, error: authError } = await blogSupabase.auth.getUser();
   if (authError || !authData.user) throw authError ?? new Error("BLOG_EDITORIAL_AUTH_REQUIRED");
 
   const member = await getCurrentEditorialMember(authData.user.id);
