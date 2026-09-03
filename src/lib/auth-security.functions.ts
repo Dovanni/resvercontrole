@@ -314,8 +314,8 @@ export const secureSignIn = createServerFn({ method: "POST" })
         throw new Error("Verificação de segurança falhou. Por favor, tente novamente.");
       }
       
-      // 3. Rate Limit (Login: 5 tentativas, inicial 15min - Progressivo)
-      const loginPolicy = { limit: 5, cooldowns: [15, 30, 60], windowMs: 60 * 60 * 1000 };
+      // 3. Rate Limit (Login: 5 tentativas, inicial 2min - Progressivo)
+      const loginPolicy = { limit: 5, cooldowns: [2, 30, 60], windowMs: 60 * 60 * 1000 };
       const rateLimit = await recordRateLimitFailure('login', data.email, loginPolicy);
       
       if (rateLimit.isBlocked) {
