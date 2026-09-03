@@ -6,7 +6,7 @@ import { getCurrentEditorialMember, type EditorialMember } from "@/features/blog
 import { listRealEditorialEditorOptions, loadRealEditorialEditorForm, type EditorialEditorPostOption } from "@/features/blog/editorial-editor-read-model";
 import { availableEditorialCommands, canEditEditorialDraft, planEditorialCommand, type EditorialCommandKind, type EditorialCommandPlan, type EditorialEditorForm } from "@/features/blog/editorial-workflow";
 
-export const Route = createFileRoute("/editorial/editor")({
+export const Route = createFileRoute("/editorial_/editor")({
   head: () => ({ meta: [
     { title: "Editor Editorial — Read Model | VEJAMAIS ERP" },
     { name: "description", content: "Editor repository-only conectado ao read model real." },
