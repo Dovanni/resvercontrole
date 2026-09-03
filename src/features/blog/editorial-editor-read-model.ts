@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { blogSupabase } from "./blog-supabase.client";
 import type { EditorialEditorForm, EditorialReviewDecision } from "./editorial-workflow";
 import { requireEditorialReadAccess } from "./editorial-read-model";
 
@@ -30,7 +30,7 @@ function sections(content: unknown) {
 
 export async function listRealEditorialEditorOptions(): Promise<EditorialEditorPostOption[]> {
   await requireEditorialReadAccess();
-  const { data, error } = await supabase.from("blog_posts" as any).select("id,title,status,revision_number").order("updated_at", { ascending: false });
+  const { data, error } = await blogSupabase.from("blog_posts" as any).select("id,title,status,revision_number").order("updated_at", { ascending: false });
   if (error) throw error;
   return ((data ?? []) as any[]).map((row) => ({ id: row.id, title: row.title, status: row.status, revisionNumber: row.revision_number }));
 }
@@ -38,8 +38,8 @@ export async function listRealEditorialEditorOptions(): Promise<EditorialEditorP
 export async function loadRealEditorialEditorForm(postId: string): Promise<EditorialEditorForm | null> {
   await requireEditorialReadAccess();
   const [{ data, error }, reviewResult] = await Promise.all([
-    supabase.from("blog_posts" as any).select(FULL_POST_SELECT).eq("id", postId).maybeSingle(),
-    supabase.from("blog_post_reviews" as any).select("decision,reviewer_user_id").eq("post_id", postId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    blogSupabase.from("blog_posts" as any).select(FULL_POST_SELECT).eq("id", postId).maybeSingle(),
+    blogSupabase.from("blog_post_reviews" as any).select("decision,reviewer_user_id").eq("post_id", postId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
   ]);
   if (error) throw error;
   if (reviewResult.error) throw reviewResult.error;
