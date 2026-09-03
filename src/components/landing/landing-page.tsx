@@ -93,6 +93,12 @@ function Header() {
                 {n.label}
               </a>
             ))}
+            <Link
+              to="/blog"
+              className="rounded-md px-1 py-2 text-[13px] xl:text-sm text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
+            >
+              Blog
+            </Link>
           </nav>
         </div>
         <div className="hidden lg:flex shrink-0 items-center gap-7 xl:gap-10">
@@ -132,6 +138,13 @@ function Header() {
                 {n.label}
               </a>
             ))}
+            <Link
+              to="/blog"
+              onClick={() => setOpen(false)}
+              className="rounded-md px-3 py-3 text-sm text-foreground hover:bg-secondary"
+            >
+              Blog
+            </Link>
             <div className="mt-2 grid gap-2">
               <Link to="/login" onClick={() => setOpen(false)}>
                 <Button variant="outline" className="w-full">{HERO.existingClientCta}</Button>
@@ -792,6 +805,7 @@ function Footer() {
           <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
             <li><Link to="/login" className="hover:text-foreground">Entrar</Link></li>
             <li><Link to="/cadastro" className="hover:text-foreground">Cadastrar</Link></li>
+            <li><Link to="/blog" className="hover:text-foreground">Blog</Link></li>
             <li><a href="#recursos" className="hover:text-foreground">Recursos</a></li>
             <li><a href="#planos" className="hover:text-foreground">Planos</a></li>
             <li><a href="#seguranca" className="hover:text-foreground">Segurança</a></li>
