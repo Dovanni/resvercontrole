@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validate-blog-v2:
@@ -16,49 +16,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Materialize Gate Y-2 Blog navigation
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path('src/components/landing/landing-page.tsx')
-          text = path.read_text()
-
-          desktop_old = '''            ))}\n          </nav>\n        </div>\n        <div className="hidden lg:flex shrink-0 items-center gap-7 xl:gap-10">'''
-          desktop_new = '''            ))}\n            <Link\n              to="/blog"\n              className="rounded-md px-1 py-2 text-[13px] xl:text-sm text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"\n            >\n              Blog\n            </Link>\n          </nav>\n        </div>\n        <div className="hidden lg:flex shrink-0 items-center gap-7 xl:gap-10">'''
-
-          mobile_old = '''            ))}\n            <div className="mt-2 grid gap-2">'''
-          mobile_new = '''            ))}\n            <Link\n              to="/blog"\n              onClick={() => setOpen(false)}\n              className="rounded-md px-3 py-3 text-sm text-foreground hover:bg-secondary"\n            >\n              Blog\n            </Link>\n            <div className="mt-2 grid gap-2">'''
-
-          footer_old = '''            <li><Link to="/cadastro" className="hover:text-foreground">Cadastrar</Link></li>\n            <li><a href="#recursos" className="hover:text-foreground">Recursos</a></li>'''
-          footer_new = '''            <li><Link to="/cadastro" className="hover:text-foreground">Cadastrar</Link></li>\n            <li><Link to="/blog" className="hover:text-foreground">Blog</Link></li>\n            <li><a href="#recursos" className="hover:text-foreground">Recursos</a></li>'''
-
-          if 'to="/blog"' not in text:
-              for old, new, label in [
-                  (desktop_old, desktop_new, 'desktop'),
-                  (mobile_old, mobile_new, 'mobile'),
-                  (footer_old, footer_new, 'footer'),
-              ]:
-                  count = text.count(old)
-                  if count != 1:
-                      raise SystemExit(f'{label}: expected exactly 1 match, found {count}')
-                  text = text.replace(old, new, 1)
-              path.write_text(text)
-
-          final = path.read_text()
-          if final.count('to="/blog"') != 3:
-              raise SystemExit(f'expected exactly 3 internal Blog links, found {final.count(chr(116)+chr(111)+chr(61)+chr(34)+chr(47)+chr(98)+chr(108)+chr(111)+chr(103)+chr(34))}')
-          PY
-
-          if ! git diff --quiet -- src/components/landing/landing-page.tsx; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add src/components/landing/landing-page.tsx
-            git commit -m "feat(landing): add Blog navigation entry"
-            git push origin HEAD:feature/blog-editorial-v2
-          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
