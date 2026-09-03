@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { blogSupabase } from "./blog-supabase.client";
 import type { BlogPostStatus } from "./types";
 import type { EditorialMember, EditorialRole } from "./blog.repository";
 import type {
@@ -86,10 +86,10 @@ function firstRelation<T>(value: T | T[] | null | undefined): T | undefined {
 }
 
 export async function requireEditorialReadAccess(): Promise<EditorialMember> {
-  const { data: authData, error: authError } = await supabase.auth.getUser();
+  const { data: authData, error: authError } = await blogSupabase.auth.getUser();
   if (authError || !authData.user) throw authError ?? new Error("BLOG_EDITORIAL_AUTH_REQUIRED");
 
-  const { data, error } = await supabase
+  const { data, error } = await blogSupabase
     .from("blog_editorial_members" as any)
     .select("user_id,role,author_id,active")
     .eq("user_id", authData.user.id)
@@ -106,9 +106,9 @@ export async function loadEditorialReferenceCatalog(): Promise<EditorialReferenc
   const member = await requireEditorialReadAccess();
   void member;
   const [categoriesResult, authorsResult, tagsResult] = await Promise.all([
-    supabase.from("blog_categories" as any).select("id,slug,name,is_active").order("sort_order").order("name"),
-    supabase.from("blog_authors" as any).select("id,slug,display_name,is_active").order("display_name"),
-    supabase.from("blog_tags" as any).select("id,slug,name,is_active").order("name"),
+    blogSupabase.from("blog_categories" as any).select("id,slug,name,is_active").order("sort_order").order("name"),
+    blogSupabase.from("blog_authors" as any).select("id,slug,display_name,is_active").order("display_name"),
+    blogSupabase.from("blog_tags" as any).select("id,slug,name,is_active").order("name"),
   ]);
   for (const result of [categoriesResult, authorsResult, tagsResult]) if (result.error) throw result.error;
 
@@ -121,7 +121,7 @@ export async function loadEditorialReferenceCatalog(): Promise<EditorialReferenc
 
 export async function listEditorialPosts(): Promise<EditorialAdminPostListItem[]> {
   await requireEditorialReadAccess();
-  const { data, error } = await supabase
+  const { data, error } = await blogSupabase
     .from("blog_posts" as any)
     .select(ADMIN_POST_SELECT)
     .order("updated_at", { ascending: false });
@@ -132,10 +132,10 @@ export async function listEditorialPosts(): Promise<EditorialAdminPostListItem[]
 export async function getEditorialPostReadModel(postId: string): Promise<EditorialPostReadModel | null> {
   await requireEditorialReadAccess();
   const [postResult, revisionsResult, reviewsResult, workflowResult] = await Promise.all([
-    supabase.from("blog_posts" as any).select(ADMIN_POST_SELECT).eq("id", postId).maybeSingle(),
-    supabase.from("blog_post_revisions" as any).select("id,post_id,revision_number,created_by,reason,created_at").eq("post_id", postId).order("revision_number", { ascending: false }),
-    supabase.from("blog_post_reviews" as any).select("id,post_id,revision_number,reviewer_user_id,decision,notes,created_at").eq("post_id", postId).order("created_at", { ascending: false }),
-    supabase.from("blog_workflow_events" as any).select("id,post_id,from_status,to_status,actor_user_id,note,created_at").eq("post_id", postId).order("created_at", { ascending: false }),
+    blogSupabase.from("blog_posts" as any).select(ADMIN_POST_SELECT).eq("id", postId).maybeSingle(),
+    blogSupabase.from("blog_post_revisions" as any).select("id,post_id,revision_number,created_by,reason,created_at").eq("post_id", postId).order("revision_number", { ascending: false }),
+    blogSupabase.from("blog_post_reviews" as any).select("id,post_id,revision_number,reviewer_user_id,decision,notes,created_at").eq("post_id", postId).order("created_at", { ascending: false }),
+    blogSupabase.from("blog_workflow_events" as any).select("id,post_id,from_status,to_status,actor_user_id,note,created_at").eq("post_id", postId).order("created_at", { ascending: false }),
   ]);
   for (const result of [postResult, revisionsResult, reviewsResult, workflowResult]) if (result.error) throw result.error;
   if (!postResult.data) return null;
