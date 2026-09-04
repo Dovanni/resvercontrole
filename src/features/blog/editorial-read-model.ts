@@ -1,4 +1,4 @@
-import { blogSupabase } from "./blog-supabase.client";
+import { blogSupabase } from "./blog-supabase";
 import type { BlogPostStatus } from "./types";
 import type { EditorialMember, EditorialRole } from "./blog.repository";
 import type {
