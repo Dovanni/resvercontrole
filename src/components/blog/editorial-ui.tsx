@@ -4,14 +4,6 @@ import { VejamaisLogo, VejamaisMark } from "@/components/vejamais-logo";
 import { Button } from "@/components/ui/button";
 import type { BlogArticle } from "@/features/blog/types";
 
-export function BlogPreviewBanner() {
-  return (
-    <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-900 sm:text-xs">
-      Blog Editorial V2 — Preview isolado — Não publicado
-    </div>
-  );
-}
-
 export function BlogHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-border/60 bg-background/90 backdrop-blur">
@@ -64,7 +56,6 @@ export function BlogFooter() {
 export function BlogShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <BlogPreviewBanner />
       <BlogHeader />
       {children}
       <BlogFooter />
