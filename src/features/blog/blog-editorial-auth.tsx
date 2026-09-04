@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { User } from "@supabase/supabase-js";
-import { blogSupabase } from "./blog-supabase.client";
+import { blogSupabase } from "./blog-supabase";
 
 export interface BlogEditorialAuthState {
   user: User | null;
