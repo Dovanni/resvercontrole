@@ -28,7 +28,7 @@ describe("Blog Editorial auth isolation contract", () => {
     expect(source).not.toContain('to="/login"');
   });
 
-  it("keeps editorial persistence fail-closed", () => {
+  it("keeps the legacy repository-only planning adapter fail-closed", () => {
     const source = read("src/features/blog/editorial-supabase-write.adapter.ts");
 
     expect(source).toContain("EDITORIAL_SUPABASE_WRITES_ENABLED = false");
