@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, FileEdit, LockKeyhole, ShieldCheck } from "lucide-react";
-import { useAuth } from "@/lib/auth";
+import { useBlogEditorialAuth } from "@/features/blog/blog-editorial-auth";
 import { getCurrentEditorialMember, type EditorialMember } from "@/features/blog/blog.repository";
 import { listRealEditorialEditorOptions, loadRealEditorialEditorForm, type EditorialEditorPostOption } from "@/features/blog/editorial-editor-read-model";
 import { availableEditorialCommands, canEditEditorialDraft, planEditorialCommand, type EditorialCommandKind, type EditorialCommandPlan, type EditorialEditorForm } from "@/features/blog/editorial-workflow";
@@ -19,7 +19,7 @@ type AccessState = { kind: "loading" } | { kind: "signed_out" } | { kind: "denie
 const LABELS: Record<EditorialCommandKind,string> = { save_draft:"Simular salvar draft", submit_review:"Simular envio para revisão", request_changes:"Simular solicitar ajustes", approve_revision:"Simular aprovação", return_to_draft:"Simular retorno para draft", schedule:"Simular agendamento", publish:"Simular publicação", archive:"Simular arquivamento", restore_draft:"Simular restauração" };
 
 function EditorialEditorRoute() {
-  const { user, loading } = useAuth();
+  const { user, loading } = useBlogEditorialAuth();
   const [access,setAccess] = useState<AccessState>({ kind:"loading" });
   useEffect(() => {
     let cancelled=false;
@@ -29,8 +29,8 @@ function EditorialEditorRoute() {
     return ()=>{cancelled=true};
   },[loading,user]);
   if (loading || access.kind==="loading") return <Message title="Validando acesso ao editor"/>;
-  if (access.kind==="signed_out") return <Message title="Editor protegido" description="Entre com uma conta editorial."/>;
-  if (access.kind==="denied") return <Message title="Conta sem acesso editorial" description="Papéis do ERP não concedem acesso a esta área."/>;
+  if (access.kind==="signed_out") return <Message title="Editor protegido" description="Autentique-se primeiro em /editorial com uma conta do Blog Editorial."/>;
+  if (access.kind==="denied") return <Message title="Conta sem acesso editorial" description="A sessão do Blog está ativa, mas não existe membership editorial válido para esta conta."/>;
   if (access.kind==="error") return <Message title="Falha ao carregar editor" description={access.message}/>;
   return <RealReadModelEditor member={access.member} userId={user!.id}/>;
 }
@@ -77,4 +77,4 @@ function RealReadModelEditor({member,userId}:{member:EditorialMember;userId:stri
 function patch<K extends keyof EditorialEditorForm>(form:EditorialEditorForm|null,setter:React.Dispatch<React.SetStateAction<EditorialEditorForm|null>>,key:K,value:EditorialEditorForm[K]){if(form)setter({...form,[key]:value});}
 function input(){return "h-11 w-full rounded-xl border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-70";}
 function Field({label,children}:{label:string;children:React.ReactNode}){return <label className="block"><span className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</span>{children}</label>;}
-function Message({title,description="Conferindo sessão e membership editorial."}:{title:string;description?:string}){return <main className="flex min-h-screen items-center justify-center bg-background px-6 text-center"><div className="max-w-xl rounded-3xl border bg-card/60 p-9"><h1 className="font-display text-3xl font-bold text-petrol">{title}</h1><p className="mt-3 text-muted-foreground">{description}</p></div></main>;}
+function Message({title,description="Conferindo sessão exclusiva do Blog e membership editorial."}:{title:string;description?:string}){return <main className="flex min-h-screen items-center justify-center bg-background px-6 text-center"><div className="max-w-xl rounded-3xl border bg-card/60 p-9"><h1 className="font-display text-3xl font-bold text-petrol">{title}</h1><p className="mt-3 text-muted-foreground">{description}</p><Link to="/editorial" className="mt-6 inline-flex text-sm font-semibold text-primary hover:underline">Ir para o painel editorial</Link></div></main>;}

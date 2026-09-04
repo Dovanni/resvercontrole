@@ -15,7 +15,7 @@ import {
   UserRound,
   Users,
 } from "lucide-react";
-import { useAuth } from "@/lib/auth";
+import { BlogEditorialSignInForm, useBlogEditorialAuth } from "@/features/blog/blog-editorial-auth";
 import type { BlogPostStatus } from "@/features/blog/types";
 import {
   getEditorialPostReadModel,
@@ -51,7 +51,7 @@ const STATUS_OPTIONS: Array<{ value: "all" | BlogPostStatus; label: string }> = 
 ];
 
 function EditorialRoute() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } = useBlogEditorialAuth();
   const [state, setState] = useState<EditorialState>({ kind: "idle" });
   const [statusFilter, setStatusFilter] = useState<"all" | BlogPostStatus>("all");
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
@@ -102,13 +102,13 @@ function EditorialRoute() {
   }, [state, statusFilter]);
 
   if (authLoading || state.kind === "loading") {
-    return <EditorialMessage title="Validando acesso editorial" description="Conferindo sua sessão, membership e permissões de leitura." />;
+    return <EditorialMessage title="Validando acesso editorial" description="Conferindo sua sessão exclusiva do Blog, membership e permissões de leitura." />;
   }
   if (!user) {
-    return <EditorialMessage icon={<LockKeyhole className="size-7" />} title="Acesso editorial protegido" description="Entre com uma conta que faça parte da equipe editorial do VEJAMAIS ERP."><Link to="/login" className="inline-flex rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground">Entrar</Link></EditorialMessage>;
+    return <EditorialMessage icon={<LockKeyhole className="size-7" />} title="Acesso editorial protegido" description="Entre com uma conta cadastrada no Blog Editorial. Esta autenticação é independente do ERP."><BlogEditorialSignInForm /></EditorialMessage>;
   }
   if (state.kind === "denied") {
-    return <EditorialMessage icon={<ShieldCheck className="size-7" />} title="Conta sem papel editorial" description="Sua sessão está autenticada, mas não existe membership editorial ativo para esta conta."><Link to="/blog" className="text-sm font-semibold text-primary hover:underline">Voltar ao Blog</Link></EditorialMessage>;
+    return <EditorialMessage icon={<ShieldCheck className="size-7" />} title="Conta sem papel editorial" description="Sua sessão do Blog está autenticada, mas não existe membership editorial ativo para esta conta."><Link to="/blog" className="text-sm font-semibold text-primary hover:underline">Voltar ao Blog</Link></EditorialMessage>;
   }
   if (state.kind === "error") return <EditorialMessage title="Não foi possível validar o painel" description={state.message} />;
   if (state.kind !== "ready") return null;

@@ -1,4 +1,4 @@
-import { blogSupabase } from "./blog-supabase.client";
+import { blogSupabase } from "./blog-supabase";
 import type { EditorialEditorForm, EditorialReviewDecision } from "./editorial-workflow";
 import { requireEditorialReadAccess } from "./editorial-read-model";
 
