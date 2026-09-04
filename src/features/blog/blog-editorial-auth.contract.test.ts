@@ -8,12 +8,13 @@ describe("Blog Editorial auth isolation contract", () => {
   it("binds editorial auth exclusively to blogSupabase", () => {
     const source = read("src/features/blog/blog-editorial-auth.tsx");
 
-    expect(source).toContain('import { blogSupabase } from "./blog-supabase.client"');
+    expect(source).toContain('import { blogSupabase } from "./blog-supabase"');
     expect(source).toContain("blogSupabase.auth.getSession()");
     expect(source).toContain("blogSupabase.auth.onAuthStateChange");
     expect(source).toContain("blogSupabase.auth.signInWithPassword");
     expect(source).not.toContain("@/lib/auth");
     expect(source).not.toContain("@/integrations/supabase/client");
+    expect(source).not.toContain("./blog-supabase.client");
   });
 
   it.each([
