@@ -1,4 +1,4 @@
-import { blogSupabase } from "./blog-supabase.client";
+import { blogSupabase } from "./blog-supabase";
 import { BLOG_ARTICLES } from "./articles";
 import type { BlogArticle, BlogArticleSection, BlogPostStatus } from "./types";
 
