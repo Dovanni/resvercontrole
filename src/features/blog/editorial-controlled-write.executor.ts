@@ -1,11 +1,11 @@
-import { supabase } from "@/integrations/supabase/client";
+import { blogSupabase as supabase } from "./blog-supabase";
 import type { EditorialWriteOrchestrationPlan } from "./editorial-write-orchestrator";
 import { normalizeEditorialWriteError, type NormalizedEditorialWriteError } from "./editorial-supabase-write.adapter";
 
 /**
- * Phase 3-U operational gate.
- * Intentionally hard-coded OFF. A later explicitly authorized phase must change
- * code and tests before any editorial mutation can reach Supabase.
+ * Phase 3-U legacy controlled gate.
+ * This path remains fail-closed; the explicitly authorized operational path
+ * lives in editorial-operational-write.ts and also uses the dedicated Blog client.
  */
 export const EDITORIAL_CONTROLLED_WRITES_ENABLED = false as const;
 export const EDITORIAL_CONTROLLED_WRITE_MODE = "connected_but_disabled" as const;
@@ -60,26 +60,14 @@ export function prepareControlledEditorialExecution(plan: EditorialWriteOrchestr
   };
 }
 
-/**
- * Connected executor boundary.
- *
- * Even though this module imports the real Supabase client, the hard-coded OFF
- * gate is checked before any table/query object is constructed. Multi-step
- * plans are also refused until an atomic database RPC exists.
- */
 export async function executeControlledEditorialWrite(
   execution: ControlledEditorialExecutionPlan,
 ): Promise<ControlledEditorialExecutionResult> {
   if (!EDITORIAL_CONTROLLED_WRITES_ENABLED) {
     throw new Error("BLOG_EDITORIAL_CONTROLLED_WRITES_FEATURE_FLAG_OFF");
   }
-
-  if (execution.safetyClass === "requires_atomic_rpc") {
-    throw new Error("BLOG_EDITORIAL_ATOMIC_RPC_REQUIRED");
-  }
-  if (execution.safetyClass !== "single_statement") {
-    throw new Error("BLOG_EDITORIAL_EXECUTION_PLAN_REJECTED");
-  }
+  if (execution.safetyClass === "requires_atomic_rpc") throw new Error("BLOG_EDITORIAL_ATOMIC_RPC_REQUIRED");
+  if (execution.safetyClass !== "single_statement") throw new Error("BLOG_EDITORIAL_EXECUTION_PLAN_REJECTED");
 
   const step = execution.transaction.steps[0];
   if (!step) throw new Error("BLOG_EDITORIAL_EXECUTION_STEP_REQUIRED");
@@ -119,22 +107,10 @@ export async function executeControlledEditorialWrite(
 
 export function normalizeControlledEditorialExecutionError(error: unknown): NormalizedEditorialWriteError {
   if (error instanceof Error && error.message === "BLOG_EDITORIAL_REVISION_CONFLICT") {
-    return {
-      code: error.message,
-      category: "conflict",
-      retryable: true,
-      message: "O artigo foi alterado por outra sessão. Recarregue a revisão atual antes de tentar novamente.",
-      source: "unknown",
-    };
+    return { code: error.message, category: "conflict", retryable: true, message: "O artigo foi alterado por outra sessão. Recarregue a revisão atual antes de tentar novamente.", source: "unknown" };
   }
   if (error instanceof Error && error.message === "BLOG_EDITORIAL_ATOMIC_RPC_REQUIRED") {
-    return {
-      code: error.message,
-      category: "constraint",
-      retryable: false,
-      message: "Esta operação exige uma RPC transacional no banco antes que a escrita possa ser habilitada.",
-      source: "unknown",
-    };
+    return { code: error.message, category: "constraint", retryable: false, message: "Esta operação exige uma RPC transacional no banco antes que a escrita possa ser habilitada.", source: "unknown" };
   }
   return normalizeEditorialWriteError(error);
 }
