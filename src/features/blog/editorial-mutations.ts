@@ -1,3 +1,4 @@
+import { normalizeBlogParagraph } from "./blog-content";
 import type { BlogPostStatus } from "./types";
 import type {
   EditorialActor,
@@ -73,8 +74,6 @@ export interface StatusMutationPayload {
 }
 
 export function createDraft(actor: EditorialActor, form: EditorialEditorForm): EditorialMutationEnvelope<DraftMutationPayload> {
-  // New drafts are planned as being created by the current editorial actor.
-  // This mirrors the database trigger that replaces created_by with auth.uid().
   const draftForm: EditorialEditorForm = {
     ...form,
     id: null,
@@ -194,7 +193,7 @@ function draftPayload(form: EditorialEditorForm): DraftMutationPayload {
     excerpt: form.excerpt.trim(),
     content: form.sections.map((section) => ({
       heading: section.heading.trim(),
-      paragraphs: section.paragraphs.map((paragraph) => paragraph.trim()).filter(Boolean),
+      paragraphs: section.paragraphs.map(normalizeBlogParagraph).filter((paragraph): paragraph is NonNullable<typeof paragraph> => Boolean(paragraph)),
     })),
     category: form.category.trim(),
     author: form.author.trim(),
