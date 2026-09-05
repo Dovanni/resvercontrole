@@ -1,11 +1,22 @@
 import type { BlogArticleParagraph, BlogArticleSection, BlogInlineContent } from "./types";
 
 const EDITOR_LINK_PATTERN = /\[([^\]\n]+)\]\(([^)\n]+)\)/g;
+const BLOG_INTERNAL_ORIGIN = "https://vejamais.com.br";
+const UNSAFE_URL_CHARACTERS = /[\\\u0000-\u001F\u007F]/;
 
 export function isSafeBlogLinkHref(href: string) {
   const value = href.trim();
-  if (!value) return false;
-  if (value.startsWith("/") && !value.startsWith("//")) return true;
+  if (!value || UNSAFE_URL_CHARACTERS.test(value)) return false;
+
+  if (value.startsWith("/")) {
+    if (value.startsWith("//")) return false;
+    try {
+      return new URL(value, BLOG_INTERNAL_ORIGIN).origin === BLOG_INTERNAL_ORIGIN;
+    } catch {
+      return false;
+    }
+  }
+
   try {
     return new URL(value).protocol === "https:";
   } catch {
