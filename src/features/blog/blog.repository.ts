@@ -65,16 +65,50 @@ function firstRelation<T>(value: T | T[] | null | undefined): T | undefined {
 function normalizeSections(content: unknown): BlogArticleSection[] {
   if (!Array.isArray(content)) return [];
 
-  return content.flatMap((block) => {
-    if (!block || typeof block !== "object") return [];
-    const heading = "heading" in block && typeof block.heading === "string" ? block.heading.trim() : "";
-    const paragraphs =
+  const sections: BlogArticleSection[] = [];
+  let current: BlogArticleSection | null = null;
+
+  const flushCurrent = () => {
+    if (current?.heading && current.paragraphs.length > 0) sections.push(current);
+    current = null;
+  };
+
+  for (const block of content) {
+    if (!block || typeof block !== "object") continue;
+
+    const legacyHeading = "heading" in block && typeof block.heading === "string" ? block.heading.trim() : "";
+    const legacyParagraphs =
       "paragraphs" in block && Array.isArray(block.paragraphs)
-        ? block.paragraphs.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+        ? block.paragraphs
+            .filter((item): item is string => typeof item === "string")
+            .map((item) => item.trim())
+            .filter(Boolean)
         : [];
 
-    return heading && paragraphs.length > 0 ? [{ heading, paragraphs }] : [];
-  });
+    if (legacyHeading && legacyParagraphs.length > 0) {
+      flushCurrent();
+      sections.push({ heading: legacyHeading, paragraphs: legacyParagraphs });
+      continue;
+    }
+
+    const type = "type" in block && typeof block.type === "string" ? block.type : "";
+    const text = "text" in block && typeof block.text === "string" ? block.text.trim() : "";
+
+    if (!text) continue;
+
+    if (type === "heading") {
+      flushCurrent();
+      current = { heading: text, paragraphs: [] };
+      continue;
+    }
+
+    if (type === "paragraph" && current) {
+      current.paragraphs.push(text);
+    }
+  }
+
+  flushCurrent();
+  return sections;
 }
 
 function publicStorageUrl(path: string | null) {
