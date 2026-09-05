@@ -1,6 +1,7 @@
 import { blogSupabase } from "./blog-supabase";
 import { BLOG_ARTICLES } from "./articles";
-import type { BlogArticle, BlogArticleSection, BlogPostStatus } from "./types";
+import { normalizeBlogSections } from "./blog-content";
+import type { BlogArticle, BlogPostStatus } from "./types";
 
 export type EditorialRole = "owner" | "editor" | "author" | "reviewer";
 
@@ -62,55 +63,6 @@ function firstRelation<T>(value: T | T[] | null | undefined): T | undefined {
   return Array.isArray(value) ? value[0] : value ?? undefined;
 }
 
-function normalizeSections(content: unknown): BlogArticleSection[] {
-  if (!Array.isArray(content)) return [];
-
-  const sections: BlogArticleSection[] = [];
-  let current: BlogArticleSection | null = null;
-
-  const flushCurrent = () => {
-    if (current?.heading && current.paragraphs.length > 0) sections.push(current);
-    current = null;
-  };
-
-  for (const block of content) {
-    if (!block || typeof block !== "object") continue;
-
-    const legacyHeading = "heading" in block && typeof block.heading === "string" ? block.heading.trim() : "";
-    const legacyParagraphs =
-      "paragraphs" in block && Array.isArray(block.paragraphs)
-        ? block.paragraphs
-            .filter((item): item is string => typeof item === "string")
-            .map((item) => item.trim())
-            .filter(Boolean)
-        : [];
-
-    if (legacyHeading && legacyParagraphs.length > 0) {
-      flushCurrent();
-      sections.push({ heading: legacyHeading, paragraphs: legacyParagraphs });
-      continue;
-    }
-
-    const type = "type" in block && typeof block.type === "string" ? block.type : "";
-    const text = "text" in block && typeof block.text === "string" ? block.text.trim() : "";
-
-    if (!text) continue;
-
-    if (type === "heading") {
-      flushCurrent();
-      current = { heading: text, paragraphs: [] };
-      continue;
-    }
-
-    if (type === "paragraph" && current) {
-      current.paragraphs.push(text);
-    }
-  }
-
-  flushCurrent();
-  return sections;
-}
-
 function publicStorageUrl(path: string | null) {
   if (!path) return undefined;
   return blogSupabase.storage.from("blog-media").getPublicUrl(path).data.publicUrl;
@@ -144,7 +96,7 @@ export function mapPublishedBlogPost(row: BlogPostRow): BlogArticle {
     featuredImage: publicStorageUrl(row.featured_image_path),
     featuredImageAlt: row.featured_image_alt?.trim() || `Imagem editorial de ${row.title}`,
     status: row.status,
-    sections: normalizeSections(row.content),
+    sections: normalizeBlogSections(row.content),
   };
 }
 
