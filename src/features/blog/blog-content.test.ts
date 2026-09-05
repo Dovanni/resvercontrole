@@ -15,6 +15,9 @@ describe("Blog structured content links", () => {
     expect(isSafeBlogLinkHref("data:text/html,boom")).toBe(false);
     expect(isSafeBlogLinkHref("http://example.com")).toBe(false);
     expect(isSafeBlogLinkHref("//evil.example")).toBe(false);
+    expect(isSafeBlogLinkHref("/\\evil.example")).toBe(false);
+    expect(isSafeBlogLinkHref("\\evil.example")).toBe(false);
+    expect(isSafeBlogLinkHref("https:\\evil.example")).toBe(false);
   });
 
   it("round-trips editorial link syntax into structured content", () => {
@@ -44,6 +47,14 @@ describe("Blog structured content links", () => {
     const sections = [{
       heading: "Segurança",
       paragraphs: [parseEditorialParagraph("Não aceite [este link](javascript:alert(1)).")],
+    }];
+    expect(validateStructuredBlogLinks(sections)).toBe("BLOG_LINK_INVALID_HREF");
+  });
+
+  it("rejects backslash-based authority confusion before persistence", () => {
+    const sections = [{
+      heading: "Segurança",
+      paragraphs: [parseEditorialParagraph("Não aceite [este link](/\\evil.example).")],
     }];
     expect(validateStructuredBlogLinks(sections)).toBe("BLOG_LINK_INVALID_HREF");
   });
