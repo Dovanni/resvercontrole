@@ -26,7 +26,7 @@ describe("Blog Editorial operational write contract", () => {
   it("turns the editor from simulation into explicit operational commands", () => {
     const route = read("src/routes/editorial_.editor.tsx");
     expect(route).toContain("executeOperationalEditorialCommand");
-    expect(route).toContain("Novo draft");
+    expect(route).toContain("Novo rascunho");
     expect(route).toContain("Publicar agora");
     expect(route).toContain("Persistência ativa");
     expect(route).not.toContain("Simular salvar draft");
