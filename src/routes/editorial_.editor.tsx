@@ -20,6 +20,7 @@ import {
   EDITORIAL_OPERATIONAL_WRITE_MODE,
   executeOperationalEditorialCommand,
 } from "@/features/blog/editorial-operational-write";
+import { getBlogMediaPublicUrl, uploadFeaturedImage } from "@/features/blog/blog-media";
 
 export const Route = createFileRoute("/editorial_/editor")({
   head: () => ({ meta: [
@@ -73,6 +74,7 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
   const [form, setForm] = useState<EditorialEditorForm | null>(null);
   const [reviewNotes, setReviewNotes] = useState("");
   const [busy, setBusy] = useState(false);
+  const [mediaBusy, setMediaBusy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -109,6 +111,7 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
   const actor = useMemo(() => ({ userId, role: member.role, authorId: member.authorId }), [userId, member.role, member.authorId]);
   const editable = form ? canEditEditorialDraft(actor, form) : false;
   const commands = form ? availableEditorialCommands(actor, form) : [];
+  const featuredImageUrl = form?.featuredImagePath ? getBlogMediaPublicUrl(form.featuredImagePath) : "";
 
   function createNewDraft() {
     if (!catalog) return;
@@ -120,6 +123,26 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
     setForm(next);
     setError("");
     setSuccess("");
+  }
+
+  async function uploadImage(file?: File) {
+    if (!form || !file) return;
+    if (!form.id) {
+      setError("Salve o draft antes de enviar a imagem destacada.");
+      return;
+    }
+    setMediaBusy(true);
+    setError("");
+    setSuccess("");
+    try {
+      const uploaded = await uploadFeaturedImage(form.id, file);
+      setForm({ ...form, featuredImagePath: uploaded.path });
+      setSuccess("Imagem destacada enviada. Salve o draft para persistir a referência da imagem no artigo.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Falha ao enviar a imagem destacada.");
+    } finally {
+      setMediaBusy(false);
+    }
   }
 
   async function execute(command: EditorialCommandKind) {
@@ -162,12 +185,24 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
           <Field label="Meta title"><input value={form.metaTitle} disabled={!editable} onChange={(e) => patch(form, setForm, "metaTitle", e.target.value)} className={input()} /></Field>
           <Field label="Meta description"><input value={form.metaDescription} disabled={!editable} onChange={(e) => patch(form, setForm, "metaDescription", e.target.value)} className={input()} /></Field>
           <Field label="Palavra-chave"><input value={form.focusKeyword} disabled={!editable} onChange={(e) => patch(form, setForm, "focusKeyword", e.target.value)} className={input()} /></Field>
-          <Field label="Alt da imagem"><input value={form.featuredImageAlt} disabled={!editable} onChange={(e) => patch(form, setForm, "featuredImageAlt", e.target.value)} className={input()} /></Field>
+          <div className="md:col-span-2 rounded-2xl border bg-background/70 p-4">
+            <div className="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)]">
+              <div className="aspect-[16/9] overflow-hidden rounded-xl border bg-muted/40">
+                {featuredImageUrl ? <img src={featuredImageUrl} alt={form.featuredImageAlt || "Pré-visualização da imagem destacada"} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">Nenhuma imagem destacada selecionada</div>}
+              </div>
+              <div className="space-y-4">
+                <div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Imagem destacada / SEO</p><p className="mt-2 text-sm leading-6 text-muted-foreground">JPEG, PNG, WebP ou AVIF · máximo 5 MB. Para novos artigos, salve o draft antes do upload.</p></div>
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={!editable || !form.id || mediaBusy} onChange={(e) => void uploadImage(e.target.files?.[0])} className="block w-full text-sm file:mr-3 file:rounded-lg file:border file:bg-background file:px-3 file:py-2 file:font-semibold disabled:opacity-60" />
+                <Field label="Alt da imagem"><input value={form.featuredImageAlt} disabled={!editable} onChange={(e) => patch(form, setForm, "featuredImageAlt", e.target.value)} className={input()} placeholder="Descreva objetivamente o conteúdo da imagem" /></Field>
+                {form.featuredImagePath && <div className="flex flex-wrap items-center gap-3"><p className="max-w-full truncate text-xs text-muted-foreground" title={form.featuredImagePath}>{form.featuredImagePath}</p><button type="button" disabled={!editable || mediaBusy} onClick={() => setForm({ ...form, featuredImagePath: "" })} className="rounded-lg border px-3 py-2 text-xs font-semibold disabled:opacity-60">Remover referência</button></div>}
+              </div>
+            </div>
+          </div>
           <Field label="Agendamento"><input type="datetime-local" value={form.scheduledAt ? localDateTimeValue(form.scheduledAt) : ""} disabled={!editable} onChange={(e) => patch(form, setForm, "scheduledAt", e.target.value)} className={input()} /></Field>
           <Field label="Status / revisão"><div className="flex h-11 items-center rounded-xl border bg-muted/40 px-3 text-sm">{form.status} · rev {form.revisionNumber}</div></Field>
         </div></section>
 
-        <aside className="space-y-6"><section className="rounded-3xl border bg-card/60 p-5"><h2 className="font-display text-xl font-semibold">Workflow real</h2><p className="mt-2 text-sm text-muted-foreground">Cada ação abaixo persiste no Blog Supabase e continua sujeita às regras do banco.</p><div className="mt-4 space-y-2">{commands.map((command) => <button key={command} type="button" disabled={busy} onClick={() => execute(command)} className="w-full rounded-xl border bg-background px-4 py-3 text-left text-sm font-semibold disabled:opacity-60">{busy ? "Processando…" : LABELS[command]}</button>)}</div></section><section className="rounded-3xl border bg-card/60 p-5"><h2 className="font-display text-xl font-semibold">Notas de revisão</h2><textarea value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)} className={`${input()} mt-3 min-h-24 py-3`} placeholder="Opcional para aprovação ou solicitação de ajustes" /><p className="mt-3 text-xs leading-5 text-muted-foreground">A regra de quatro-olhos permanece obrigatória: quem criou a revisão não pode aprová-la.</p></section></aside>
+        <aside className="space-y-6"><section className="rounded-3xl border bg-card/60 p-5"><h2 className="font-display text-xl font-semibold">Workflow real</h2><p className="mt-2 text-sm text-muted-foreground">Cada ação abaixo persiste no Blog Supabase e continua sujeita às regras do banco.</p><div className="mt-4 space-y-2">{commands.map((command) => <button key={command} type="button" disabled={busy || mediaBusy} onClick={() => execute(command)} className="w-full rounded-xl border bg-background px-4 py-3 text-left text-sm font-semibold disabled:opacity-60">{busy ? "Processando…" : LABELS[command]}</button>)}</div></section><section className="rounded-3xl border bg-card/60 p-5"><h2 className="font-display text-xl font-semibold">Notas de revisão</h2><textarea value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)} className={`${input()} mt-3 min-h-24 py-3`} placeholder="Opcional para aprovação ou solicitação de ajustes" /><p className="mt-3 text-xs leading-5 text-muted-foreground">A regra de quatro-olhos permanece obrigatória: quem criou a revisão não pode aprová-la.</p></section></aside>
       </div>}
     </main>
   </div>;
@@ -179,4 +214,4 @@ function localDateTimeValue(value: string) { const date = new Date(value); if (N
 function patch<K extends keyof EditorialEditorForm>(form: EditorialEditorForm | null, setter: React.Dispatch<React.SetStateAction<EditorialEditorForm | null>>, key: K, value: EditorialEditorForm[K]) { if (form) setter({ ...form, [key]: value }); }
 function input() { return "h-11 min-w-56 rounded-xl border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"; }
 function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className="block"><span className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</span>{children}</label>; }
-function Message({ title, description = "Conferindo sessão exclusiva do Blog e membership editorial." }: { title: string; description?: string }) { return <main className="flex min-h-screen items-center justify-center bg-background px-6 text-center"><div className="max-w-xl rounded-3xl border bg-card/60 p-9"><h1 className="font-display text-3xl font-bold text-petrol">{title}</h1><p className="mt-3 text-muted-foreground">{description}</p><Link to="/editorial" className="mt-6 inline-flex text-sm font-semibold text-primary hover:underline">Ir para o painel editorial</Link></div></main>; }
+function Message({ title, description = "Conferindo sessão exclusiva do Blog e membership editorial." }: { title: string; description?: string }) { return <main className="flex min-h-screen items-center justify-center bg-background px-6"><div className="max-w-xl text-center"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Blog Editorial V2</p><h1 className="mt-4 font-display text-3xl font-bold text-petrol">{title}</h1><p className="mt-4 leading-7 text-muted-foreground">{description}</p><Link to="/editorial" className="mt-7 inline-flex font-semibold text-primary">Voltar ao painel editorial</Link></div></main>; }
