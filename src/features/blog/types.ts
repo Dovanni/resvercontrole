@@ -1,8 +1,16 @@
 export type BlogPostStatus = "draft" | "review" | "scheduled" | "published" | "archived";
 
+export type BlogInlineContent =
+  | { type: "text"; text: string }
+  | { type: "link"; text: string; href: string };
+
+export type BlogArticleParagraph =
+  | string
+  | { type: "rich_text"; content: BlogInlineContent[] };
+
 export interface BlogArticleSection {
   heading: string;
-  paragraphs: string[];
+  paragraphs: BlogArticleParagraph[];
 }
 
 export interface BlogArticle {
