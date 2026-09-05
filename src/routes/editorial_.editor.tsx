@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, FileEdit, ShieldCheck } from "lucide-react";
 import { useBlogEditorialAuth } from "@/features/blog/blog-editorial-auth";
 import { getCurrentEditorialMember, type EditorialMember } from "@/features/blog/blog.repository";
+import { parseEditorialParagraph, serializeEditorialParagraph } from "@/features/blog/blog-content";
 import {
   listRealEditorialEditorOptions,
   loadRealEditorialEditorForm,
@@ -179,7 +180,7 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
           <Field label="Categoria"><select value={form.category} disabled={!editable} onChange={(e) => patch(form, setForm, "category", e.target.value)} className={input()}>{catalog?.categories.map((item) => <option key={item.id} value={item.name}>{item.name}</option>)}</select></Field>
           <Field label="Autor"><select value={form.author} disabled={!editable} onChange={(e) => patch(form, setForm, "author", e.target.value)} className={input()}>{catalog?.authors.map((item) => <option key={item.id} value={item.displayName}>{item.displayName}</option>)}</select></Field>
           <div className="md:col-span-2"><Field label="Resumo"><textarea value={form.excerpt} disabled={!editable} onChange={(e) => patch(form, setForm, "excerpt", e.target.value)} className={`${input()} min-h-24 py-3`} /></Field></div>
-          <div className="md:col-span-2"><Field label="Conteúdo"><textarea value={sectionsToText(form)} disabled={!editable} onChange={(e) => patch(form, setForm, "sections", textToSections(e.target.value))} className={`${input()} min-h-64 py-3`} /></Field></div>
+          <div className="md:col-span-2"><Field label="Conteúdo"><textarea value={sectionsToText(form)} disabled={!editable} onChange={(e) => patch(form, setForm, "sections", textToSections(e.target.value))} className={`${input()} min-h-64 py-3`} /><p className="mt-2 text-xs leading-5 text-muted-foreground">Links estruturados: use [texto do link](/rota-interna) ou [texto do link](https://exemplo.com). Protocolos inseguros são rejeitados ao salvar.</p></Field></div>
           <Field label="Tags (separadas por vírgula)"><input value={form.tags.join(", ")} disabled={!editable} onChange={(e) => patch(form, setForm, "tags", e.target.value.split(",").map((x) => x.trim()).filter(Boolean))} className={input()} /></Field>
           <Field label="Tempo de leitura"><input type="number" min={1} value={form.readingTimeMinutes} disabled={!editable} onChange={(e) => patch(form, setForm, "readingTimeMinutes", Number(e.target.value))} className={input()} /></Field>
           <Field label="Meta title"><input value={form.metaTitle} disabled={!editable} onChange={(e) => patch(form, setForm, "metaTitle", e.target.value)} className={input()} /></Field>
@@ -208,8 +209,8 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
   </div>;
 }
 
-function sectionsToText(form: EditorialEditorForm) { return form.sections.map((section) => [section.heading, ...section.paragraphs].filter(Boolean).join("\n")).join("\n\n"); }
-function textToSections(value: string) { const blocks = value.split(/\n\s*\n/).map((x) => x.trim()).filter(Boolean); return blocks.length ? blocks.map((block, index) => { const lines = block.split("\n").map((x) => x.trim()).filter(Boolean); return { heading: lines[0] || `Seção ${index + 1}`, paragraphs: lines.slice(1).length ? lines.slice(1) : [lines[0] || ""] }; }) : [{ heading: "", paragraphs: [""] }]; }
+function sectionsToText(form: EditorialEditorForm) { return form.sections.map((section) => [section.heading, ...section.paragraphs.map(serializeEditorialParagraph)].filter(Boolean).join("\n")).join("\n\n"); }
+function textToSections(value: string) { const blocks = value.split(/\n\s*\n/).map((x) => x.trim()).filter(Boolean); return blocks.length ? blocks.map((block, index) => { const lines = block.split("\n").map((x) => x.trim()).filter(Boolean); return { heading: lines[0] || `Seção ${index + 1}`, paragraphs: lines.slice(1).length ? lines.slice(1).map(parseEditorialParagraph) : [parseEditorialParagraph(lines[0] || "")] }; }) : [{ heading: "", paragraphs: [""] }]; }
 function localDateTimeValue(value: string) { const date = new Date(value); if (Number.isNaN(date.getTime())) return value; const offset = date.getTimezoneOffset() * 60000; return new Date(date.getTime() - offset).toISOString().slice(0, 16); }
 function patch<K extends keyof EditorialEditorForm>(form: EditorialEditorForm | null, setter: React.Dispatch<React.SetStateAction<EditorialEditorForm | null>>, key: K, value: EditorialEditorForm[K]) { if (form) setter({ ...form, [key]: value }); }
 function input() { return "h-11 min-w-56 rounded-xl border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"; }
