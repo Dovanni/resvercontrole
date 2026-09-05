@@ -4,6 +4,7 @@ import { ArrowLeft, FileEdit, ShieldCheck } from "lucide-react";
 import { useBlogEditorialAuth } from "@/features/blog/blog-editorial-auth";
 import { getCurrentEditorialMember, type EditorialMember } from "@/features/blog/blog.repository";
 import { parseEditorialParagraph, serializeEditorialParagraph } from "@/features/blog/blog-content";
+import { blogPostStatusLabel, editorialRoleLabel, revisionLabel } from "@/features/blog/editorial-localization";
 import {
   listRealEditorialEditorOptions,
   loadRealEditorialEditorForm,
@@ -36,15 +37,15 @@ type AccessState = { kind: "loading" } | { kind: "signed_out" } | { kind: "denie
 type Catalog = EditorialAdministrativeReadModel["catalog"];
 
 const LABELS: Record<EditorialCommandKind, string> = {
-  save_draft: "Salvar draft",
+  save_draft: "Salvar rascunho",
   submit_review: "Enviar para revisão",
   request_changes: "Solicitar ajustes",
   approve_revision: "Aprovar revisão",
-  return_to_draft: "Retornar para draft",
+  return_to_draft: "Retornar para rascunho",
   schedule: "Agendar publicação",
   publish: "Publicar agora",
   archive: "Arquivar",
-  restore_draft: "Restaurar como draft",
+  restore_draft: "Restaurar como rascunho",
 };
 
 function EditorialEditorRoute() {
@@ -63,7 +64,7 @@ function EditorialEditorRoute() {
 
   if (loading || access.kind === "loading") return <Message title="Validando acesso ao editor" />;
   if (access.kind === "signed_out") return <Message title="Editor protegido" description="Autentique-se primeiro em /editorial com uma conta do Blog Editorial." />;
-  if (access.kind === "denied") return <Message title="Conta sem acesso editorial" description="A sessão do Blog está ativa, mas não existe membership editorial válido para esta conta." />;
+  if (access.kind === "denied") return <Message title="Conta sem acesso editorial" description="A sessão do Blog está ativa, mas não existe vínculo editorial válido para esta conta." />;
   if (access.kind === "error") return <Message title="Falha ao carregar editor" description={access.message} />;
   return <OperationalEditor member={access.member} userId={user!.id} />;
 }
@@ -129,7 +130,7 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
   async function uploadImage(file?: File) {
     if (!form || !file) return;
     if (!form.id) {
-      setError("Salve o draft antes de enviar a imagem destacada.");
+      setError("Salve o rascunho antes de enviar a imagem destacada.");
       return;
     }
     setMediaBusy(true);
@@ -138,7 +139,7 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
     try {
       const uploaded = await uploadFeaturedImage(form.id, file);
       setForm({ ...form, featuredImagePath: uploaded.path });
-      setSuccess("Imagem destacada enviada. Salve o draft para persistir a referência da imagem no artigo.");
+      setSuccess("Imagem destacada enviada. Salve o rascunho para persistir a referência da imagem no artigo.");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha ao enviar a imagem destacada.");
     } finally {
@@ -167,9 +168,9 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
   return <div className="min-h-screen bg-background text-foreground">
     <header className="border-b"><div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6"><div className="flex items-center gap-3"><div className="rounded-xl bg-mint p-2.5 text-primary-deep"><FileEdit className="size-5" /></div><div><p className="font-display text-lg font-semibold text-petrol">Editor Editorial V2</p><p className="text-xs text-muted-foreground">Modo operacional · {EDITORIAL_OPERATIONAL_WRITE_MODE}</p></div></div><Link to="/editorial" className="inline-flex items-center gap-2 text-sm font-semibold text-primary"><ArrowLeft className="size-4" />Painel editorial</Link></div></header>
     <main className="mx-auto max-w-7xl px-4 py-8 md:px-6">
-      <section className="rounded-3xl border bg-card/60 p-6"><div className="flex flex-wrap items-start justify-between gap-5"><div><h1 className="font-display text-3xl font-bold text-petrol">Escrita editorial ativa</h1><p className="mt-3 max-w-3xl text-muted-foreground">Drafts, revisões, agendamentos e publicação usam exclusivamente o Supabase do Blog. RLS, triggers, concorrência otimista e regra de quatro-olhos continuam como autoridade.</p></div><div className="rounded-2xl border bg-background p-4 text-sm"><div className="flex items-center gap-2 font-semibold"><ShieldCheck className="size-4 text-primary" />Persistência ativa</div><div className="mt-2 text-muted-foreground">Papel atual: {member.role}</div></div></div></section>
+      <section className="rounded-3xl border bg-card/60 p-6"><div className="flex flex-wrap items-start justify-between gap-5"><div><h1 className="font-display text-3xl font-bold text-petrol">Escrita editorial ativa</h1><p className="mt-3 max-w-3xl text-muted-foreground">Rascunhos, revisões, agendamentos e publicação usam exclusivamente o Supabase do Blog. RLS, gatilhos, concorrência otimista e regra de quatro-olhos continuam como autoridade.</p></div><div className="rounded-2xl border bg-background p-4 text-sm"><div className="flex items-center gap-2 font-semibold"><ShieldCheck className="size-4 text-primary" />Persistência ativa</div><div className="mt-2 text-muted-foreground">Papel atual: {editorialRoleLabel(member.role)}</div></div></div></section>
 
-      <div className="mt-6 flex flex-wrap gap-3"><button type="button" onClick={createNewDraft} className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">Novo draft</button><select value={selectedId} onChange={(e) => setSelectedId(e.target.value)} className={input()}><option value="">Novo / selecione um artigo</option>{options.map((o) => <option key={o.id} value={o.id}>{o.title} · {o.status} · rev {o.revisionNumber}</option>)}</select></div>
+      <div className="mt-6 flex flex-wrap gap-3"><button type="button" onClick={createNewDraft} className="rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground">Novo rascunho</button><select value={selectedId} onChange={(e) => setSelectedId(e.target.value)} className={input()}><option value="">Novo / selecione um artigo</option>{options.map((o) => <option key={o.id} value={o.id}>{o.title} · {blogPostStatusLabel(o.status)} · {revisionLabel(o.revisionNumber)}</option>)}</select></div>
       {error && <div className="mt-5 rounded-2xl border p-4 text-sm">{error}</div>}
       {success && <div className="mt-5 rounded-2xl border p-4 text-sm">{success}</div>}
 
@@ -181,10 +182,10 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
           <Field label="Autor"><select value={form.author} disabled={!editable} onChange={(e) => patch(form, setForm, "author", e.target.value)} className={input()}>{catalog?.authors.map((item) => <option key={item.id} value={item.displayName}>{item.displayName}</option>)}</select></Field>
           <div className="md:col-span-2"><Field label="Resumo"><textarea value={form.excerpt} disabled={!editable} onChange={(e) => patch(form, setForm, "excerpt", e.target.value)} className={`${input()} min-h-24 py-3`} /></Field></div>
           <div className="md:col-span-2"><Field label="Conteúdo"><textarea value={sectionsToText(form)} disabled={!editable} onChange={(e) => patch(form, setForm, "sections", textToSections(e.target.value))} className={`${input()} min-h-64 py-3`} /><p className="mt-2 text-xs leading-5 text-muted-foreground">Links estruturados: use [texto do link](/rota-interna) ou [texto do link](https://exemplo.com). Protocolos inseguros são rejeitados ao salvar.</p></Field></div>
-          <Field label="Tags (separadas por vírgula)"><input value={form.tags.join(", ")} disabled={!editable} onChange={(e) => patch(form, setForm, "tags", e.target.value.split(",").map((x) => x.trim()).filter(Boolean))} className={input()} /></Field>
+          <Field label="Marcadores (separados por vírgula)"><input value={form.tags.join(", ")} disabled={!editable} onChange={(e) => patch(form, setForm, "tags", e.target.value.split(",").map((x) => x.trim()).filter(Boolean))} className={input()} /></Field>
           <Field label="Tempo de leitura"><input type="number" min={1} value={form.readingTimeMinutes} disabled={!editable} onChange={(e) => patch(form, setForm, "readingTimeMinutes", Number(e.target.value))} className={input()} /></Field>
-          <Field label="Meta title"><input value={form.metaTitle} disabled={!editable} onChange={(e) => patch(form, setForm, "metaTitle", e.target.value)} className={input()} /></Field>
-          <Field label="Meta description"><input value={form.metaDescription} disabled={!editable} onChange={(e) => patch(form, setForm, "metaDescription", e.target.value)} className={input()} /></Field>
+          <Field label="Título SEO"><input value={form.metaTitle} disabled={!editable} onChange={(e) => patch(form, setForm, "metaTitle", e.target.value)} className={input()} /></Field>
+          <Field label="Descrição SEO"><input value={form.metaDescription} disabled={!editable} onChange={(e) => patch(form, setForm, "metaDescription", e.target.value)} className={input()} /></Field>
           <Field label="Palavra-chave"><input value={form.focusKeyword} disabled={!editable} onChange={(e) => patch(form, setForm, "focusKeyword", e.target.value)} className={input()} /></Field>
           <div className="md:col-span-2 rounded-2xl border bg-background/70 p-4">
             <div className="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)]">
@@ -192,18 +193,18 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
                 {featuredImageUrl ? <img src={featuredImageUrl} alt={form.featuredImageAlt || "Pré-visualização da imagem destacada"} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">Nenhuma imagem destacada selecionada</div>}
               </div>
               <div className="space-y-4">
-                <div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Imagem destacada / SEO</p><p className="mt-2 text-sm leading-6 text-muted-foreground">JPEG, PNG, WebP ou AVIF · máximo 5 MB. Para novos artigos, salve o draft antes do upload.</p></div>
+                <div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Imagem destacada / SEO</p><p className="mt-2 text-sm leading-6 text-muted-foreground">JPEG, PNG, WebP ou AVIF · máximo 5 MB. Para novos artigos, salve o rascunho antes do envio do arquivo.</p></div>
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={!editable || !form.id || mediaBusy} onChange={(e) => void uploadImage(e.target.files?.[0])} className="block w-full text-sm file:mr-3 file:rounded-lg file:border file:bg-background file:px-3 file:py-2 file:font-semibold disabled:opacity-60" />
-                <Field label="Alt da imagem"><input value={form.featuredImageAlt} disabled={!editable} onChange={(e) => patch(form, setForm, "featuredImageAlt", e.target.value)} className={input()} placeholder="Descreva objetivamente o conteúdo da imagem" /></Field>
+                <Field label="Texto alternativo da imagem"><input value={form.featuredImageAlt} disabled={!editable} onChange={(e) => patch(form, setForm, "featuredImageAlt", e.target.value)} className={input()} placeholder="Descreva objetivamente o conteúdo da imagem" /></Field>
                 {form.featuredImagePath && <div className="flex flex-wrap items-center gap-3"><p className="max-w-full truncate text-xs text-muted-foreground" title={form.featuredImagePath}>{form.featuredImagePath}</p><button type="button" disabled={!editable || mediaBusy} onClick={() => setForm({ ...form, featuredImagePath: "" })} className="rounded-lg border px-3 py-2 text-xs font-semibold disabled:opacity-60">Remover referência</button></div>}
               </div>
             </div>
           </div>
           <Field label="Agendamento"><input type="datetime-local" value={form.scheduledAt ? localDateTimeValue(form.scheduledAt) : ""} disabled={!editable} onChange={(e) => patch(form, setForm, "scheduledAt", e.target.value)} className={input()} /></Field>
-          <Field label="Status / revisão"><div className="flex h-11 items-center rounded-xl border bg-muted/40 px-3 text-sm">{form.status} · rev {form.revisionNumber}</div></Field>
+          <Field label="Estado / revisão"><div className="flex h-11 items-center rounded-xl border bg-muted/40 px-3 text-sm">{blogPostStatusLabel(form.status)} · {revisionLabel(form.revisionNumber)}</div></Field>
         </div></section>
 
-        <aside className="space-y-6"><section className="rounded-3xl border bg-card/60 p-5"><h2 className="font-display text-xl font-semibold">Workflow real</h2><p className="mt-2 text-sm text-muted-foreground">Cada ação abaixo persiste no Blog Supabase e continua sujeita às regras do banco.</p><div className="mt-4 space-y-2">{commands.map((command) => <button key={command} type="button" disabled={busy || mediaBusy} onClick={() => execute(command)} className="w-full rounded-xl border bg-background px-4 py-3 text-left text-sm font-semibold disabled:opacity-60">{busy ? "Processando…" : LABELS[command]}</button>)}</div></section><section className="rounded-3xl border bg-card/60 p-5"><h2 className="font-display text-xl font-semibold">Notas de revisão</h2><textarea value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)} className={`${input()} mt-3 min-h-24 py-3`} placeholder="Opcional para aprovação ou solicitação de ajustes" /><p className="mt-3 text-xs leading-5 text-muted-foreground">A regra de quatro-olhos permanece obrigatória: quem criou a revisão não pode aprová-la.</p></section></aside>
+        <aside className="space-y-6"><section className="rounded-3xl border bg-card/60 p-5"><h2 className="font-display text-xl font-semibold">Fluxo editorial real</h2><p className="mt-2 text-sm text-muted-foreground">Cada ação abaixo persiste no Supabase do Blog e continua sujeita às regras do banco.</p><div className="mt-4 space-y-2">{commands.map((command) => <button key={command} type="button" disabled={busy || mediaBusy} onClick={() => execute(command)} className="w-full rounded-xl border bg-background px-4 py-3 text-left text-sm font-semibold disabled:opacity-60">{busy ? "Processando…" : LABELS[command]}</button>)}</div></section><section className="rounded-3xl border bg-card/60 p-5"><h2 className="font-display text-xl font-semibold">Notas de revisão</h2><textarea value={reviewNotes} onChange={(e) => setReviewNotes(e.target.value)} className={`${input()} mt-3 min-h-24 py-3`} placeholder="Opcional para aprovação ou solicitação de ajustes" /><p className="mt-3 text-xs leading-5 text-muted-foreground">A regra de quatro-olhos permanece obrigatória: quem criou a revisão não pode aprová-la.</p></section></aside>
       </div>}
     </main>
   </div>;
@@ -215,4 +216,4 @@ function localDateTimeValue(value: string) { const date = new Date(value); if (N
 function patch<K extends keyof EditorialEditorForm>(form: EditorialEditorForm | null, setter: React.Dispatch<React.SetStateAction<EditorialEditorForm | null>>, key: K, value: EditorialEditorForm[K]) { if (form) setter({ ...form, [key]: value }); }
 function input() { return "h-11 min-w-56 rounded-xl border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"; }
 function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className="block"><span className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</span>{children}</label>; }
-function Message({ title, description = "Conferindo sessão exclusiva do Blog e membership editorial." }: { title: string; description?: string }) { return <main className="flex min-h-screen items-center justify-center bg-background px-6 text-center"><div className="max-w-xl rounded-3xl border bg-card/60 p-9"><h1 className="font-display text-3xl font-bold text-petrol">{title}</h1><p className="mt-3 text-muted-foreground">{description}</p><Link to="/editorial" className="mt-6 inline-flex text-sm font-semibold text-primary hover:underline">Ir para o painel editorial</Link></div></main>; }
+function Message({ title, description = "Conferindo sessão exclusiva do Blog e vínculo editorial." }: { title: string; description?: string }) { return <main className="flex min-h-screen items-center justify-center bg-background px-6 text-center"><div className="max-w-xl rounded-3xl border bg-card/60 p-9"><h1 className="font-display text-3xl font-bold text-petrol">{title}</h1><p className="mt-3 text-muted-foreground">{description}</p><Link to="/editorial" className="mt-6 inline-flex text-sm font-semibold text-primary hover:underline">Ir para o painel editorial</Link></div></main>; }
