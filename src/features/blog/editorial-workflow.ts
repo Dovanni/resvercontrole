@@ -1,4 +1,5 @@
-import type { BlogArticle, BlogArticleSection, BlogPostStatus } from "./types";
+import { validateStructuredBlogLinks } from "./blog-content";
+import type { BlogArticle, BlogArticleParagraph, BlogArticleSection, BlogPostStatus } from "./types";
 import type { EditorialRole } from "./blog.repository";
 
 export type EditorialReviewDecision = "approved" | "changes_requested";
@@ -123,6 +124,9 @@ export function validateEditorialDraft(form: EditorialEditorForm): EditorialVali
   if (!Number.isInteger(form.readingTimeMinutes) || form.readingTimeMinutes <= 0) {
     issues.push(issue("readingTimeMinutes", "BLOG_READING_TIME_INVALID", "O tempo de leitura deve ser um inteiro maior que zero."));
   }
+  const linkIssue = validateStructuredBlogLinks(form.sections);
+  if (linkIssue === "BLOG_LINK_TEXT_REQUIRED") issues.push(issue("sections", linkIssue, "Todo link precisa ter um texto visível."));
+  if (linkIssue === "BLOG_LINK_INVALID_HREF") issues.push(issue("sections", linkIssue, "Use apenas links internos iniciados por / ou URLs HTTPS."));
   return issues;
 }
 
@@ -149,9 +153,7 @@ export function availableEditorialCommands(actor: EditorialActor, form: Editoria
   const authorOwnDraft = actor.role === "author" && form.status === "draft" && form.createdByUserId === actor.userId;
 
   if (form.status === "draft" && (ownerOrEditor || authorOwnDraft)) commands.push("save_draft", "submit_review");
-  if (form.status === "review" && ["owner", "editor", "reviewer"].includes(actor.role)) {
-    commands.push("request_changes", "approve_revision");
-  }
+  if (form.status === "review" && ["owner", "editor", "reviewer"].includes(actor.role)) commands.push("request_changes", "approve_revision");
   if (form.status === "review" && ownerOrEditor) commands.push("return_to_draft", "schedule", "publish", "archive");
   if (form.status === "scheduled" && ownerOrEditor) commands.push("publish", "archive");
   if (form.status === "published" && ownerOrEditor) commands.push("archive");
@@ -159,19 +161,12 @@ export function availableEditorialCommands(actor: EditorialActor, form: Editoria
   return commands;
 }
 
-export function planEditorialCommand(
-  actor: EditorialActor,
-  form: EditorialEditorForm,
-  command: EditorialCommandKind,
-  now = new Date(),
-): EditorialCommandPlan {
+export function planEditorialCommand(actor: EditorialActor, form: EditorialEditorForm, command: EditorialCommandKind, now = new Date()): EditorialCommandPlan {
   const allowedCommands = availableEditorialCommands(actor, form);
   const issues: EditorialValidationIssue[] = [];
   let toStatus = form.status;
 
-  if (!allowedCommands.includes(command)) {
-    issues.push(issue("workflow", "BLOG_COMMAND_NOT_ALLOWED", "Este comando não é permitido para o papel e o status atuais."));
-  }
+  if (!allowedCommands.includes(command)) issues.push(issue("workflow", "BLOG_COMMAND_NOT_ALLOWED", "Este comando não é permitido para o papel e o status atuais."));
 
   switch (command) {
     case "save_draft":
@@ -207,9 +202,7 @@ export function planEditorialCommand(
       toStatus = "published";
       issues.push(...validateEditorialPublishingRequirements(form));
       requireCurrentApproval(form, issues);
-      if (form.status === "scheduled" && form.scheduledAt && new Date(form.scheduledAt).getTime() > now.getTime()) {
-        issues.push(issue("scheduledAt", "BLOG_SCHEDULED_PUBLICATION_NOT_DUE", "O horário agendado ainda não foi alcançado."));
-      }
+      if (form.status === "scheduled" && form.scheduledAt && new Date(form.scheduledAt).getTime() > now.getTime()) issues.push(issue("scheduledAt", "BLOG_SCHEDULED_PUBLICATION_NOT_DUE", "O horário agendado ainda não foi alcançado."));
       break;
     case "archive":
       toStatus = "archived";
@@ -234,26 +227,21 @@ export function simulateEditorialCommand(form: EditorialEditorForm, plan: Editor
   if (!plan.allowedByClientContract) return form;
   if (plan.command === "approve_revision") return { ...form, latestReviewDecision: "approved" };
   if (plan.command === "request_changes") return { ...form, latestReviewDecision: "changes_requested" };
-  if (plan.command === "return_to_draft") {
-    return { ...form, status: "draft", latestReviewDecision: null, latestReviewerUserId: null, scheduledAt: "" };
-  }
-  return {
-    ...form,
-    status: plan.toStatus,
-    scheduledAt: plan.toStatus === "review" ? "" : form.scheduledAt,
-  };
+  if (plan.command === "return_to_draft") return { ...form, status: "draft", latestReviewDecision: null, latestReviewerUserId: null, scheduledAt: "" };
+  return { ...form, status: plan.toStatus, scheduledAt: plan.toStatus === "review" ? "" : form.scheduledAt };
 }
 
 function requireCurrentApproval(form: EditorialEditorForm, issues: EditorialValidationIssue[]) {
-  if (form.latestReviewDecision !== "approved" || !form.latestReviewerUserId) {
-    issues.push(issue("workflow", "BLOG_CURRENT_REVISION_REQUIRES_APPROVAL", "A revisão atual precisa estar aprovada por outro usuário."));
-  }
+  if (form.latestReviewDecision !== "approved" || !form.latestReviewerUserId) issues.push(issue("workflow", "BLOG_CURRENT_REVISION_REQUIRES_APPROVAL", "A revisão atual precisa estar aprovada por outro usuário."));
+}
+
+function paragraphHasText(paragraph: BlogArticleParagraph) {
+  if (typeof paragraph === "string") return paragraph.trim().length > 0;
+  return paragraph.content.some((item) => item.text.trim().length > 0);
 }
 
 function hasStructuredContent(sections: BlogArticleSection[]) {
-  return sections.some(
-    (section) => section.heading.trim().length > 0 && section.paragraphs.some((paragraph) => paragraph.trim().length > 0),
-  );
+  return sections.some((section) => section.heading.trim().length > 0 && section.paragraphs.some(paragraphHasText));
 }
 
 function issue(field: EditorialValidationIssue["field"], code: string, message: string): EditorialValidationIssue {

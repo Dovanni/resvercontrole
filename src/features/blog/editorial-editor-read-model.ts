@@ -1,4 +1,5 @@
 import { blogSupabase } from "./blog-supabase";
+import { normalizeBlogSections } from "./blog-content";
 import type { EditorialEditorForm, EditorialReviewDecision } from "./editorial-workflow";
 import { requireEditorialReadAccess } from "./editorial-read-model";
 
@@ -17,16 +18,6 @@ type FullPostRow = {
 const FULL_POST_SELECT = `id,slug,title,excerpt,content,status,revision_number,scheduled_at,published_at,featured_image_path,featured_image_alt,meta_title,meta_description,focus_keyword,reading_time_minutes,created_by,blog_categories(name),blog_authors(display_name),blog_post_tags(blog_tags(name))`;
 
 function firstRelation<T>(value: T | T[] | null | undefined): T | undefined { return Array.isArray(value) ? value[0] : value ?? undefined; }
-
-function sections(content: unknown) {
-  if (!Array.isArray(content)) return [];
-  return content.flatMap((block) => {
-    if (!block || typeof block !== "object") return [];
-    const heading = "heading" in block && typeof block.heading === "string" ? block.heading : "";
-    const paragraphs = "paragraphs" in block && Array.isArray(block.paragraphs) ? block.paragraphs.filter((p): p is string => typeof p === "string") : [];
-    return [{ heading, paragraphs }];
-  });
-}
 
 export async function listRealEditorialEditorOptions(): Promise<EditorialEditorPostOption[]> {
   await requireEditorialReadAccess();
@@ -51,7 +42,7 @@ export async function loadRealEditorialEditorForm(postId: string): Promise<Edito
     slug: row.slug,
     title: row.title,
     excerpt: row.excerpt,
-    sections: sections(row.content),
+    sections: normalizeBlogSections(row.content),
     category: firstRelation(row.blog_categories)?.name?.trim() || "",
     author: firstRelation(row.blog_authors)?.display_name?.trim() || "",
     tags: (row.blog_post_tags ?? []).map((x) => firstRelation(x.blog_tags)?.name?.trim()).filter((x): x is string => Boolean(x)),
