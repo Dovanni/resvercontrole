@@ -2,12 +2,10 @@ import { resolveBlogSeoSettings } from "./blog-seo-policy";
 import type { BlogSeoSettings } from "./types";
 
 /**
- * Repository-only safety gate for P.10-C6.SEO-IMPL-R3.
- * Keep false until the R2 persistence migration is explicitly applied and
- * validated in the real Blog Lab. This prevents selecting missing columns or
- * sending the 19-argument RPC contract to the current 16-argument endpoint.
+ * Persistence readiness gate for per-article SEO controls.
+ * Enabled only after R2 was applied and functionally validated in the real Blog Lab.
  */
-export const BLOG_SEO_PERSISTENCE_READY = false as const;
+export const BLOG_SEO_PERSISTENCE_READY = true as const;
 
 export const BLOG_SEO_PERSISTENCE_SELECT =
   "seo_allow_indexing,seo_allow_following,seo_include_in_sitemap" as const;
