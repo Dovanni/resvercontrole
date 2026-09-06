@@ -55,6 +55,9 @@ export interface DraftMutationPayload {
   metaDescription: string;
   focusKeyword: string;
   readingTimeMinutes: number;
+  allowIndexing: boolean;
+  allowFollowing: boolean;
+  includeInSitemap: boolean;
 }
 
 export interface ReviewDecisionPayload {
@@ -141,11 +144,6 @@ export function restoreDraft(actor: EditorialActor, form: EditorialEditorForm): 
   return statusEnvelope("restoreDraft", actor, form, "restore_draft", "Restaurar artigo arquivado para draft.");
 }
 
-/**
- * Hard barrier for Phase 3-N. There is deliberately no Supabase client in this
- * module. Calling this function is proof that a caller attempted to cross the
- * repository-only boundary and therefore always fails closed.
- */
 export async function executeEditorialMutation(_mutation: EditorialMutationEnvelope): Promise<never> {
   throw new Error("BLOG_MUTATION_EXECUTION_DISABLED_REPOSITORY_ONLY");
 }
@@ -204,5 +202,8 @@ function draftPayload(form: EditorialEditorForm): DraftMutationPayload {
     metaDescription: form.metaDescription.trim(),
     focusKeyword: form.focusKeyword.trim(),
     readingTimeMinutes: form.readingTimeMinutes,
+    allowIndexing: form.allowIndexing,
+    allowFollowing: form.allowFollowing,
+    includeInSitemap: form.allowIndexing ? form.includeInSitemap : false,
   };
 }
