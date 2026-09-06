@@ -11,21 +11,23 @@ function form() {
   value.author = "Equipe";
   value.allowIndexing = false;
   value.allowFollowing = false;
-  value.includeInSitemap = false;
+  value.includeInSitemap = true;
   return value;
 }
 
 describe("editorial SEO write gate", () => {
-  it("keeps the current live RPC payload on 16 arguments while R2 is not applied", () => {
+  it("sends the live 19-argument RPC payload after R4 persistence validation", () => {
     const args = buildOperationalDraftRpcArgs(form(), {
       categoryId: "00000000-0000-0000-0000-000000000001",
       authorId: "00000000-0000-0000-0000-000000000002",
       tagIds: [],
     });
 
-    expect(Object.keys(args)).toHaveLength(16);
-    expect(args).not.toHaveProperty("p_seo_allow_indexing");
-    expect(args).not.toHaveProperty("p_seo_allow_following");
-    expect(args).not.toHaveProperty("p_seo_include_in_sitemap");
+    expect(Object.keys(args)).toHaveLength(19);
+    expect(args).toMatchObject({
+      p_seo_allow_indexing: false,
+      p_seo_allow_following: false,
+      p_seo_include_in_sitemap: false,
+    });
   });
 });
