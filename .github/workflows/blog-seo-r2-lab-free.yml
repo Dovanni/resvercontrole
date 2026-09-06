@@ -1,0 +1,224 @@
+name: Blog SEO R2 LAB FREE
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-seo-r2-postgres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: blog_seo_r2_lab
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d blog_seo_r2_lab"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: blog_seo_r2_lab
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Bootstrap disposable Supabase-compatible contract
+        run: |
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          create schema auth;
+          create schema blog_private;
+          create role authenticated;
+          create function auth.uid() returns uuid language sql stable as $$ select null::uuid $$;
+
+          create table public.blog_categories (id uuid primary key, is_active boolean not null default true);
+          create table public.blog_authors (id uuid primary key, is_active boolean not null default true);
+          create table public.blog_tags (id uuid primary key, is_active boolean not null default true);
+          create table public.blog_editorial_members (
+            user_id uuid not null,
+            author_id uuid,
+            active boolean not null default true,
+            role text not null
+          );
+          create table public.blog_posts (
+            id uuid primary key default gen_random_uuid(),
+            slug text not null,
+            title text not null,
+            excerpt text,
+            content jsonb not null default '[]'::jsonb,
+            category_id uuid,
+            author_id uuid,
+            status text not null default 'draft',
+            revision_number integer not null default 1,
+            featured_image_path text,
+            featured_image_alt text,
+            meta_title text,
+            meta_description text,
+            focus_keyword text,
+            reading_time_minutes integer,
+            created_by uuid,
+            updated_by uuid,
+            reviewed_by uuid,
+            published_by uuid,
+            published_at timestamptz,
+            scheduled_at timestamptz
+          );
+          create table public.blog_post_tags (
+            post_id uuid not null references public.blog_posts(id) on delete cascade,
+            tag_id uuid not null references public.blog_tags(id) on delete cascade,
+            primary key (post_id, tag_id)
+          );
+          create table public.blog_post_reviews (
+            id uuid primary key default gen_random_uuid(),
+            post_id uuid not null,
+            revision_number integer not null,
+            decision text not null,
+            reviewer_user_id uuid,
+            created_at timestamptz not null default now()
+          );
+          create function blog_private.has_editorial_role(text[]) returns boolean
+          language sql stable as $$ select true $$;
+          SQL
+
+      - name: Install pre-R2 draft RPC signature
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          src = Path('supabase/rollback/20260906195800_blog_editorial_v2_seo_controls_persistence.rollback.sql').read_text()
+          start = src.index('create function public.blog_save_draft_transaction(')
+          end_marker = ') to authenticated;'
+          end = src.index(end_marker, start) + len(end_marker)
+          Path('/tmp/pre-r2-rpc.sql').write_text(src[start:end] + '\n')
+          PY
+          psql -v ON_ERROR_STOP=1 -f /tmp/pre-r2-rpc.sql
+
+      - name: Apply R2 migration
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20260906195800_blog_editorial_v2_seo_controls_persistence.sql
+
+      - name: Assert R2 executable invariants
+        run: |
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          do $$
+          declare
+            cols integer;
+            defaults integer;
+            checks integer;
+            rpc19 integer;
+            rpc16 integer;
+            invoker_ok boolean;
+            guard_def text;
+          begin
+            select count(*) into cols
+            from information_schema.columns
+            where table_schema='public' and table_name='blog_posts'
+              and column_name in ('seo_allow_indexing','seo_allow_following','seo_include_in_sitemap')
+              and data_type='boolean' and is_nullable='NO';
+            if cols <> 3 then raise exception 'R2 columns invariant failed: %', cols; end if;
+
+            select count(*) into defaults
+            from information_schema.columns
+            where table_schema='public' and table_name='blog_posts'
+              and column_name in ('seo_allow_indexing','seo_allow_following','seo_include_in_sitemap')
+              and column_default = 'true';
+            if defaults <> 3 then raise exception 'R2 defaults invariant failed: %', defaults; end if;
+
+            select count(*) into checks
+            from pg_constraint c join pg_class t on t.oid=c.conrelid join pg_namespace n on n.oid=t.relnamespace
+            where n.nspname='public' and t.relname='blog_posts'
+              and c.conname='blog_posts_seo_sitemap_requires_indexing_check' and c.contype='c';
+            if checks <> 1 then raise exception 'R2 check invariant failed'; end if;
+
+            select count(*) into rpc19
+            from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+            where n.nspname='public' and p.proname='blog_save_draft_transaction' and p.pronargs=19;
+            select count(*) into rpc16
+            from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+            where n.nspname='public' and p.proname='blog_save_draft_transaction' and p.pronargs=16;
+            if rpc19 <> 1 or rpc16 <> 0 then raise exception 'R2 RPC signature invariant failed: 19=%, 16=%', rpc19, rpc16; end if;
+
+            select not p.prosecdef into invoker_ok
+            from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+            where n.nspname='public' and p.proname='blog_save_draft_transaction' and p.pronargs=19;
+            if invoker_ok is distinct from true then raise exception 'R2 RPC must remain SECURITY INVOKER'; end if;
+
+            select pg_get_functiondef(p.oid) into guard_def
+            from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+            where n.nspname='blog_private' and p.proname='guard_blog_post_write';
+            if guard_def not like '%seo_allow_indexing%' or guard_def not like '%seo_allow_following%' or guard_def not like '%seo_include_in_sitemap%'
+              then raise exception 'R2 guard does not track all SEO fields'; end if;
+          end $$;
+
+          insert into public.blog_posts(slug,title,content,seo_allow_indexing,seo_include_in_sitemap)
+          values ('defaults','Defaults','[]'::jsonb,default,default);
+          do $$ begin
+            if not exists (
+              select 1 from public.blog_posts where slug='defaults'
+                and seo_allow_indexing and seo_allow_following and seo_include_in_sitemap
+            ) then raise exception 'R2 row defaults failed'; end if;
+          end $$;
+
+          do $$ begin
+            begin
+              insert into public.blog_posts(slug,title,content,seo_allow_indexing,seo_include_in_sitemap)
+              values ('invalid','Invalid','[]'::jsonb,false,true);
+              raise exception 'R2 constraint unexpectedly accepted noindex+sitemap';
+            exception when check_violation then null;
+            end;
+          end $$;
+          SQL
+
+      - name: Execute exact rollback
+        run: psql -v ON_ERROR_STOP=1 -f supabase/rollback/20260906195800_blog_editorial_v2_seo_controls_persistence.rollback.sql
+
+      - name: Assert exact post-rollback contract
+        run: |
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          do $$
+          declare
+            cols integer;
+            checks integer;
+            rpc19 integer;
+            rpc16 integer;
+            guard_def text;
+          begin
+            select count(*) into cols
+            from information_schema.columns
+            where table_schema='public' and table_name='blog_posts'
+              and column_name in ('seo_allow_indexing','seo_allow_following','seo_include_in_sitemap');
+            if cols <> 0 then raise exception 'Rollback left SEO columns: %', cols; end if;
+
+            select count(*) into checks
+            from pg_constraint c join pg_class t on t.oid=c.conrelid join pg_namespace n on n.oid=t.relnamespace
+            where n.nspname='public' and t.relname='blog_posts'
+              and c.conname='blog_posts_seo_sitemap_requires_indexing_check';
+            if checks <> 0 then raise exception 'Rollback left SEO constraint'; end if;
+
+            select count(*) into rpc19
+            from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+            where n.nspname='public' and p.proname='blog_save_draft_transaction' and p.pronargs=19;
+            select count(*) into rpc16
+            from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+            where n.nspname='public' and p.proname='blog_save_draft_transaction' and p.pronargs=16;
+            if rpc19 <> 0 or rpc16 <> 1 then raise exception 'Rollback RPC signature invariant failed: 19=%, 16=%', rpc19, rpc16; end if;
+
+            select pg_get_functiondef(p.oid) into guard_def
+            from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+            where n.nspname='blog_private' and p.proname='guard_blog_post_write';
+            if guard_def like '%seo_allow_indexing%' or guard_def like '%seo_allow_following%' or guard_def like '%seo_include_in_sitemap%'
+              then raise exception 'Rollback guard still references SEO fields'; end if;
+          end $$;
+          SQL
