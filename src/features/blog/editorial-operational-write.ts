@@ -1,4 +1,6 @@
 import { blogSupabase } from "./blog-supabase";
+import { toBlogSeoDraftRpcArgs } from "./blog-seo-persistence-contract";
+import { BLOG_SEO_PERSISTENCE_READY } from "./blog-seo-persistence-readiness";
 import { loadEditorialReferenceCatalog } from "./editorial-read-model";
 import {
   planEditorialCommand,
@@ -57,6 +59,41 @@ export async function executeOperationalEditorialCommand(input: {
   }
 }
 
+export function buildOperationalDraftRpcArgs(form: EditorialEditorForm, references: {
+  categoryId: string;
+  authorId: string;
+  tagIds: string[];
+}) {
+  const baseArgs = {
+    p_operation: form.id ? "update" : "create",
+    p_post_id: form.id,
+    p_expected_revision: form.id ? form.revisionNumber : null,
+    p_slug: form.slug.trim(),
+    p_title: form.title.trim(),
+    p_excerpt: form.excerpt.trim(),
+    p_content: form.sections,
+    p_category_id: references.categoryId,
+    p_author_id: references.authorId,
+    p_tag_ids: [...new Set(references.tagIds)],
+    p_featured_image_path: form.featuredImagePath.trim(),
+    p_featured_image_alt: form.featuredImageAlt.trim(),
+    p_meta_title: form.metaTitle.trim(),
+    p_meta_description: form.metaDescription.trim(),
+    p_focus_keyword: form.focusKeyword.trim(),
+    p_reading_time_minutes: form.readingTimeMinutes,
+  };
+
+  if (!BLOG_SEO_PERSISTENCE_READY) return baseArgs;
+  return {
+    ...baseArgs,
+    ...toBlogSeoDraftRpcArgs({
+      allowIndexing: form.allowIndexing,
+      allowFollowing: form.allowFollowing,
+      includeInSitemap: form.includeInSitemap,
+    }),
+  };
+}
+
 async function saveDraft(form: EditorialEditorForm): Promise<EditorialOperationalWriteResult> {
   const catalog = await loadEditorialReferenceCatalog();
   const category = catalog.categories.find((item) => matchesReference(form.category, item.name, item.slug));
@@ -70,24 +107,12 @@ async function saveDraft(form: EditorialEditorForm): Promise<EditorialOperationa
   if (!category) throw new Error("BLOG_CATEGORY_REFERENCE_NOT_FOUND");
   if (!author) throw new Error("BLOG_AUTHOR_REFERENCE_NOT_FOUND");
 
-  const { data, error } = await (blogSupabase as any).rpc("blog_save_draft_transaction", {
-    p_operation: form.id ? "update" : "create",
-    p_post_id: form.id,
-    p_expected_revision: form.id ? form.revisionNumber : null,
-    p_slug: form.slug.trim(),
-    p_title: form.title.trim(),
-    p_excerpt: form.excerpt.trim(),
-    p_content: form.sections,
-    p_category_id: category.id,
-    p_author_id: author.id,
-    p_tag_ids: [...new Set(tagIds)],
-    p_featured_image_path: form.featuredImagePath.trim(),
-    p_featured_image_alt: form.featuredImageAlt.trim(),
-    p_meta_title: form.metaTitle.trim(),
-    p_meta_description: form.metaDescription.trim(),
-    p_focus_keyword: form.focusKeyword.trim(),
-    p_reading_time_minutes: form.readingTimeMinutes,
+  const args = buildOperationalDraftRpcArgs(form, {
+    categoryId: category.id,
+    authorId: author.id,
+    tagIds,
   });
+  const { data, error } = await (blogSupabase as any).rpc("blog_save_draft_transaction", args);
 
   if (error) throw error;
   const row = Array.isArray(data) ? data[0] : data;
