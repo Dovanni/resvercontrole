@@ -95,6 +95,11 @@ export function mapPublishedBlogPost(row: BlogPostRow): BlogArticle {
     focusKeyword: row.focus_keyword?.trim() || row.title,
     featuredImage: publicStorageUrl(row.featured_image_path),
     featuredImageAlt: row.featured_image_alt?.trim() || `Imagem editorial de ${row.title}`,
+    seo: {
+      allowIndexing: true,
+      allowFollowing: true,
+      includeInSitemap: true,
+    },
     status: row.status,
     sections: normalizeBlogSections(row.content),
   };

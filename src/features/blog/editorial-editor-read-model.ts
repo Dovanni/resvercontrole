@@ -1,5 +1,9 @@
 import { blogSupabase } from "./blog-supabase";
 import { normalizeBlogSections } from "./blog-content";
+import {
+  persistedBlogSeoSettings,
+  withBlogSeoPersistenceSelect,
+} from "./blog-seo-persistence-readiness";
 import type { EditorialEditorForm, EditorialReviewDecision } from "./editorial-workflow";
 import { requireEditorialReadAccess } from "./editorial-read-model";
 
@@ -10,12 +14,15 @@ type FullPostRow = {
   revision_number: number; scheduled_at: string | null; published_at: string | null; featured_image_path: string | null;
   featured_image_alt: string | null; meta_title: string | null; meta_description: string | null; focus_keyword: string | null;
   reading_time_minutes: number; created_by: string;
+  seo_allow_indexing?: boolean | null; seo_allow_following?: boolean | null; seo_include_in_sitemap?: boolean | null;
   blog_categories?: { name?: string | null } | Array<{ name?: string | null }> | null;
   blog_authors?: { display_name?: string | null } | Array<{ display_name?: string | null }> | null;
   blog_post_tags?: Array<{ blog_tags?: { name?: string | null } | Array<{ name?: string | null }> | null }> | null;
 };
 
-const FULL_POST_SELECT = `id,slug,title,excerpt,content,status,revision_number,scheduled_at,published_at,featured_image_path,featured_image_alt,meta_title,meta_description,focus_keyword,reading_time_minutes,created_by,blog_categories(name),blog_authors(display_name),blog_post_tags(blog_tags(name))`;
+const FULL_POST_SELECT = withBlogSeoPersistenceSelect(
+  `id,slug,title,excerpt,content,status,revision_number,scheduled_at,published_at,featured_image_path,featured_image_alt,meta_title,meta_description,focus_keyword,reading_time_minutes,created_by,blog_categories(name),blog_authors(display_name),blog_post_tags(blog_tags(name))`,
+);
 
 function firstRelation<T>(value: T | T[] | null | undefined): T | undefined { return Array.isArray(value) ? value[0] : value ?? undefined; }
 
@@ -37,6 +44,7 @@ export async function loadRealEditorialEditorForm(postId: string): Promise<Edito
   if (!data) return null;
   const row = data as unknown as FullPostRow;
   const review = reviewResult.data as any;
+  const seo = persistedBlogSeoSettings(row);
   return {
     id: row.id,
     slug: row.slug,
@@ -52,6 +60,9 @@ export async function loadRealEditorialEditorForm(postId: string): Promise<Edito
     metaDescription: row.meta_description || "",
     focusKeyword: row.focus_keyword || "",
     readingTimeMinutes: row.reading_time_minutes,
+    allowIndexing: seo.allowIndexing,
+    allowFollowing: seo.allowFollowing,
+    includeInSitemap: seo.includeInSitemap,
     status: row.status,
     revisionNumber: row.revision_number,
     scheduledAt: row.scheduled_at || "",

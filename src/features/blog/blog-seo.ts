@@ -1,4 +1,5 @@
 import type { BlogArticle } from "./types";
+import { buildBlogRobotsContent, shouldIncludeArticleInSitemap } from "./blog-seo-policy";
 
 export const BLOG_PUBLIC_ORIGIN = "https://vejamais.com.br";
 export const BLOG_PUBLIC_PATH = "/blog";
@@ -73,7 +74,7 @@ export function buildPublishedArticleHead(article: BlogArticle) {
     meta: [
       { title: article.metaTitle },
       { name: "description", content: article.metaDescription },
-      { name: "robots", content: "index, follow, max-image-preview:large" },
+      { name: "robots", content: buildBlogRobotsContent(article) },
       { property: "og:title", content: article.metaTitle },
       { property: "og:description", content: article.metaDescription },
       { property: "og:type", content: "article" },
@@ -97,15 +98,18 @@ export function buildPublishedArticleHead(article: BlogArticle) {
 
 /**
  * This builder receives only the already-filtered published read model.
- * Draft/review/scheduled content must never be passed to it.
+ * R0 additionally applies the repository-only SEO visibility contract.
+ * Missing SEO flags retain the historical index/follow/sitemap defaults.
  */
 export function buildBlogSitemapXml(articles: BlogArticle[]) {
   const urls = [
     `<url><loc>${escapeXml(blogCanonicalUrl())}</loc></url>`,
-    ...articles.map(
-      (article) =>
-        `<url><loc>${escapeXml(blogCanonicalUrl(article.slug))}</loc><lastmod>${escapeXml(new Date(article.updatedAt).toISOString())}</lastmod></url>`,
-    ),
+    ...articles
+      .filter(shouldIncludeArticleInSitemap)
+      .map(
+        (article) =>
+          `<url><loc>${escapeXml(blogCanonicalUrl(article.slug))}</loc><lastmod>${escapeXml(new Date(article.updatedAt).toISOString())}</lastmod></url>`,
+      ),
   ];
 
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls.join("")}</urlset>`;

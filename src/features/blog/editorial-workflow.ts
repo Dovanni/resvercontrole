@@ -30,6 +30,9 @@ export interface EditorialEditorForm {
   metaDescription: string;
   focusKeyword: string;
   readingTimeMinutes: number;
+  allowIndexing: boolean;
+  allowFollowing: boolean;
+  includeInSitemap: boolean;
   status: BlogPostStatus;
   revisionNumber: number;
   scheduledAt: string;
@@ -79,6 +82,9 @@ export function articleToEditorialForm(article: BlogArticle): EditorialEditorFor
     metaDescription: article.metaDescription,
     focusKeyword: article.focusKeyword,
     readingTimeMinutes: article.readingTimeMinutes,
+    allowIndexing: article.allowIndexing ?? true,
+    allowFollowing: article.allowFollowing ?? true,
+    includeInSitemap: article.allowIndexing === false ? false : (article.includeInSitemap ?? true),
     status: article.status,
     revisionNumber: 1,
     scheduledAt: "",
@@ -105,6 +111,9 @@ export function createEmptyEditorialForm(): EditorialEditorForm {
     metaDescription: "",
     focusKeyword: "",
     readingTimeMinutes: 1,
+    allowIndexing: true,
+    allowFollowing: true,
+    includeInSitemap: true,
     status: "draft",
     revisionNumber: 1,
     scheduledAt: "",
@@ -123,6 +132,9 @@ export function validateEditorialDraft(form: EditorialEditorForm): EditorialVali
   if (!form.excerpt.trim()) issues.push(issue("excerpt", "BLOG_EXCERPT_REQUIRED", "Informe o resumo."));
   if (!Number.isInteger(form.readingTimeMinutes) || form.readingTimeMinutes <= 0) {
     issues.push(issue("readingTimeMinutes", "BLOG_READING_TIME_INVALID", "O tempo de leitura deve ser um inteiro maior que zero."));
+  }
+  if (!form.allowIndexing && form.includeInSitemap) {
+    issues.push(issue("includeInSitemap", "BLOG_SEO_NOINDEX_SITEMAP_CONFLICT", "Um artigo noindex não pode permanecer incluído no sitemap."));
   }
   const linkIssue = validateStructuredBlogLinks(form.sections);
   if (linkIssue === "BLOG_LINK_TEXT_REQUIRED") issues.push(issue("sections", linkIssue, "Todo link precisa ter um texto visível."));

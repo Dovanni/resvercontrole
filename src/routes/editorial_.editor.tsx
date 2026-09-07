@@ -4,6 +4,7 @@ import { ArrowLeft, FileEdit, ShieldCheck } from "lucide-react";
 import { useBlogEditorialAuth } from "@/features/blog/blog-editorial-auth";
 import { getCurrentEditorialMember, type EditorialMember } from "@/features/blog/blog.repository";
 import { parseEditorialParagraph, serializeEditorialParagraph } from "@/features/blog/blog-content";
+import { BLOG_SEO_PERSISTENCE_READY } from "@/features/blog/blog-seo-persistence-readiness";
 import { blogPostStatusLabel, editorialRoleLabel, revisionLabel } from "@/features/blog/editorial-localization";
 import {
   listRealEditorialEditorOptions,
@@ -114,6 +115,7 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
   const editable = form ? canEditEditorialDraft(actor, form) : false;
   const commands = form ? availableEditorialCommands(actor, form) : [];
   const featuredImageUrl = form?.featuredImagePath ? getBlogMediaPublicUrl(form.featuredImagePath) : "";
+  const seoControlsEnabled = editable && BLOG_SEO_PERSISTENCE_READY;
 
   function createNewDraft() {
     if (!catalog) return;
@@ -188,6 +190,15 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
           <Field label="Descrição SEO"><input value={form.metaDescription} disabled={!editable} onChange={(e) => patch(form, setForm, "metaDescription", e.target.value)} className={input()} /></Field>
           <Field label="Palavra-chave"><input value={form.focusKeyword} disabled={!editable} onChange={(e) => patch(form, setForm, "focusKeyword", e.target.value)} className={input()} /></Field>
           <div className="md:col-span-2 rounded-2xl border bg-background/70 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Controles avançados de indexação</p><p className="mt-2 text-sm text-muted-foreground">Contrato R3 preparado para persistência por artigo.</p></div><span className="rounded-full border px-3 py-1 text-xs font-semibold">{BLOG_SEO_PERSISTENCE_READY ? "Persistência disponível" : "Aguardando migration no Blog Lab"}</span></div>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              <SeoToggle label="Indexar este artigo" checked={form.allowIndexing} disabled={!seoControlsEnabled} onChange={(checked) => setForm({ ...form, allowIndexing: checked, includeInSitemap: checked ? form.includeInSitemap : false })} />
+              <SeoToggle label="Permitir seguir links" checked={form.allowFollowing} disabled={!seoControlsEnabled} onChange={(checked) => patch(form, setForm, "allowFollowing", checked)} />
+              <SeoToggle label="Incluir no sitemap" checked={form.includeInSitemap} disabled={!seoControlsEnabled || !form.allowIndexing} onChange={(checked) => patch(form, setForm, "includeInSitemap", checked)} />
+            </div>
+            {!BLOG_SEO_PERSISTENCE_READY && <p className="mt-4 text-xs leading-5 text-muted-foreground">Os controles permanecem bloqueados nesta fase repository-only para evitar valores que o banco atual ainda não persiste. Os defaults históricos continuam index, follow e sitemap ativos.</p>}
+          </div>
+          <div className="md:col-span-2 rounded-2xl border bg-background/70 p-4">
             <div className="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)]">
               <div className="aspect-[16/9] overflow-hidden rounded-xl border bg-muted/40">
                 {featuredImageUrl ? <img src={featuredImageUrl} alt={form.featuredImageAlt || "Pré-visualização da imagem destacada"} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">Nenhuma imagem destacada selecionada</div>}
@@ -216,4 +227,5 @@ function localDateTimeValue(value: string) { const date = new Date(value); if (N
 function patch<K extends keyof EditorialEditorForm>(form: EditorialEditorForm | null, setter: React.Dispatch<React.SetStateAction<EditorialEditorForm | null>>, key: K, value: EditorialEditorForm[K]) { if (form) setter({ ...form, [key]: value }); }
 function input() { return "h-11 min-w-56 rounded-xl border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"; }
 function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className="block"><span className="mb-2 block text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</span>{children}</label>; }
+function SeoToggle({ label, checked, disabled, onChange }: { label: string; checked: boolean; disabled: boolean; onChange: (checked: boolean) => void }) { return <label className="flex items-center gap-3 rounded-xl border bg-background px-3 py-3 text-sm font-medium"><input type="checkbox" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} className="size-4" /><span>{label}</span></label>; }
 function Message({ title, description = "Conferindo sessão exclusiva do Blog e vínculo editorial." }: { title: string; description?: string }) { return <main className="flex min-h-screen items-center justify-center bg-background px-6 text-center"><div className="max-w-xl rounded-3xl border bg-card/60 p-9"><h1 className="font-display text-3xl font-bold text-petrol">{title}</h1><p className="mt-3 text-muted-foreground">{description}</p><Link to="/editorial" className="mt-6 inline-flex text-sm font-semibold text-primary hover:underline">Ir para o painel editorial</Link></div></main>; }
