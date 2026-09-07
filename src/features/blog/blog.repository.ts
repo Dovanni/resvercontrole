@@ -1,6 +1,10 @@
 import { blogSupabase } from "./blog-supabase";
 import { BLOG_ARTICLES } from "./articles";
 import { normalizeBlogSections } from "./blog-content";
+import {
+  persistedBlogSeoSettings,
+  withBlogSeoPersistenceSelect,
+} from "./blog-seo-persistence-readiness";
 import type { BlogArticle, BlogPostStatus } from "./types";
 
 export type EditorialRole = "owner" | "editor" | "author" | "reviewer";
@@ -34,12 +38,15 @@ type BlogPostRow = {
   focus_keyword: string | null;
   featured_image_path: string | null;
   featured_image_alt: string | null;
+  seo_allow_indexing?: boolean | null;
+  seo_allow_following?: boolean | null;
+  seo_include_in_sitemap?: boolean | null;
   blog_categories?: { name?: string | null } | Array<{ name?: string | null }> | null;
   blog_authors?: { display_name?: string | null } | Array<{ display_name?: string | null }> | null;
   blog_post_tags?: Array<{ blog_tags?: { name?: string | null } | Array<{ name?: string | null }> | null }> | null;
 };
 
-const BLOG_POST_SELECT = `
+const BLOG_POST_SELECT = withBlogSeoPersistenceSelect(`
   id,
   slug,
   title,
@@ -57,7 +64,7 @@ const BLOG_POST_SELECT = `
   blog_categories(name),
   blog_authors(display_name),
   blog_post_tags(blog_tags(name))
-`;
+`);
 
 function firstRelation<T>(value: T | T[] | null | undefined): T | undefined {
   return Array.isArray(value) ? value[0] : value ?? undefined;
@@ -95,11 +102,7 @@ export function mapPublishedBlogPost(row: BlogPostRow): BlogArticle {
     focusKeyword: row.focus_keyword?.trim() || row.title,
     featuredImage: publicStorageUrl(row.featured_image_path),
     featuredImageAlt: row.featured_image_alt?.trim() || `Imagem editorial de ${row.title}`,
-    seo: {
-      allowIndexing: true,
-      allowFollowing: true,
-      includeInSitemap: true,
-    },
+    seo: persistedBlogSeoSettings(row),
     status: row.status,
     sections: normalizeBlogSections(row.content),
   };
