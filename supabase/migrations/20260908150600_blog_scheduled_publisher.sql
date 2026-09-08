@@ -1,6 +1,6 @@
 -- VEJAMAIS ERP — Blog Editorial V2
--- R9.3 — Publicador agendado seguro (repository-only)
--- NÃO aplicar ao Supabase sem homologação em laboratório e autorização explícita.
+-- R9.3/R9.6 — Publicador agendado seguro (repository-only)
+-- NÃO aplicar ao staging/produção sem gate e autorização explícita.
 
 begin;
 
@@ -30,6 +30,12 @@ create index blog_scheduled_publication_attempts_post_attempted_idx
 create index blog_scheduled_publication_attempts_outcome_attempted_idx
   on blog_private.blog_scheduled_publication_attempts (outcome, attempted_at desc);
 
+-- R9.6: para skips determinísticos, registra somente uma ocorrência por
+-- post + revisão + motivo. Uma nova revisão volta a ser auditável.
+create unique index blog_scheduled_publication_attempts_skip_once_uidx
+  on blog_private.blog_scheduled_publication_attempts (post_id, revision_number, outcome, error_code)
+  where outcome in ('skipped_no_approval', 'skipped_requirements');
+
 revoke all on table blog_private.blog_scheduled_publication_attempts from public, anon, authenticated, service_role;
 
 create or replace function blog_private.capture_blog_workflow_event()
@@ -50,33 +56,20 @@ begin
   end if;
 
   if tg_op = 'INSERT' then
-    insert into public.blog_workflow_events (
-      post_id, from_status, to_status, actor_user_id, actor_source
-    ) values (
-      new.id, null, new.status, _actor_user_id, _actor_source
-    );
+    insert into public.blog_workflow_events (post_id, from_status, to_status, actor_user_id, actor_source)
+    values (new.id, null, new.status, _actor_user_id, _actor_source);
   elsif old.status is distinct from new.status then
-    insert into public.blog_workflow_events (
-      post_id, from_status, to_status, actor_user_id, actor_source
-    ) values (
-      new.id, old.status, new.status, _actor_user_id, _actor_source
-    );
+    insert into public.blog_workflow_events (post_id, from_status, to_status, actor_user_id, actor_source)
+    values (new.id, old.status, new.status, _actor_user_id, _actor_source);
   end if;
-
   return new;
 end;
 $$;
 revoke all on function blog_private.capture_blog_workflow_event() from public;
 
 create or replace function blog_private.publish_due_scheduled_posts(p_limit integer default 50)
-returns table(
-  post_id uuid,
-  outcome text,
-  detail text,
-  published_at timestamptz
-)
-language plpgsql
-security definer
+returns table(post_id uuid, outcome text, detail text, published_at timestamptz)
+language plpgsql security definer
 set search_path = pg_catalog, public, blog_private, pg_temp
 as $$
 declare
@@ -89,132 +82,58 @@ begin
     raise exception 'BLOG_SCHEDULED_PUBLISHER_LIMIT_INVALID';
   end if;
 
-  -- O marcador serve apenas para auditoria do trigger de workflow; não é
-  -- autoridade de autorização. A função permanece privada e sem EXECUTE para
-  -- papéis expostos pela API.
   perform set_config('blog.scheduler_context', 'scheduled_publisher', true);
 
   for _post in
-    select
-      p.id,
-      p.slug,
-      p.revision_number,
-      p.scheduled_at,
-      p.category_id,
-      p.author_id,
-      p.meta_title,
-      p.meta_description,
-      p.content
+    select p.id,p.slug,p.revision_number,p.scheduled_at,p.category_id,p.author_id,p.meta_title,p.meta_description,p.content
     from public.blog_posts p
     where p.status = 'scheduled'
       and p.scheduled_at is not null
       and p.scheduled_at <= now()
-    order by p.scheduled_at asc, p.id asc
+    order by p.scheduled_at asc,p.id asc
     limit p_limit
     for update skip locked
   loop
-    select r.decision, r.reviewer_user_id
-      into _latest_review_decision, _latest_reviewer
+    select r.decision,r.reviewer_user_id into _latest_review_decision,_latest_reviewer
     from public.blog_post_reviews r
-    where r.post_id = _post.id
-      and r.revision_number = _post.revision_number
-    order by r.created_at desc, r.id desc
-    limit 1;
+    where r.post_id = _post.id and r.revision_number = _post.revision_number
+    order by r.created_at desc,r.id desc limit 1;
 
     if _latest_review_decision is distinct from 'approved' or _latest_reviewer is null then
-      insert into blog_private.blog_scheduled_publication_attempts (
-        post_id, post_slug, revision_number, scheduled_at, outcome, error_code, detail
-      ) values (
-        _post.id,
-        _post.slug,
-        _post.revision_number,
-        _post.scheduled_at,
-        'skipped_no_approval',
-        'BLOG_CURRENT_REVISION_REQUIRES_APPROVAL',
-        'Revisão atual sem aprovação válida; nenhuma publicação executada.'
-      );
-
-      post_id := _post.id;
-      outcome := 'skipped_no_approval';
-      detail := 'BLOG_CURRENT_REVISION_REQUIRES_APPROVAL';
-      published_at := null;
-      return next;
-      continue;
+      insert into blog_private.blog_scheduled_publication_attempts(post_id,post_slug,revision_number,scheduled_at,outcome,error_code,detail)
+      values(_post.id,_post.slug,_post.revision_number,_post.scheduled_at,'skipped_no_approval','BLOG_CURRENT_REVISION_REQUIRES_APPROVAL','Revisão atual sem aprovação válida; nenhuma publicação executada.')
+      on conflict (post_id, revision_number, outcome, error_code)
+        where outcome in ('skipped_no_approval', 'skipped_requirements')
+        do nothing;
+      post_id:=_post.id; outcome:='skipped_no_approval'; detail:='BLOG_CURRENT_REVISION_REQUIRES_APPROVAL'; published_at:=null; return next; continue;
     end if;
 
     if _post.category_id is null
        or _post.author_id is null
-       or nullif(btrim(coalesce(_post.meta_title, '')), '') is null
-       or nullif(btrim(coalesce(_post.meta_description, '')), '') is null
+       or nullif(btrim(coalesce(_post.meta_title,'')),'') is null
+       or nullif(btrim(coalesce(_post.meta_description,'')),'') is null
        or jsonb_typeof(_post.content) is distinct from 'array'
-       or jsonb_array_length(_post.content) = 0 then
-      insert into blog_private.blog_scheduled_publication_attempts (
-        post_id, post_slug, revision_number, scheduled_at, outcome, error_code, detail
-      ) values (
-        _post.id,
-        _post.slug,
-        _post.revision_number,
-        _post.scheduled_at,
-        'skipped_requirements',
-        'BLOG_PUBLISHING_REQUIREMENTS_NOT_MET',
-        'Requisitos editoriais de publicação não atendidos; nenhuma publicação executada.'
-      );
-
-      post_id := _post.id;
-      outcome := 'skipped_requirements';
-      detail := 'BLOG_PUBLISHING_REQUIREMENTS_NOT_MET';
-      published_at := null;
-      return next;
-      continue;
+       or jsonb_array_length(_post.content)=0 then
+      insert into blog_private.blog_scheduled_publication_attempts(post_id,post_slug,revision_number,scheduled_at,outcome,error_code,detail)
+      values(_post.id,_post.slug,_post.revision_number,_post.scheduled_at,'skipped_requirements','BLOG_PUBLISHING_REQUIREMENTS_NOT_MET','Requisitos editoriais de publicação não atendidos; nenhuma publicação executada.')
+      on conflict (post_id, revision_number, outcome, error_code)
+        where outcome in ('skipped_no_approval', 'skipped_requirements')
+        do nothing;
+      post_id:=_post.id; outcome:='skipped_requirements'; detail:='BLOG_PUBLISHING_REQUIREMENTS_NOT_MET'; published_at:=null; return next; continue;
     end if;
 
     begin
-      update public.blog_posts p
-      set status = 'published'
-      where p.id = _post.id
-        and p.status = 'scheduled'
-        and p.scheduled_at is not null
-        and p.scheduled_at <= now()
+      update public.blog_posts p set status='published'
+      where p.id=_post.id and p.status='scheduled' and p.scheduled_at is not null and p.scheduled_at <= now()
       returning p.published_at into _published_at;
-
-      if not found then
-        continue;
-      end if;
-
-      insert into blog_private.blog_scheduled_publication_attempts (
-        post_id, post_slug, revision_number, scheduled_at, outcome, detail
-      ) values (
-        _post.id,
-        _post.slug,
-        _post.revision_number,
-        _post.scheduled_at,
-        'published',
-        'Publicação agendada promovida de scheduled para published.'
-      );
-
-      post_id := _post.id;
-      outcome := 'published';
-      detail := null;
-      published_at := _published_at;
-      return next;
+      if not found then continue; end if;
+      insert into blog_private.blog_scheduled_publication_attempts(post_id,post_slug,revision_number,scheduled_at,outcome,detail)
+      values(_post.id,_post.slug,_post.revision_number,_post.scheduled_at,'published','Publicação agendada promovida de scheduled para published.');
+      post_id:=_post.id; outcome:='published'; detail:=null; published_at:=_published_at; return next;
     exception when others then
-      insert into blog_private.blog_scheduled_publication_attempts (
-        post_id, post_slug, revision_number, scheduled_at, outcome, error_code, detail
-      ) values (
-        _post.id,
-        _post.slug,
-        _post.revision_number,
-        _post.scheduled_at,
-        'failed',
-        sqlstate,
-        left(sqlerrm, 1000)
-      );
-
-      post_id := _post.id;
-      outcome := 'failed';
-      detail := sqlstate || ': ' || left(sqlerrm, 900);
-      published_at := null;
-      return next;
+      insert into blog_private.blog_scheduled_publication_attempts(post_id,post_slug,revision_number,scheduled_at,outcome,error_code,detail)
+      values(_post.id,_post.slug,_post.revision_number,_post.scheduled_at,'failed',sqlstate,left(sqlerrm,1000));
+      post_id:=_post.id; outcome:='failed'; detail:=sqlstate||': '||left(sqlerrm,900); published_at:=null; return next;
     end;
   end loop;
 end;
@@ -224,6 +143,6 @@ revoke all on function blog_private.publish_due_scheduled_posts(integer)
   from public, anon, authenticated, service_role;
 
 comment on function blog_private.publish_due_scheduled_posts(integer) is
-  'R9 scheduled publisher. Private, idempotent batch transition of due approved posts from scheduled to published.';
+  'R9 scheduled publisher. Private, idempotent batch transition of due approved posts from scheduled to published; deterministic skips are audit-deduplicated per revision.';
 
 commit;
