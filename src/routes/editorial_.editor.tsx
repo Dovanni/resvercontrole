@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, FileEdit, ShieldCheck } from "lucide-react";
 import { useBlogEditorialAuth } from "@/features/blog/blog-editorial-auth";
 import { getCurrentEditorialMember, type EditorialMember } from "@/features/blog/blog.repository";
-import { parseEditorialParagraph, serializeEditorialParagraph } from "@/features/blog/blog-content";
 import { BLOG_SEO_PERSISTENCE_READY } from "@/features/blog/blog-seo-persistence-readiness";
 import { blogPostStatusLabel, editorialRoleLabel, revisionLabel } from "@/features/blog/editorial-localization";
 import {
@@ -12,6 +11,11 @@ import {
   type EditorialEditorPostOption,
 } from "@/features/blog/editorial-editor-read-model";
 import { loadEditorialReferenceCatalog, type EditorialAdministrativeReadModel } from "@/features/blog/editorial-read-model";
+import {
+  editorialSectionsToText,
+  editorialTextToSections,
+  parseEditorialTagInput,
+} from "@/features/blog/editorial-editor-input";
 import {
   availableEditorialCommands,
   canEditEditorialDraft,
@@ -75,11 +79,20 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [selectedId, setSelectedId] = useState("");
   const [form, setForm] = useState<EditorialEditorForm | null>(null);
+  const [contentText, setContentText] = useState("");
+  const [tagText, setTagText] = useState("");
+  const [pendingImage, setPendingImage] = useState<File | null>(null);
   const [reviewNotes, setReviewNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [mediaBusy, setMediaBusy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  function syncEditorForm(value: EditorialEditorForm) {
+    setForm(value);
+    setContentText(editorialSectionsToText(value.sections));
+    setTagText(value.tags.join(", "));
+  }
 
   async function refreshOptions(preferredId?: string) {
     const rows = await listRealEditorialEditorOptions();
@@ -106,7 +119,7 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
     if (!selectedId) return;
     let cancelled = false;
     loadRealEditorialEditorForm(selectedId)
-      .then((value) => { if (!cancelled) { setForm(value); setReviewNotes(""); } })
+      .then((value) => { if (!cancelled) { syncEditorForm(value); setPendingImage(null); setReviewNotes(""); } })
       .catch((cause) => { if (!cancelled) setError(cause instanceof Error ? cause.message : "Falha ao carregar artigo."); });
     return () => { cancelled = true; };
   }, [selectedId]);
@@ -124,20 +137,22 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
     next.author = catalog.authors[0]?.displayName ?? "";
     next.createdByUserId = userId;
     setSelectedId("");
-    setForm(next);
+    syncEditorForm(next);
+    setPendingImage(null);
     setError("");
     setSuccess("");
   }
 
   async function uploadImage(file?: File) {
     if (!form || !file) return;
+    setError("");
+    setSuccess("");
     if (!form.id) {
-      setError("Salve o rascunho antes de enviar a imagem destacada.");
+      setPendingImage(file);
+      setSuccess(`Arquivo ${file.name} selecionado. A imagem será enviada automaticamente ao salvar o rascunho.`);
       return;
     }
     setMediaBusy(true);
-    setError("");
-    setSuccess("");
     try {
       const uploaded = await uploadFeaturedImage(form.id, file);
       setForm({ ...form, featuredImagePath: uploaded.path });
@@ -155,15 +170,37 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
     setError("");
     setSuccess("");
     try {
-      const result = await executeOperationalEditorialCommand({ actor, form, command, reviewNotes });
+      const effectiveForm: EditorialEditorForm = {
+        ...form,
+        sections: editorialTextToSections(contentText),
+        tags: parseEditorialTagInput(tagText),
+      };
+      let result = await executeOperationalEditorialCommand({ actor, form: effectiveForm, command, reviewNotes });
+
+      if (command === "save_draft" && pendingImage) {
+        setMediaBusy(true);
+        const uploaded = await uploadFeaturedImage(result.postId, pendingImage);
+        const persisted = await loadRealEditorialEditorForm(result.postId);
+        const imageForm: EditorialEditorForm = {
+          ...persisted,
+          featuredImagePath: uploaded.path,
+          featuredImageAlt: effectiveForm.featuredImageAlt,
+          sections: effectiveForm.sections,
+          tags: effectiveForm.tags,
+        };
+        result = await executeOperationalEditorialCommand({ actor, form: imageForm, command: "save_draft", reviewNotes });
+        setPendingImage(null);
+      }
+
       setSuccess(`${LABELS[command]} concluído com sucesso.`);
       const id = await refreshOptions(result.postId);
-      if (id) setForm(await loadRealEditorialEditorForm(id));
+      if (id) syncEditorForm(await loadRealEditorialEditorForm(id));
       setReviewNotes("");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Falha na operação editorial.");
     } finally {
       setBusy(false);
+      setMediaBusy(false);
     }
   }
 
@@ -183,8 +220,8 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
           <Field label="Categoria"><select value={form.category} disabled={!editable} onChange={(e) => patch(form, setForm, "category", e.target.value)} className={input()}>{catalog?.categories.map((item) => <option key={item.id} value={item.name}>{item.name}</option>)}</select></Field>
           <Field label="Autor"><select value={form.author} disabled={!editable} onChange={(e) => patch(form, setForm, "author", e.target.value)} className={input()}>{catalog?.authors.map((item) => <option key={item.id} value={item.displayName}>{item.displayName}</option>)}</select></Field>
           <div className="md:col-span-2"><Field label="Resumo"><textarea value={form.excerpt} disabled={!editable} onChange={(e) => patch(form, setForm, "excerpt", e.target.value)} className={`${input()} min-h-24 py-3`} /></Field></div>
-          <div className="md:col-span-2"><Field label="Conteúdo"><textarea value={sectionsToText(form)} disabled={!editable} onChange={(e) => patch(form, setForm, "sections", textToSections(e.target.value))} className={`${input()} min-h-64 py-3`} /><p className="mt-2 text-xs leading-5 text-muted-foreground">Links estruturados: use [texto do link](/rota-interna) ou [texto do link](https://exemplo.com). Protocolos inseguros são rejeitados ao salvar.</p></Field></div>
-          <Field label="Marcadores (separados por vírgula)"><input value={form.tags.join(", ")} disabled={!editable} onChange={(e) => patch(form, setForm, "tags", e.target.value.split(",").map((x) => x.trim()).filter(Boolean))} className={input()} /></Field>
+          <div className="md:col-span-2"><Field label="Conteúdo"><textarea value={contentText} disabled={!editable} onChange={(e) => setContentText(e.target.value)} className={`${input()} min-h-64 py-3`} /><p className="mt-2 text-xs leading-5 text-muted-foreground">Digite normalmente. O texto só é convertido para a estrutura editorial no momento de salvar ou executar uma ação. Links: [texto](/rota-interna) ou [texto](https://exemplo.com).</p></Field></div>
+          <Field label="Marcadores (vírgula, ponto e vírgula ou Enter)"><input value={tagText} disabled={!editable} onChange={(e) => setTagText(e.target.value)} className={input()} placeholder="Ex.: Fluxo de caixa, Gestão, ERP" /><p className="mt-2 text-xs leading-5 text-muted-foreground">Proprietário/editor pode criar marcadores novos automaticamente ao salvar.</p></Field>
           <Field label="Tempo de leitura"><input type="number" min={1} value={form.readingTimeMinutes} disabled={!editable} onChange={(e) => patch(form, setForm, "readingTimeMinutes", Number(e.target.value))} className={input()} /></Field>
           <Field label="Título SEO"><input value={form.metaTitle} disabled={!editable} onChange={(e) => patch(form, setForm, "metaTitle", e.target.value)} className={input()} /></Field>
           <Field label="Descrição SEO"><input value={form.metaDescription} disabled={!editable} onChange={(e) => patch(form, setForm, "metaDescription", e.target.value)} className={input()} /></Field>
@@ -201,12 +238,13 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
           <div className="md:col-span-2 rounded-2xl border bg-background/70 p-4">
             <div className="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)]">
               <div className="aspect-[16/9] overflow-hidden rounded-xl border bg-muted/40">
-                {featuredImageUrl ? <img src={featuredImageUrl} alt={form.featuredImageAlt || "Pré-visualização da imagem destacada"} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">Nenhuma imagem destacada selecionada</div>}
+                {featuredImageUrl ? <img src={featuredImageUrl} alt={form.featuredImageAlt || "Pré-visualização da imagem destacada"} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">{pendingImage ? `Arquivo selecionado: ${pendingImage.name}` : "Nenhuma imagem destacada selecionada"}</div>}
               </div>
               <div className="space-y-4">
-                <div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Imagem destacada / SEO</p><p className="mt-2 text-sm leading-6 text-muted-foreground">JPEG, PNG, WebP ou AVIF · máximo 5 MB. Para novos artigos, salve o rascunho antes do envio do arquivo.</p></div>
-                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={!editable || !form.id || mediaBusy} onChange={(e) => void uploadImage(e.target.files?.[0])} className="block w-full text-sm file:mr-3 file:rounded-lg file:border file:bg-background file:px-3 file:py-2 file:font-semibold disabled:opacity-60" />
+                <div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Imagem destacada / SEO</p><p className="mt-2 text-sm leading-6 text-muted-foreground">JPEG, PNG, WebP ou AVIF · máximo 5 MB. Em artigo novo, você já pode escolher o arquivo; ele será enviado automaticamente no primeiro salvamento.</p></div>
+                <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={!editable || mediaBusy} onChange={(e) => void uploadImage(e.target.files?.[0])} className="block w-full text-sm file:mr-3 file:rounded-lg file:border file:bg-background file:px-3 file:py-2 file:font-semibold disabled:opacity-60" />
                 <Field label="Texto alternativo da imagem"><input value={form.featuredImageAlt} disabled={!editable} onChange={(e) => patch(form, setForm, "featuredImageAlt", e.target.value)} className={input()} placeholder="Descreva objetivamente o conteúdo da imagem" /></Field>
+                {pendingImage && <button type="button" disabled={mediaBusy} onClick={() => setPendingImage(null)} className="rounded-lg border px-3 py-2 text-xs font-semibold disabled:opacity-60">Cancelar arquivo selecionado</button>}
                 {form.featuredImagePath && <div className="flex flex-wrap items-center gap-3"><p className="max-w-full truncate text-xs text-muted-foreground" title={form.featuredImagePath}>{form.featuredImagePath}</p><button type="button" disabled={!editable || mediaBusy} onClick={() => setForm({ ...form, featuredImagePath: "" })} className="rounded-lg border px-3 py-2 text-xs font-semibold disabled:opacity-60">Remover referência</button></div>}
               </div>
             </div>
@@ -221,8 +259,6 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
   </div>;
 }
 
-function sectionsToText(form: EditorialEditorForm) { return form.sections.map((section) => [section.heading, ...section.paragraphs.map(serializeEditorialParagraph)].filter(Boolean).join("\n")).join("\n\n"); }
-function textToSections(value: string) { const blocks = value.split(/\n\s*\n/).map((x) => x.trim()).filter(Boolean); return blocks.length ? blocks.map((block, index) => { const lines = block.split("\n").map((x) => x.trim()).filter(Boolean); return { heading: lines[0] || `Seção ${index + 1}`, paragraphs: lines.slice(1).length ? lines.slice(1).map(parseEditorialParagraph) : [parseEditorialParagraph(lines[0] || "")] }; }) : [{ heading: "", paragraphs: [""] }]; }
 function localDateTimeValue(value: string) { const date = new Date(value); if (Number.isNaN(date.getTime())) return value; const offset = date.getTimezoneOffset() * 60000; return new Date(date.getTime() - offset).toISOString().slice(0, 16); }
 function patch<K extends keyof EditorialEditorForm>(form: EditorialEditorForm | null, setter: React.Dispatch<React.SetStateAction<EditorialEditorForm | null>>, key: K, value: EditorialEditorForm[K]) { if (form) setter({ ...form, [key]: value }); }
 function input() { return "h-11 min-w-56 rounded-xl border bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-70"; }

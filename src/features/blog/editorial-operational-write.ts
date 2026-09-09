@@ -2,6 +2,7 @@ import { blogSupabase } from "./blog-supabase";
 import { toBlogSeoDraftRpcArgs } from "./blog-seo-persistence-contract";
 import { BLOG_SEO_PERSISTENCE_READY } from "./blog-seo-persistence-readiness";
 import { loadEditorialReferenceCatalog } from "./editorial-read-model";
+import { parseEditorialTagInput, slugifyEditorialTag } from "./editorial-editor-input";
 import {
   planEditorialCommand,
   type EditorialActor,
@@ -37,7 +38,7 @@ export async function executeOperationalEditorialCommand(input: {
 
   switch (input.command) {
     case "save_draft":
-      return saveDraft(input.form);
+      return saveDraft(input.form, input.actor);
     case "submit_review":
       return transitionPost(input.form, "review");
     case "request_changes":
@@ -94,15 +95,24 @@ export function buildOperationalDraftRpcArgs(form: EditorialEditorForm, referenc
   };
 }
 
-async function saveDraft(form: EditorialEditorForm): Promise<EditorialOperationalWriteResult> {
+async function saveDraft(form: EditorialEditorForm, actor: EditorialActor): Promise<EditorialOperationalWriteResult> {
   const catalog = await loadEditorialReferenceCatalog();
   const category = catalog.categories.find((item) => matchesReference(form.category, item.name, item.slug));
   const author = catalog.authors.find((item) => matchesReference(form.author, item.displayName, item.slug));
-  const tagIds = form.tags.map((tag) => {
+  const tagNames = parseEditorialTagInput(form.tags.join(","));
+  const tagIds: string[] = [];
+
+  for (const tag of tagNames) {
     const match = catalog.tags.find((item) => matchesReference(tag, item.name, item.slug));
-    if (!match) throw new Error(`BLOG_TAG_REFERENCE_NOT_FOUND:${tag}`);
-    return match.id;
-  });
+    if (match) {
+      tagIds.push(match.id);
+      continue;
+    }
+    if (actor.role !== "owner" && actor.role !== "editor") {
+      throw new Error(`BLOG_TAG_REFERENCE_NOT_FOUND:${tag}`);
+    }
+    tagIds.push(await ensureEditorialTag(tag, actor.userId));
+  }
 
   if (!category) throw new Error("BLOG_CATEGORY_REFERENCE_NOT_FOUND");
   if (!author) throw new Error("BLOG_AUTHOR_REFERENCE_NOT_FOUND");
@@ -124,6 +134,28 @@ async function saveDraft(form: EditorialEditorForm): Promise<EditorialOperationa
     revisionNumber: Number(row.revision_number),
     status: String(row.status),
   };
+}
+
+async function ensureEditorialTag(name: string, userId: string) {
+  const slug = slugifyEditorialTag(name);
+  if (!slug) throw new Error("BLOG_TAG_INVALID");
+
+  const { data: existing, error: selectError } = await (blogSupabase as any)
+    .from("blog_tags")
+    .select("id")
+    .eq("slug", slug)
+    .maybeSingle();
+  if (selectError) throw selectError;
+  if (existing?.id) return String(existing.id);
+
+  const { data, error } = await (blogSupabase as any)
+    .from("blog_tags")
+    .insert({ name: name.trim(), slug, is_active: true, created_by: userId })
+    .select("id")
+    .single();
+  if (error) throw error;
+  if (!data?.id) throw new Error("BLOG_TAG_CREATE_EMPTY_RESULT");
+  return String(data.id);
 }
 
 async function transitionPost(
