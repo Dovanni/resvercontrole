@@ -82,6 +82,7 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
   const [contentText, setContentText] = useState("");
   const [tagText, setTagText] = useState("");
   const [pendingImage, setPendingImage] = useState<File | null>(null);
+  const [pendingImagePreviewUrl, setPendingImagePreviewUrl] = useState("");
   const [reviewNotes, setReviewNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [mediaBusy, setMediaBusy] = useState(false);
@@ -124,10 +125,22 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
     return () => { cancelled = true; };
   }, [selectedId]);
 
+  useEffect(() => {
+    if (!pendingImage) {
+      setPendingImagePreviewUrl("");
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(pendingImage);
+    setPendingImagePreviewUrl(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [pendingImage]);
+
   const actor = useMemo(() => ({ userId, role: member.role, authorId: member.authorId }), [userId, member.role, member.authorId]);
   const editable = form ? canEditEditorialDraft(actor, form) : false;
   const commands = form ? availableEditorialCommands(actor, form) : [];
   const featuredImageUrl = form?.featuredImagePath ? getBlogMediaPublicUrl(form.featuredImagePath) : "";
+  const imagePreviewUrl = pendingImagePreviewUrl || featuredImageUrl;
   const seoControlsEnabled = editable && BLOG_SEO_PERSISTENCE_READY;
 
   function createNewDraft() {
@@ -238,13 +251,13 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
           <div className="md:col-span-2 rounded-2xl border bg-background/70 p-4">
             <div className="grid gap-4 md:grid-cols-[220px_minmax(0,1fr)]">
               <div className="aspect-[16/9] overflow-hidden rounded-xl border bg-muted/40">
-                {featuredImageUrl ? <img src={featuredImageUrl} alt={form.featuredImageAlt || "Pré-visualização da imagem destacada"} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">{pendingImage ? `Arquivo selecionado: ${pendingImage.name}` : "Nenhuma imagem destacada selecionada"}</div>}
+                {imagePreviewUrl ? <img src={imagePreviewUrl} alt={form.featuredImageAlt || "Pré-visualização da imagem destacada"} className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center px-4 text-center text-xs text-muted-foreground">Nenhuma imagem destacada selecionada</div>}
               </div>
               <div className="space-y-4">
                 <div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Imagem destacada / SEO</p><p className="mt-2 text-sm leading-6 text-muted-foreground">JPEG, PNG, WebP ou AVIF · máximo 5 MB. Em artigo novo, você já pode escolher o arquivo; ele será enviado automaticamente no primeiro salvamento.</p></div>
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/avif" disabled={!editable || mediaBusy} onChange={(e) => void uploadImage(e.target.files?.[0])} className="block w-full text-sm file:mr-3 file:rounded-lg file:border file:bg-background file:px-3 file:py-2 file:font-semibold disabled:opacity-60" />
                 <Field label="Texto alternativo da imagem"><input value={form.featuredImageAlt} disabled={!editable} onChange={(e) => patch(form, setForm, "featuredImageAlt", e.target.value)} className={input()} placeholder="Descreva objetivamente o conteúdo da imagem" /></Field>
-                {pendingImage && <button type="button" disabled={mediaBusy} onClick={() => setPendingImage(null)} className="rounded-lg border px-3 py-2 text-xs font-semibold disabled:opacity-60">Cancelar arquivo selecionado</button>}
+                {pendingImage && <div className="flex flex-wrap items-center gap-3"><p className="max-w-full truncate text-xs text-muted-foreground" title={pendingImage.name}>Arquivo selecionado: {pendingImage.name}</p><button type="button" disabled={mediaBusy} onClick={() => setPendingImage(null)} className="rounded-lg border px-3 py-2 text-xs font-semibold disabled:opacity-60">Cancelar arquivo selecionado</button></div>}
                 {form.featuredImagePath && <div className="flex flex-wrap items-center gap-3"><p className="max-w-full truncate text-xs text-muted-foreground" title={form.featuredImagePath}>{form.featuredImagePath}</p><button type="button" disabled={!editable || mediaBusy} onClick={() => setForm({ ...form, featuredImagePath: "" })} className="rounded-lg border px-3 py-2 text-xs font-semibold disabled:opacity-60">Remover referência</button></div>}
               </div>
             </div>
