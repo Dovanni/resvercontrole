@@ -72,6 +72,19 @@ function categoryIcon(category: string) {
 }
 
 export function EditorialVisual({ article, compact = false }: { article: BlogArticle; compact?: boolean }) {
+  if (article.featuredImage) {
+    return (
+      <div className={`relative overflow-hidden border-b bg-mint ${compact ? "min-h-40" : "min-h-64 rounded-3xl border"}`}>
+        <img
+          src={article.featuredImage}
+          alt={article.featuredImageAlt}
+          className="absolute inset-0 h-full w-full object-cover"
+          loading={compact ? "lazy" : "eager"}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       role="img"
