@@ -125,7 +125,9 @@ function SpaAnalyticsEmitter() {
   const router = useRouter();
 
   useEffect(() => {
-    return router.subscribe("onRendered", () => {
+    return router.subscribe("onRendered", (event) => {
+      if (!event.fromLocation || !event.pathChanged) return;
+
       const analyticsWindow = window as typeof window & {
         dataLayer?: Array<Record<string, unknown>>;
       };
