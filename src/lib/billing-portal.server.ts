@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { supabaseAdmin } from '@/integrations/supabase/client.server';
 import { getStripeClient } from './stripe.server';
+import { getBillingEnvironment } from './billing-status.server';
 
 export async function createStripePortalSessionImpl(empresaId: string, origin: string, host: string | null) {
   // 1. Obter informações da empresa e do cliente Stripe
@@ -15,8 +16,9 @@ export async function createStripePortalSessionImpl(empresaId: string, origin: s
     throw new Error('CUSTOMER_NOT_FOUND');
   }
 
-  // 2. Identificar ambiente (Sandbox/Live) e obter a chave correspondente
-  const isProduction = host === 'www.vejamais.com.br' || host === 'vejamais.com.br';
+  // 2. Identificar ambiente (Sandbox/Live) pela mesma regra canônica do Checkout
+  const billingEnvironment = getBillingEnvironment(host);
+  const isProduction = billingEnvironment === 'live';
   const stripeKey = isProduction 
     ? process.env['STRIPE_RESTRICTED_KEY_LIVE'] 
     : (process.env['STRIPE_RESTRICTED_KEY_TEST'] || process.env['STRIPE_RESTRICTED_KEY']);
