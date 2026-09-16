@@ -121,6 +121,29 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   );
 }
 
+function SpaAnalyticsEmitter() {
+  const router = useRouter();
+
+  useEffect(() => {
+    return router.subscribe("onRendered", (event) => {
+      if (!event.fromLocation || !event.pathChanged) return;
+
+      const analyticsWindow = window as typeof window & {
+        dataLayer?: Array<Record<string, unknown>>;
+      };
+
+      analyticsWindow.dataLayer = analyticsWindow.dataLayer || [];
+      analyticsWindow.dataLayer.push({
+        event: "vejamais_spa_page_view",
+        page_location: window.location.href,
+        page_title: document.title,
+      });
+    });
+  }, [router]);
+
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
@@ -128,6 +151,7 @@ function RootComponent() {
       <AuthProvider>
         <SecurityProvider>
           <TooltipProvider>
+            <SpaAnalyticsEmitter />
             <Outlet />
             <Toaster richColors position="top-right" />
           </TooltipProvider>
