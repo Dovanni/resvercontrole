@@ -229,18 +229,20 @@ export function SubscriptionSettingsPage() {
 
                               const data = await response.json();
                               
-                              // Validation Protocol
+                              // Validation Protocol: URL and Stripe session mode must match the server-declared environment.
                               const isValidUrl = typeof data.url === "string";
                               const isHttps = isValidUrl && new URL(data.url).protocol === "https:";
                               const isStripeHost = isValidUrl && new URL(data.url).hostname === "checkout.stripe.com";
-                              const isLiveSession = typeof data.sessionId === "string" && data.sessionId.startsWith("cs_live_");
+                              const expectedSessionPrefix = isLive ? "cs_live_" : "cs_test_";
+                              const isExpectedSession = typeof data.sessionId === "string" && data.sessionId.startsWith(expectedSessionPrefix);
 
-                              if (isValidUrl && isHttps && isStripeHost && isLiveSession) {
+                              if (isValidUrl && isHttps && isStripeHost && isExpectedSession) {
                                 window.location.assign(data.url);
                               } else {
                                 console.error("Security validation failed for checkout redirect", {
                                   url: data.url,
-                                  sessionId: data.sessionId
+                                  sessionId: data.sessionId,
+                                  environment: status?.environment
                                 });
                                 btn.disabled = false;
                                 btn.innerText = originalText;
