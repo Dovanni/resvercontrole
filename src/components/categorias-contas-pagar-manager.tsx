@@ -7,27 +7,34 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Lock, Pencil, Trash2, Plus, Check, X, Search } from "lucide-react";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/confirm-dialog";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 
 export type Categoria = { id: string; nome: string; padrao: boolean };
 
 export function useCategoriasContasPagar() {
+  const { empresaId, isLoading } = useMultiempresa();
+
   return useQuery({
-    queryKey: ["categorias-contas-pagar"],
+    queryKey: ["categorias-contas-pagar", empresaId],
     queryFn: async () => {
+      if (!empresaId) return [] as Categoria[];
       const { data, error } = await supabase
         .from("categorias_contas_pagar" as any)
         .select("id,nome,padrao")
+        .eq("empresa_id", empresaId)
         .order("padrao", { ascending: false })
         .order("nome");
       if (error) throw error;
       return (data ?? []) as unknown as Categoria[];
     },
+    enabled: !isLoading && !!empresaId,
   });
 }
 
 export function CategoriasManagerInline() {
   const qc = useQueryClient();
   const confirm = useConfirm();
+  const { empresaId, isLoading: empresaLoading } = useMultiempresa();
   const { data: cats } = useCategoriasContasPagar();
   const [novaCategoria, setNovaCategoria] = useState("");
   const [busca, setBusca] = useState("");
@@ -44,17 +51,18 @@ export function CategoriasManagerInline() {
       const nome = nomeRaw.trim();
       if (nome.length < 2) throw new Error("Nome deve ter no mínimo 2 caracteres");
       if (existingLower.has(nome.toLowerCase())) throw new Error("Esta categoria já existe");
+      if (!empresaId) throw new Error("Empresa ativa não identificada");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
       const { error } = await supabase.from("categorias_contas_pagar" as any)
-        .insert({ user_id: user.id, nome, padrao: false });
+        .insert({ user_id: user.id, empresa_id: empresaId, nome, padrao: false });
       if (error) {
         console.error("Erro ao inserir categoria:", error);
         if (error.code === "23505") throw new Error("Esta categoria já existe");
         throw new Error(error.message);
       }
     },
-    onSuccess: () => { setNovaCategoria(""); toast.success("Categoria criada"); qc.invalidateQueries({ queryKey: ["categorias-contas-pagar"] }); },
+    onSuccess: () => { setNovaCategoria(""); toast.success("Categoria criada"); qc.invalidateQueries({ queryKey: ["categorias-contas-pagar", empresaId] }); },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -62,26 +70,31 @@ export function CategoriasManagerInline() {
     mutationFn: async ({ id, nome }: { id: string; nome: string }) => {
       const n = nome.trim();
       if (n.length < 2) throw new Error("Nome deve ter no mínimo 2 caracteres");
+      if (!empresaId) throw new Error("Empresa ativa não identificada");
       const dup = (cats ?? []).find((c) => c.id !== id && c.nome.trim().toLowerCase() === n.toLowerCase());
       if (dup) throw new Error("Já existe uma categoria com esse nome");
       const { error } = await supabase.from("categorias_contas_pagar" as any)
-        .update({ nome: n }).eq("id", id);
+        .update({ nome: n }).eq("id", id).eq("empresa_id", empresaId);
       if (error) throw error;
     },
-    onSuccess: () => { setEditId(null); toast.success("Renomeada"); qc.invalidateQueries({ queryKey: ["categorias-contas-pagar"] }); },
+    onSuccess: () => { setEditId(null); toast.success("Renomeada"); qc.invalidateQueries({ queryKey: ["categorias-contas-pagar", empresaId] }); },
     onError: (e: any) => toast.error(e.message),
   });
 
   const remove = useMutation({
     mutationFn: async (cat: Categoria) => {
+      if (!empresaId) throw new Error("Empresa ativa não identificada");
       const { count, error: cErr } = await supabase.from("payables")
-        .select("id", { count: "exact", head: true }).eq("category", cat.nome);
+        .select("id", { count: "exact", head: true })
+        .eq("empresa_id", empresaId)
+        .eq("category", cat.nome);
       if (cErr) throw cErr;
       if ((count ?? 0) > 0) throw new Error(`Categoria em uso por ${count} conta(s)`);
-      const { error } = await supabase.from("categorias_contas_pagar" as any).delete().eq("id", cat.id);
+      const { error } = await supabase.from("categorias_contas_pagar" as any)
+        .delete().eq("id", cat.id).eq("empresa_id", empresaId);
       if (error) throw error;
     },
-    onSuccess: () => { toast.success("Excluída"); qc.invalidateQueries({ queryKey: ["categorias-contas-pagar"] }); },
+    onSuccess: () => { toast.success("Excluída"); qc.invalidateQueries({ queryKey: ["categorias-contas-pagar", empresaId] }); },
     onError: (e: any) => toast.error(e.message),
   });
 
@@ -89,7 +102,7 @@ export function CategoriasManagerInline() {
   const all = cats ?? [];
   const padrao = all.filter((c) => c.padrao && (!filtro || c.nome.toLowerCase().includes(filtro)));
   const custom = all.filter((c) => !c.padrao && (!filtro || c.nome.toLowerCase().includes(filtro)));
-  const podeAdicionar = novaCategoria.trim().length >= 2;
+  const podeAdicionar = !empresaLoading && !!empresaId && novaCategoria.trim().length >= 2;
 
   const handleAdicionar = () => {
     if (!podeAdicionar) return;
@@ -106,7 +119,7 @@ export function CategoriasManagerInline() {
           className="flex-1"
           autoFocus
         />
-        <Button type="button" disabled={!podeAdicionar} onClick={handleAdicionar}>
+        <Button type="button" disabled={!podeAdicionar || create.isPending} onClick={handleAdicionar}>
           <Plus className="size-4 mr-1" /> Adicionar
         </Button>
       </div>
@@ -157,7 +170,7 @@ export function CategoriasManagerInline() {
                       if (e.key === "Escape") setEditId(null);
                     }}
                   />
-                  <Button size="icon" variant="ghost" onClick={() => rename.mutate({ id: c.id, nome: editNome })} disabled={editNome.trim().length < 2}>
+                  <Button size="icon" variant="ghost" onClick={() => rename.mutate({ id: c.id, nome: editNome })} disabled={editNome.trim().length < 2 || rename.isPending}>
                     <Check className="size-4 text-success" />
                   </Button>
                   <Button size="icon" variant="ghost" onClick={() => setEditId(null)}>
