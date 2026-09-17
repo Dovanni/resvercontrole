@@ -1,4 +1,4 @@
--- VEJAMAIS_BILLING_STRIPE_SUBSCRIPTION_IDENTITY_RECONCILIATION
+﻿-- VEJAMAIS_BILLING_STRIPE_SUBSCRIPTION_IDENTITY_RECONCILIATION
 -- Repository-only migration. Do not apply without explicit approval.
 -- Purpose:
 --   1. Make Stripe subscription object.id the canonical provider subscription identity.
@@ -45,12 +45,25 @@ DECLARE
     v_stripe_sub_id TEXT;
     v_incoming_stripe_sub_id TEXT;
     v_existing_stripe_sub_id TEXT;
+    v_existing_checkout_session_id TEXT;
     v_stripe_customer_id TEXT;
+    v_current_period_start BIGINT;
     v_current_period_end BIGINT;
     v_existing_current_period_end TIMESTAMPTZ;
     v_existing_status TEXT;
     v_checkout_attempt_id UUID;
     v_provider_session_id TEXT;
+
+    -- LAB-5W: checkout authority
+    v_incoming_attempt_id UUID;
+    v_incoming_attempt_empresa_id UUID;
+    v_incoming_attempt_subscription_id UUID;
+    v_incoming_attempt_status TEXT;
+    v_incoming_attempt_livemode BOOLEAN;
+    v_incoming_attempt_created_at TIMESTAMPTZ;
+
+    v_canonical_attempt_id UUID;
+    v_canonical_attempt_created_at TIMESTAMPTZ;
 
     -- Local block variables for checkout.session.expired
     v_locked_attempt_id UUID;
@@ -253,6 +266,7 @@ BEGIN
     SELECT
         empresa_id,
         stripe_subscription_id,
+        stripe_checkout_session_id,
         stripe_last_event_created,
         stripe_last_event_priority,
         current_period_ends_at,
@@ -260,6 +274,7 @@ BEGIN
     INTO
         v_resolved_empresa_id,
         v_existing_stripe_sub_id,
+        v_existing_checkout_session_id,
         v_last_event_created,
         v_last_event_priority,
         v_existing_current_period_end,
@@ -309,6 +324,294 @@ BEGIN
         RETURN jsonb_build_object('status', 'rejected_permanent', 'reason', 'Stripe subscription id already linked');
     END IF;
 
+    -- LAB-5W: checkout.session.completed authority is derived from the
+    -- persisted checkout attempt/session, not from Stripe event arrival time.
+    IF p_event_type = 'checkout.session.completed' THEN
+
+        SELECT
+            ca.id,
+            ca.empresa_id,
+            ca.subscription_id,
+            ca.status,
+            ca.livemode,
+            ca.created_at
+        INTO
+            v_incoming_attempt_id,
+            v_incoming_attempt_empresa_id,
+            v_incoming_attempt_subscription_id,
+            v_incoming_attempt_status,
+            v_incoming_attempt_livemode,
+            v_incoming_attempt_created_at
+        FROM public.checkout_attempts ca
+        WHERE ca.provider = 'stripe'
+          AND ca.provider_checkout_session_id = v_provider_session_id
+        FOR UPDATE;
+
+        IF v_incoming_attempt_id IS NULL THEN
+            UPDATE public.payment_events
+            SET processing_status = 'failed_retryable',
+                sanitized_error_code = 'UNLINKED_SESSION',
+                subscription_id = v_internal_sub_id,
+                empresa_id = v_empresa_id,
+                updated_at = now()
+            WHERE id = v_event_id;
+
+            RETURN jsonb_build_object(
+                'status', 'failed_retryable',
+                'reason', 'Checkout session is not linked to an attempt',
+                'event_id', v_event_id
+            );
+        END IF;
+
+        IF v_checkout_attempt_id IS NULL
+           OR v_checkout_attempt_id <> v_incoming_attempt_id
+           OR v_incoming_attempt_empresa_id <> v_empresa_id
+           OR v_incoming_attempt_subscription_id <> v_internal_sub_id
+           OR v_incoming_attempt_livemode IS DISTINCT FROM p_livemode THEN
+
+            UPDATE public.payment_events
+            SET processing_status = 'rejected_permanent',
+                sanitized_error_code = 'CHECKOUT_ATTEMPT_MISMATCH',
+                subscription_id = v_internal_sub_id,
+                empresa_id = v_empresa_id,
+                updated_at = now()
+            WHERE id = v_event_id;
+
+            RETURN jsonb_build_object(
+                'status', 'rejected_permanent',
+                'reason', 'Checkout attempt does not match resolved context',
+                'event_id', v_event_id
+            );
+        END IF;
+
+        IF v_existing_checkout_session_id IS NOT NULL
+           AND v_existing_checkout_session_id <> v_provider_session_id THEN
+
+            SELECT ca.id, ca.created_at
+            INTO v_canonical_attempt_id, v_canonical_attempt_created_at
+            FROM public.checkout_attempts ca
+            WHERE ca.provider = 'stripe'
+              AND ca.provider_checkout_session_id =
+                  v_existing_checkout_session_id
+            FOR UPDATE;
+
+            -- If the current canonical session cannot be related to an
+            -- attempt, do not guess which differing checkout has authority.
+            IF v_canonical_attempt_id IS NULL THEN
+                UPDATE public.payment_events
+                SET processing_status = 'failed_retryable',
+                    sanitized_error_code = 'UNLINKED_CANONICAL_SESSION',
+                    subscription_id = v_internal_sub_id,
+                    empresa_id = v_empresa_id,
+                    updated_at = now()
+                WHERE id = v_event_id;
+
+                RETURN jsonb_build_object(
+                    'status', 'failed_retryable',
+                    'reason', 'Canonical checkout session is not linked to an attempt',
+                    'event_id', v_event_id
+                );
+            END IF;
+
+            IF v_incoming_attempt_created_at <
+                   v_canonical_attempt_created_at THEN
+
+                UPDATE public.payment_events
+                SET processing_status = 'ignored_out_of_order',
+                    sanitized_error_code = 'STALE_CHECKOUT_SESSION',
+                    subscription_id = v_internal_sub_id,
+                    empresa_id = v_empresa_id,
+                    updated_at = now()
+                WHERE id = v_event_id;
+
+                RETURN jsonb_build_object(
+                    'status', 'ignored_out_of_order',
+                    'reason', 'Checkout attempt is older than canonical checkout attempt',
+                    'event_id', v_event_id
+                );
+
+            ELSIF v_incoming_attempt_created_at =
+                      v_canonical_attempt_created_at THEN
+
+                UPDATE public.payment_events
+                SET processing_status = 'rejected_permanent',
+                    sanitized_error_code = 'AMBIGUOUS_CHECKOUT_AUTHORITY',
+                    subscription_id = v_internal_sub_id,
+                    empresa_id = v_empresa_id,
+                    updated_at = now()
+                WHERE id = v_event_id;
+
+                RETURN jsonb_build_object(
+                    'status', 'rejected_permanent',
+                    'reason', 'Checkout attempt authority is ambiguous',
+                    'event_id', v_event_id
+                );
+            END IF;
+        END IF;
+    END IF;
+    -- LAB-5Z-C: a delayed customer.subscription.created must not restore
+    -- a Stripe subscription that belongs to an older checkout attempt.
+    IF p_event_type = 'customer.subscription.created'
+       AND v_existing_stripe_sub_id IS NOT NULL
+       AND v_incoming_stripe_sub_id IS NOT NULL
+       AND v_existing_stripe_sub_id <> v_incoming_stripe_sub_id THEN
+
+        -- For subscription.created there is no Checkout Session id on the
+        -- subscription object. Resolve the incoming authority by attempt_id
+        -- from the Stripe subscription metadata.
+        SELECT
+            ca.id,
+            ca.empresa_id,
+            ca.subscription_id,
+            ca.status,
+            ca.livemode,
+            ca.created_at
+        INTO
+            v_incoming_attempt_id,
+            v_incoming_attempt_empresa_id,
+            v_incoming_attempt_subscription_id,
+            v_incoming_attempt_status,
+            v_incoming_attempt_livemode,
+            v_incoming_attempt_created_at
+        FROM public.checkout_attempts ca
+        WHERE ca.id = v_checkout_attempt_id
+          AND ca.provider = 'stripe'
+        FOR UPDATE;
+
+        IF v_checkout_attempt_id IS NULL
+           OR v_incoming_attempt_id IS NULL
+           OR v_incoming_attempt_empresa_id <> v_empresa_id
+           OR v_incoming_attempt_subscription_id <> v_internal_sub_id
+           OR v_incoming_attempt_livemode IS DISTINCT FROM p_livemode THEN
+
+            UPDATE public.payment_events
+            SET processing_status = 'rejected_permanent',
+                sanitized_error_code = 'CHECKOUT_ATTEMPT_MISMATCH',
+                subscription_id = v_internal_sub_id,
+                empresa_id = v_empresa_id,
+                updated_at = now()
+            WHERE id = v_event_id;
+
+            RETURN jsonb_build_object(
+                'status', 'rejected_permanent',
+                'reason', 'Subscription created attempt does not match resolved context',
+                'event_id', v_event_id
+            );
+        END IF;
+
+        -- A replacement cannot be authorized when an existing canonical Stripe
+        -- subscription has no canonical Checkout Session from which to resolve
+        -- the attempt that established the current identity.
+        IF v_existing_checkout_session_id IS NULL THEN
+
+            UPDATE public.payment_events
+            SET processing_status = 'failed_retryable',
+                sanitized_error_code = 'CANONICAL_CHECKOUT_AUTHORITY_MISSING',
+                subscription_id = v_internal_sub_id,
+                empresa_id = v_empresa_id,
+                updated_at = now()
+            WHERE id = v_event_id;
+
+            RETURN jsonb_build_object(
+                'status', 'failed_retryable',
+                'reason', 'Canonical Stripe subscription has no checkout authority',
+                'event_id', v_event_id
+            );
+        END IF;
+
+
+        -- The current canonical Checkout Session identifies the attempt that
+        -- established the currently-authoritative Stripe identity.
+        IF v_existing_checkout_session_id IS NOT NULL THEN
+
+            SELECT
+                ca.id,
+                ca.created_at
+            INTO
+                v_canonical_attempt_id,
+                v_canonical_attempt_created_at
+            FROM public.checkout_attempts ca
+            WHERE ca.provider = 'stripe'
+              AND ca.provider_checkout_session_id =
+                  v_existing_checkout_session_id
+            FOR UPDATE;
+
+            IF v_canonical_attempt_id IS NULL THEN
+                UPDATE public.payment_events
+                SET processing_status = 'failed_retryable',
+                    sanitized_error_code = 'UNLINKED_CANONICAL_SESSION',
+                    subscription_id = v_internal_sub_id,
+                    empresa_id = v_empresa_id,
+                    updated_at = now()
+                WHERE id = v_event_id;
+
+                RETURN jsonb_build_object(
+                    'status', 'failed_retryable',
+                    'reason', 'Canonical checkout session is not linked to an attempt',
+                    'event_id', v_event_id
+                );
+            END IF;
+
+            -- LAB-7H: one persisted checkout attempt cannot authorize two
+            -- different Stripe subscription identities.
+            IF v_incoming_attempt_id = v_canonical_attempt_id
+               AND v_incoming_stripe_sub_id IS DISTINCT FROM
+                   v_existing_stripe_sub_id THEN
+
+                UPDATE public.payment_events
+                SET processing_status = 'rejected_permanent',
+                    sanitized_error_code =
+                        'CHECKOUT_ATTEMPT_SUBSCRIPTION_CONFLICT',
+                    subscription_id = v_internal_sub_id,
+                    empresa_id = v_empresa_id,
+                    updated_at = now()
+                WHERE id = v_event_id;
+
+                RETURN jsonb_build_object(
+                    'status', 'rejected_permanent',
+                    'reason',
+                    'Checkout attempt already authorizes the canonical Stripe subscription',
+                    'event_id', v_event_id
+                );
+
+            ELSIF v_incoming_attempt_created_at <
+                   v_canonical_attempt_created_at THEN
+
+                UPDATE public.payment_events
+                SET processing_status = 'ignored_out_of_order',
+                    sanitized_error_code = 'STALE_STRIPE_SUBSCRIPTION',
+                    subscription_id = v_internal_sub_id,
+                    empresa_id = v_empresa_id,
+                    updated_at = now()
+                WHERE id = v_event_id;
+
+                RETURN jsonb_build_object(
+                    'status', 'ignored_out_of_order',
+                    'reason', 'Subscription created belongs to an older checkout attempt',
+                    'event_id', v_event_id
+                );
+
+            ELSIF v_incoming_attempt_created_at =
+                      v_canonical_attempt_created_at
+                  AND v_incoming_attempt_id <>
+                      v_canonical_attempt_id THEN
+
+                UPDATE public.payment_events
+                SET processing_status = 'rejected_permanent',
+                    sanitized_error_code = 'AMBIGUOUS_CHECKOUT_AUTHORITY',
+                    subscription_id = v_internal_sub_id,
+                    empresa_id = v_empresa_id,
+                    updated_at = now()
+                WHERE id = v_event_id;
+
+                RETURN jsonb_build_object(
+                    'status', 'rejected_permanent',
+                    'reason', 'Subscription created checkout authority is ambiguous',
+                    'event_id', v_event_id
+                );
+            END IF;
+        END IF;
+    END IF;
     IF v_last_event_created IS NOT NULL THEN
         IF p_event_created < v_last_event_created THEN
             v_is_out_of_order := TRUE;
@@ -328,9 +631,38 @@ BEGIN
         RETURN jsonb_build_object('status', 'ignored_out_of_order', 'event_id', v_event_id);
     END IF;
 
+    -- Invoice events must carry a verifiable Stripe subscription identity before
+    -- they are allowed to mutate an already-canonical internal subscription.
+    IF p_event_type IN (
+        'invoice.paid',
+        'invoice.payment_failed'
+    )
+       AND v_existing_stripe_sub_id IS NOT NULL
+       AND v_incoming_stripe_sub_id IS NULL THEN
+
+        UPDATE public.payment_events
+        SET processing_status = 'rejected_permanent',
+            sanitized_error_code = 'MISSING_STRIPE_SUBSCRIPTION_IDENTITY',
+            subscription_id = v_internal_sub_id,
+            empresa_id = v_empresa_id,
+            updated_at = now()
+        WHERE id = v_event_id;
+
+        RETURN jsonb_build_object(
+            'status', 'rejected_permanent',
+            'reason', 'Invoice is missing Stripe subscription identity',
+            'event_id', v_event_id
+        );
+    END IF;
+
     -- Once a replacement subscription is canonical, delayed updated/deleted events from the
     -- superseded Stripe subscription must not mutate the current internal subscription.
-    IF p_event_type IN ('customer.subscription.updated', 'customer.subscription.deleted')
+    IF p_event_type IN (
+        'customer.subscription.updated',
+        'customer.subscription.deleted',
+        'invoice.paid',
+        'invoice.payment_failed'
+    )
        AND v_existing_stripe_sub_id IS NOT NULL
        AND v_existing_stripe_sub_id <> v_incoming_stripe_sub_id THEN
         UPDATE public.payment_events
@@ -344,6 +676,31 @@ BEGIN
         RETURN jsonb_build_object(
             'status', 'ignored_out_of_order',
             'reason', 'Event belongs to superseded Stripe subscription',
+            'event_id', v_event_id
+        );
+    END IF;
+
+    -- LAB-7U: an authorized Stripe subscription replacement must carry
+    -- the complete NEW billing period before canonical identity promotion.
+    IF p_event_type = 'customer.subscription.created'
+       AND v_existing_stripe_sub_id IS NOT NULL
+       AND v_incoming_stripe_sub_id IS DISTINCT FROM v_existing_stripe_sub_id
+       AND (
+           COALESCE(v_object->>'current_period_start', v_object#>>'{items,data,0,current_period_start}') IS NULL
+           OR COALESCE(v_object->>'current_period_end', v_object#>>'{items,data,0,current_period_end}') IS NULL
+       ) THEN
+
+        UPDATE public.payment_events
+        SET processing_status = 'failed_retryable',
+            sanitized_error_code = 'INCOMPLETE_REPLACEMENT_PERIOD',
+            subscription_id = v_internal_sub_id,
+            empresa_id = v_empresa_id,
+            updated_at = now()
+        WHERE id = v_event_id;
+
+        RETURN jsonb_build_object(
+            'status', 'failed_retryable',
+            'reason', 'Replacement Stripe subscription is missing billing period',
             'event_id', v_event_id
         );
     END IF;
@@ -374,7 +731,8 @@ BEGIN
             END IF;
 
         WHEN 'customer.subscription.created', 'customer.subscription.updated' THEN
-            v_current_period_end := (v_object->>'current_period_end')::BIGINT;
+            v_current_period_start := COALESCE(v_object->>'current_period_start', v_object#>>'{items,data,0,current_period_start}')::BIGINT;
+            v_current_period_end := COALESCE(v_object->>'current_period_end', v_object#>>'{items,data,0,current_period_end}')::BIGINT;
 
             UPDATE public.subscriptions
             SET stripe_subscription_id = CASE
@@ -390,7 +748,20 @@ BEGIN
                     WHEN v_object->>'status' = 'trialing' THEN 'trialing'
                     ELSE status
                 END,
-                current_period_ends_at = GREATEST(v_existing_current_period_end, to_timestamp(v_current_period_end)),
+                current_period_started_at = CASE
+                    WHEN p_event_type = 'customer.subscription.created'
+                     AND v_existing_stripe_sub_id IS NOT NULL
+                     AND v_incoming_stripe_sub_id IS DISTINCT FROM v_existing_stripe_sub_id
+                    THEN to_timestamp(v_current_period_start)
+                    ELSE current_period_started_at
+                END,
+                current_period_ends_at = CASE
+                    WHEN p_event_type = 'customer.subscription.created'
+                     AND v_existing_stripe_sub_id IS NOT NULL
+                     AND v_incoming_stripe_sub_id IS DISTINCT FROM v_existing_stripe_sub_id
+                    THEN to_timestamp(v_current_period_end)
+                    ELSE GREATEST(v_existing_current_period_end, to_timestamp(v_current_period_end))
+                END,
                 cancel_at_period_end = (v_object->>'cancel_at_period_end')::BOOLEAN,
                 updated_at = now(),
                 plan_id = COALESCE(
@@ -454,3 +825,7 @@ GRANT EXECUTE ON FUNCTION public.process_stripe_webhook_event(
 ) TO service_role;
 
 COMMIT;
+
+
+
+
