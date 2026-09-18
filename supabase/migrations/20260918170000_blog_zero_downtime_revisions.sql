@@ -57,8 +57,9 @@ where status = 'published';
 insert into public.blog_post_revision_tags(post_id, revision_number, tag_id)
 select p.id, p.revision_number, pt.tag_id
 from public.blog_posts p
+join public.blog_post_revisions r
+  on r.post_id = p.id and r.revision_number = p.revision_number
 join public.blog_post_tags pt on pt.post_id = p.id
-where p.status = 'published'
 on conflict do nothing;
 
 alter table public.blog_posts
@@ -122,7 +123,10 @@ declare
   _revision integer;
 begin
   select revision_number into _revision from public.blog_posts where id = _post_id;
-  if _revision is null then return coalesce(new, old); end if;
+  if _revision is null then
+    if tg_op = 'DELETE' then return old; end if;
+    return new;
+  end if;
 
   delete from public.blog_post_revision_tags
   where post_id = _post_id and revision_number = _revision;
@@ -133,7 +137,8 @@ begin
   where pt.post_id = _post_id
   on conflict do nothing;
 
-  return coalesce(new, old);
+  if tg_op = 'DELETE' then return old; end if;
+  return new;
 end;
 $$;
 revoke all on function blog_private.sync_current_revision_tags() from public;
