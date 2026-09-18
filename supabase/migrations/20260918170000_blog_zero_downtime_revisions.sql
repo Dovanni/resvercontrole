@@ -263,7 +263,7 @@ grant execute on function public.blog_public_get_post_by_slug(text) to anon, aut
 
 -- Preflight de hardening para SECURITY DEFINER: nenhuma role de aplicação pode
 -- possuir CREATE nos schemas resolvidos pelo search_path das funções públicas.
-do $
+do $$
 begin
   if has_schema_privilege('anon', 'public', 'CREATE')
      or has_schema_privilege('authenticated', 'public', 'CREATE')
@@ -272,7 +272,7 @@ begin
     raise exception 'BLOG_SECURITY_DEFINER_SCHEMA_CREATE_PRIVILEGE_UNSAFE';
   end if;
 end;
-$;
+$$;
 
 create or replace function public.blog_publish_working_revision(
   p_post_id uuid,
@@ -329,7 +329,7 @@ create or replace function blog_private.publish_due_scheduled_posts(p_limit inte
 returns table(post_id uuid,outcome text,detail text,published_at timestamptz)
 language plpgsql security definer
 set search_path=pg_catalog,public,blog_private,pg_temp
-as $
+as $$
 declare _post record; _latest_review_decision text; _latest_reviewer uuid; _published_at timestamptz;
 begin
  if p_limit is null or p_limit<1 or p_limit>500 then raise exception 'BLOG_SCHEDULED_PUBLISHER_LIMIT_INVALID'; end if;
@@ -378,7 +378,7 @@ begin
   end;
  end loop;
 end;
-$;
+$$;
 revoke all on function blog_private.publish_due_scheduled_posts(integer) from public,anon,authenticated,service_role;
 
 alter table public.blog_post_revision_tags enable row level security;
