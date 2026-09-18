@@ -68,7 +68,7 @@ export function normalizeBlogSections(content: unknown): BlogArticleSection[] {
 
     if (legacyHeading && legacyParagraphs.length > 0) {
       flushCurrent();
-      sections.push({ heading: legacyHeading.replace(/^#{2,3}\\s+/, ""), headingLevel: "headingLevel" in block && block.headingLevel === 3 ? 3 : undefined, paragraphs: legacyParagraphs });
+      sections.push({ heading: legacyHeading.replace(/^#{2,3}\s+/, ""), headingLevel: "headingLevel" in block && block.headingLevel === 3 ? 3 : undefined, paragraphs: legacyParagraphs });
       continue;
     }
 
@@ -78,7 +78,7 @@ export function normalizeBlogSections(content: unknown): BlogArticleSection[] {
 
     if (type === "heading") {
       flushCurrent();
-      current = { heading: text.replace(/^#{2,3}\\s+/, ""), headingLevel: "level" in block && block.level === 3 ? 3 : undefined, paragraphs: [] };
+      current = { heading: text.replace(/^#{2,3}\s+/, ""), headingLevel: "level" in block && block.level === 3 ? 3 : undefined, paragraphs: [] };
       continue;
     }
 
