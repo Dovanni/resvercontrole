@@ -1,7 +1,11 @@
 import { parseEditorialParagraph, serializeEditorialParagraph } from "./blog-content";
 import type { BlogArticleSection } from "./types";
 
-const EXPLICIT_HEADING_PATTERN = /^##\s+(.+)$/;
+const EXPLICIT_HEADING_PATTERN = /^(##|###)\\s+(.+)$/;
+
+function cleanHeading(value: string) {
+  return value.trim().replace(/^#{2,3}\\s+/, "").trim();
+}
 const INTRODUCTION_HEADING = "Introdução";
 
 function paragraphHasText(paragraph: ReturnType<typeof parseEditorialParagraph>) {
@@ -12,7 +16,7 @@ function paragraphHasText(paragraph: ReturnType<typeof parseEditorialParagraph>)
 export function editorialSectionsToText(sections: BlogArticleSection[]) {
   return sections
     .map((section) => [
-      `## ${section.heading}`,
+      `${section.headingLevel === 3 ? "###" : "##"} ${cleanHeading(section.heading)}`,
       ...section.paragraphs.map(serializeEditorialParagraph),
     ].filter(Boolean).join("\n\n"))
     .join("\n\n");
@@ -45,7 +49,7 @@ export function editorialTextToSections(value: string): BlogArticleSection[] {
     if (lines.length === 1) {
       const explicitHeading = lines[0].match(EXPLICIT_HEADING_PATTERN);
       if (explicitHeading) {
-        current = { heading: explicitHeading[1].trim(), paragraphs: [] };
+        current = { heading: cleanHeading(explicitHeading[2]), headingLevel: explicitHeading[1] === "###" ? 3 : undefined, paragraphs: [] };
         sections.push(current);
         continue;
       }
@@ -58,7 +62,7 @@ export function editorialTextToSections(value: string): BlogArticleSection[] {
     // Backward compatibility for the original editor contract:
     // a multi-line block is still interpreted as heading + paragraphs.
     current = {
-      heading: lines[0],
+      heading: cleanHeading(lines[0]),
       paragraphs: lines
         .slice(1)
         .map((line) => parseEditorialParagraph(line))
