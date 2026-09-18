@@ -23,6 +23,29 @@ export interface EditorialDashboardSnapshot {
   authors: number;
 }
 
+type PublicBlogPostRpcRow = {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: unknown;
+  published_at: string;
+  updated_at: string;
+  reading_time_minutes: number;
+  meta_title: string | null;
+  meta_description: string | null;
+  focus_keyword: string | null;
+  featured_image_path: string | null;
+  featured_image_alt: string | null;
+  seo_allow_indexing: boolean;
+  seo_allow_following: boolean;
+  seo_include_in_sitemap: boolean;
+  category: string;
+  author: string;
+  tags: string[];
+  published_revision_number: number;
+};
+
 type BlogPostRow = {
   id: string;
   slug: string;
@@ -134,30 +157,46 @@ export function getRelatedPreviewBlogArticles(article: BlogArticle, limit = 2) {
     .map((item) => item.article);
 }
 
-/** Public reader: RLS independently enforces status/published_at visibility. */
-export async function listPublishedBlogArticles(): Promise<BlogArticle[]> {
-  const { data, error } = await blogSupabase
-    .from("blog_posts" as any)
-    .select(BLOG_POST_SELECT)
-    .eq("status", "published")
-    .lte("published_at", new Date().toISOString())
-    .order("published_at", { ascending: false });
+function mapPublicBlogPostRpcRow(row: PublicBlogPostRpcRow): BlogArticle {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    excerpt: row.excerpt,
+    category: row.category.trim() || "VEJAMAIS ERP",
+    tags: row.tags ?? [],
+    author: row.author.trim() || "Equipe Editorial VEJAMAIS ERP",
+    publishedAt: row.published_at,
+    updatedAt: row.updated_at,
+    readingTimeMinutes: row.reading_time_minutes,
+    metaTitle: row.meta_title?.trim() || `${row.title} | VEJAMAIS ERP`,
+    metaDescription: row.meta_description?.trim() || row.excerpt,
+    focusKeyword: row.focus_keyword?.trim() || row.title,
+    featuredImage: publicStorageUrl(row.featured_image_path),
+    featuredImageAlt: row.featured_image_alt?.trim() || `Imagem editorial de ${row.title}`,
+    seo: persistedBlogSeoSettings(row),
+    status: "published",
+    sections: normalizeBlogSections(row.content),
+  };
+}
 
+/**
+ * Zero-downtime public reader. This repository change must only be deployed
+ * after the matching database migration exposes both RPCs.
+ */
+export async function listPublishedBlogArticles(): Promise<BlogArticle[]> {
+  const { data, error } = await (blogSupabase as any).rpc("blog_public_list_posts");
   if (error) throw error;
-  return ((data ?? []) as unknown as BlogPostRow[]).map(mapPublishedBlogPost);
+  return ((data ?? []) as PublicBlogPostRpcRow[]).map(mapPublicBlogPostRpcRow);
 }
 
 export async function getPublishedBlogArticleBySlug(slug: string): Promise<BlogArticle | undefined> {
-  const { data, error } = await blogSupabase
-    .from("blog_posts" as any)
-    .select(BLOG_POST_SELECT)
-    .eq("slug", slug)
-    .eq("status", "published")
-    .lte("published_at", new Date().toISOString())
-    .maybeSingle();
-
+  const { data, error } = await (blogSupabase as any).rpc("blog_public_get_post_by_slug", {
+    p_slug: slug,
+  });
   if (error) throw error;
-  return data ? mapPublishedBlogPost(data as unknown as BlogPostRow) : undefined;
+  const row = Array.isArray(data) ? data[0] : data;
+  return row ? mapPublicBlogPostRpcRow(row as PublicBlogPostRpcRow) : undefined;
 }
 
 export async function getCurrentEditorialMember(userId: string): Promise<EditorialMember | null> {

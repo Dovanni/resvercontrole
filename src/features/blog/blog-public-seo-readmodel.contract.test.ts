@@ -15,8 +15,9 @@ describe("Blog public SEO read model contract", () => {
     expect(source).not.toContain("allowIndexing: true,\n      allowFollowing: true,\n      includeInSitemap: true");
   });
 
-  it("keeps public visibility restricted to due published posts", () => {
-    expect(source).toContain('.eq("status", "published")');
-    expect(source).toContain('.lte("published_at", new Date().toISOString())');
+  it("routes public visibility through the zero-downtime published revision RPCs", () => {
+    expect(source).toContain('.rpc("blog_public_list_posts")');
+    expect(source).toContain('.rpc("blog_public_get_post_by_slug"');
+    expect(source).not.toContain('.eq("status", "published")');
   });
 });

@@ -28,6 +28,7 @@ import {
   executeOperationalEditorialCommand,
 } from "@/features/blog/editorial-operational-write";
 import { getBlogMediaPublicUrl, uploadFeaturedImage } from "@/features/blog/blog-media";
+import { normalizeEditorialWriteError } from "@/features/blog/editorial-supabase-write.adapter";
 
 export const Route = createFileRoute("/editorial_/editor")({
   head: () => ({ meta: [
@@ -47,6 +48,7 @@ const LABELS: Record<EditorialCommandKind, string> = {
   request_changes: "Solicitar ajustes",
   approve_revision: "Aprovar revisão",
   return_to_draft: "Retornar para rascunho",
+  reopen_review: "Criar nova revisão",
   schedule: "Agendar publicação",
   publish: "Publicar agora",
   archive: "Arquivar",
@@ -210,7 +212,8 @@ function OperationalEditor({ member, userId }: { member: EditorialMember; userId
       if (id) syncEditorForm(await loadRealEditorialEditorForm(id));
       setReviewNotes("");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Falha na operação editorial.");
+      const normalized = normalizeEditorialWriteError(cause);
+      setError(normalized.message);
     } finally {
       setBusy(false);
       setMediaBusy(false);
