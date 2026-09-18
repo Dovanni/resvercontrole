@@ -74,6 +74,27 @@ describe("editorial editor input", () => {
     expect(editorialTextToSections(text)).toEqual(sections);
   });
 
+  it("supports semantic H3 sections without changing the legacy H2 shape", () => {
+    const text = "## Gestão financeira\n\nParágrafo principal.\n\n### Fluxo de caixa\n\nParágrafo específico.";
+    const sections = editorialTextToSections(text);
+
+    expect(sections).toEqual([
+      { heading: "Gestão financeira", paragraphs: ["Parágrafo principal."] },
+      { heading: "Fluxo de caixa", headingLevel: 3, paragraphs: ["Parágrafo específico."] },
+    ]);
+    expect(editorialSectionsToText(sections)).toBe(text);
+  });
+
+  it("removes duplicated markdown markers when serializing legacy headings", () => {
+    const sections = [{ heading: "## ERP para gestão comercial e financeira", paragraphs: ["Conteúdo."] }];
+    expect(editorialSectionsToText(sections)).toBe("## ERP para gestão comercial e financeira\n\nConteúdo.");
+  });
+
+  it("preserves the VEJAMAIS internal anchor and HTTPS external link", () => {
+    const text = "## Referências\n\nConheça os [recursos do VEJAMAIS ERP](/#recursos) e consulte o [Sebrae](https://sebrae.com.br/).";
+    expect(editorialSectionsToText(editorialTextToSections(text))).toBe(text);
+  });
+
   it("accepts commas semicolons and line breaks for multiple tags", () => {
     expect(parseEditorialTagInput("Teste, Agendamento; Validação\nTeste")).toEqual(["Teste", "Agendamento", "Validação"]);
   });
