@@ -76,7 +76,13 @@ begin
     raise exception 'BLOG_PUBLISHED_REVIEW_REQUIRES_BEGIN_REVISION_RPC';
   end if;
 
-  -- Arquivar oculta a publicação no read model sem destruir o último ponteiro.
+  -- Arquivar é uma despublicação explícita: elimina o ponteiro público.
+  -- Assim, archived -> draft nunca republica silenciosamente uma revisão antiga.
+  if old.status = 'published' and new.status = 'archived' then
+    new.published_revision_number := null;
+    return new;
+  end if;
+
   if new.published_revision_number is distinct from old.published_revision_number then
     if old.status in ('review','scheduled')
        and new.status = 'published'
