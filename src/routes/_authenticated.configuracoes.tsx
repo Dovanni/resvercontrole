@@ -276,6 +276,22 @@ function SettingsPage() {
         </CardContent>
       </Card>
 
+      <Card className="shadow-soft mt-6">
+        <CardContent className="p-6 flex items-center justify-between gap-4">
+          <div>
+            <h3 className="font-display text-lg">Editor do Blog</h3>
+            <p className="text-sm text-muted-foreground">
+              Acesse o Editor Editorial V2. A autenticação e as permissões editoriais continuam protegidas pela sessão exclusiva do Blog.
+            </p>
+          </div>
+          <Button asChild variant="link" className="text-primary">
+            <a href="https://vejamais.com.br/editorial/editor?utm_source=chatgpt.com">
+              Acessar Editor →
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
+
       {import.meta.env.VITE_ENABLE_BILLING_SUBSCRIPTIONS === 'true' && (
         <Card className="shadow-soft mt-6">
           <CardContent className="p-6 flex items-center justify-between gap-4">
