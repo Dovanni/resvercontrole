@@ -12,6 +12,23 @@ begin
   ) then
     raise exception 'BLOG_ZERO_DOWNTIME_ROLLBACK_BLOCKED_WORKING_REVISION_EXISTS';
   end if;
+
+  if exists (
+    select 1
+    from public.blog_posts p
+    where p.published_revision_number is not null
+      and not exists (
+        select 1
+        from public.blog_post_revisions r
+        where r.post_id = p.id
+          and r.revision_number = p.published_revision_number
+          and r.snapshot->>'slug' = p.slug
+          and r.snapshot->>'title' = p.title
+          and coalesce(r.snapshot->'content', '[]'::jsonb) = p.content
+      )
+  ) then
+    raise exception 'BLOG_ZERO_DOWNTIME_ROLLBACK_BLOCKED_SNAPSHOT_MISMATCH';
+  end if;
 end;
 $$;
 
