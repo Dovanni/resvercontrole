@@ -10,6 +10,8 @@ export type BlogArticleParagraph =
 
 export interface BlogArticleSection {
   heading: string;
+  /** Legacy sections omit this field and are rendered as H2. */
+  headingLevel?: 2 | 3;
   paragraphs: BlogArticleParagraph[];
 }
 
