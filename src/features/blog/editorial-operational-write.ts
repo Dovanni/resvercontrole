@@ -48,13 +48,15 @@ export async function executeOperationalEditorialCommand(input: {
     case "return_to_draft":
       return transitionPost(input.form, "draft");
     case "reopen_review":
-      return transitionPost(input.form, "review");
+      return beginPublishedRevision(input.form);
     case "schedule":
       return transitionPost(input.form, "scheduled", {
         scheduled_at: new Date(input.form.scheduledAt).toISOString(),
       });
     case "publish":
-      return transitionPost(input.form, "published");
+      return input.form.status === "published"
+        ? transitionPost(input.form, "published")
+        : publishWorkingRevision(input.form);
     case "archive":
       return transitionPost(input.form, "archived");
     case "restore_draft":
@@ -158,6 +160,44 @@ async function ensureEditorialTag(name: string, userId: string) {
   if (error) throw error;
   if (!data?.id) throw new Error("BLOG_TAG_CREATE_EMPTY_RESULT");
   return String(data.id);
+}
+
+async function beginPublishedRevision(form: EditorialEditorForm): Promise<EditorialOperationalWriteResult> {
+  if (!form.id) throw new Error("BLOG_POST_ID_REQUIRED");
+
+  const { data, error } = await (blogSupabase as any).rpc("blog_begin_post_revision", {
+    p_post_id: form.id,
+    p_expected_revision: form.revisionNumber,
+  });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row?.post_id) throw new Error("BLOG_EDITORIAL_BEGIN_REVISION_EMPTY_RESULT");
+  return {
+    ok: true,
+    code: "BLOG_EDITORIAL_WRITE_OK",
+    postId: String(row.post_id),
+    revisionNumber: Number(row.revision_number),
+    status: String(row.status),
+  };
+}
+
+async function publishWorkingRevision(form: EditorialEditorForm): Promise<EditorialOperationalWriteResult> {
+  if (!form.id) throw new Error("BLOG_POST_ID_REQUIRED");
+
+  const { data, error } = await (blogSupabase as any).rpc("blog_publish_working_revision", {
+    p_post_id: form.id,
+    p_expected_revision: form.revisionNumber,
+  });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row?.post_id) throw new Error("BLOG_EDITORIAL_PUBLISH_REVISION_EMPTY_RESULT");
+  return {
+    ok: true,
+    code: "BLOG_EDITORIAL_WRITE_OK",
+    postId: String(row.post_id),
+    revisionNumber: Number(row.revision_number),
+    status: String(row.status),
+  };
 }
 
 async function transitionPost(
