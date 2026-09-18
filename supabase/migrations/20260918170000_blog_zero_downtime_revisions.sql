@@ -68,6 +68,14 @@ returns trigger language plpgsql security definer
 set search_path = pg_catalog, public, blog_private, pg_temp
 as $$
 begin
+  -- Fecha a janela de compatibilidade do frontend legado: depois desta
+  -- migration, published -> review só pode ser iniciado pela RPC dedicada.
+  if old.status = 'published' and new.status = 'review'
+     and old.published_revision_number is not null
+     and coalesce(current_setting('blog.revision_context', true), '') <> 'begin_post_revision' then
+    raise exception 'BLOG_PUBLISHED_REVIEW_REQUIRES_BEGIN_REVISION_RPC';
+  end if;
+
   -- Arquivar oculta a publicação no read model sem destruir o último ponteiro.
   if new.published_revision_number is distinct from old.published_revision_number then
     if old.status in ('review','scheduled')
@@ -165,6 +173,7 @@ begin
   end if;
 
   _next_revision := _current.revision_number + 1;
+  perform set_config('blog.revision_context', 'begin_post_revision', true);
 
   update public.blog_posts
   set status = 'review', revision_number = _next_revision, reviewed_by = null, scheduled_at = null
