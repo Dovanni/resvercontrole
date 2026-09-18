@@ -175,13 +175,13 @@ begin
   _next_revision := _current.revision_number + 1;
   perform set_config('blog.revision_context', 'begin_post_revision', true);
 
-  update public.blog_posts
+  update public.blog_posts as bp
   set status = 'review', revision_number = _next_revision, reviewed_by = null, scheduled_at = null
-  where id = p_post_id and revision_number = p_expected_revision;
+  where bp.id = p_post_id and bp.revision_number = p_expected_revision;
 
-  update public.blog_posts
+  update public.blog_posts as bp
   set status = 'draft', reviewed_by = null, scheduled_at = null
-  where id = p_post_id and revision_number = _next_revision;
+  where bp.id = p_post_id and bp.revision_number = _next_revision;
 
   return query
   select p.id, p.revision_number, p.status, p.published_revision_number
@@ -311,9 +311,9 @@ begin
     raise exception 'BLOG_CURRENT_REVISION_REQUIRES_APPROVAL';
   end if;
 
-  update public.blog_posts
-  set status = 'published', published_revision_number = revision_number
-  where id = _post.id and revision_number = _post.revision_number;
+  update public.blog_posts as bp
+  set status = 'published', published_revision_number = bp.revision_number
+  where bp.id = _post.id and bp.revision_number = _post.revision_number;
 
   return query
   select p.id, p.revision_number, p.status, p.published_revision_number, p.published_at
