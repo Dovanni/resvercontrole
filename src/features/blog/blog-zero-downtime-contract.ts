@@ -35,6 +35,27 @@ export function planBeginWorkingRevision(
   };
 }
 
+export function planMaterialWorkingSave(
+  state: BlogRevisionPublicationState,
+): BlogRevisionTransitionPlan {
+  if (state.status !== "draft" && state.status !== "review") {
+    throw new Error("BLOG_WORKING_EDIT_STATUS_REQUIRED");
+  }
+  if (
+    state.publishedRevisionNumber !== null &&
+    state.publishedRevisionNumber >= state.revisionNumber
+  ) {
+    throw new Error("BLOG_WORKING_REVISION_REQUIRED");
+  }
+
+  return {
+    status: state.status,
+    revisionNumber: state.revisionNumber + 1,
+    publishedRevisionNumber: state.publishedRevisionNumber,
+    publicRevisionNumber: state.publishedRevisionNumber,
+  };
+}
+
 export function planPublishWorkingRevision(
   state: BlogRevisionPublicationState,
   approved: boolean,
