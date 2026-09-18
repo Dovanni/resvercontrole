@@ -49,7 +49,7 @@ export function editorialTextToSections(value: string): BlogArticleSection[] {
     if (lines.length === 1) {
       const explicitHeading = lines[0].match(EXPLICIT_HEADING_PATTERN);
       if (explicitHeading) {
-        current = { heading: cleanHeading(explicitHeading[2]), headingLevel: explicitHeading[1] === "###" ? 3 : undefined, paragraphs: [] };
+        current = { heading: cleanHeading(explicitHeading[2]), ...(explicitHeading[1] === "###" ? { headingLevel: 3 as const } : {}), paragraphs: [] };
         sections.push(current);
         continue;
       }
