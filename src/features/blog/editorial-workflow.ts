@@ -10,6 +10,7 @@ export type EditorialCommandKind =
   | "request_changes"
   | "approve_revision"
   | "return_to_draft"
+  | "reopen_review"
   | "schedule"
   | "publish"
   | "archive"
@@ -168,7 +169,7 @@ export function availableEditorialCommands(actor: EditorialActor, form: Editoria
   if (form.status === "review" && ["owner", "editor", "reviewer"].includes(actor.role)) commands.push("request_changes", "approve_revision");
   if (form.status === "review" && ownerOrEditor) commands.push("return_to_draft", "schedule", "publish", "archive");
   if (form.status === "scheduled" && ownerOrEditor) commands.push("publish", "archive");
-  if (form.status === "published" && ownerOrEditor) commands.push("archive");
+  if (form.status === "published" && ownerOrEditor) commands.push("reopen_review", "archive");
   if (form.status === "archived" && ownerOrEditor) commands.push("restore_draft");
   return commands;
 }
@@ -202,6 +203,10 @@ export function planEditorialCommand(actor: EditorialActor, form: EditorialEdito
     case "return_to_draft":
       toStatus = "draft";
       if (form.status !== "review") issues.push(issue("workflow", "BLOG_REVIEW_STATUS_REQUIRED", "Retornar para draft exige status de revisão."));
+      break;
+    case "reopen_review":
+      toStatus = "review";
+      if (form.status !== "published") issues.push(issue("workflow", "BLOG_PUBLISHED_STATUS_REQUIRED", "Criar nova revisão exige status publicado."));
       break;
     case "schedule":
       toStatus = "scheduled";
