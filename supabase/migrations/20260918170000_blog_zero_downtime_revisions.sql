@@ -29,13 +29,8 @@ create index blog_post_revision_tags_tag_idx
 
 do $$
 begin
-  if exists (
-    select 1 from public.blog_posts
-    where published_at is not null and status <> 'published'
-  ) then
-    raise exception 'BLOG_ZERO_DOWNTIME_BACKFILL_AMBIGUOUS_PUBLICATION_STATE';
-  end if;
-
+  -- published_at histórico não implica publicação ativa. O bootstrap público
+  -- considera exclusivamente o estado atual 'published'.
   if exists (
     select 1
     from public.blog_posts p
@@ -73,11 +68,7 @@ returns trigger language plpgsql security definer
 set search_path = pg_catalog, public, blog_private, pg_temp
 as $$
 begin
-  if new.status = 'archived' then
-    new.published_revision_number := null;
-    return new;
-  end if;
-
+  -- Arquivar oculta a publicação no read model sem destruir o último ponteiro.
   if new.published_revision_number is distinct from old.published_revision_number then
     if old.status in ('review','scheduled')
        and new.status = 'published'
@@ -233,6 +224,7 @@ as $$
     on rt.post_id = p.id and rt.revision_number = p.published_revision_number
   left join public.blog_tags t on t.id = rt.tag_id
   where p.published_revision_number is not null
+    and p.status <> 'archived'
     and p.published_at is not null
     and p.published_at <= now()
   group by p.id, r.id, c.name, a.display_name
@@ -259,6 +251,19 @@ as $$
 $$;
 revoke all on function public.blog_public_get_post_by_slug(text) from public;
 grant execute on function public.blog_public_get_post_by_slug(text) to anon, authenticated;
+
+-- Preflight de hardening para SECURITY DEFINER: nenhuma role de aplicação pode
+-- possuir CREATE nos schemas resolvidos pelo search_path das funções públicas.
+do $
+begin
+  if has_schema_privilege('anon', 'public', 'CREATE')
+     or has_schema_privilege('authenticated', 'public', 'CREATE')
+     or has_schema_privilege('anon', 'blog_private', 'CREATE')
+     or has_schema_privilege('authenticated', 'blog_private', 'CREATE') then
+    raise exception 'BLOG_SECURITY_DEFINER_SCHEMA_CREATE_PRIVILEGE_UNSAFE';
+  end if;
+end;
+$;
 
 create or replace function public.blog_publish_working_revision(
   p_post_id uuid,
