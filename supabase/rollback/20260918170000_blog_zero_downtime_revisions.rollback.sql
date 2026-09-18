@@ -35,7 +35,7 @@ $$;
 -- Restaura exatamente o publicador agendado anterior à Fase 4D.
 create or replace function blog_private.publish_due_scheduled_posts(p_limit integer default 50)
 returns table(post_id uuid,outcome text,detail text,published_at timestamptz)
-language plpgsql security definer set search_path=pg_catalog,public,blog_private,pg_temp as $
+language plpgsql security definer set search_path=pg_catalog,public,blog_private,pg_temp as $$$$
 declare _post record; _latest_review_decision text; _latest_reviewer uuid; _published_at timestamptz;
 begin
  if p_limit is null or p_limit<1 or p_limit>500 then raise exception 'BLOG_SCHEDULED_PUBLISHER_LIMIT_INVALID'; end if;
@@ -62,7 +62,7 @@ begin
    post_id:=_post.id; outcome:='failed'; detail:=sqlstate||': '||left(sqlerrm,900); published_at:=null; return next;
   end;
  end loop;
-end; $;
+end; $$$$;
 revoke all on function blog_private.publish_due_scheduled_posts(integer) from public,anon,authenticated,service_role;
 
 drop function if exists public.blog_publish_working_revision(uuid, integer);
