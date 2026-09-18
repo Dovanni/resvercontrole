@@ -47,6 +47,8 @@ export async function executeOperationalEditorialCommand(input: {
       return recordReview(input.form, "approved", input.reviewNotes ?? "");
     case "return_to_draft":
       return transitionPost(input.form, "draft");
+    case "reopen_review":
+      return transitionPost(input.form, "review");
     case "schedule":
       return transitionPost(input.form, "scheduled", {
         scheduled_at: new Date(input.form.scheduledAt).toISOString(),
