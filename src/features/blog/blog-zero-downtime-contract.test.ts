@@ -3,6 +3,7 @@ import {
   canRollbackZeroDowntimeRevisionContract,
   isBlogRevisionPublic,
   planBeginWorkingRevision,
+  planMaterialWorkingSave,
   planPublishWorkingRevision,
 } from "./blog-zero-downtime-contract";
 
@@ -43,6 +44,43 @@ describe("Blog Editorial V2 zero-downtime revision contract", () => {
 
     expect(isBlogRevisionPublic(review, 2)).toBe(true);
     expect(isBlogRevisionPublic(review, 3)).toBe(false);
+  });
+
+  it("keeps revision 2 public when a material save advances working revision 3 to 4", () => {
+    const saved = planMaterialWorkingSave({
+      status: "draft",
+      revisionNumber: 3,
+      publishedRevisionNumber: 2,
+    });
+
+    expect(saved.status).toBe("draft");
+    expect(saved.revisionNumber).toBe(4);
+    expect(saved.publishedRevisionNumber).toBe(2);
+    expect(saved.publicRevisionNumber).toBe(2);
+    expect(isBlogRevisionPublic(saved, 2)).toBe(true);
+    expect(isBlogRevisionPublic(saved, 4)).toBe(false);
+  });
+
+  it("publishes only the final approved material revision after multiple saves", () => {
+    const firstSave = planMaterialWorkingSave({
+      status: "draft",
+      revisionNumber: 3,
+      publishedRevisionNumber: 2,
+    });
+    const secondSave = planMaterialWorkingSave(firstSave);
+
+    expect(secondSave.revisionNumber).toBe(5);
+    expect(secondSave.publishedRevisionNumber).toBe(2);
+
+    const promoted = planPublishWorkingRevision(
+      { ...secondSave, status: "review" },
+      true,
+    );
+
+    expect(promoted.revisionNumber).toBe(5);
+    expect(promoted.publishedRevisionNumber).toBe(5);
+    expect(isBlogRevisionPublic(promoted, 2)).toBe(false);
+    expect(isBlogRevisionPublic(promoted, 5)).toBe(true);
   });
 
   it("refuses to promote an unapproved working revision", () => {
