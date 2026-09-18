@@ -1,10 +1,10 @@
 import { parseEditorialParagraph, serializeEditorialParagraph } from "./blog-content";
 import type { BlogArticleSection } from "./types";
 
-const EXPLICIT_HEADING_PATTERN = /^(##|###)\\s+(.+)$/;
+const EXPLICIT_HEADING_PATTERN = /^(##|###)\s+(.+)$/;
 
 function cleanHeading(value: string) {
-  return value.trim().replace(/^#{2,3}\\s+/, "").trim();
+  return value.trim().replace(/^#{2,3}\s+/, "").trim();
 }
 const INTRODUCTION_HEADING = "Introdução";
 
