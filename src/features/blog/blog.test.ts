@@ -213,6 +213,33 @@ describe("Fase 3-M repository-only editorial workflow", () => {
     expect(codes).toContain("BLOG_CONTENT_REQUIRED");
   });
 
+  it("allows owner/editor to reopen a published article for review without granting authors or reviewers", () => {
+    const published = { ...draft(), status: "published" as const };
+
+    expect(availableEditorialCommands(editor, published)).toContain("reopen_review");
+    expect(availableEditorialCommands(author, published)).not.toContain("reopen_review");
+    expect(availableEditorialCommands(reviewer, published)).not.toContain("reopen_review");
+
+    const plan = planEditorialCommand(editor, published, "reopen_review");
+    expect(plan.allowedByClientContract).toBe(true);
+    expect(plan.fromStatus).toBe("published");
+    expect(plan.toStatus).toBe("review");
+
+    const next = simulateEditorialCommand(published, plan);
+    expect(next.status).toBe("review");
+    expect(next.revisionNumber).toBe(published.revisionNumber);
+    expect(published.status).toBe("published");
+  });
+
+  it("keeps return_to_draft restricted to review status", () => {
+    const published = { ...draft(), status: "published" as const };
+    const plan = planEditorialCommand(editor, published, "return_to_draft");
+
+    expect(plan.allowedByClientContract).toBe(false);
+    expect(plan.issues.some((current) => current.code === "BLOG_COMMAND_NOT_ALLOWED")).toBe(true);
+    expect(plan.issues.some((current) => current.code === "BLOG_REVIEW_STATUS_REQUIRED")).toBe(true);
+  });
+
   it("allows owner/editor archive and restore transitions while authors cannot", () => {
     const published = { ...draft(), status: "published" as const };
     const archived = { ...draft(), status: "archived" as const };
