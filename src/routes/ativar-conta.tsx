@@ -32,6 +32,14 @@ function ActivationPage() {
       const result = await reconcileFn();
       
       if (result.success) {
+        if (result.already_finalized === false && typeof window !== "undefined") {
+          const dataLayer = ((window as any).dataLayer = (window as any).dataLayer || []);
+          dataLayer.push({
+            event: "vejamais_sign_up",
+            method: "company_activation",
+          });
+        }
+
         // Limpar caches multiempresa para forçar recarregamento do contexto
         await queryClient.cancelQueries();
         queryClient.clear();
