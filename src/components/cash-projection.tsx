@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { brl } from "@/lib/format";
+import { useMultiempresa } from "@/hooks/use-multiempresa";
 import { AlertTriangle, ArrowDown, TrendingUp } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -14,32 +15,42 @@ type Horizon = "6m" | "12m" | "ano";
 
 export function CashProjection({ compact = false }: { compact?: boolean }) {
   const [horizon, setHorizon] = useState<Horizon>("6m");
+  const { empresaId, isEnabled } = useMultiempresa();
 
   const { data: movs } = useQuery({
-    queryKey: ["cash-projection-movs"],
+    queryKey: ["cash-projection-movs", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("bank_movements" as any)
         .select("account_id, type, amount");
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []) as unknown as { account_id: string; type: string; amount: number }[];
     },
   });
 
   const { data: payables } = useQuery({
-    queryKey: ["cash-projection-pay"],
+    queryKey: ["cash-projection-pay", empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("payables")
         .select("amount, due_date, status")
         .in("status", ["pendente", "atrasado"]);
+      if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
+      const { data, error } = await query;
       if (error) throw error;
       return data ?? [];
     },
   });
 
   const saldoAtual = useMemo(
-    () => (movs ?? []).reduce((s, m) => s + (m.type === "entrada" ? Number(m.amount) : -Number(m.amount)), 0),
+    () => (movs ?? []).reduce((s, m) => {
+      const amount = Number(m.amount);
+      if (m.type === "entrada") return s + amount;
+      if (m.type === "saida") return s - amount;
+      return s;
+    }, 0),
     [movs]
   );
 

@@ -53,6 +53,7 @@ function BankAccountsPage() {
   const confirm = useConfirm();
   const [editing, setEditing] = useState<BankAccount | null>(null);
   const [openForm, setOpenForm] = useState(false);
+  const [openTransfer, setOpenTransfer] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [extractFor, setExtractFor] = useState<BankAccount | null>(null);
 
@@ -103,6 +104,9 @@ function BankAccountsPage() {
         subtitle="Gerencie suas contas e movimentações financeiras"
         action={
           <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setOpenTransfer(true)} disabled={active.length < 2}>
+              <ArrowLeftRight className="size-4 mr-1" /> Transferir entre contas
+            </Button>
             <Button className="bg-gradient-primary text-primary-foreground" onClick={() => { setEditing(null); setOpenForm(true); }}>
               <Plus className="size-4 mr-1" /> Nova conta
             </Button>
@@ -233,6 +237,19 @@ function BankAccountsPage() {
           <AccountForm
             initial={editing}
             onDone={() => { setOpenForm(false); qc.invalidateQueries({ queryKey: ["bank-accounts", empresaId] }); }}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={openTransfer} onOpenChange={setOpenTransfer}>
+        <DialogContent>
+          <DialogHeader><DialogTitle className="font-display">Transferir entre contas</DialogTitle></DialogHeader>
+          <TransferForm
+            accounts={active}
+            onDone={() => {
+              setOpenTransfer(false);
+              qc.invalidateQueries({ queryKey: ["bank-movements"] });
+            }}
           />
         </DialogContent>
       </Dialog>
@@ -620,6 +637,99 @@ function ExtractView({ account, accounts, balance, onClose }: { account: BankAcc
 
       <div className="mt-4 flex justify-end"><Button variant="outline" onClick={onClose}>Fechar</Button></div>
     </div>
+  );
+}
+
+function TransferForm({ accounts, onDone }: { accounts: BankAccount[]; onDone: () => void }) {
+  const { empresaId, isEnabled } = useMultiempresa();
+  const [originAccountId, setOriginAccountId] = useState("");
+  const [destinationAccountId, setDestinationAccountId] = useState("");
+  const [movementDate, setMovementDate] = useState(new Date().toISOString().slice(0, 10));
+  const [amount, setAmount] = useState(0);
+  const [description, setDescription] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const activeAccounts = accounts.filter((a) => a.status === "ativa");
+  const destinationAccounts = activeAccounts.filter((a) => a.id !== originAccountId);
+
+  const save = useMutation({
+    mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Não autenticado");
+      if (isEnabled && !empresaId) throw new Error("Empresa ativa não identificada");
+      if (!originAccountId) throw new Error("Selecione a conta de origem");
+      if (!destinationAccountId) throw new Error("Selecione a conta de destino");
+      if (originAccountId === destinationAccountId) throw new Error("Origem e destino devem ser contas diferentes");
+      if (!Number.isFinite(amount) || amount <= 0) throw new Error("Informe um valor maior que zero");
+      if (!activeAccounts.some((a) => a.id === originAccountId)) throw new Error("Conta de origem inválida");
+      if (!activeAccounts.some((a) => a.id === destinationAccountId)) throw new Error("Conta de destino inválida");
+
+      const { error } = await supabase.from("bank_movements" as any).insert({
+        user_id: user.id,
+        empresa_id: isEnabled ? empresaId : undefined,
+        account_id: originAccountId,
+        destination_account_id: destinationAccountId,
+        movement_date: movementDate,
+        type: "transferencia",
+        category: "Transferência entre contas",
+        description: description || "Transferência entre contas",
+        amount,
+        notes: notes || null,
+        origin: "transfer",
+      } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Transferência registrada");
+      onDone();
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  return (
+    <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
+        <div className="col-span-2 space-y-1.5">
+          <Label>Conta de origem</Label>
+          <Select value={originAccountId} onValueChange={(v) => {
+            setOriginAccountId(v);
+            if (v === destinationAccountId) setDestinationAccountId("");
+          }}>
+            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <SelectContent>{activeAccounts.map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div className="col-span-2 space-y-1.5">
+          <Label>Conta de destino</Label>
+          <Select value={destinationAccountId} onValueChange={setDestinationAccountId} disabled={!originAccountId}>
+            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <SelectContent>{destinationAccounts.map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Data</Label>
+          <Input type="date" required value={movementDate} onChange={(e) => setMovementDate(e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Valor (R$)</Label>
+          <Input type="number" step="0.01" min={0.01} required value={amount} onChange={(e) => setAmount(Number(e.target.value))} />
+        </div>
+        <div className="col-span-2 space-y-1.5">
+          <Label>Descrição</Label>
+          <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Opcional" />
+        </div>
+        <div className="col-span-2 space-y-1.5">
+          <Label>Observações</Label>
+          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        A transferência movimenta apenas os saldos das contas bancárias e não cria receita ou despesa operacional.
+      </p>
+      <Button type="submit" disabled={save.isPending || activeAccounts.length < 2} className="w-full bg-gradient-primary text-primary-foreground">
+        {save.isPending ? "Transferindo…" : "Transferir"}
+      </Button>
+    </form>
   );
 }
 
