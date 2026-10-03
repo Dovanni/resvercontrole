@@ -681,7 +681,8 @@ function BIPage() {
     let i = 0;
     while (i < sorted.length && String(sorted[i].movement_date) < from) {
       const v = Number(sorted[i].amount);
-      saldo += sorted[i].type === "entrada" ? v : -v;
+      if (sorted[i].type === "entrada") saldo += v;
+      else if (sorted[i].type === "saida") saldo -= v;
       i++;
     }
 
@@ -696,7 +697,8 @@ function BIPage() {
     while (ds <= to) {
       while (i < sorted.length && String(sorted[i].movement_date) === ds) {
         const v = Number(sorted[i].amount);
-        saldo += sorted[i].type === "entrada" ? v : -v;
+        if (sorted[i].type === "entrada") saldo += v;
+        else if (sorted[i].type === "saida") saldo -= v;
         i++;
       }
       out.push({ date: ds.slice(5), saldo: Number(saldo.toFixed(2)) });
