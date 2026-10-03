@@ -19,6 +19,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as RecuperarSenhaRouteImport } from './routes/recuperar-senha'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapBlogDotxmlRouteImport } from './routes/sitemap-blog[.]xml'
+import { Route as AuthenticatedAdministracaoMatrizRouteImport } from './routes/_authenticated.administracao-matriz'
 import { Route as AuthenticatedBalanceteRouteImport } from './routes/_authenticated.balancete'
 import { Route as AuthenticatedBiRouteImport } from './routes/_authenticated.bi'
 import { Route as AuthenticatedCartoesCreditoRouteImport } from './routes/_authenticated.cartoes-credito'
@@ -108,6 +109,12 @@ const SitemapBlogDotxmlRoute = SitemapBlogDotxmlRouteImport.update({
   path: '/sitemap-blog.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdministracaoMatrizRoute =
+  AuthenticatedAdministracaoMatrizRouteImport.update({
+    id: '/administracao-matriz',
+    path: '/administracao-matriz',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedBalanceteRoute = AuthenticatedBalanceteRouteImport.update({
   id: '/balancete',
   path: '/balancete',
@@ -332,6 +339,7 @@ export interface FileRoutesByFullPath {
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap-blog.xml': typeof SitemapBlogDotxmlRoute
+  '/administracao-matriz': typeof AuthenticatedAdministracaoMatrizRoute
   '/balancete': typeof AuthenticatedBalanceteRoute
   '/bi': typeof AuthenticatedBiRoute
   '/cartoes-credito': typeof AuthenticatedCartoesCreditoRoute
@@ -382,6 +390,7 @@ export interface FileRoutesByTo {
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap-blog.xml': typeof SitemapBlogDotxmlRoute
+  '/administracao-matriz': typeof AuthenticatedAdministracaoMatrizRoute
   '/balancete': typeof AuthenticatedBalanceteRoute
   '/bi': typeof AuthenticatedBiRoute
   '/cartoes-credito': typeof AuthenticatedCartoesCreditoRoute
@@ -434,6 +443,7 @@ export interface FileRoutesById {
   '/recuperar-senha': typeof RecuperarSenhaRoute
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap-blog.xml': typeof SitemapBlogDotxmlRoute
+  '/_authenticated/administracao-matriz': typeof AuthenticatedAdministracaoMatrizRoute
   '/_authenticated/balancete': typeof AuthenticatedBalanceteRoute
   '/_authenticated/bi': typeof AuthenticatedBiRoute
   '/_authenticated/cartoes-credito': typeof AuthenticatedCartoesCreditoRoute
@@ -486,6 +496,7 @@ export interface FileRouteTypes {
     | '/recuperar-senha'
     | '/reset-password'
     | '/sitemap-blog.xml'
+    | '/administracao-matriz'
     | '/balancete'
     | '/bi'
     | '/cartoes-credito'
@@ -536,6 +547,7 @@ export interface FileRouteTypes {
     | '/recuperar-senha'
     | '/reset-password'
     | '/sitemap-blog.xml'
+    | '/administracao-matriz'
     | '/balancete'
     | '/bi'
     | '/cartoes-credito'
@@ -587,6 +599,7 @@ export interface FileRouteTypes {
     | '/recuperar-senha'
     | '/reset-password'
     | '/sitemap-blog.xml'
+    | '/_authenticated/administracao-matriz'
     | '/_authenticated/balancete'
     | '/_authenticated/bi'
     | '/_authenticated/cartoes-credito'
@@ -723,6 +736,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/sitemap-blog.xml'
       preLoaderRoute: typeof SitemapBlogDotxmlRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/administracao-matriz': {
+      id: '/_authenticated/administracao-matriz'
+      path: '/administracao-matriz'
+      fullPath: '/administracao-matriz'
+      preLoaderRoute: typeof AuthenticatedAdministracaoMatrizRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/balancete': {
       id: '/_authenticated/balancete'
@@ -1019,6 +1039,7 @@ const AuthenticatedConfiguracoesRouteWithChildren =
   )
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAdministracaoMatrizRoute: typeof AuthenticatedAdministracaoMatrizRoute
   AuthenticatedBalanceteRoute: typeof AuthenticatedBalanceteRoute
   AuthenticatedBiRoute: typeof AuthenticatedBiRoute
   AuthenticatedCartoesCreditoRoute: typeof AuthenticatedCartoesCreditoRoute
@@ -1045,6 +1066,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAdministracaoMatrizRoute: AuthenticatedAdministracaoMatrizRoute,
   AuthenticatedBalanceteRoute: AuthenticatedBalanceteRoute,
   AuthenticatedBiRoute: AuthenticatedBiRoute,
   AuthenticatedCartoesCreditoRoute: AuthenticatedCartoesCreditoRoute,
