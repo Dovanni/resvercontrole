@@ -95,13 +95,13 @@ function BalancetePage() {
     queryFn: async () => {
       let query = supabase
         .from("bank_movements")
-        .select("account_id, movement_date, type, amount");
+        .select("account_id, destination_account_id, movement_date, type, amount");
       
       if (isEnabled && empresaId) query = query.eq("empresa_id", empresaId);
 
       const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []) as unknown as { account_id: string; movement_date: string; type: string; amount: number }[];
+      return (data ?? []) as unknown as { account_id: string; destination_account_id: string | null; movement_date: string; type: string; amount: number }[];
     },
   });
 
@@ -126,7 +126,14 @@ function BalancetePage() {
     for (const m of allMovs ?? []) {
       if (m.movement_date > cutoffDate) continue;
       const v = Number(m.amount || 0);
-      map[m.account_id] = (map[m.account_id] ?? 0) + (m.type === "entrada" ? v : -v);
+      if (m.type === "entrada") map[m.account_id] = (map[m.account_id] ?? 0) + v;
+      else if (m.type === "saida") map[m.account_id] = (map[m.account_id] ?? 0) - v;
+      else if (m.type === "transferencia") {
+        map[m.account_id] = (map[m.account_id] ?? 0) - v;
+        if (m.destination_account_id) {
+          map[m.destination_account_id] = (map[m.destination_account_id] ?? 0) + v;
+        }
+      }
     }
     return map;
   }, [allMovs, cutoffDate]);
