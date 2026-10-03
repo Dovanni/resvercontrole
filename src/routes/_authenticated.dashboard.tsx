@@ -112,7 +112,7 @@ function Dashboard() {
     queryKey: ["dashboard-bank-balances", empresaId],
     queryFn: async () => {
       const queryAccounts = supabase.from("bank_accounts").select("id,name,bank,color,initial_balance");
-      const queryMovements = supabase.from("bank_movements").select("account_id,type,amount");
+      const queryMovements = supabase.from("bank_movements").select("account_id,destination_account_id,type,amount");
 
       if (isEnabled && empresaId) {
         queryAccounts.eq("empresa_id", empresaId);
@@ -131,9 +131,16 @@ function Dashboard() {
       const accounts = (accountsRes.data ?? []) as any[];
       const movs = (movsRes.data ?? []) as any[];
       const perAccount = accounts.map(a => {
-        const bal = movs
-          .filter(m => m.account_id === a.id)
-          .reduce((s, m) => s + (m.type === "entrada" ? Number(m.amount) : -Number(m.amount)), 0);
+        const bal = movs.reduce((s, m) => {
+          const amount = Number(m.amount);
+          if (m.type === "entrada" && m.account_id === a.id) return s + amount;
+          if (m.type === "saida" && m.account_id === a.id) return s - amount;
+          if (m.type === "transferencia") {
+            if (m.account_id === a.id) s -= amount;
+            if (m.destination_account_id === a.id) s += amount;
+          }
+          return s;
+        }, 0);
         return { ...a, balance: bal };
       });
       const total = perAccount.reduce((s, a) => s + a.balance, 0);
