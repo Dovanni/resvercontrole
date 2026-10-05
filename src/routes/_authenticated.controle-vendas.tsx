@@ -141,14 +141,17 @@ function ControleVendasPage() {
   });
 
   const { data: fornecedorRow } = useQuery({
-    queryKey: ["controle-vendas-fornecedor", YEAR, mes],
+    queryKey: ["controle-vendas-fornecedor", YEAR, mes, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("controle_vendas_fornecedor")
         .select("*")
         .eq("ano", YEAR)
-        .eq("mes", mes)
-        .maybeSingle();
+        .eq("mes", mes);
+
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+
+      const { data, error } = await q.maybeSingle();
       if (error) throw error;
       return data as { id: string; valor_fornecedor: number } | null;
     },
@@ -244,14 +247,17 @@ function ControleVendasPage() {
   });
 
   const { data: historico = [] } = useQuery({
-    queryKey: ["controle-vendas-fornecedor-historico", YEAR, mes],
+    queryKey: ["controle-vendas-fornecedor-historico", YEAR, mes, empresaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("controle_vendas_fornecedor_historico")
         .select("*")
         .eq("ano", YEAR)
-        .eq("mes", mes)
-        .order("created_at", { ascending: false });
+        .eq("mes", mes);
+
+      if (isEnabled && empresaId) q = q.eq("empresa_id", empresaId);
+
+      const { data, error } = await q.order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Array<{
         id: string; valor_anterior: number; valor_novo: number;
@@ -265,21 +271,22 @@ function ControleVendasPage() {
       const { data: userRes } = await supabase.auth.getUser();
       const user_id = userRes.user?.id;
       if (!user_id) throw new Error("Sem usuário");
+      if (isEnabled && !empresaId) throw new Error("Empresa ativa não identificada");
       const novoValor = num(fornecedorInput);
       const valorAnterior = Number(fornecedorRow?.valor_fornecedor ?? 0);
       const isEdit = editingFornecedor && fornecedorRow && novoValor !== valorAnterior;
 
-      const payload = { user_id, mes, ano: YEAR, valor_fornecedor: novoValor };
+      const payload = { user_id, empresa_id: empresaId!, mes, ano: YEAR, valor_fornecedor: novoValor };
       const { error } = await supabase
         .from("controle_vendas_fornecedor")
-        .upsert(payload, { onConflict: "user_id,mes,ano" });
+        .upsert(payload, { onConflict: "empresa_id,mes,ano" });
       if (error) throw error;
 
       if (isEdit) {
         const { error: hErr } = await supabase
           .from("controle_vendas_fornecedor_historico")
           .insert({
-            user_id, mes, ano: YEAR,
+            user_id, empresa_id: empresaId!, mes, ano: YEAR,
             valor_anterior: valorAnterior,
             valor_novo: novoValor,
             motivo: motivoAlteracao || null,
@@ -375,10 +382,13 @@ function ControleVendasPage() {
   const exportPdfAnual = async () => {
     const ano = YEAR;
     try {
-      const [diarioRes, fornRes] = await Promise.all([
-        supabase.from("controle_vendas_diario").select("mes,receber,lucro,custo,frete_empresa").eq("ano", ano),
-        supabase.from("controle_vendas_fornecedor").select("mes,valor_fornecedor").eq("ano", ano),
-      ]);
+      let diarioQuery = supabase.from("controle_vendas_diario").select("mes,receber,lucro,custo,frete_empresa").eq("ano", ano);
+      let fornecedorQuery = supabase.from("controle_vendas_fornecedor").select("mes,valor_fornecedor").eq("ano", ano);
+      if (isEnabled && empresaId) {
+        diarioQuery = diarioQuery.eq("empresa_id", empresaId);
+        fornecedorQuery = fornecedorQuery.eq("empresa_id", empresaId);
+      }
+      const [diarioRes, fornRes] = await Promise.all([diarioQuery, fornecedorQuery]);
       if (diarioRes.error) throw diarioRes.error;
       if (fornRes.error) throw fornRes.error;
 
