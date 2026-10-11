@@ -133,7 +133,7 @@ function SalesPage() {
       />
 
       <Dialog open={!!editingId} onOpenChange={(o) => !o && setEditingId(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-3xl max-h-[90dvh] overflow-y-auto overflow-x-hidden">
           <DialogHeader><DialogTitle className="font-display">Editar venda</DialogTitle></DialogHeader>
           {editingId && <SaleForm saleId={editingId} idempotencyKey={`edit-${editingId}`} onDone={() => { setEditingId(null); invalidate(); }} />}
         </DialogContent>
@@ -639,7 +639,7 @@ function SaleForm({ onDone, saleId, idempotencyKey }: { onDone: () => void; sale
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="col-span-2 space-y-1.5">
           <Label>Canal</Label>
           <Select value={channel} onValueChange={(v: any) => changeChannel(v)}>
@@ -791,7 +791,7 @@ function SaleForm({ onDone, saleId, idempotencyKey }: { onDone: () => void; sale
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label>Desconto</Label>
@@ -814,7 +814,7 @@ function SaleForm({ onDone, saleId, idempotencyKey }: { onDone: () => void; sale
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
             <div className="space-y-1.5">
               <Label>Juros Mercado Pago (R$)</Label>
               <Input type="number" step="0.01" min={0}
