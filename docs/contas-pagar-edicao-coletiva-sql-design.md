@@ -63,3 +63,11 @@ CREATE INDEX payables_series_lookup
 - Auditar RLS e políticas em detalhes antes de definir a função.
 - Criar migration por CLI em branch após aprovação; nunca executar em produção sem autorização específica.
 - Não mergear PR #38 nem publicar Worker antes de CI e testes de integração.
+
+## Regra de negócio aprovada (2026-10-22)
+- Novo valor informado é o valor **de cada parcela selecionada**, não o total da série. Total anterior e novo total são soma dos registros selecionados, em centavos.
+- O vencimento informado é âncora da parcela selecionada. Para as demais, calcular mês relativo pela diferença entre índices; preservar o dia escolhido, limitando ao último dia válido de cada mês (ex.: 31/01 → 28/02 → 31/03). Para escopo all, calcular também meses anteriores.
+- Exibir confirmação antes de qualquer gravação: escopo, número e IDs de parcelas, valores anterior/novo/diferença e vencimentos por parcela. O servidor recalcula e rejeita divergência de snapshot.
+- Parcelas pagas, canceladas e parcialmente quitadas permanecem intocadas. Uma parcela selecionada já quitada/parcialmente quitada causa bloqueio da operação; outras quitadas na série são excluídas do escopo.
+- Helpers puros e testes em src/lib/payables-collective-preview.ts e .test.ts; **testes adicionados, ainda não executados/validados no CI**.
+- Ainda falta RPC atômica, identidade persistida, integração da UI com preview e autorização explícita para qualquer migration/deploy.
