@@ -54,5 +54,5 @@ CREATE POLICY "cp04_delete_financial_member" ON public.payables
   )
  );
 GRANT SELECT ON public.empresas,public.user_company_access TO authenticated;
-GRANT SELECT,UPDATE ON public.payables TO authenticated;
+GRANT SELECT,INSERT,UPDATE,DELETE ON public.payables TO authenticated;
 INSERT INTO public.empresas VALUES('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','active'),('cccccccc-cccc-4ccc-8ccc-cccccccccccc','active');
