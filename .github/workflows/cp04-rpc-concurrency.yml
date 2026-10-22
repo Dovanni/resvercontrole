@@ -4,6 +4,8 @@ on:
     paths:
       - 'docs/cp04-production-rpc-review.sql'
       - 'tests/cp04/rpc-*'
+      - 'tests/cp04/supabase-auth-*'
+      - '.github/workflows/cp04-supabase-auth.yml'
       - '.github/workflows/cp04-rpc-concurrency.yml'
   workflow_dispatch:
 permissions:
@@ -40,3 +42,30 @@ jobs:
       - run: python -m pip install --user psycopg2-binary==2.9.11
       - name: Two-session concurrent RPC and stale confirmation tests
         run: python tests/cp04/rpc-concurrency.py
+
+  real_supabase_auth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start disposable Supabase Auth and PostgREST
+        run: |
+          supabase --version
+          supabase start
+      - name: Install isolated schema and proposed RPC
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y postgresql-client
+          export PGPASSWORD=postgres
+          psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -f tests/cp04/supabase-auth-fixture.sql
+          psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -f docs/cp04-production-rpc-review.sql
+          psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "GRANT EXECUTE ON FUNCTION public.edit_payables_series_cp04(uuid,uuid,text,numeric,date,jsonb) TO authenticated;"
+      - name: Validate GoTrue JWT, role isolation and revocation
+        run: |
+          export CP04_ANON_KEY="$(supabase status -o env | sed -n 's/^ANON_KEY=//p' | tr -d '"')"
+          test -n "$CP04_ANON_KEY"
+          python3 tests/cp04/supabase-auth-integration.py
+      - if: always()
+        run: supabase stop --no-backup || true
