@@ -18,6 +18,7 @@ DECLARE
  v_series_total integer;
  v_count integer;
  v_target_count integer;
+ v_recurrence text;
  v_snapshot jsonb;
 BEGIN
  IF v_user IS NULL OR p_empresa_id IS NULL OR p_payable_id IS NULL THEN
@@ -73,6 +74,13 @@ BEGIN
         AND p.user_id=v_user)<>v_count THEN
    RAISE EXCEPTION 'Series incomplete or inconsistent';
  END IF;
+ -- Every row must share a supported recurrence. No monthly coercion of weekly series.
+ SELECT min(p.recurrence) INTO v_recurrence
+ FROM public.payables p WHERE p.empresa_id=p_empresa_id AND p.series_id=v_selected.series_id;
+ IF v_recurrence NOT IN ('mensal','semanal') OR EXISTS (
+  SELECT 1 FROM public.payables p WHERE p.empresa_id=p_empresa_id
+   AND p.series_id=v_selected.series_id AND p.recurrence IS DISTINCT FROM v_recurrence
+ ) THEN RAISE EXCEPTION 'Inconsistent or unsupported series recurrence'; END IF;
  -- Snapshot is a canonical array of {id,amount,due_date,status,paid_amount,paid_at}.
  -- Validate ALL series rows, not only targets, so changed payments invalidate confirmation.
  SELECT jsonb_agg(jsonb_build_object(
@@ -105,10 +113,12 @@ BEGIN
    AND (p_scope<>'single' OR p.id=p_payable_id)
  ), scheduled AS (
   SELECT t.*,
-   (t.month_start + (least(
+   CASE WHEN v_recurrence='semanal' THEN
+     (p_anchor_due_date + 7 * (t.series_index-v_selected.series_index))::date
+   ELSE (t.month_start + (least(
       extract(day from p_anchor_due_date)::integer,
       extract(day from (t.month_start + interval '1 month - 1 day'))::integer
-    )-1))::date AS next_due
+    )-1))::date END AS next_due
   FROM targets t
  ), updated AS (
   UPDATE public.payables p SET amount=p_new_amount,due_date=s.next_due
