@@ -7,8 +7,12 @@ def http(path,method="GET",body=None,token=None):
     if token: headers["Authorization"]="Bearer "+token
     req=urllib.request.Request(BASE+path,data=data,headers=headers,method=method)
     try:
-        with urllib.request.urlopen(req,timeout=20) as res: return res.status,json.load(res)
-    except urllib.error.HTTPError as e: return e.code,json.loads(e.read().decode())
+        with urllib.request.urlopen(req,timeout=20) as res:
+            raw=res.read()
+            return res.status,(json.loads(raw) if raw.strip() else None)
+    except urllib.error.HTTPError as e:
+        raw=e.read()
+        return e.code,(json.loads(raw) if raw.strip() else None)
 def sql(query):
     subprocess.run(["psql","postgresql://postgres:postgres@127.0.0.1:54322/postgres","-v","ON_ERROR_STOP=1","-c",query],check=True,stdout=subprocess.DEVNULL)
 def register(label):
@@ -38,6 +42,51 @@ assert status>=400,(status,result)
 owner_row={**sales_row,"user_id":owner}
 status,result=http("/rest/v1/payables","POST",owner_row,owner_token)
 assert status in (200,201,204),(status,result)
+# Independent companies: each financial administrator may write only inside
+# their own active company and cannot impersonate another owner.
+admin,admin_token=register("matrix-admin")
+sql(f"INSERT INTO public.user_company_access(user_id,empresa_id,status,role) VALUES ('{admin}','{other}','active','admin')")
+admin_row={**owner_row,"user_id":admin,"empresa_id":other,"id":str(uuid.uuid4())}
+status,result=http("/rest/v1/payables","POST",admin_row,admin_token)
+assert status in (200,201,204),("other-company-admin-insert",status,result)
+# Active financial owner can update and delete a dedicated own row.
+own_id=str(uuid.uuid4())
+own_row={**owner_row,"id":own_id}
+status,result=http("/rest/v1/payables","POST",own_row,owner_token)
+assert status in (200,201,204),("finance-insert",status,result)
+status,result=http("/rest/v1/payables?id=eq."+own_id,"PATCH",{"amount":11},owner_token)
+assert status in (200,204),("finance-update",status,result)
+status,result=http("/rest/v1/payables?id=eq."+own_id,"DELETE",None,owner_token)
+assert status in (200,204),("finance-delete",status,result)
+# A seller may not modify or delete their own rows, even if inserted by a
+# privileged fixture writer. An unauthorized UPDATE can return 204 with zero
+# affected rows; verify via an owner-independent SQL read afterwards.
+sales_id=str(uuid.uuid4())
+sql(f"INSERT INTO public.payables(id,empresa_id,user_id,amount,due_date,status,recurrence) VALUES ('{sales_id}','{company}','{sales}',10,'2026-11-01','pendente','nenhuma')")
+status,result=http("/rest/v1/payables?id=eq."+sales_id,"PATCH",{"amount":99},sales_token)
+assert status in (200,204,403,401),("sales-update",status,result)
+status,rows=http("/rest/v1/payables?select=amount&id=eq."+sales_id,token=sales_token)
+assert status==200 and len(rows)==1 and float(rows[0]["amount"])==10,("sales-update-bypassed",status,rows)
+status,result=http("/rest/v1/payables?id=eq."+sales_id,"DELETE",None,sales_token)
+assert status in (200,204,403,401),("sales-delete",status,result)
+status,rows=http("/rest/v1/payables?select=id&id=eq."+sales_id,token=sales_token)
+assert status==200 and len(rows)==1,("sales-delete-bypassed",status,rows)
+# Cross-company insertion must be rejected even for active financial members.
+cross={**owner_row,"id":str(uuid.uuid4()),"empresa_id":other}
+status,result=http("/rest/v1/payables","POST",cross,owner_token)
+assert status>=400,("cross-company-insert",status,result)
+# RLS must hide the other company's financial data.
+status,rows=http("/rest/v1/payables?select=id&id=eq."+admin_row["id"],token=owner_token)
+assert status==200 and rows==[],("cross-company-read",status,rows)
+# A financial admin of company B must not edit/delete company A's records.
+status,result=http("/rest/v1/payables?id=eq."+selected,"PATCH",{"amount":999},admin_token)
+assert status in (200,204,403,401),("cross-company-update",status,result)
+status,rows=http("/rest/v1/payables?select=amount&id=eq."+selected,token=owner_token)
+assert status==200 and len(rows)==1 and float(rows[0]["amount"])==94.47,("cross-company-update-bypassed",status,rows)
+status,result=http("/rest/v1/payables?id=eq."+selected,"DELETE",None,admin_token)
+assert status in (200,204,403,401),("cross-company-delete",status,result)
+status,rows=http("/rest/v1/payables?select=id&id=eq."+selected,token=owner_token)
+assert status==200 and len(rows)==1,("cross-company-delete-bypassed",status,rows)
 def snapshot(token):
     status,rows=http("/rest/v1/payables?select=id,series_index,amount,due_date,status,paid_amount,paid_at&series_id=eq."+series+"&order=series_index.asc",token=token)
     assert status==200,(status,rows)
