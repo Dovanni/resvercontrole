@@ -780,6 +780,20 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
   const series = parseSeries(payable.description);
   const confirm = useConfirm();
   const [editScope, setEditScope] = useState<"single" | "future" | "all">("single");
+  const navCats = useNavigate();
+  const { data: cats } = useCategoriasContasPagar();
+  const categoryOptions = (cats && cats.length > 0) ? cats.map(c => c.nome) : FALLBACK_CATEGORIES;
+
+  const [f, setF] = useState({
+    supplier_id: payable.supplier_id ?? "",
+    description: payable.description,
+    category: payable.category,
+    amount: Number(payable.amount),
+    due_date: payable.due_date,
+    payment_method: payable.payment_method ?? "pix",
+    bank_account_id: payable.bank_account_id ?? "",
+    recurrence: payable.recurrence,
+  });
   // Read-only preview: never infer series identity from the description suffix.
   // The collective submit path remains disabled until the reviewed RPC is deployed.
   const collectivePreview = useMemo(() => {
@@ -799,20 +813,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
       return prepareCollectiveConfirmation(payable.series_id, payable.id, editScope, preview);
     } catch { return null; }
   }, [all, payable, editScope, f.amount, f.due_date]);
-  const navCats = useNavigate();
-  const { data: cats } = useCategoriasContasPagar();
-  const categoryOptions = (cats && cats.length > 0) ? cats.map(c => c.nome) : FALLBACK_CATEGORIES;
 
-  const [f, setF] = useState({
-    supplier_id: payable.supplier_id ?? "",
-    description: payable.description,
-    category: payable.category,
-    amount: Number(payable.amount),
-    due_date: payable.due_date,
-    payment_method: payable.payment_method ?? "pix",
-    bank_account_id: payable.bank_account_id ?? "",
-    recurrence: payable.recurrence,
-  });
 
   const save = useMutation({
     mutationFn: async () => {
