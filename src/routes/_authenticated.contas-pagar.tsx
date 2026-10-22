@@ -806,7 +806,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
       const preview = previewCollectiveEdit(
         siblings.map(p => ({
           id: p.id, index: p.series_index!, dueDate: p.due_date,
-          amount: Number(p.amount), status: p.status, paidAmount: Number(p.paid_amount),
+          amount: Number(p.amount), status: p.status, paidAmount: Number(p.paid_amount), paidAt: p.paid_at,
         })),
         payable.series_index, editScope, f.amount, f.due_date
       );
