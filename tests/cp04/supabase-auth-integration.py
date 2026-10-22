@@ -46,6 +46,16 @@ assert sum(float(x["new_amount"]) for x in result)==200,result
 assert [x["new_due_date"] for x in result]==["2026-01-31","2026-02-28"],result
 status,result=http("/rest/v1/rpc/edit_payables_series_cp04","POST",args,owner_token)
 assert status>=400,(status,result)
+# Snapshot must include a settled row with a real timestamp. The old JSON
+# snapshot must fail after any payment, even when the target is another row.
+sql(f"UPDATE public.payables SET status='pago',paid_amount=100,paid_at='2026-10-22 19:30:15.123456+00' WHERE id='00000000-0000-4000-8000-000000000002'")
+status,result=http("/rest/v1/rpc/edit_payables_series_cp04","POST",args,owner_token)
+assert status>=400,(status,result)
+paid_snap=snapshot(owner_token)
+assert paid_snap[1]["paid_at"] is not None,paid_snap
+args["p_expected_snapshot"]=paid_snap
+status,result=http("/rest/v1/rpc/edit_payables_series_cp04","POST",args,owner_token)
+assert status==200 and len(result)==1,(status,result)
 sql(f"UPDATE public.user_company_access SET status='inactive' WHERE user_id='{owner}'")
 args["p_expected_snapshot"]=snapshot(owner_token)
 status,result=http("/rest/v1/rpc/edit_payables_series_cp04","POST",args,owner_token)
