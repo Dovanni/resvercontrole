@@ -16,6 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Trash2, CheckCircle2, AlertCircle, Pencil, ArrowUpDown, Download, ChevronDown, ChevronRight, Settings, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
+import { previewCollectiveEdit, prepareCollectiveConfirmation } from "@/lib/payables-collective-preview";
 import { useConfirm } from "@/components/confirm-dialog";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { useCategoriasContasPagar } from "@/components/categorias-contas-pagar-manager";
@@ -60,6 +61,7 @@ const FALLBACK_CATEGORIES = ["fornecedor", "logistica", "marketing", "aluguel", 
 const PAYMENT_METHODS = ["pix", "boleto", "transferência", "dinheiro", "cartão"];
 
 type Payable = {
+  series_id?: string | null; series_index?: number | null; series_total?: number | null;
   id: string; supplier_id: string | null; description: string; category: string;
   amount: number; due_date: string; payment_method: string | null;
   bank_account_id: string | null;
@@ -778,6 +780,25 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
   const series = parseSeries(payable.description);
   const confirm = useConfirm();
   const [editScope, setEditScope] = useState<"single" | "future" | "all">("single");
+  // Read-only preview: never infer series identity from the description suffix.
+  // The collective submit path remains disabled until the reviewed RPC is deployed.
+  const collectivePreview = useMemo(() => {
+    if (!payable.series_id || !payable.series_index || !payable.series_total || editScope === "single") return null;
+    const siblings = all.filter(p => p.series_id === payable.series_id && p.series_total === payable.series_total);
+    if (siblings.length !== payable.series_total ||
+        new Set(siblings.map(p => p.series_index)).size !== payable.series_total ||
+        siblings.some(p => !p.series_index || p.series_index < 1 || p.series_index > payable.series_total!)) return null;
+    try {
+      const preview = previewCollectiveEdit(
+        siblings.map(p => ({
+          id: p.id, index: p.series_index!, dueDate: p.due_date,
+          amount: Number(p.amount), status: p.status, paidAmount: Number(p.paid_amount),
+        })),
+        payable.series_index, editScope, f.amount, f.due_date
+      );
+      return prepareCollectiveConfirmation(payable.series_id, payable.id, editScope, preview);
+    } catch { return null; }
+  }, [all, payable, editScope, f.amount, f.due_date]);
   const navCats = useNavigate();
   const { data: cats } = useCategoriasContasPagar();
   const categoryOptions = (cats && cats.length > 0) ? cats.map(c => c.nome) : FALLBACK_CATEGORIES;
@@ -874,7 +895,19 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
               <span>{label}</span>
             </label>
           ))}
-          <p className="text-muted-foreground">As opções coletivas serão habilitadas após validação de identidade da série e transação segura.</p>
+          <p className="text-muted-foreground">A edição coletiva permanece bloqueada até a publicação e validação da operação transacional.</p>
+          {collectivePreview && (
+            <div className="rounded border p-3 space-y-2" aria-live="polite">
+              <p className="font-semibold">Prévia financeira — somente leitura</p>
+              <p>{collectivePreview.count} parcelas | Anterior: {brl(collectivePreview.before)} | Novo: {brl(collectivePreview.after)} | Diferença: {brl(collectivePreview.difference)}</p>
+              <ul className="text-xs space-y-1">
+                {collectivePreview.changes.map(change => (
+                  <li key={change.id}>Parcela {change.index}: {brl(change.previousAmount)} → {brl(change.nextAmount)}; {change.previousDueDate} → {change.nextDueDate}</li>
+                ))}
+              </ul>
+              <p className="text-muted-foreground">Confirmação e gravação indisponíveis até validação de autenticação, RLS e rollback.</p>
+            </div>
+          )}
           {editScope !== "single" && (
             <p className="text-muted-foreground">
               Série {series.index}/{series.total}: somente parcelas pendentes. O vencimento
