@@ -10,6 +10,7 @@ export type PayablePreviewRow = {
   status: "pendente" | "atrasado" | "pago" | "cancelado";
   paidAmount: number;
   paidAt?: string | null;
+  recurrence?: 'mensal' | 'semanal' | 'nenhuma';
 };
 export type CollectiveScope = "single" | "future" | "all";
 
@@ -33,6 +34,12 @@ export function monthlyDueDate(anchorISO: string, offsetMonths: number): string 
   return `${first.getUTCFullYear()}-${String(first.getUTCMonth() + 1).padStart(2, "0")}-${String(Math.min(day, lastDay)).padStart(2, "0")}`;
 }
 
+export function weeklyDueDate(anchorISO: string, offsetWeeks: number): string {
+  const { year, month, day } = parseISODate(anchorISO);
+  if (!Number.isInteger(offsetWeeks)) throw new Error("Intervalo semanal inválido");
+  return new Date(Date.UTC(year,month-1,day+offsetWeeks*7)).toISOString().slice(0,10);
+}
+
 function cents(value: number): number {
   if (!Number.isFinite(value) || value < 0) throw new Error("Valor inválido");
   const rounded = Math.round(value * 100);
@@ -51,6 +58,8 @@ export function previewCollectiveEdit(
   const nextCents = cents(newAmount);
   if (nextCents <= 0) throw new Error("O valor precisa ser positivo");
   parseISODate(selectedDueDate);
+  const cadence = rows[0]?.recurrence ?? 'mensal';
+  if (!['mensal','semanal'].includes(cadence) || rows.some(row => (row.recurrence ?? 'mensal') !== cadence)) throw new Error('Recorrência inconsistente');
   const selected = rows.filter((row) =>
     (scope === "all" || row.index >= selectedIndex) &&
     (scope !== "single" || row.index === selectedIndex) &&
@@ -73,7 +82,7 @@ export function previewCollectiveEdit(
       previousAmount: row.amount,
       nextAmount: nextCents / 100,
       previousDueDate: row.dueDate,
-      nextDueDate: monthlyDueDate(selectedDueDate, row.index - selectedIndex),
+      nextDueDate: cadence === 'semanal' ? weeklyDueDate(selectedDueDate, row.index - selectedIndex) : monthlyDueDate(selectedDueDate, row.index - selectedIndex),
     })),
   };
 }
