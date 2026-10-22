@@ -16,7 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Trash2, CheckCircle2, AlertCircle, Pencil, ArrowUpDown, Download, ChevronDown, ChevronRight, Settings, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
-import { previewCollectiveEdit, prepareCollectiveConfirmation } from "@/lib/payables-collective-preview";
+import { previewCollectiveEdit, prepareCollectiveConfirmation, createCollectiveSnapshot } from "@/lib/payables-collective-preview";
 import { useConfirm } from "@/components/confirm-dialog";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { useCategoriasContasPagar } from "@/components/categorias-contas-pagar-manager";
@@ -880,11 +880,53 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
         return 1;
       }
 
-      // Fail closed until a persisted series identifier and an atomic, authorized
-      // database operation are available. Description suffixes are NOT series identity.
-      throw new Error(
-        "Edição coletiva ainda indisponível: é necessário identificar a série no banco e executar uma atualização atômica."
+      if (!payable.series_id || !payable.series_index || !payable.series_total || !collectivePreview) {
+        throw new Error("Série não identificada ou prévia coletiva indisponível.");
+      }
+      const { data: fresh, error: freshError } = await supabase.from("payables")
+        .select("id,series_id,series_index,series_total,amount,due_date,status,paid_amount,paid_at")
+        .eq("empresa_id",empresaId).eq("user_id",user.id).eq("series_id",payable.series_id)
+        .order("series_index",{ascending:true});
+      if (freshError || !fresh || fresh.length !== payable.series_total) {
+        throw new Error("Série incompleta ou leitura financeira indisponível.");
+      }
+      const freshPreview = previewCollectiveEdit(
+        fresh.map(p=>({id:p.id,index:p.series_index!,dueDate:p.due_date,
+          amount:Number(p.amount),status:p.status as Payable["status"],
+          paidAmount:Number(p.paid_amount),paidAt:p.paid_at})),
+        payable.series_index,editScope,f.amount,f.due_date
       );
+      const freshConfirmation = prepareCollectiveConfirmation(payable.series_id,payable.id,editScope,freshPreview);
+      if (JSON.stringify(freshConfirmation.changes) !== JSON.stringify(collectivePreview.changes)
+        || fresh.some(p=>p.series_id!==payable.series_id || p.series_total!==payable.series_total)
+        || new Set(fresh.map(p=>p.series_index)).size!==payable.series_total) {
+        throw new Error("Dados financeiros alterados. Atualize a página e refaça a prévia.");
+      }
+      const approved = await confirm({
+        title:"Confirmar edição coletiva de contas a pagar",
+        description:`${freshConfirmation.count} parcelas. Total anterior: ${brl(freshConfirmation.before)}. Total novo: ${brl(freshConfirmation.after)}. Diferença: ${brl(freshConfirmation.difference)}. Parcelas: ${freshConfirmation.changes.map(p=>`${p.index}: ${p.id} (${p.previousDueDate} → ${p.nextDueDate})`).join("; ")}. Confirma a alteração financeira?`,
+        confirmText:"Confirmar alterações",cancelText:"Cancelar",destructive:false
+      });
+      if (!approved) throw new Error("Operação cancelada sem alterações.");
+      const expectedSnapshot=createCollectiveSnapshot(fresh.map(p=>({
+        id:p.id,series_index:p.series_index!,amount:Number(p.amount),due_date:p.due_date,
+        status:p.status,paid_amount:Number(p.paid_amount),paid_at:p.paid_at
+      })));
+      const { data: result, error: rpcError } = await supabase.rpc("edit_payables_series_cp04" as any,{
+        p_empresa_id:empresaId,p_payable_id:payable.id,p_scope:editScope,
+        p_new_amount:f.amount,p_anchor_due_date:f.due_date,p_expected_snapshot:expectedSnapshot
+      } as any);
+      if (rpcError) throw rpcError;
+      const returned=Array.isArray(result)?result:[];
+      const expected=new Map(freshConfirmation.changes.map(p=>[p.id,p]));
+      if (returned.length!==expected.size || returned.some((p:any)=>{
+        const e=expected.get(p.id);
+        return !e || Number(p.old_amount)!==e.previousAmount || Number(p.new_amount)!==e.nextAmount
+          || p.old_due_date!==e.previousDueDate || p.new_due_date!==e.nextDueDate;
+      })) {
+        throw new Error("RPC retornou valores divergentes da confirmação. Recarregue e solicite auditoria.");
+      }
+      return returned.length;
     },
     onSuccess: (n) => { toast.success(n > 1 ? `${n} lançamentos atualizados` : "Lançamento atualizado"); onDone(); },
     onError: (e: any) => toast.error(e.message),
@@ -906,7 +948,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
               <span>{label}</span>
             </label>
           ))}
-          <p className="text-muted-foreground">Simulação financeira permitida para séries identificadas. A gravação coletiva permanece bloqueada até a validação da operação transacional.</p>
+          <p className="text-muted-foreground">Edição coletiva exige confirmação financeira e autorização transacional no banco. Sem RPC instalada, a operação será rejeitada sem alterações.</p>
           {collectivePreview && (
             <div className="rounded border p-3 space-y-2" aria-live="polite">
               <p className="font-semibold">Prévia financeira — somente leitura</p>
@@ -916,7 +958,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
                   <li key={change.id}>Parcela {change.index}: {brl(change.previousAmount)} → {brl(change.nextAmount)}; {change.previousDueDate} → {change.nextDueDate}</li>
                 ))}
               </ul>
-              <p className="text-muted-foreground">Confirmação e gravação indisponíveis até validação de autenticação, RLS e rollback.</p>
+              <p className="text-muted-foreground">A confirmação valida novamente a série no servidor antes da RPC.</p>
             </div>
           )}
           {editScope !== "single" && (
