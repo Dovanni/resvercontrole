@@ -779,6 +779,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
   const validatePayableCompany = useServerFn(validateCompanyAccess);
   const series = parseSeries(payable.description);
   const confirm = useConfirm();
+  const hasPersistedSeries = Boolean(payable.series_id && payable.series_index && payable.series_total);
   const [editScope, setEditScope] = useState<"single" | "future" | "all">("single");
   const navCats = useNavigate();
   const { data: cats } = useCategoriasContasPagar();
@@ -891,7 +892,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
 
   return (
     <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="space-y-3">
-      {series && (
+      {(series || hasPersistedSeries) && (
         <fieldset className="rounded-lg border bg-muted/30 p-3 text-sm space-y-2">
           <legend className="font-semibold px-1">Aplicar alterações a</legend>
           {([
@@ -901,11 +902,11 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
           ] as const).map(([value, label]) => (
             <label key={value} className="flex items-center gap-2 cursor-pointer">
               <input type="radio" name="payable-edit-scope" value={value}
-                checked={editScope === value} disabled={value !== "single"} onChange={() => setEditScope(value)} />
+                checked={editScope === value} disabled={value !== "single" && !hasPersistedSeries} onChange={() => setEditScope(value)} />
               <span>{label}</span>
             </label>
           ))}
-          <p className="text-muted-foreground">A edição coletiva permanece bloqueada até a publicação e validação da operação transacional.</p>
+          <p className="text-muted-foreground">Simulação financeira permitida para séries identificadas. A gravação coletiva permanece bloqueada até a validação da operação transacional.</p>
           {collectivePreview && (
             <div className="rounded border p-3 space-y-2" aria-live="polite">
               <p className="font-semibold">Prévia financeira — somente leitura</p>
@@ -920,7 +921,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
           )}
           {editScope !== "single" && (
             <p className="text-muted-foreground">
-              Série {series.index}/{series.total}: somente parcelas pendentes. O vencimento
+              Série {payable.series_index ?? series?.index}/{payable.series_total ?? series?.total}: somente parcelas pendentes. O vencimento
               será deslocado proporcionalmente; parcelas pagas não serão alteradas.
               Séries incompletas ou ambíguas serão bloqueadas.
             </p>
