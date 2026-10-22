@@ -13,7 +13,7 @@ ALTER TABLE public.user_company_access ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payables ENABLE ROW LEVEL SECURITY;
 CREATE POLICY cp04_member ON public.user_company_access FOR SELECT TO authenticated USING(user_id=(SELECT auth.uid()));
 CREATE POLICY cp04_company ON public.empresas FOR SELECT TO authenticated USING(
- EXISTS(SELECT 1 FROM public.user_company_access m WHERE m.empresa_id=id AND m.user_id=(SELECT auth.uid()) AND m.status='active'));
+ EXISTS(SELECT 1 FROM public.user_company_access m WHERE m.empresa_id=public.empresas.id AND m.user_id=(SELECT auth.uid()) AND m.status='active'));
 CREATE POLICY cp04_read ON public.payables FOR SELECT TO authenticated USING(user_id=(SELECT auth.uid()));
 CREATE POLICY cp04_write ON public.payables FOR UPDATE TO authenticated USING(user_id=(SELECT auth.uid())) WITH CHECK(user_id=(SELECT auth.uid()));
 GRANT SELECT ON public.empresas,public.user_company_access TO authenticated;
