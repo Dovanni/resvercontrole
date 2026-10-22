@@ -81,6 +81,7 @@ type SortKey = "due_date" | "description" | "supplier" | "category" | "status" |
 function PayablesPage() {
   const qc = useQueryClient();
   const { empresaId, isEnabled } = useMultiempresa();
+  const validatePayableCompany = useServerFn(validateCompanyAccess);
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -239,8 +240,33 @@ function PayablesPage() {
       .sort((a, b) => a.sortKey < b.sortKey ? -1 : 1);
   }, [filtered, groupBy]);
 
+
+  const authorizePayableMutation = async () => {
+    if (!empresaId) throw new Error("Selecione uma empresa válida.");
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) throw new Error("Usuário não autenticado.");
+    await validatePayableCompany({ data: empresaId });
+    return { empresaId, userId: user.id };
+  };
+
+  const assertSinglePayable = (rows: { id: string }[] | null) => {
+    if (!rows || rows.length !== 1) {
+      throw new Error("Lançamento não encontrado na empresa selecionada.");
+    }
+  };
   const remove = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("payables").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => {
+      const scope = await authorizePayableMutation();
+      const { data, error } = await supabase
+        .from("payables")
+        .delete()
+        .eq("id", id)
+        .eq("empresa_id", scope.empresaId)
+        .eq("user_id", scope.userId)
+        .select("id");
+      if (error) throw error;
+      assertSinglePayable(data);
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["payables", empresaId] }); toast.success("Removido"); },
   });
 
@@ -299,16 +325,32 @@ function PayablesPage() {
       <TableRow key={p.id}>
         <TableCell className={overdue ? "text-destructive font-medium" : "text-muted-foreground"}>
           <InlineDate value={p.due_date} onSave={async (v) => {
-            const { error } = await supabase.from("payables").update({ due_date: v }).eq("id", p.id);
+            const scope = await authorizePayableMutation();
+            const { data, error } = await supabase
+              .from("payables")
+              .update({ due_date: v })
+              .eq("id", p.id)
+              .eq("empresa_id", scope.empresaId)
+              .eq("user_id", scope.userId)
+              .select("id");
             if (error) throw error;
+            assertSinglePayable(data);
             qc.invalidateQueries({ queryKey: ["payables", empresaId] });
           }} />
         </TableCell>
         <TableCell className="font-medium">
           <InlineText value={p.description} onSave={async (v) => {
             if (!v.trim()) throw new Error("Descrição obrigatória");
-            const { error } = await supabase.from("payables").update({ description: v.trim() }).eq("id", p.id);
+            const scope = await authorizePayableMutation();
+            const { data, error } = await supabase
+              .from("payables")
+              .update({ description: v.trim() })
+              .eq("id", p.id)
+              .eq("empresa_id", scope.empresaId)
+              .eq("user_id", scope.userId)
+              .select("id");
             if (error) throw error;
+            assertSinglePayable(data);
             qc.invalidateQueries({ queryKey: ["payables", empresaId] });
           }} />
         </TableCell>
@@ -318,8 +360,16 @@ function PayablesPage() {
         <TableCell className="text-right font-medium">
           <InlineNumber value={Number(p.amount)} onSave={async (v) => {
             if (v <= 0) throw new Error("Informe um valor maior que zero");
-            const { error } = await supabase.from("payables").update({ amount: v }).eq("id", p.id);
+            const scope = await authorizePayableMutation();
+            const { data, error } = await supabase
+              .from("payables")
+              .update({ amount: v })
+              .eq("id", p.id)
+              .eq("empresa_id", scope.empresaId)
+              .eq("user_id", scope.userId)
+              .select("id");
             if (error) throw error;
+            assertSinglePayable(data);
             qc.invalidateQueries({ queryKey: ["payables", empresaId] });
           }} />
         </TableCell>
@@ -724,6 +774,7 @@ function InlineDate({ value, onSave }: { value: string; onSave: (v: string) => P
 
 function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { payable: Payable; all: Payable[]; suppliers: { id: string; name: string }[]; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
   const { empresaId, isEnabled } = useMultiempresa();
+  const validatePayableCompany = useServerFn(validateCompanyAccess);
   const series = parseSeries(payable.description);
   const navCats = useNavigate();
   const { data: cats } = useCategoriasContasPagar();
@@ -744,6 +795,33 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
     mutationFn: async () => {
       if (f.amount <= 0) throw new Error("Informe um valor maior que zero");
       if (!f.description.trim()) throw new Error("Descrição obrigatória");
+      if (!empresaId) throw new Error("Selecione uma empresa válida.");
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw new Error("Usuário não autenticado.");
+      await validatePayableCompany({ data: empresaId });
+      if (f.supplier_id) {
+        const { data: supplier, error: supplierError } = await supabase
+          .from("suppliers").select("id")
+          .eq("id", f.supplier_id)
+          .eq("empresa_id", empresaId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (supplierError || !supplier) {
+          throw new Error("Fornecedor não autorizado para esta empresa.");
+        }
+      }
+
+      if (f.bank_account_id) {
+        const { data: bank, error: bankError } = await supabase
+          .from("bank_accounts").select("id")
+          .eq("id", f.bank_account_id)
+          .eq("empresa_id", empresaId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (bankError || !bank) {
+          throw new Error("Conta bancária não autorizada para esta empresa.");
+        }
+      }
 
       // CP-03.12: edit only the selected payable. Series membership is not persisted,
       // so bulk updates could mix unrelated records or partially apply changes.
@@ -752,7 +830,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
       if (originalSeries && !parseSeries(desc)) {
         desc = `${desc} (${originalSeries.index}/${originalSeries.total})`;
       }
-      const { error } = await supabase.from("payables").update({
+      const { data, error } = await supabase.from("payables").update({
         supplier_id: f.supplier_id || null,
         description: desc,
         category: f.category,
@@ -761,8 +839,9 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
         payment_method: f.payment_method,
         bank_account_id: f.bank_account_id || null,
         recurrence: f.recurrence,
-      } as any).eq("id", payable.id);
+      } as any).eq("id", payable.id).eq("empresa_id", empresaId).eq("user_id", user.id).select("id");
       if (error) throw error;
+      if (!data || data.length !== 1) throw new Error("Lançamento não encontrado na empresa selecionada.");
       return 1;
     },
     onSuccess: (n) => { toast.success(n > 1 ? `${n} lançamentos atualizados` : "Lançamento atualizado"); onDone(); },
@@ -861,6 +940,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
 
 function PayPayableForm({ payable, bankAccounts, onDone }: { payable: Payable; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
   const { empresaId, isEnabled } = useMultiempresa();
+  const validatePayableCompany = useServerFn(validateCompanyAccess);
   const [paid_at, setPaidAt] = useState(new Date().toISOString().slice(0, 10));
   const [bank_account_id, setBankAccountId] = useState<string>(payable.bank_account_id ?? "");
   const [amount, setAmount] = useState(Number(payable.amount));
@@ -868,13 +948,29 @@ function PayPayableForm({ payable, bankAccounts, onDone }: { payable: Payable; b
   const save = useMutation({
     mutationFn: async () => {
       if (amount <= 0) throw new Error("Informe um valor maior que zero");
-      const { error } = await supabase.from("payables").update({
+      if (!empresaId) throw new Error("Selecione uma empresa válida.");
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw new Error("Usuário não autenticado.");
+      await validatePayableCompany({ data: empresaId });
+      if (bank_account_id) {
+        const { data: bank, error: bankError } = await supabase
+          .from("bank_accounts").select("id")
+          .eq("id", bank_account_id)
+          .eq("empresa_id", empresaId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (bankError || !bank) {
+          throw new Error("Conta bancária não autorizada para esta empresa.");
+        }
+      }
+      const { data, error } = await supabase.from("payables").update({
         status: "pago",
         paid_amount: amount,
         paid_at: new Date(paid_at).toISOString(),
         bank_account_id: bank_account_id || null,
-      } as any).eq("id", payable.id);
+      } as any).eq("id", payable.id).eq("empresa_id", empresaId).eq("user_id", user.id).select("id");
       if (error) throw error;
+      if (!data || data.length !== 1) throw new Error("Lançamento não encontrado na empresa selecionada.");
     },
     onSuccess: () => { toast.success(bank_account_id ? "Pago e lançado na conta bancária" : "Pago"); onDone(); },
     onError: (e: any) => toast.error(e.message),
