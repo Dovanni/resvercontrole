@@ -47,7 +47,7 @@ END $$;
 RESET ROLE;
 DO $$
 BEGIN
- IF (SELECT count(*) FROM cp04_security.payables WHERE id IN (2,3) AND amount<>10)<>2 THEN
+ IF (SELECT count(*) FROM cp04_security.payables WHERE id IN (2,3) AND amount=10)<>2 THEN
   RAISE EXCEPTION 'RLS allowed cross-tenant update';
  END IF;
 END $$;
