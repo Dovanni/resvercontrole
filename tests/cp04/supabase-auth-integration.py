@@ -44,7 +44,7 @@ status,result=http("/rest/v1/payables","POST",owner_row,owner_token)
 assert status in (200,201,204),(status,result)
 # Independent companies: each financial administrator may write only inside
 # their own active company and cannot impersonate another owner.
-admin,admin_token=register("matrix-admin")
+admin,admin_token=register("other-company-admin")
 sql(f"INSERT INTO public.user_company_access(user_id,empresa_id,status,role) VALUES ('{admin}','{other}','active','admin')")
 admin_row={**owner_row,"user_id":admin,"empresa_id":other,"id":str(uuid.uuid4())}
 status,result=http("/rest/v1/payables","POST",admin_row,admin_token)
@@ -115,6 +115,17 @@ args["p_expected_snapshot"]=paid_snap
 status,result=http("/rest/v1/rpc/edit_payables_series_cp04","POST",args,owner_token)
 assert status==200 and len(result)==1,(status,result)
 sql(f"UPDATE public.user_company_access SET status='inactive' WHERE user_id='{owner}'")
+# Revocation must also block direct INSERT/UPDATE/DELETE, not only the RPC.
+status,result=http("/rest/v1/payables","POST",{**owner_row,"id":str(uuid.uuid4())},owner_token)
+assert status>=400,("revoked-insert",status,result)
+status,result=http("/rest/v1/payables?id=eq."+selected,"PATCH",{"amount":777},owner_token)
+assert status in (200,204,401,403),("revoked-update",status,result)
+status,rows=http("/rest/v1/payables?select=amount&id=eq."+selected,token=owner_token)
+assert status==200 and len(rows)==1 and float(rows[0]["amount"])==100,("revoked-update-bypassed",status,rows)
+status,result=http("/rest/v1/payables?id=eq."+selected,"DELETE",None,owner_token)
+assert status in (200,204,401,403),("revoked-delete",status,result)
+status,rows=http("/rest/v1/payables?select=id&id=eq."+selected,token=owner_token)
+assert status==200 and len(rows)==1,("revoked-delete-bypassed",status,rows)
 args["p_expected_snapshot"]=snapshot(owner_token)
 status,result=http("/rest/v1/rpc/edit_payables_series_cp04","POST",args,owner_token)
 assert status>=400,(status,result)
