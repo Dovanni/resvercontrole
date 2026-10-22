@@ -1006,7 +1006,7 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
     amount: 0, due_date: new Date().toISOString().slice(0, 10),
     payment_method: "pix", bank_account_id: "", recurrence: "nenhuma" as "nenhuma" | "semanal" | "mensal",
   });
-  const [repeatCount, setRepeatCount] = useState(1);
+  const [repeatCount, setRepeatCount] = useState(2);
   const [paymentSchedule, setPaymentSchedule] = useState<"unico" | "parcelado" | "recorrente">("unico");
   const navCats2 = useNavigate();
   const { data: cats } = useCategoriasContasPagar();
@@ -1060,6 +1060,7 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (f.amount <= 0) { toast.error("Informe um valor maior que zero"); return; }
+    if (paymentSchedule === "parcelado" && Math.round(f.amount * 100) < repeatCount) { toast.error("O valor total deve permitir ao menos R$ 0,01 por parcela"); return; }
     // Trava anti-duplicidade: bloquear lançamento manual de despesas de cartão
     if (/cart[aã]o/i.test(f.category)) {
       const ok = await confirm({
