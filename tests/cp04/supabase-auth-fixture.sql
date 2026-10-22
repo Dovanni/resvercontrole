@@ -5,7 +5,7 @@ CREATE TABLE public.user_company_access(id uuid PRIMARY KEY DEFAULT gen_random_u
 CREATE TABLE public.payables(
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),empresa_id uuid NOT NULL REFERENCES public.empresas(id),
  user_id uuid NOT NULL REFERENCES auth.users(id),series_id uuid,series_index integer,series_total integer,
- amount numeric(12,2) NOT NULL,due_date date NOT NULL,status text NOT NULL,
+ amount numeric(12,2) NOT NULL,due_date date NOT NULL,status text NOT NULL,recurrence text NOT NULL DEFAULT 'mensal',
  paid_amount numeric(12,2) NOT NULL DEFAULT 0,paid_at timestamptz
 );
 ALTER TABLE public.empresas ENABLE ROW LEVEL SECURITY;
