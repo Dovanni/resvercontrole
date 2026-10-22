@@ -98,3 +98,20 @@ with c.cursor() as q:
     assert statuses==["pendente","pendente","pago"],statuses
 c.close()
 print("CP04 PAID-INSTALLMENT PROTECTION + CLIENT ROLLBACK PASSED")
+
+# Revoke financial permission and ensure the same authenticated user cannot edit.
+c=connect()
+with c.cursor() as q:
+    q.execute("UPDATE public.user_company_access SET role='vendedor' WHERE user_id=%s",(USER,))
+c.commit()
+denied_snapshot=snapshot(c)
+with c.cursor() as q:
+    as_user(q)
+    try:
+        q.execute(SQL,(COMPANY,SELECTED,"all",110,"2026-01-31",Json(denied_snapshot)))
+        raise AssertionError("sales-only role unexpectedly edited payables")
+    except psycopg2.Error as e:
+        assert e.pgcode=="42501",str(e)
+        c.rollback()
+c.close()
+print("CP04 FINANCIAL ROLE DENIAL PASSED")
