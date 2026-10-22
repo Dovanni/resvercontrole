@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { monthlyDueDate, previewCollectiveEdit, type PayablePreviewRow } from "./payables-collective-preview";
+import { monthlyDueDate, previewCollectiveEdit, prepareCollectiveConfirmation, type PayablePreviewRow } from "./payables-collective-preview";
 
 const rows: PayablePreviewRow[] = [
   { id: "a", index: 1, dueDate: "2026-01-31", amount: 94.47, status: "pendente", paidAmount: 0 },
@@ -45,5 +45,20 @@ describe("previewCollectiveEdit", () => {
   });
   it("rejects values with more than two decimals", () => {
     expect(() => previewCollectiveEdit(rows, 1, "all", 10.001, "2026-01-31")).toThrow();
+  });
+});
+
+describe("prepareCollectiveConfirmation", () => {
+  it("requires persisted series identity and includes expected IDs", () => {
+    const preview = previewCollectiveEdit(rows, 1, "all", 100, "2026-01-31");
+    expect(() => prepareCollectiveConfirmation(null, "a", "all", preview)).toThrow();
+    expect(prepareCollectiveConfirmation("series-123", "a", "all", preview)).toMatchObject({
+      seriesId: "series-123", selectedPayableId: "a", expectedIds: ["a", "c"],
+      count: 2, before: 188.94, after: 200, difference: 11.06,
+    });
+  });
+  it("rejects a selected installment missing from the preview", () => {
+    const preview = previewCollectiveEdit(rows, 1, "future", 100, "2026-01-31");
+    expect(() => prepareCollectiveConfirmation("series-123", "b", "future", preview)).toThrow();
   });
 });
