@@ -1,3 +1,5 @@
+import { useServerFn } from "@tanstack/react-start";
+import { validateCompanyAccess } from "@/lib/multiempresa.functions";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useMemo, useState, useEffect, useRef } from "react";
@@ -937,7 +939,8 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: string; name: string }[]; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
-  const { empresaId, isEnabled } = useMultiempresa();
+  const { empresaId } = useMultiempresa();
+  const validatePayableCompany = useServerFn(validateCompanyAccess);
   const confirm = useConfirm();
   const [f, setF] = useState({
     supplier_id: "", description: "", category: "fornecedor",
@@ -958,6 +961,38 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
       if (f.amount <= 0) throw new Error("Informe um valor maior que zero");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
+      if (!empresaId) {
+        throw new Error("Selecione uma empresa válida antes de criar contas a pagar.");
+      }
+      await validatePayableCompany({ data: empresaId });
+      // CP-03.14M.3 - validar referencias financeiras
+      if (f.supplier_id) {
+        const { data: supplier, error: supplierError } = await supabase
+          .from("suppliers")
+          .select("id")
+          .eq("id", f.supplier_id)
+          .eq("empresa_id", empresaId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (supplierError || !supplier) {
+          throw new Error("Fornecedor inexistente ou nao autorizado para esta empresa.");
+        }
+      }
+
+      if (f.bank_account_id) {
+        const { data: bankAccount, error: bankError } = await supabase
+          .from("bank_accounts")
+          .select("id")
+          .eq("id", f.bank_account_id)
+          .eq("empresa_id", empresaId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (bankError || !bankAccount) {
+          throw new Error("Conta bancaria inexistente ou nao autorizada para esta empresa.");
+        }
+      }
       const isScheduled = paymentSchedule !== "unico" && repeatCount > 1;
       const total = isScheduled ? repeatCount : 1;
       const totalCents = Math.round(f.amount * 100);
@@ -979,7 +1014,7 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
           bank_account_id: f.bank_account_id || null,
           recurrence: paymentSchedule === "unico" ? "nenhuma" : f.recurrence,
           user_id: user.id,
-          empresa_id: isEnabled ? empresaId : undefined,
+          empresa_id: empresaId,
         };
       });
       const { error } = await supabase.from("payables").insert(rows as any);
