@@ -76,3 +76,32 @@ export function previewCollectiveEdit(
     })),
   };
 }
+
+/**
+ * Read-only confirmation payload for the future transactional RPC.
+ * The server must revalidate all rows under lock before writing.
+ */
+export function prepareCollectiveConfirmation(
+  seriesId: string | null,
+  selectedPayableId: string,
+  scope: CollectiveScope,
+  preview: ReturnType<typeof previewCollectiveEdit>,
+) {
+  if (!seriesId) throw new Error("Série sem identificador persistente. Edição coletiva bloqueada.");
+  if (!selectedPayableId || !preview.changes.some((row) => row.id === selectedPayableId)) {
+    throw new Error("A parcela selecionada não consta na prévia.");
+  }
+  const expectedIds = preview.changes.map((row) => row.id);
+  if (new Set(expectedIds).size !== expectedIds.length) throw new Error("Parcela duplicada na prévia.");
+  return {
+    seriesId,
+    selectedPayableId,
+    scope,
+    expectedIds,
+    count: preview.count,
+    before: preview.before,
+    after: preview.after,
+    difference: preview.difference,
+    changes: preview.changes,
+  };
+}
