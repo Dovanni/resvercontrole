@@ -1,0 +1,42 @@
+name: CP-04 Actual RPC Concurrency
+on:
+  pull_request:
+    paths:
+      - 'docs/cp04-production-rpc-review.sql'
+      - 'tests/cp04/rpc-*'
+      - '.github/workflows/cp04-rpc-concurrency.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  concurrency:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: cp04
+          POSTGRES_PASSWORD: cp04_only_ephemeral
+          POSTGRES_DB: cp04_synthetic
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U cp04 -d cp04_synthetic"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 15
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: cp04
+      PGPASSWORD: cp04_only_ephemeral
+      PGDATABASE: cp04_synthetic
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
+      - run: psql -v ON_ERROR_STOP=1 -f tests/cp04/rpc-real-fixture.sql
+      - run: psql -v ON_ERROR_STOP=1 -f docs/cp04-production-rpc-review.sql
+      - name: Enable function ONLY inside disposable CI database
+        run: psql -v ON_ERROR_STOP=1 -c "GRANT EXECUTE ON FUNCTION public.edit_payables_series_cp04(uuid,uuid,text,numeric,date,jsonb) TO authenticated"
+      - run: python -m pip install --user psycopg2-binary==2.9.11
+      - name: Two-session concurrent RPC and stale confirmation tests
+        run: python tests/cp04/rpc-concurrency.py
