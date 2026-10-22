@@ -1,0 +1,22 @@
+name: CP-04 Collective Payables Unit Tests
+on:
+  pull_request:
+    paths:
+      - 'src/lib/payables-collective-preview.ts'
+      - 'src/lib/payables-collective-preview.test.ts'
+      - '.github/workflows/cp04-collective-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  preview-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3.1'
+      - name: Install pinned dependencies
+        run: bun install --frozen-lockfile
+      - name: Run CP-04 isolated unit tests
+        run: bunx vitest run src/lib/payables-collective-preview.test.ts
