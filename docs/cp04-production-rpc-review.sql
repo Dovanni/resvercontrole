@@ -31,8 +31,18 @@ BEGIN
  IF p_expected_snapshot IS NULL OR jsonb_typeof(p_expected_snapshot)<>'array' THEN
   RAISE EXCEPTION 'Confirmation snapshot required';
  END IF;
- -- The caller's RLS SELECT policy must restrict ownership and company membership.
- -- For a production rollout, company membership must be enforced server-side too.
+ -- Require a currently active company membership and financial role.
+ -- SECURITY INVOKER: user_company_access SELECT RLS limits rows to auth.uid().
+ -- Lock membership to prevent concurrent revocation during this transaction.
+ PERFORM m.id FROM public.user_company_access m
+  JOIN public.empresas e ON e.id=m.empresa_id
+  WHERE m.user_id=v_user AND m.empresa_id=p_empresa_id
+    AND m.status='active' AND m.role::text IN ('admin','financeiro')
+    AND e.status='active'
+  FOR SHARE OF m,e;
+ IF NOT FOUND THEN
+  RAISE EXCEPTION 'Company membership or financial permission denied' USING ERRCODE='42501';
+ END IF;
  SELECT * INTO v_selected FROM public.payables
   WHERE public.payables.id=p_payable_id
     AND empresa_id=p_empresa_id AND user_id=v_user;
@@ -111,7 +121,7 @@ BEGIN
  IF v_count <> v_target_count THEN
   RAISE EXCEPTION 'Partial update; rolling back transaction';
  END IF;
- -- Gate: validate database company-membership authorization independently of UI.
+ -- Gate: prove real Supabase Auth/JWT, RLS and membership revocation in isolated lab before any GRANT.
 END;
 $function$;
 REVOKE ALL ON FUNCTION public.edit_payables_series_cp04(uuid,uuid,text,numeric,date,jsonb) FROM PUBLIC;
