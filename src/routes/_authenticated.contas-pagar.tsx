@@ -11,7 +11,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Plus, Trash2, CheckCircle2, AlertCircle, Pencil, ArrowUpDown, Download, ChevronDown, ChevronRight, Settings, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
@@ -75,17 +74,6 @@ function parseSeries(desc: string) {
   if (!m) return null;
   return { base: m[1].trim(), index: Number(m[2]), total: Number(m[3]) };
 }
-function findSeriesItems(all: Payable[], target: Payable) {
-  const s = parseSeries(target.description);
-  if (!s) return null;
-  const items = all
-    .map((p) => ({ p, s: parseSeries(p.description) }))
-    .filter((x) => x.s && x.s.base === s.base && x.s.total === s.total)
-    .map((x) => ({ ...x.p, _idx: x.s!.index }))
-    .sort((a, b) => a._idx - b._idx);
-  return items.length > 1 ? { base: s.base, total: s.total, current: s.index, items } : null;
-}
-
 type SortKey = "due_date" | "description" | "supplier" | "category" | "status" | "amount";
 
 function PayablesPage() {
@@ -734,8 +722,7 @@ function InlineDate({ value, onSave }: { value: string; onSave: (v: string) => P
 
 function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { payable: Payable; all: Payable[]; suppliers: { id: string; name: string }[]; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
   const { empresaId, isEnabled } = useMultiempresa();
-  const series = useMemo(() => findSeriesItems(all, payable), [all, payable]);
-  const [scope, setScope] = useState<"one" | "forward" | "all">("one");
+  const series = parseSeries(payable.description);
   const navCats = useNavigate();
   const { data: cats } = useCategoriasContasPagar();
   const categoryOptions = (cats && cats.length > 0) ? cats.map(c => c.nome) : FALLBACK_CATEGORIES;
@@ -751,75 +738,30 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
     recurrence: payable.recurrence,
   });
 
-  const addMonths = (iso: string, n: number) => { const [y,m,d] = iso.split("-").map(Number); return new Date(y, m - 1 + n, d).toISOString().slice(0,10); };
-  const addWeeks = (iso: string, n: number) => { const dt = new Date(iso + "T00:00"); dt.setDate(dt.getDate() + 7 * n); return dt.toISOString().slice(0, 10); };
-
   const save = useMutation({
     mutationFn: async () => {
       if (f.amount <= 0) throw new Error("Informe um valor maior que zero");
       if (!f.description.trim()) throw new Error("Descrição obrigatória");
 
-      // Single-row update (no series, or scope === "one")
-      if (!series || scope === "one") {
-        // Preserve series suffix in description if exists
-        let desc = f.description.trim();
-        const s = parseSeries(payable.description);
-        const newHasSuffix = parseSeries(desc);
-        if (s && !newHasSuffix) desc = `${desc} (${s.index}/${s.total})`;
-        const { error } = await supabase.from("payables").update({
-          supplier_id: f.supplier_id || null,
-          description: desc,
-          category: f.category,
-          amount: f.amount,
-          due_date: f.due_date,
-          payment_method: f.payment_method,
-          bank_account_id: f.bank_account_id || null,
-          recurrence: f.recurrence,
-        } as any).eq("id", payable.id);
-        if (error) throw error;
-        return 1;
+      // CP-03.12: edit only the selected payable. Series membership is not persisted,
+      // so bulk updates could mix unrelated records or partially apply changes.
+      let desc = f.description.trim();
+      const originalSeries = parseSeries(payable.description);
+      if (originalSeries && !parseSeries(desc)) {
+        desc = `${desc} (${originalSeries.index}/${originalSeries.total})`;
       }
-
-      // Safety: without a persisted schedule type, a series can be installments or recurring.
-      // Never copy a changed amount across an ambiguous series.
-      if (Math.round(f.amount * 100) !== Math.round(Number(payable.amount) * 100)) {
-        throw new Error("Para sua seguranca, altere o valor de cada parcela individualmente. O sistema ainda nao distingue series parceladas de recorrentes na edicao coletiva.");
-      }
-
-      // Series bulk update
-      const cur = parseSeries(payable.description)!;
-      const dueChanged = f.due_date !== payable.due_date;
-      const targets = series.items.filter(it => scope === "all" ? true : it._idx >= cur.index);
-
-      // Strip series suffix the user may have left in description
-      const baseDesc = (parseSeries(f.description.trim())?.base ?? f.description.trim());
-
-      let count = 0;
-      for (const it of targets) {
-        const itS = parseSeries(it.description)!;
-        const newDesc = `${baseDesc} (${itS.index}/${itS.total})`;
-        let newDue = it.due_date;
-        if (dueChanged) {
-          const offset = itS.index - cur.index;
-          newDue = f.recurrence === "semanal" ? addWeeks(f.due_date, offset)
-                : f.recurrence === "mensal" ? addMonths(f.due_date, offset)
-                : addMonths(f.due_date, offset);
-        }
-        const { error } = await supabase.from("payables").update({
-          supplier_id: f.supplier_id || null,
-          description: newDesc,
-          category: f.category,
-          // Preserve each original amount in a bulk edit: installments may differ by cents.
-          amount: it.amount,
-          due_date: newDue,
-          payment_method: f.payment_method,
-          bank_account_id: f.bank_account_id || null,
-          recurrence: f.recurrence,
-        } as any).eq("id", it.id);
-        if (error) throw error;
-        count++;
-      }
-      return count;
+      const { error } = await supabase.from("payables").update({
+        supplier_id: f.supplier_id || null,
+        description: desc,
+        category: f.category,
+        amount: f.amount,
+        due_date: f.due_date,
+        payment_method: f.payment_method,
+        bank_account_id: f.bank_account_id || null,
+        recurrence: f.recurrence,
+      } as any).eq("id", payable.id);
+      if (error) throw error;
+      return 1;
     },
     onSuccess: (n) => { toast.success(n > 1 ? `${n} lançamentos atualizados` : "Lançamento atualizado"); onDone(); },
     onError: (e: any) => toast.error(e.message),
@@ -828,19 +770,8 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
   return (
     <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="space-y-3">
       {series && (
-        <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
-          <div className="text-sm font-medium">Este lançamento faz parte de uma série ({series.current}/{series.total}). O que deseja editar?</div>
-          <RadioGroup value={scope} onValueChange={(v: any) => setScope(v)} className="space-y-1">
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <RadioGroupItem value="one" /> Somente este lançamento
-            </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <RadioGroupItem value="forward" /> Este e todos os próximos
-            </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <RadioGroupItem value="all" /> Todos os lançamentos da série
-            </label>
-          </RadioGroup>
+        <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+          Este lançamento possui numeração ({series.index}/{series.total}). Por segurança, somente este registro será editado. A edição coletiva está temporariamente desabilitada.
         </div>
       )}
 
