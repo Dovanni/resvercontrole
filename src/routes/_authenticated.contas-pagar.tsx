@@ -1007,11 +1007,12 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
     payment_method: "pix", bank_account_id: "", recurrence: "nenhuma" as "nenhuma" | "semanal" | "mensal",
   });
   const [repeatCount, setRepeatCount] = useState(1);
+  const [paymentSchedule, setPaymentSchedule] = useState<"unico" | "parcelado" | "recorrente">("unico");
   const navCats2 = useNavigate();
   const { data: cats } = useCategoriasContasPagar();
   const categoryOptions = (cats && cats.length > 0) ? cats.map((c) => c.nome) : FALLBACK_CATEGORIES;
 
-  const addMonths = (iso: string, n: number) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1 + n, d).toISOString().slice(0, 10); };
+  const addMonths = (iso: string, n: number) => { const [y, m, d] = iso.split("-").map(Number); const monthStart = new Date(Date.UTC(y, m - 1 + n, 1)); const lastDay = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 0)).getUTCDate(); return `${monthStart.getUTCFullYear()}-${String(monthStart.getUTCMonth() + 1).padStart(2, "0")}-${String(Math.min(d, lastDay)).padStart(2, "0")}`; };
   const addWeeks = (iso: string, n: number) => { const dt = new Date(iso + "T00:00"); dt.setDate(dt.getDate() + 7 * n); return dt.toISOString().slice(0, 10); };
 
   const save = useMutation({
@@ -1019,22 +1020,26 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
       if (f.amount <= 0) throw new Error("Informe um valor maior que zero");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
-      const isRecurring = f.recurrence !== "nenhuma" && repeatCount > 1;
-      const total = isRecurring ? repeatCount : 1;
+      const isScheduled = paymentSchedule !== "unico" && repeatCount > 1;
+      const total = isScheduled ? repeatCount : 1;
+      const totalCents = Math.round(f.amount * 100);
+      const baseCents = Math.floor(totalCents / total);
+      const remainderCents = totalCents % total;
       const rows = Array.from({ length: total }, (_, i) => {
-        const due = isRecurring
+        const due = isScheduled
           ? (f.recurrence === "mensal" ? addMonths(f.due_date, i) : addWeeks(f.due_date, i))
           : f.due_date;
-        const desc = isRecurring ? `${f.description} (${i + 1}/${total})` : f.description;
+        const desc = isScheduled ? `${f.description} (${i + 1}/${total})` : f.description;
+        const amount = paymentSchedule === "parcelado" ? (baseCents + (i < remainderCents ? 1 : 0)) / 100 : f.amount;
         return {
           supplier_id: f.supplier_id || null,
           description: desc,
           category: f.category,
-          amount: f.amount,
+          amount,
           due_date: due,
           payment_method: f.payment_method,
           bank_account_id: f.bank_account_id || null,
-          recurrence: f.recurrence,
+          recurrence: paymentSchedule === "unico" ? "nenhuma" : f.recurrence,
           user_id: user.id,
           empresa_id: isEnabled ? empresaId : undefined,
         };
@@ -1067,11 +1072,13 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
       });
       if (!ok) return;
     }
-    const isRecurring = f.recurrence !== "nenhuma" && repeatCount > 1;
-    if (isRecurring) {
+    const isScheduled = paymentSchedule !== "unico" && repeatCount > 1;
+    if (isScheduled) {
       const ok = await confirm({
         title: "Confirmar criação",
-        description: `Serão criadas ${repeatCount} contas a pagar no total. Confirmar?`,
+        description: paymentSchedule === "parcelado"
+          ? `O valor total de R$ ${f.amount.toFixed(2).replace(".", ",")} será dividido em ${repeatCount} parcelas. Confirmar?`
+          : `Serão criadas ${repeatCount} contas a pagar de R$ ${f.amount.toFixed(2).replace(".", ",")} cada. Confirmar?`,
         confirmText: "Criar",
         destructive: false,
       });
@@ -1152,22 +1159,38 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Recorrência</Label>
-          <Select value={f.recurrence} onValueChange={(v: any) => setF({ ...f, recurrence: v })}>
+          <Label>Tipo de lançamento</Label>
+          <Select value={paymentSchedule} onValueChange={(v: "unico" | "parcelado" | "recorrente") => { setPaymentSchedule(v); setF((prev) => ({ ...prev, recurrence: v === "unico" ? "nenhuma" : "mensal" })); }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="nenhuma">Não se repete</SelectItem>
-              <SelectItem value="semanal">Semanal</SelectItem>
-              <SelectItem value="mensal">Mensal</SelectItem>
+              <SelectItem value="unico">Pagamento único</SelectItem>
+              <SelectItem value="parcelado">Parcelamento (dividir valor total)</SelectItem>
+              <SelectItem value="recorrente">Recorrência (repetir valor)</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        {f.recurrence !== "nenhuma" && (
-          <div className="space-y-1.5">
-            <Label>Repetir por quantos {f.recurrence === "mensal" ? "meses" : "semanas"}?</Label>
-            <Input type="number" min={1} max={60} value={repeatCount} onChange={(e) => setRepeatCount(Math.max(1, Math.min(60, Number(e.target.value) || 1)))} />
-            <div className="text-xs text-muted-foreground">Serão criadas {repeatCount} {repeatCount === 1 ? "conta" : "contas"} no total.</div>
-          </div>
+        {paymentSchedule !== "unico" && (
+          <>
+            <div className="space-y-1.5">
+              <Label>Periodicidade</Label>
+              <Select value={f.recurrence} onValueChange={(v: "mensal" | "semanal") => setF({ ...f, recurrence: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mensal">Mensal</SelectItem>
+                  <SelectItem value="semanal">Semanal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{paymentSchedule === "parcelado" ? "Quantidade de parcelas" : "Quantidade de repetições"}</Label>
+              <Input type="number" min={2} max={60} value={repeatCount} onChange={(e) => setRepeatCount(Math.max(2, Math.min(60, Number(e.target.value) || 2)))} />
+              <div className="text-xs text-muted-foreground">
+                {paymentSchedule === "parcelado"
+                  ? `Valor total de R$ ${f.amount.toFixed(2).replace(".", ",")} dividido em ${repeatCount} parcelas (com ajuste de centavos).`
+                  : `Serão criadas ${repeatCount} contas de R$ ${f.amount.toFixed(2).replace(".", ",")} cada.`}
+              </div>
+            </div>
+          </>
         )}
       </div>
       <Button type="submit" disabled={save.isPending} className="w-full bg-gradient-primary text-primary-foreground">
