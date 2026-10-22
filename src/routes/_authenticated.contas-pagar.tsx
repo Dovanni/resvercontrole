@@ -807,7 +807,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
       const preview = previewCollectiveEdit(
         siblings.map(p => ({
           id: p.id, index: p.series_index!, dueDate: p.due_date,
-          amount: Number(p.amount), status: p.status, paidAmount: Number(p.paid_amount), paidAt: p.paid_at,
+          amount: Number(p.amount), status: p.status, paidAmount: Number(p.paid_amount), paidAt: p.paid_at, recurrence: p.recurrence,
         })),
         payable.series_index, editScope, f.amount, f.due_date
       );
@@ -874,7 +874,8 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
           throw new Error("Parcela quitada, cancelada ou parcialmente paga não pode ser editada.");
         }
         const { data, error } = await supabase.from("payables").update(singleUpdate as any)
-          .eq("id", payable.id).eq("empresa_id", empresaId).eq("user_id", user.id).select("id");
+          .eq("id", payable.id).eq("empresa_id", empresaId).eq("user_id", user.id)
+          .in("status",["pendente","atrasado"]).eq("paid_amount",0).is("paid_at",null).select("id");
         if (error) throw error;
         if (!data || data.length !== 1) throw new Error("Lançamento não encontrado na empresa selecionada.");
         return 1;
@@ -884,7 +885,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
         throw new Error("Série não identificada ou prévia coletiva indisponível.");
       }
       const { data: fresh, error: freshError } = await supabase.from("payables")
-        .select("id,series_id,series_index,series_total,amount,due_date,status,paid_amount,paid_at")
+        .select("id,series_id,series_index,series_total,amount,due_date,status,paid_amount,paid_at,recurrence")
         .eq("empresa_id",empresaId).eq("user_id",user.id).eq("series_id",payable.series_id)
         .order("series_index",{ascending:true});
       if (freshError || !fresh || fresh.length !== payable.series_total) {
@@ -893,7 +894,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
       const freshPreview = previewCollectiveEdit(
         fresh.map(p=>({id:p.id,index:p.series_index!,dueDate:p.due_date,
           amount:Number(p.amount),status:p.status as Payable["status"],
-          paidAmount:Number(p.paid_amount),paidAt:p.paid_at})),
+          paidAmount:Number(p.paid_amount),paidAt:p.paid_at,recurrence:p.recurrence})),
         payable.series_index,editScope,f.amount,f.due_date
       );
       const freshConfirmation = prepareCollectiveConfirmation(payable.series_id,payable.id,editScope,freshPreview);
@@ -1209,6 +1210,7 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
       const totalCents = Math.round(f.amount * 100);
       const baseCents = Math.floor(totalCents / total);
       const remainderCents = totalCents % total;
+      const persistedSeriesId = isScheduled ? crypto.randomUUID() : null;
       const rows = Array.from({ length: total }, (_, i) => {
         const due = isScheduled
           ? (f.recurrence === "mensal" ? addMonths(f.due_date, i) : addWeeks(f.due_date, i))
@@ -1226,6 +1228,7 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
           recurrence: paymentSchedule === "unico" ? "nenhuma" : f.recurrence,
           user_id: user.id,
           empresa_id: empresaId,
+          ...(isScheduled ? { series_id: persistedSeriesId, series_index: i + 1, series_total: total } : {}),
         };
       });
       const { error } = await supabase.from("payables").insert(rows as any);
