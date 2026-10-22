@@ -863,6 +863,15 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
         recurrence: f.recurrence,
       };
       if (editScope === "single") {
+        // A settled installment is never eligible for financial edits.
+        // Re-check the server-side record to prevent relying on stale UI state.
+        const { data: current, error: currentError } = await supabase
+          .from("payables").select("status,paid_amount,paid_at")
+          .eq("id", payable.id).eq("empresa_id", empresaId).eq("user_id", user.id).maybeSingle();
+        if (currentError || !current || !["pendente", "atrasado"].includes(current.status)
+          || Number(current.paid_amount ?? 0) !== 0 || current.paid_at) {
+          throw new Error("Parcela quitada, cancelada ou parcialmente paga não pode ser editada.");
+        }
         const { data, error } = await supabase.from("payables").update(singleUpdate as any)
           .eq("id", payable.id).eq("empresa_id", empresaId).eq("user_id", user.id).select("id");
         if (error) throw error;
