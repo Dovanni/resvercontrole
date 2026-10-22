@@ -14,8 +14,45 @@ ALTER TABLE public.payables ENABLE ROW LEVEL SECURITY;
 CREATE POLICY cp04_member ON public.user_company_access FOR SELECT TO authenticated USING(user_id=(SELECT auth.uid()));
 CREATE POLICY cp04_company ON public.empresas FOR SELECT TO authenticated USING(
  EXISTS(SELECT 1 FROM public.user_company_access m WHERE m.empresa_id=public.empresas.id AND m.user_id=(SELECT auth.uid()) AND m.status='active'));
-CREATE POLICY cp04_read ON public.payables FOR SELECT TO authenticated USING(user_id=(SELECT auth.uid()));
-CREATE POLICY cp04_write ON public.payables FOR UPDATE TO authenticated USING(user_id=(SELECT auth.uid())) WITH CHECK(user_id=(SELECT auth.uid()));
+CREATE POLICY "cp04_read_own_payables" ON public.payables
+ FOR SELECT TO authenticated
+ USING (user_id=(SELECT auth.uid()));
+CREATE POLICY "cp04_insert_financial_member" ON public.payables
+ FOR INSERT TO authenticated WITH CHECK (
+  user_id=(SELECT auth.uid()) AND EXISTS (
+   SELECT 1 FROM public.user_company_access m
+   JOIN public.empresas e ON e.id=m.empresa_id
+   WHERE m.user_id=(SELECT auth.uid()) AND m.empresa_id=payables.empresa_id
+    AND m.status='active' AND m.role::text IN ('admin','financeiro')
+    AND e.status='active'
+  )
+ );
+CREATE POLICY "cp04_update_financial_member" ON public.payables
+ FOR UPDATE TO authenticated
+ USING (user_id=(SELECT auth.uid()) AND EXISTS (
+   SELECT 1 FROM public.user_company_access m
+   JOIN public.empresas e ON e.id=m.empresa_id
+   WHERE m.user_id=(SELECT auth.uid()) AND m.empresa_id=payables.empresa_id
+    AND m.status='active' AND m.role::text IN ('admin','financeiro')
+    AND e.status='active'
+ ))
+ WITH CHECK (user_id=(SELECT auth.uid()) AND EXISTS (
+   SELECT 1 FROM public.user_company_access m
+   JOIN public.empresas e ON e.id=m.empresa_id
+   WHERE m.user_id=(SELECT auth.uid()) AND m.empresa_id=payables.empresa_id
+    AND m.status='active' AND m.role::text IN ('admin','financeiro')
+    AND e.status='active'
+ ));
+CREATE POLICY "cp04_delete_financial_member" ON public.payables
+ FOR DELETE TO authenticated USING (
+  user_id=(SELECT auth.uid()) AND EXISTS (
+   SELECT 1 FROM public.user_company_access m
+   JOIN public.empresas e ON e.id=m.empresa_id
+   WHERE m.user_id=(SELECT auth.uid()) AND m.empresa_id=payables.empresa_id
+    AND m.status='active' AND m.role::text IN ('admin','financeiro')
+    AND e.status='active'
+  )
+ );
 GRANT SELECT ON public.empresas,public.user_company_access TO authenticated;
 GRANT SELECT,UPDATE ON public.payables TO authenticated;
 INSERT INTO public.empresas VALUES('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','active'),('cccccccc-cccc-4ccc-8ccc-cccccccccccc','active');
