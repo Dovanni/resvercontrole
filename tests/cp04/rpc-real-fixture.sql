@@ -25,7 +25,7 @@ ALTER TABLE public.user_company_access ENABLE ROW LEVEL SECURITY;
 CREATE POLICY cp04_membership ON public.user_company_access FOR SELECT TO authenticated USING (user_id=(SELECT auth.uid()));
 ALTER TABLE public.empresas ENABLE ROW LEVEL SECURITY;
 CREATE POLICY cp04_company ON public.empresas FOR SELECT TO authenticated USING
- (EXISTS (SELECT 1 FROM public.user_company_access m WHERE m.empresa_id=id AND m.user_id=(SELECT auth.uid()) AND m.status='active'));
+ (EXISTS (SELECT 1 FROM public.user_company_access m WHERE m.empresa_id=public.empresas.id AND m.user_id=(SELECT auth.uid()) AND m.status='active'));
 GRANT SELECT ON public.empresas,public.user_company_access TO authenticated;
 INSERT INTO public.empresas VALUES ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','active'),('cccccccc-cccc-4ccc-8ccc-cccccccccccc','active');
 INSERT INTO public.user_company_access VALUES
