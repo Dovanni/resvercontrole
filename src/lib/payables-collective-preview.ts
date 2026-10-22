@@ -9,6 +9,7 @@ export type PayablePreviewRow = {
   amount: number;
   status: "pendente" | "atrasado" | "pago" | "cancelado";
   paidAmount: number;
+  paidAt?: string | null;
 };
 export type CollectiveScope = "single" | "future" | "all";
 
@@ -54,7 +55,7 @@ export function previewCollectiveEdit(
     (scope === "all" || row.index >= selectedIndex) &&
     (scope !== "single" || row.index === selectedIndex) &&
     (row.status === "pendente" || row.status === "atrasado") &&
-    cents(row.paidAmount) === 0
+    cents(row.paidAmount) === 0 && !row.paidAt
   ).sort((a, b) => a.index - b.index);
   if (!selected.some((row) => row.index === selectedIndex)) {
     throw new Error("A parcela selecionada não está pendente e integralmente em aberto");
