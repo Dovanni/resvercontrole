@@ -106,3 +106,22 @@ export function prepareCollectiveConfirmation(
     changes: preview.changes,
   };
 }
+
+/**
+ * Canonical snapshot of EVERY row of the persisted series, including settled rows.
+ * Mirrors the RPC's jsonb_agg(jsonb_build_object(... ORDER BY series_index)).
+ * Dates and numeric amounts must come from a fresh authenticated DB read.
+ */
+export function createCollectiveSnapshot(rows: Array<{
+  id: string; series_index: number; amount: number; due_date: string;
+  status: string; paid_amount: number; paid_at: string | null;
+}>) {
+  const ordered = [...rows].sort((a,b) => a.series_index-b.series_index);
+  if (new Set(ordered.map(r=>r.series_index)).size !== ordered.length) {
+    throw new Error("Série inconsistente: índices duplicados");
+  }
+  return ordered.map(r=>({
+    id:r.id, amount:r.amount, due_date:r.due_date,
+    status:r.status, paid_amount:r.paid_amount, paid_at:r.paid_at,
+  }));
+}
