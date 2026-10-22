@@ -29,6 +29,15 @@ sql(f"""INSERT INTO public.user_company_access(user_id,empresa_id,status,role) V
 INSERT INTO public.payables(id,empresa_id,user_id,series_id,series_index,series_total,amount,due_date,status)
 VALUES('{selected}','{company}','{owner}','{series}',1,2,94.47,'2026-01-31','pendente'),
 ('00000000-0000-4000-8000-000000000002','{company}','{owner}','{series}',2,2,94.47,'2026-02-28','pendente');""")
+# An authenticated sales user must not write even an OWN payable in a company
+# where membership is active. Test the direct REST Data API, not only the RPC.
+sales_row={"empresa_id":company,"user_id":sales,"amount":10,"due_date":"2026-11-01","status":"pendente","recurrence":"nenhuma"}
+status,result=http("/rest/v1/payables","POST",sales_row,sales_token)
+assert status>=400,(status,result)
+# An owner with a financial role may create an own payable.
+owner_row={**sales_row,"user_id":owner}
+status,result=http("/rest/v1/payables","POST",owner_row,owner_token)
+assert status in (200,201,204),(status,result)
 def snapshot(token):
     status,rows=http("/rest/v1/payables?select=id,series_index,amount,due_date,status,paid_amount,paid_at&series_id=eq."+series+"&order=series_index.asc",token=token)
     assert status==200,(status,rows)
