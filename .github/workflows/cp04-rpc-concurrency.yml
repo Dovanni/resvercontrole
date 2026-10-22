@@ -54,6 +54,9 @@ jobs:
       - name: Start disposable Supabase Auth and PostgREST
         run: |
           supabase --version
+          mkdir -p /tmp/cp04-auth-lab
+          cd /tmp/cp04-auth-lab
+          supabase init --yes
           supabase start
       - name: Install isolated schema and proposed RPC
         run: |
@@ -64,8 +67,10 @@ jobs:
           psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 -c "GRANT EXECUTE ON FUNCTION public.edit_payables_series_cp04(uuid,uuid,text,numeric,date,jsonb) TO authenticated;"
       - name: Validate GoTrue JWT, role isolation and revocation
         run: |
-          export CP04_ANON_KEY="$(supabase status -o env | sed -n 's/^ANON_KEY=//p' | tr -d '"')"
+          cd /tmp/cp04-auth-lab
+          export CP04_ANON_KEY="$(supabase status -o env | sed -n 's/^ANON_KEY=//p' | tr -d '"')" 
+          cd "$GITHUB_WORKSPACE"
           test -n "$CP04_ANON_KEY"
           python3 tests/cp04/supabase-auth-integration.py
       - if: always()
-        run: supabase stop --no-backup || true
+        run: cd /tmp/cp04-auth-lab && supabase stop --no-backup || true
