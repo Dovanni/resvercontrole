@@ -18,6 +18,19 @@ CREATE POLICY cp04_update ON public.payables FOR UPDATE TO authenticated
 GRANT USAGE ON SCHEMA public,auth TO authenticated;
 GRANT SELECT,UPDATE ON public.payables TO authenticated;
 GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated;
+CREATE TYPE public.app_role AS ENUM ('admin','vendedor','financeiro');
+CREATE TABLE public.empresas (id uuid PRIMARY KEY,status text NOT NULL);
+CREATE TABLE public.user_company_access (id uuid PRIMARY KEY,user_id uuid NOT NULL,empresa_id uuid NOT NULL REFERENCES public.empresas(id),status text NOT NULL,role public.app_role NOT NULL);
+ALTER TABLE public.user_company_access ENABLE ROW LEVEL SECURITY;
+CREATE POLICY cp04_membership ON public.user_company_access FOR SELECT TO authenticated USING (user_id=(SELECT auth.uid()));
+ALTER TABLE public.empresas ENABLE ROW LEVEL SECURITY;
+CREATE POLICY cp04_company ON public.empresas FOR SELECT TO authenticated USING
+ (EXISTS (SELECT 1 FROM public.user_company_access m WHERE m.empresa_id=id AND m.user_id=(SELECT auth.uid()) AND m.status='active'));
+GRANT SELECT ON public.empresas,public.user_company_access TO authenticated;
+INSERT INTO public.empresas VALUES ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','active'),('cccccccc-cccc-4ccc-8ccc-cccccccccccc','active');
+INSERT INTO public.user_company_access VALUES
+ ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','11111111-1111-4111-8111-111111111111','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','active','financeiro'),
+ ('ffffffff-ffff-4fff-8fff-ffffffffffff','22222222-2222-4222-8222-222222222222','cccccccc-cccc-4ccc-8ccc-cccccccccccc','active','admin');
 INSERT INTO public.payables VALUES
  ('00000000-0000-4000-8000-000000000001','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','11111111-1111-4111-8111-111111111111','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',1,3,94.47,'2026-01-31','pendente',0,NULL),
  ('00000000-0000-4000-8000-000000000002','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','11111111-1111-4111-8111-111111111111','bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',2,3,94.47,'2026-02-28','pendente',0,NULL),
