@@ -861,7 +861,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
         due_date: f.due_date,
         payment_method: f.payment_method,
         bank_account_id: f.bank_account_id || null,
-        recurrence: f.recurrence,
+        recurrence: payable.series_id ? payable.recurrence : f.recurrence,
       };
       if (editScope === "single") {
         // A settled installment is never eligible for financial edits.
@@ -1207,6 +1207,9 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
       }
       const isScheduled = paymentSchedule !== "unico" && repeatCount > 1;
       const total = isScheduled ? repeatCount : 1;
+      if (isScheduled && (!["mensal","semanal"].includes(f.recurrence) || total > 120 || total < 2)) {
+        throw new Error("Série exige recorrência mensal ou semanal e entre 2 e 120 parcelas.");
+      }
       const totalCents = Math.round(f.amount * 100);
       const baseCents = Math.floor(totalCents / total);
       const remainderCents = totalCents % total;
