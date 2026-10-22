@@ -107,8 +107,11 @@ BEGIN
  )
  SELECT s.id,s.amount,p_new_amount,s.due_date,s.next_due
  FROM scheduled s JOIN updated u ON u.id=s.id ORDER BY s.series_index;
- -- Note: production integration must verify returned count = v_target_count
- -- and confirm database company-membership authorization independently of UI.
+ GET DIAGNOSTICS v_count = ROW_COUNT;
+ IF v_count <> v_target_count THEN
+  RAISE EXCEPTION 'Partial update; rolling back transaction';
+ END IF;
+ -- Gate: validate database company-membership authorization independently of UI.
 END;
 $function$;
 REVOKE ALL ON FUNCTION public.edit_payables_series_cp04(uuid,uuid,text,numeric,date,jsonb) FROM PUBLIC;
