@@ -776,6 +776,8 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
   const { empresaId, isEnabled } = useMultiempresa();
   const validatePayableCompany = useServerFn(validateCompanyAccess);
   const series = parseSeries(payable.description);
+  const confirm = useConfirm();
+  const [editScope, setEditScope] = useState<"single" | "future" | "all">("single");
   const navCats = useNavigate();
   const { data: cats } = useCategoriasContasPagar();
   const categoryOptions = (cats && cats.length > 0) ? cats.map(c => c.nome) : FALLBACK_CATEGORIES;
@@ -823,14 +825,12 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
         }
       }
 
-      // CP-03.12: edit only the selected payable. Series membership is not persisted,
-      // so bulk updates could mix unrelated records or partially apply changes.
-      let desc = f.description.trim();
       const originalSeries = parseSeries(payable.description);
+      let desc = f.description.trim();
       if (originalSeries && !parseSeries(desc)) {
         desc = `${desc} (${originalSeries.index}/${originalSeries.total})`;
       }
-      const { data, error } = await supabase.from("payables").update({
+      const singleUpdate = {
         supplier_id: f.supplier_id || null,
         description: desc,
         category: f.category,
@@ -839,10 +839,87 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
         payment_method: f.payment_method,
         bank_account_id: f.bank_account_id || null,
         recurrence: f.recurrence,
-      } as any).eq("id", payable.id).eq("empresa_id", empresaId).eq("user_id", user.id).select("id");
-      if (error) throw error;
-      if (!data || data.length !== 1) throw new Error("Lançamento não encontrado na empresa selecionada.");
-      return 1;
+      };
+      if (editScope === "single") {
+        const { data, error } = await supabase.from("payables").update(singleUpdate as any)
+          .eq("id", payable.id).eq("empresa_id", empresaId).eq("user_id", user.id).select("id");
+        if (error) throw error;
+        if (!data || data.length !== 1) throw new Error("Lançamento não encontrado na empresa selecionada.");
+        return 1;
+      }
+
+      if (!originalSeries || originalSeries.index < 1 || originalSeries.total < 2 ||
+          originalSeries.index > originalSeries.total) {
+        throw new Error("Numeração da série inválida. Edite individualmente.");
+      }
+      // Recarregar todos os lançamentos da empresa; filtros de período da tela não limitam a série.
+      const { data: fresh, error: fetchError } = await supabase.from("payables")
+        .select("id,description,supplier_id,due_date,status,recurrence,amount")
+        .eq("empresa_id", empresaId).eq("user_id", user.id);
+      if (fetchError) throw fetchError;
+      const matches = (fresh ?? []).filter(p => {
+        const parsed = parseSeries(p.description);
+        return parsed?.base === originalSeries.base && parsed.total === originalSeries.total &&
+          p.supplier_id === payable.supplier_id && p.recurrence === payable.recurrence;
+      });
+      const byIndex = new Map<number, (typeof matches)[number]>();
+      for (const p of matches) {
+        const n = parseSeries(p.description)!.index;
+        if (n < 1 || n > originalSeries.total || byIndex.has(n)) {
+          throw new Error("Série ambígua ou com numeração repetida. Edição coletiva bloqueada.");
+        }
+        byIndex.set(n, p);
+      }
+      // Sem ID de série persistido, exigir série completa e única para evitar agrupar dívidas distintas.
+      if (byIndex.size !== originalSeries.total ||
+          Array.from({ length: originalSeries.total }, (_, i) => i + 1).some(i => !byIndex.has(i))) {
+        throw new Error("Série incompleta. Por segurança, use a edição individual.");
+      }
+      if (byIndex.get(originalSeries.index)?.id !== payable.id) {
+        throw new Error("A série não corresponde ao lançamento selecionado.");
+      }
+      const selected = [...byIndex.entries()].filter(([i, p]) =>
+        (editScope === "all" || i >= originalSeries.index) &&
+        (p.status === "pendente" || p.status === "atrasado")
+      ).sort(([a], [b]) => a - b);
+      if (!selected.length || !selected.some(([, p]) => p.id === payable.id)) {
+        throw new Error("A parcela selecionada não está pendente.");
+      }
+      const baseDescription = parseSeries(desc)?.base ?? desc;
+      if (!baseDescription) throw new Error("Descrição obrigatória.");
+      // Em lote, o vencimento é deslocado pelo mesmo número de dias para preservar a sequência.
+      const dayOffset = Math.round(
+        (Date.parse(f.due_date + "T00:00:00Z") - Date.parse(payable.due_date + "T00:00:00Z")) / 86400000
+      );
+      if (!Number.isFinite(dayOffset)) throw new Error("Vencimento inválido.");
+      const changes = selected.map(([index, p]) => {
+        const date = new Date(Date.parse(p.due_date + "T00:00:00Z") + dayOffset * 86400000)
+          .toISOString().slice(0, 10);
+        return { index, p, date };
+      });
+      const approved = await confirm({
+        title: "Confirmar edição coletiva",
+        description: `Alterar ${changes.length} parcela(s) pendente(s) da série "${originalSeries.base}"? Parcelas pagas e canceladas serão preservadas. O vencimento de cada parcela será deslocado ${dayOffset} dia(s).`,
+        confirmText: "Confirmar alterações",
+        cancelText: "Cancelar",
+      });
+      if (!approved) throw new Error("Operação cancelada.");
+      // Cada parcela tem vencimento e sufixo próprios: atualizações individuais.
+      // Não há transação entre requisições; interromper no primeiro erro e reportar quantas foram alteradas.
+      let changed = 0;
+      for (const { index, p, date } of changes) {
+        const { data, error } = await supabase.from("payables").update({
+          ...singleUpdate,
+          description: `${baseDescription} (${index}/${originalSeries.total})`,
+          due_date: date,
+        } as any).eq("id", p.id).eq("empresa_id", empresaId).eq("user_id", user.id)
+          .in("status", ["pendente", "atrasado"]).select("id");
+        if (error || data?.length !== 1) {
+          throw new Error(`Edição coletiva interrompida após ${changed} alteração(ões). Verifique a série antes de tentar novamente. ${error?.message ?? ""}`);
+        }
+        changed++;
+      }
+      return changed;
     },
     onSuccess: (n) => { toast.success(n > 1 ? `${n} lançamentos atualizados` : "Lançamento atualizado"); onDone(); },
     onError: (e: any) => toast.error(e.message),
@@ -851,9 +928,27 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
   return (
     <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="space-y-3">
       {series && (
-        <div className="rounded-lg border bg-muted/30 p-3 text-sm">
-          Este lançamento possui numeração ({series.index}/{series.total}). Por segurança, somente este registro será editado. A edição coletiva está temporariamente desabilitada.
-        </div>
+        <fieldset className="rounded-lg border bg-muted/30 p-3 text-sm space-y-2">
+          <legend className="font-semibold px-1">Aplicar alterações a</legend>
+          {([
+            ["single", "Somente esta parcela"],
+            ["future", "Esta parcela e as próximas pendentes"],
+            ["all", "Todas as parcelas pendentes da mesma série"],
+          ] as const).map(([value, label]) => (
+            <label key={value} className="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="payable-edit-scope" value={value}
+                checked={editScope === value} onChange={() => setEditScope(value)} />
+              <span>{label}</span>
+            </label>
+          ))}
+          {editScope !== "single" && (
+            <p className="text-muted-foreground">
+              Série {series.index}/{series.total}: somente parcelas pendentes. O vencimento
+              será deslocado proporcionalmente; parcelas pagas não serão alteradas.
+              Séries incompletas ou ambíguas serão bloqueadas.
+            </p>
+          )}
+        </fieldset>
       )}
 
       <div className="grid grid-cols-2 gap-3">
