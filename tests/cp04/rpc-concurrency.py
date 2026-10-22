@@ -31,7 +31,13 @@ def writer():
         with c.cursor() as q:
             as_user(q)
             q.execute(SQL,(COMPANY,SELECTED,"all",100,"2026-01-31",Json(snap)))
-            assert len(q.fetchall())==3
+            returned=q.fetchall()
+            assert len(returned)==3,returned
+            assert sorted(float(row[1]) for row in returned)==[94.47]*3,returned
+            assert sorted(float(row[2]) for row in returned)==[100.0]*3,returned
+            assert round(sum(float(row[1]) for row in returned),2)==283.41
+            assert round(sum(float(row[2]) for row in returned),2)==300.00
+            assert round(sum(float(row[2])-float(row[1]) for row in returned),2)==16.59
             started.set()
             time.sleep(2)
         c.commit()
