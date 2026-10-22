@@ -1,3 +1,5 @@
+import { useServerFn } from "@tanstack/react-start";
+import { validateCompanyAccess } from "@/lib/multiempresa.functions";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useMemo, useState, useEffect, useRef } from "react";
@@ -11,7 +13,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Plus, Trash2, CheckCircle2, AlertCircle, Pencil, ArrowUpDown, Download, ChevronDown, ChevronRight, Settings, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
@@ -75,22 +76,12 @@ function parseSeries(desc: string) {
   if (!m) return null;
   return { base: m[1].trim(), index: Number(m[2]), total: Number(m[3]) };
 }
-function findSeriesItems(all: Payable[], target: Payable) {
-  const s = parseSeries(target.description);
-  if (!s) return null;
-  const items = all
-    .map((p) => ({ p, s: parseSeries(p.description) }))
-    .filter((x) => x.s && x.s.base === s.base && x.s.total === s.total)
-    .map((x) => ({ ...x.p, _idx: x.s!.index }))
-    .sort((a, b) => a._idx - b._idx);
-  return items.length > 1 ? { base: s.base, total: s.total, current: s.index, items } : null;
-}
-
 type SortKey = "due_date" | "description" | "supplier" | "category" | "status" | "amount";
 
 function PayablesPage() {
   const qc = useQueryClient();
   const { empresaId, isEnabled } = useMultiempresa();
+  const validatePayableCompany = useServerFn(validateCompanyAccess);
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
@@ -249,8 +240,33 @@ function PayablesPage() {
       .sort((a, b) => a.sortKey < b.sortKey ? -1 : 1);
   }, [filtered, groupBy]);
 
+
+  const authorizePayableMutation = async () => {
+    if (!empresaId) throw new Error("Selecione uma empresa válida.");
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) throw new Error("Usuário não autenticado.");
+    await validatePayableCompany({ data: empresaId });
+    return { empresaId, userId: user.id };
+  };
+
+  const assertSinglePayable = (rows: { id: string }[] | null) => {
+    if (!rows || rows.length !== 1) {
+      throw new Error("Lançamento não encontrado na empresa selecionada.");
+    }
+  };
   const remove = useMutation({
-    mutationFn: async (id: string) => { const { error } = await supabase.from("payables").delete().eq("id", id); if (error) throw error; },
+    mutationFn: async (id: string) => {
+      const scope = await authorizePayableMutation();
+      const { data, error } = await supabase
+        .from("payables")
+        .delete()
+        .eq("id", id)
+        .eq("empresa_id", scope.empresaId)
+        .eq("user_id", scope.userId)
+        .select("id");
+      if (error) throw error;
+      assertSinglePayable(data);
+    },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["payables", empresaId] }); toast.success("Removido"); },
   });
 
@@ -309,16 +325,32 @@ function PayablesPage() {
       <TableRow key={p.id}>
         <TableCell className={overdue ? "text-destructive font-medium" : "text-muted-foreground"}>
           <InlineDate value={p.due_date} onSave={async (v) => {
-            const { error } = await supabase.from("payables").update({ due_date: v }).eq("id", p.id);
+            const scope = await authorizePayableMutation();
+            const { data, error } = await supabase
+              .from("payables")
+              .update({ due_date: v })
+              .eq("id", p.id)
+              .eq("empresa_id", scope.empresaId)
+              .eq("user_id", scope.userId)
+              .select("id");
             if (error) throw error;
+            assertSinglePayable(data);
             qc.invalidateQueries({ queryKey: ["payables", empresaId] });
           }} />
         </TableCell>
         <TableCell className="font-medium">
           <InlineText value={p.description} onSave={async (v) => {
             if (!v.trim()) throw new Error("Descrição obrigatória");
-            const { error } = await supabase.from("payables").update({ description: v.trim() }).eq("id", p.id);
+            const scope = await authorizePayableMutation();
+            const { data, error } = await supabase
+              .from("payables")
+              .update({ description: v.trim() })
+              .eq("id", p.id)
+              .eq("empresa_id", scope.empresaId)
+              .eq("user_id", scope.userId)
+              .select("id");
             if (error) throw error;
+            assertSinglePayable(data);
             qc.invalidateQueries({ queryKey: ["payables", empresaId] });
           }} />
         </TableCell>
@@ -328,8 +360,16 @@ function PayablesPage() {
         <TableCell className="text-right font-medium">
           <InlineNumber value={Number(p.amount)} onSave={async (v) => {
             if (v <= 0) throw new Error("Informe um valor maior que zero");
-            const { error } = await supabase.from("payables").update({ amount: v }).eq("id", p.id);
+            const scope = await authorizePayableMutation();
+            const { data, error } = await supabase
+              .from("payables")
+              .update({ amount: v })
+              .eq("id", p.id)
+              .eq("empresa_id", scope.empresaId)
+              .eq("user_id", scope.userId)
+              .select("id");
             if (error) throw error;
+            assertSinglePayable(data);
             qc.invalidateQueries({ queryKey: ["payables", empresaId] });
           }} />
         </TableCell>
@@ -734,8 +774,8 @@ function InlineDate({ value, onSave }: { value: string; onSave: (v: string) => P
 
 function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { payable: Payable; all: Payable[]; suppliers: { id: string; name: string }[]; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
   const { empresaId, isEnabled } = useMultiempresa();
-  const series = useMemo(() => findSeriesItems(all, payable), [all, payable]);
-  const [scope, setScope] = useState<"one" | "forward" | "all">("one");
+  const validatePayableCompany = useServerFn(validateCompanyAccess);
+  const series = parseSeries(payable.description);
   const navCats = useNavigate();
   const { data: cats } = useCategoriasContasPagar();
   const categoryOptions = (cats && cats.length > 0) ? cats.map(c => c.nome) : FALLBACK_CATEGORIES;
@@ -751,68 +791,58 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
     recurrence: payable.recurrence,
   });
 
-  const addMonths = (iso: string, n: number) => { const [y,m,d] = iso.split("-").map(Number); return new Date(y, m - 1 + n, d).toISOString().slice(0,10); };
-  const addWeeks = (iso: string, n: number) => { const dt = new Date(iso + "T00:00"); dt.setDate(dt.getDate() + 7 * n); return dt.toISOString().slice(0, 10); };
-
   const save = useMutation({
     mutationFn: async () => {
       if (f.amount <= 0) throw new Error("Informe um valor maior que zero");
       if (!f.description.trim()) throw new Error("Descrição obrigatória");
-
-      // Single-row update (no series, or scope === "one")
-      if (!series || scope === "one") {
-        // Preserve series suffix in description if exists
-        let desc = f.description.trim();
-        const s = parseSeries(payable.description);
-        const newHasSuffix = parseSeries(desc);
-        if (s && !newHasSuffix) desc = `${desc} (${s.index}/${s.total})`;
-        const { error } = await supabase.from("payables").update({
-          supplier_id: f.supplier_id || null,
-          description: desc,
-          category: f.category,
-          amount: f.amount,
-          due_date: f.due_date,
-          payment_method: f.payment_method,
-          bank_account_id: f.bank_account_id || null,
-          recurrence: f.recurrence,
-        } as any).eq("id", payable.id);
-        if (error) throw error;
-        return 1;
-      }
-
-      // Series bulk update
-      const cur = parseSeries(payable.description)!;
-      const dueChanged = f.due_date !== payable.due_date;
-      const targets = series.items.filter(it => scope === "all" ? true : it._idx >= cur.index);
-
-      // Strip series suffix the user may have left in description
-      const baseDesc = (parseSeries(f.description.trim())?.base ?? f.description.trim());
-
-      let count = 0;
-      for (const it of targets) {
-        const itS = parseSeries(it.description)!;
-        const newDesc = `${baseDesc} (${itS.index}/${itS.total})`;
-        let newDue = it.due_date;
-        if (dueChanged) {
-          const offset = itS.index - cur.index;
-          newDue = f.recurrence === "semanal" ? addWeeks(f.due_date, offset)
-                : f.recurrence === "mensal" ? addMonths(f.due_date, offset)
-                : addMonths(f.due_date, offset);
+      if (!empresaId) throw new Error("Selecione uma empresa válida.");
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw new Error("Usuário não autenticado.");
+      await validatePayableCompany({ data: empresaId });
+      if (f.supplier_id) {
+        const { data: supplier, error: supplierError } = await supabase
+          .from("suppliers").select("id")
+          .eq("id", f.supplier_id)
+          .eq("empresa_id", empresaId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (supplierError || !supplier) {
+          throw new Error("Fornecedor não autorizado para esta empresa.");
         }
-        const { error } = await supabase.from("payables").update({
-          supplier_id: f.supplier_id || null,
-          description: newDesc,
-          category: f.category,
-          amount: f.amount,
-          due_date: newDue,
-          payment_method: f.payment_method,
-          bank_account_id: f.bank_account_id || null,
-          recurrence: f.recurrence,
-        } as any).eq("id", it.id);
-        if (error) throw error;
-        count++;
       }
-      return count;
+
+      if (f.bank_account_id) {
+        const { data: bank, error: bankError } = await supabase
+          .from("bank_accounts").select("id")
+          .eq("id", f.bank_account_id)
+          .eq("empresa_id", empresaId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (bankError || !bank) {
+          throw new Error("Conta bancária não autorizada para esta empresa.");
+        }
+      }
+
+      // CP-03.12: edit only the selected payable. Series membership is not persisted,
+      // so bulk updates could mix unrelated records or partially apply changes.
+      let desc = f.description.trim();
+      const originalSeries = parseSeries(payable.description);
+      if (originalSeries && !parseSeries(desc)) {
+        desc = `${desc} (${originalSeries.index}/${originalSeries.total})`;
+      }
+      const { data, error } = await supabase.from("payables").update({
+        supplier_id: f.supplier_id || null,
+        description: desc,
+        category: f.category,
+        amount: f.amount,
+        due_date: f.due_date,
+        payment_method: f.payment_method,
+        bank_account_id: f.bank_account_id || null,
+        recurrence: f.recurrence,
+      } as any).eq("id", payable.id).eq("empresa_id", empresaId).eq("user_id", user.id).select("id");
+      if (error) throw error;
+      if (!data || data.length !== 1) throw new Error("Lançamento não encontrado na empresa selecionada.");
+      return 1;
     },
     onSuccess: (n) => { toast.success(n > 1 ? `${n} lançamentos atualizados` : "Lançamento atualizado"); onDone(); },
     onError: (e: any) => toast.error(e.message),
@@ -821,19 +851,8 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
   return (
     <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="space-y-3">
       {series && (
-        <div className="rounded-lg border bg-muted/30 p-3 space-y-2">
-          <div className="text-sm font-medium">Este lançamento faz parte de uma série ({series.current}/{series.total}). O que deseja editar?</div>
-          <RadioGroup value={scope} onValueChange={(v: any) => setScope(v)} className="space-y-1">
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <RadioGroupItem value="one" /> Somente este lançamento
-            </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <RadioGroupItem value="forward" /> Este e todos os próximos
-            </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <RadioGroupItem value="all" /> Todos os lançamentos da série
-            </label>
-          </RadioGroup>
+        <div className="rounded-lg border bg-muted/30 p-3 text-sm">
+          Este lançamento possui numeração ({series.index}/{series.total}). Por segurança, somente este registro será editado. A edição coletiva está temporariamente desabilitada.
         </div>
       )}
 
@@ -921,6 +940,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
 
 function PayPayableForm({ payable, bankAccounts, onDone }: { payable: Payable; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
   const { empresaId, isEnabled } = useMultiempresa();
+  const validatePayableCompany = useServerFn(validateCompanyAccess);
   const [paid_at, setPaidAt] = useState(new Date().toISOString().slice(0, 10));
   const [bank_account_id, setBankAccountId] = useState<string>(payable.bank_account_id ?? "");
   const [amount, setAmount] = useState(Number(payable.amount));
@@ -928,13 +948,29 @@ function PayPayableForm({ payable, bankAccounts, onDone }: { payable: Payable; b
   const save = useMutation({
     mutationFn: async () => {
       if (amount <= 0) throw new Error("Informe um valor maior que zero");
-      const { error } = await supabase.from("payables").update({
+      if (!empresaId) throw new Error("Selecione uma empresa válida.");
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw new Error("Usuário não autenticado.");
+      await validatePayableCompany({ data: empresaId });
+      if (bank_account_id) {
+        const { data: bank, error: bankError } = await supabase
+          .from("bank_accounts").select("id")
+          .eq("id", bank_account_id)
+          .eq("empresa_id", empresaId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (bankError || !bank) {
+          throw new Error("Conta bancária não autorizada para esta empresa.");
+        }
+      }
+      const { data, error } = await supabase.from("payables").update({
         status: "pago",
         paid_amount: amount,
         paid_at: new Date(paid_at).toISOString(),
         bank_account_id: bank_account_id || null,
-      } as any).eq("id", payable.id);
+      } as any).eq("id", payable.id).eq("empresa_id", empresaId).eq("user_id", user.id).select("id");
       if (error) throw error;
+      if (!data || data.length !== 1) throw new Error("Lançamento não encontrado na empresa selecionada.");
     },
     onSuccess: () => { toast.success(bank_account_id ? "Pago e lançado na conta bancária" : "Pago"); onDone(); },
     onError: (e: any) => toast.error(e.message),
@@ -999,19 +1035,21 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: string; name: string }[]; bankAccounts: { id: string; name: string; bank: string; color: string }[]; onDone: () => void }) {
-  const { empresaId, isEnabled } = useMultiempresa();
+  const { empresaId } = useMultiempresa();
+  const validatePayableCompany = useServerFn(validateCompanyAccess);
   const confirm = useConfirm();
   const [f, setF] = useState({
     supplier_id: "", description: "", category: "fornecedor",
     amount: 0, due_date: new Date().toISOString().slice(0, 10),
     payment_method: "pix", bank_account_id: "", recurrence: "nenhuma" as "nenhuma" | "semanal" | "mensal",
   });
-  const [repeatCount, setRepeatCount] = useState(1);
+  const [repeatCount, setRepeatCount] = useState(2);
+  const [paymentSchedule, setPaymentSchedule] = useState<"unico" | "parcelado" | "recorrente">("unico");
   const navCats2 = useNavigate();
   const { data: cats } = useCategoriasContasPagar();
   const categoryOptions = (cats && cats.length > 0) ? cats.map((c) => c.nome) : FALLBACK_CATEGORIES;
 
-  const addMonths = (iso: string, n: number) => { const [y, m, d] = iso.split("-").map(Number); return new Date(y, m - 1 + n, d).toISOString().slice(0, 10); };
+  const addMonths = (iso: string, n: number) => { const [y, m, d] = iso.split("-").map(Number); const monthStart = new Date(Date.UTC(y, m - 1 + n, 1)); const lastDay = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 0)).getUTCDate(); return `${monthStart.getUTCFullYear()}-${String(monthStart.getUTCMonth() + 1).padStart(2, "0")}-${String(Math.min(d, lastDay)).padStart(2, "0")}`; };
   const addWeeks = (iso: string, n: number) => { const dt = new Date(iso + "T00:00"); dt.setDate(dt.getDate() + 7 * n); return dt.toISOString().slice(0, 10); };
 
   const save = useMutation({
@@ -1019,24 +1057,60 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
       if (f.amount <= 0) throw new Error("Informe um valor maior que zero");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
-      const isRecurring = f.recurrence !== "nenhuma" && repeatCount > 1;
-      const total = isRecurring ? repeatCount : 1;
+      if (!empresaId) {
+        throw new Error("Selecione uma empresa válida antes de criar contas a pagar.");
+      }
+      await validatePayableCompany({ data: empresaId });
+      // CP-03.14M.3 - validar referencias financeiras
+      if (f.supplier_id) {
+        const { data: supplier, error: supplierError } = await supabase
+          .from("suppliers")
+          .select("id")
+          .eq("id", f.supplier_id)
+          .eq("empresa_id", empresaId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (supplierError || !supplier) {
+          throw new Error("Fornecedor inexistente ou nao autorizado para esta empresa.");
+        }
+      }
+
+      if (f.bank_account_id) {
+        const { data: bankAccount, error: bankError } = await supabase
+          .from("bank_accounts")
+          .select("id")
+          .eq("id", f.bank_account_id)
+          .eq("empresa_id", empresaId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (bankError || !bankAccount) {
+          throw new Error("Conta bancaria inexistente ou nao autorizada para esta empresa.");
+        }
+      }
+      const isScheduled = paymentSchedule !== "unico" && repeatCount > 1;
+      const total = isScheduled ? repeatCount : 1;
+      const totalCents = Math.round(f.amount * 100);
+      const baseCents = Math.floor(totalCents / total);
+      const remainderCents = totalCents % total;
       const rows = Array.from({ length: total }, (_, i) => {
-        const due = isRecurring
+        const due = isScheduled
           ? (f.recurrence === "mensal" ? addMonths(f.due_date, i) : addWeeks(f.due_date, i))
           : f.due_date;
-        const desc = isRecurring ? `${f.description} (${i + 1}/${total})` : f.description;
+        const desc = isScheduled ? `${f.description} (${i + 1}/${total})` : f.description;
+        const amount = paymentSchedule === "parcelado" ? (baseCents + (i < remainderCents ? 1 : 0)) / 100 : f.amount;
         return {
           supplier_id: f.supplier_id || null,
           description: desc,
           category: f.category,
-          amount: f.amount,
+          amount,
           due_date: due,
           payment_method: f.payment_method,
           bank_account_id: f.bank_account_id || null,
-          recurrence: f.recurrence,
+          recurrence: paymentSchedule === "unico" ? "nenhuma" : f.recurrence,
           user_id: user.id,
-          empresa_id: isEnabled ? empresaId : undefined,
+          empresa_id: empresaId,
         };
       });
       const { error } = await supabase.from("payables").insert(rows as any);
@@ -1055,6 +1129,7 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (f.amount <= 0) { toast.error("Informe um valor maior que zero"); return; }
+    if (paymentSchedule === "parcelado" && Math.round(f.amount * 100) < repeatCount) { toast.error("O valor total deve permitir ao menos R$ 0,01 por parcela"); return; }
     // Trava anti-duplicidade: bloquear lançamento manual de despesas de cartão
     if (/cart[aã]o/i.test(f.category)) {
       const ok = await confirm({
@@ -1067,11 +1142,13 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
       });
       if (!ok) return;
     }
-    const isRecurring = f.recurrence !== "nenhuma" && repeatCount > 1;
-    if (isRecurring) {
+    const isScheduled = paymentSchedule !== "unico" && repeatCount > 1;
+    if (isScheduled) {
       const ok = await confirm({
         title: "Confirmar criação",
-        description: `Serão criadas ${repeatCount} contas a pagar no total. Confirmar?`,
+        description: paymentSchedule === "parcelado"
+          ? `O valor total de R$ ${f.amount.toFixed(2).replace(".", ",")} será dividido em ${repeatCount} parcelas. Confirmar?`
+          : `Serão criadas ${repeatCount} contas a pagar de R$ ${f.amount.toFixed(2).replace(".", ",")} cada. Confirmar?`,
         confirmText: "Criar",
         destructive: false,
       });
@@ -1152,22 +1229,38 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Recorrência</Label>
-          <Select value={f.recurrence} onValueChange={(v: any) => setF({ ...f, recurrence: v })}>
+          <Label>Tipo de lançamento</Label>
+          <Select value={paymentSchedule} onValueChange={(v: "unico" | "parcelado" | "recorrente") => { setPaymentSchedule(v); setF((prev) => ({ ...prev, recurrence: v === "unico" ? "nenhuma" : "mensal" })); }}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="nenhuma">Não se repete</SelectItem>
-              <SelectItem value="semanal">Semanal</SelectItem>
-              <SelectItem value="mensal">Mensal</SelectItem>
+              <SelectItem value="unico">Pagamento único</SelectItem>
+              <SelectItem value="parcelado">Parcelamento (dividir valor total)</SelectItem>
+              <SelectItem value="recorrente">Recorrência (repetir valor)</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        {f.recurrence !== "nenhuma" && (
-          <div className="space-y-1.5">
-            <Label>Repetir por quantos {f.recurrence === "mensal" ? "meses" : "semanas"}?</Label>
-            <Input type="number" min={1} max={60} value={repeatCount} onChange={(e) => setRepeatCount(Math.max(1, Math.min(60, Number(e.target.value) || 1)))} />
-            <div className="text-xs text-muted-foreground">Serão criadas {repeatCount} {repeatCount === 1 ? "conta" : "contas"} no total.</div>
-          </div>
+        {paymentSchedule !== "unico" && (
+          <>
+            <div className="space-y-1.5">
+              <Label>Periodicidade</Label>
+              <Select value={f.recurrence} onValueChange={(v: "mensal" | "semanal") => setF({ ...f, recurrence: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mensal">Mensal</SelectItem>
+                  <SelectItem value="semanal">Semanal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{paymentSchedule === "parcelado" ? "Quantidade de parcelas" : "Quantidade de repetições"}</Label>
+              <Input type="number" min={2} max={60} value={repeatCount} onChange={(e) => setRepeatCount(Math.max(2, Math.min(60, Number(e.target.value) || 2)))} />
+              <div className="text-xs text-muted-foreground">
+                {paymentSchedule === "parcelado"
+                  ? `Valor total de R$ ${f.amount.toFixed(2).replace(".", ",")} dividido em ${repeatCount} parcelas (com ajuste de centavos).`
+                  : `Serão criadas ${repeatCount} contas de R$ ${f.amount.toFixed(2).replace(".", ",")} cada.`}
+              </div>
+            </div>
+          </>
         )}
       </div>
       <Button type="submit" disabled={save.isPending} className="w-full bg-gradient-primary text-primary-foreground">
