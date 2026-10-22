@@ -780,6 +780,12 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
         return 1;
       }
 
+      // Safety: without a persisted schedule type, a series can be installments or recurring.
+      // Never copy a changed amount across an ambiguous series.
+      if (Math.round(f.amount * 100) !== Math.round(Number(payable.amount) * 100)) {
+        throw new Error("Para sua seguranca, altere o valor de cada parcela individualmente. O sistema ainda nao distingue series parceladas de recorrentes na edicao coletiva.");
+      }
+
       // Series bulk update
       const cur = parseSeries(payable.description)!;
       const dueChanged = f.due_date !== payable.due_date;
@@ -803,7 +809,8 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
           supplier_id: f.supplier_id || null,
           description: newDesc,
           category: f.category,
-          amount: f.amount,
+          // Preserve each original amount in a bulk edit: installments may differ by cents.
+          amount: it.amount,
           due_date: newDue,
           payment_method: f.payment_method,
           bank_account_id: f.bank_account_id || null,
