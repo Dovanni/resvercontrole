@@ -72,3 +72,23 @@ with c.cursor() as q:
         c.rollback()
 c.close()
 print("CP04 ACTUAL RPC CONCURRENCY + STALE SNAPSHOT PASSED")
+
+# Paid installment protection and whole-transaction rollback.
+c=connect()
+with c.cursor() as q:
+    q.execute("UPDATE public.payables SET status='pago',paid_amount=100,paid_at='2026-03-31T12:00:00Z' WHERE id='00000000-0000-4000-8000-000000000003'")
+c.commit()
+paid_snapshot=snapshot(c)
+with c.cursor() as q:
+    as_user(q)
+    q.execute(SQL,(COMPANY,SELECTED,"all",110,"2026-01-31",Json(paid_snapshot)))
+    result=q.fetchall()
+    assert len(result)==2,result
+c.rollback()  # Explicit client transaction rollback after RPC returns.
+with c.cursor() as q:
+    q.execute("SELECT array_agg(amount ORDER BY series_index),array_agg(status ORDER BY series_index) FROM public.payables WHERE series_id='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'")
+    amounts,statuses=q.fetchone()
+    assert list(map(float,amounts))==[100,100,100],amounts
+    assert statuses==["pendente","pendente","pago"],statuses
+c.close()
+print("CP04 PAID-INSTALLMENT PROTECTION + CLIENT ROLLBACK PASSED")
