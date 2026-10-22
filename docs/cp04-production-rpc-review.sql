@@ -33,13 +33,13 @@ BEGIN
  END IF;
  -- Require a currently active company membership and financial role.
  -- SECURITY INVOKER: user_company_access SELECT RLS limits rows to auth.uid().
- -- Lock membership to prevent concurrent revocation during this transaction.
+ -- SELECT-only membership check; concurrent revocation needs separate race test.
  PERFORM m.id FROM public.user_company_access m
   JOIN public.empresas e ON e.id=m.empresa_id
   WHERE m.user_id=v_user AND m.empresa_id=p_empresa_id
     AND m.status='active' AND m.role::text IN ('admin','financeiro')
     AND e.status='active'
-  FOR SHARE OF m,e;
+  ;
  IF NOT FOUND THEN
   RAISE EXCEPTION 'Company membership or financial permission denied' USING ERRCODE='42501';
  END IF;
