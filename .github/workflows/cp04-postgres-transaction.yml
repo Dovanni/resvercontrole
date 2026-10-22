@@ -1,0 +1,38 @@
+name: CP-04 Isolated PostgreSQL Transactions
+on:
+  pull_request:
+    paths:
+      - 'tests/cp04/**'
+      - '.github/workflows/cp04-postgres-transaction.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  transactional-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: cp04
+          POSTGRES_PASSWORD: cp04_only_ephemeral
+          POSTGRES_DB: cp04_synthetic
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cp04 -d cp04_synthetic"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 15
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: cp04
+      PGPASSWORD: cp04_only_ephemeral
+      PGDATABASE: cp04_synthetic
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install PostgreSQL client
+        run: sudo apt-get update -qq && sudo apt-get install -y postgresql-client
+      - name: Run synthetic transactional tests
+        run: psql -v ON_ERROR_STOP=1 -f tests/cp04/isolated-transaction.sql
