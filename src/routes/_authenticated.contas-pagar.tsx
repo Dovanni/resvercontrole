@@ -16,6 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Trash2, CheckCircle2, AlertCircle, Pencil, ArrowUpDown, Download, ChevronDown, ChevronRight, Settings, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 import { brl } from "@/lib/format";
+import { previewCollectiveEdit, prepareCollectiveConfirmation, createCollectiveSnapshot } from "@/lib/payables-collective-preview";
 import { useConfirm } from "@/components/confirm-dialog";
 import { DataPagination, usePagination } from "@/components/data-pagination";
 import { useCategoriasContasPagar } from "@/components/categorias-contas-pagar-manager";
@@ -60,6 +61,7 @@ const FALLBACK_CATEGORIES = ["fornecedor", "logistica", "marketing", "aluguel", 
 const PAYMENT_METHODS = ["pix", "boleto", "transferência", "dinheiro", "cartão"];
 
 type Payable = {
+  series_id?: string | null; series_index?: number | null; series_total?: number | null;
   id: string; supplier_id: string | null; description: string; category: string;
   amount: number; due_date: string; payment_method: string | null;
   bank_account_id: string | null;
@@ -776,6 +778,9 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
   const { empresaId, isEnabled } = useMultiempresa();
   const validatePayableCompany = useServerFn(validateCompanyAccess);
   const series = parseSeries(payable.description);
+  const confirm = useConfirm();
+  const hasPersistedSeries = Boolean(payable.series_id && payable.series_index && payable.series_total);
+  const [editScope, setEditScope] = useState<"single" | "future" | "all">("single");
   const navCats = useNavigate();
   const { data: cats } = useCategoriasContasPagar();
   const categoryOptions = (cats && cats.length > 0) ? cats.map(c => c.nome) : FALLBACK_CATEGORIES;
@@ -790,6 +795,79 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
     bank_account_id: payable.bank_account_id ?? "",
     recurrence: payable.recurrence,
   });
+  const [reconcilingLegacy, setReconcilingLegacy] = useState(false);
+  const reconcileLegacy = async () => {
+    if (!series || hasPersistedSeries || !empresaId || !isEnabled) return;
+    setReconcilingLegacy(true);
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw new Error("Autenticação necessária.");
+      await validatePayableCompany({ data: empresaId });
+      // Read the entire tenant's legacy obligations, not just paginated/filtered UI rows.
+      const candidates: Array<Pick<Payable, "id" | "description" | "amount" | "due_date" | "status" | "paid_amount" | "paid_at" | "series_id">> = [];
+      for (let from = 0; ; from += 500) {
+        const { data, error } = await supabase.from("payables")
+          .select("id,description,amount,due_date,status,paid_amount,paid_at,series_id")
+          .eq("empresa_id", empresaId).eq("user_id", user.id)
+          .order("id", { ascending: true }).range(from, from + 499);
+        if (error) throw error;
+        candidates.push(...(data ?? []));
+        if (!data || data.length < 500) break;
+      }
+      const matches = candidates.filter(p => {
+        const parsed = parseSeries(p.description);
+        return !p.series_id && parsed?.base === series.base && parsed.total === series.total;
+      });
+      const ordered = Array.from({ length: series.total }, (_, i) => {
+        const found = matches.filter(p => parseSeries(p.description)?.index === i + 1);
+        if (found.length !== 1) throw new Error("Série histórica incompleta ou ambígua. Revisão manual necessária.");
+        return found[0];
+      });
+      if (matches.length !== series.total || !ordered.some(p => p.id === payable.id))
+        throw new Error("Série histórica não identificada com segurança.");
+      const approved = await confirm({
+        title: "Vincular série histórica",
+        description: `Confira os ${series.total} lançamentos da série "${series.base}": ${ordered.map((p, i) => `${i + 1}/${series.total}: ${p.description} — ${brl(Number(p.amount))} — ${p.due_date} — ${p.status}`).join("; ")}. Esta operação identifica a série, sem modificar valores, vencimentos ou pagamentos. Confirma que pertencem à mesma obrigação?`,
+        confirmText: "Confirmar vínculo", cancelText: "Cancelar", destructive: false,
+      });
+      if (!approved) return;
+      const snapshot = ordered.map(p => ({
+        id: p.id, description: p.description, amount: Number(p.amount),
+        due_date: p.due_date, status: p.status,
+        paid_amount: Number(p.paid_amount ?? 0), paid_at: p.paid_at,
+      }));
+      const { data, error } = await supabase.rpc("reconcile_legacy_payables_cp04" as any, {
+        p_empresa_id: empresaId, p_ordered_ids: ordered.map(p => p.id),
+        p_expected_snapshot: snapshot,
+      } as any);
+      if (error) throw error;
+      if (!Array.isArray(data) || data.length !== ordered.length)
+        throw new Error("A conciliação não retornou a série completa. Recarregue para auditoria.");
+      toast.success("Série histórica identificada. Abra novamente a edição para escolher o alcance.");
+      onDone();
+    } catch (e: any) { toast.error(e.message ?? "Falha na conciliação da série."); }
+    finally { setReconcilingLegacy(false); }
+  };
+  // Read-only preview: never infer series identity from the description suffix.
+  // The collective submit path remains disabled until the reviewed RPC is deployed.
+  const collectivePreview = useMemo(() => {
+    if (!payable.series_id || !payable.series_index || !payable.series_total || editScope === "single") return null;
+    const siblings = all.filter(p => p.series_id === payable.series_id && p.series_total === payable.series_total);
+    if (siblings.length !== payable.series_total ||
+        new Set(siblings.map(p => p.series_index)).size !== payable.series_total ||
+        siblings.some(p => !p.series_index || p.series_index < 1 || p.series_index > payable.series_total!)) return null;
+    try {
+      const preview = previewCollectiveEdit(
+        siblings.map(p => ({
+          id: p.id, index: p.series_index!, dueDate: p.due_date,
+          amount: Number(p.amount), status: p.status, paidAmount: Number(p.paid_amount), paidAt: p.paid_at, recurrence: p.recurrence,
+        })),
+        payable.series_index, editScope, f.amount, f.due_date
+      );
+      return prepareCollectiveConfirmation(payable.series_id, payable.id, editScope, preview);
+    } catch { return null; }
+  }, [all, payable, editScope, f.amount, f.due_date]);
+
 
   const save = useMutation({
     mutationFn: async () => {
@@ -823,14 +901,12 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
         }
       }
 
-      // CP-03.12: edit only the selected payable. Series membership is not persisted,
-      // so bulk updates could mix unrelated records or partially apply changes.
-      let desc = f.description.trim();
       const originalSeries = parseSeries(payable.description);
+      let desc = f.description.trim();
       if (originalSeries && !parseSeries(desc)) {
         desc = `${desc} (${originalSeries.index}/${originalSeries.total})`;
       }
-      const { data, error } = await supabase.from("payables").update({
+      const singleUpdate = {
         supplier_id: f.supplier_id || null,
         description: desc,
         category: f.category,
@@ -838,11 +914,73 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
         due_date: f.due_date,
         payment_method: f.payment_method,
         bank_account_id: f.bank_account_id || null,
-        recurrence: f.recurrence,
-      } as any).eq("id", payable.id).eq("empresa_id", empresaId).eq("user_id", user.id).select("id");
-      if (error) throw error;
-      if (!data || data.length !== 1) throw new Error("Lançamento não encontrado na empresa selecionada.");
-      return 1;
+        recurrence: payable.series_id ? payable.recurrence : f.recurrence,
+      };
+      if (editScope === "single") {
+        // A settled installment is never eligible for financial edits.
+        // Re-check the server-side record to prevent relying on stale UI state.
+        const { data: current, error: currentError } = await supabase
+          .from("payables").select("status,paid_amount,paid_at")
+          .eq("id", payable.id).eq("empresa_id", empresaId).eq("user_id", user.id).maybeSingle();
+        if (currentError || !current || !["pendente", "atrasado"].includes(current.status)
+          || Number(current.paid_amount ?? 0) !== 0 || current.paid_at) {
+          throw new Error("Parcela quitada, cancelada ou parcialmente paga não pode ser editada.");
+        }
+        const { data, error } = await supabase.from("payables").update(singleUpdate as any)
+          .eq("id", payable.id).eq("empresa_id", empresaId).eq("user_id", user.id)
+          .in("status",["pendente","atrasado"]).eq("paid_amount",0).is("paid_at",null).select("id");
+        if (error) throw error;
+        if (!data || data.length !== 1) throw new Error("Lançamento não encontrado na empresa selecionada.");
+        return 1;
+      }
+
+      if (!payable.series_id || !payable.series_index || !payable.series_total || !collectivePreview) {
+        throw new Error("Série não identificada ou prévia coletiva indisponível.");
+      }
+      const { data: fresh, error: freshError } = await supabase.from("payables")
+        .select("id,series_id,series_index,series_total,amount,due_date,status,paid_amount,paid_at,recurrence")
+        .eq("empresa_id",empresaId).eq("user_id",user.id).eq("series_id",payable.series_id)
+        .order("series_index",{ascending:true});
+      if (freshError || !fresh || fresh.length !== payable.series_total) {
+        throw new Error("Série incompleta ou leitura financeira indisponível.");
+      }
+      const freshPreview = previewCollectiveEdit(
+        fresh.map(p=>({id:p.id,index:p.series_index!,dueDate:p.due_date,
+          amount:Number(p.amount),status:p.status as Payable["status"],
+          paidAmount:Number(p.paid_amount),paidAt:p.paid_at,recurrence:p.recurrence})),
+        payable.series_index,editScope,f.amount,f.due_date
+      );
+      const freshConfirmation = prepareCollectiveConfirmation(payable.series_id,payable.id,editScope,freshPreview);
+      if (JSON.stringify(freshConfirmation.changes) !== JSON.stringify(collectivePreview.changes)
+        || fresh.some(p=>p.series_id!==payable.series_id || p.series_total!==payable.series_total)
+        || new Set(fresh.map(p=>p.series_index)).size!==payable.series_total) {
+        throw new Error("Dados financeiros alterados. Atualize a página e refaça a prévia.");
+      }
+      const approved = await confirm({
+        title:"Confirmar edição coletiva de contas a pagar",
+        description:`${freshConfirmation.count} parcelas. Total anterior: ${brl(freshConfirmation.before)}. Total novo: ${brl(freshConfirmation.after)}. Diferença: ${brl(freshConfirmation.difference)}. Parcelas: ${freshConfirmation.changes.map(p=>`${p.index}: ${p.id} (${p.previousDueDate} → ${p.nextDueDate})`).join("; ")}. Confirma a alteração financeira?`,
+        confirmText:"Confirmar alterações",cancelText:"Cancelar",destructive:false
+      });
+      if (!approved) throw new Error("Operação cancelada sem alterações.");
+      const expectedSnapshot=createCollectiveSnapshot(fresh.map(p=>({
+        id:p.id,series_index:p.series_index!,amount:Number(p.amount),due_date:p.due_date,
+        status:p.status,paid_amount:Number(p.paid_amount),paid_at:p.paid_at
+      })));
+      const { data: result, error: rpcError } = await supabase.rpc("edit_payables_series_cp04" as any,{
+        p_empresa_id:empresaId,p_payable_id:payable.id,p_scope:editScope,
+        p_new_amount:f.amount,p_anchor_due_date:f.due_date,p_expected_snapshot:expectedSnapshot
+      } as any);
+      if (rpcError) throw rpcError;
+      const returned=Array.isArray(result)?result:[];
+      const expected=new Map(freshConfirmation.changes.map(p=>[p.id,p]));
+      if (returned.length!==expected.size || returned.some((p:any)=>{
+        const e=expected.get(p.id);
+        return !e || Number(p.old_amount)!==e.previousAmount || Number(p.new_amount)!==e.nextAmount
+          || p.old_due_date!==e.previousDueDate || p.new_due_date!==e.nextDueDate;
+      })) {
+        throw new Error("RPC retornou valores divergentes da confirmação. Recarregue e solicite auditoria.");
+      }
+      return returned.length;
     },
     onSuccess: (n) => { toast.success(n > 1 ? `${n} lançamentos atualizados` : "Lançamento atualizado"); onDone(); },
     onError: (e: any) => toast.error(e.message),
@@ -850,10 +988,50 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
 
   return (
     <form onSubmit={(e) => { e.preventDefault(); save.mutate(); }} className="space-y-3">
-      {series && (
-        <div className="rounded-lg border bg-muted/30 p-3 text-sm">
-          Este lançamento possui numeração ({series.index}/{series.total}). Por segurança, somente este registro será editado. A edição coletiva está temporariamente desabilitada.
-        </div>
+      {(series || hasPersistedSeries) && (
+        <fieldset className="rounded-lg border bg-muted/30 p-3 text-sm space-y-2">
+          <legend className="font-semibold px-1">Aplicar alterações a</legend>
+          {([
+            ["single", "Somente esta parcela"],
+            ["future", "Esta parcela e as próximas pendentes"],
+            ["all", "Todas as parcelas pendentes da mesma série"],
+          ] as const).map(([value, label]) => (
+            <label key={value} className="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="payable-edit-scope" value={value}
+                checked={editScope === value} disabled={value !== "single" && !hasPersistedSeries} onChange={() => setEditScope(value)} />
+              <span>{label}</span>
+            </label>
+          ))}
+          {series && !hasPersistedSeries && (
+            <div className="space-y-2 rounded border p-2">
+              <p className="text-muted-foreground">Série antiga sem identificação persistente. Para habilitar a edição coletiva, confira e vincule todos os lançamentos da mesma obrigação.</p>
+              <Button type="button" variant="outline" disabled={reconcilingLegacy || !isEnabled}
+                onClick={() => void reconcileLegacy()}>
+                {reconcilingLegacy ? "Conferindo série..." : "Conferir e vincular série antiga"}
+              </Button>
+            </div>
+          )}
+          <p className="text-muted-foreground">Edição coletiva exige confirmação financeira e autorização transacional no banco. Sem RPC instalada, a operação será rejeitada sem alterações.</p>
+          {collectivePreview && (
+            <div className="rounded border p-3 space-y-2" aria-live="polite">
+              <p className="font-semibold">Prévia financeira — somente leitura</p>
+              <p>{collectivePreview.count} parcelas | Anterior: {brl(collectivePreview.before)} | Novo: {brl(collectivePreview.after)} | Diferença: {brl(collectivePreview.difference)}</p>
+              <ul className="text-xs space-y-1">
+                {collectivePreview.changes.map(change => (
+                  <li key={change.id}>Parcela {change.index}: {brl(change.previousAmount)} → {brl(change.nextAmount)}; {change.previousDueDate} → {change.nextDueDate}</li>
+                ))}
+              </ul>
+              <p className="text-muted-foreground">A confirmação valida novamente a série no servidor antes da RPC.</p>
+            </div>
+          )}
+          {editScope !== "single" && (
+            <p className="text-muted-foreground">
+              Série {payable.series_index ?? series?.index}/{payable.series_total ?? series?.total}: somente parcelas pendentes. O vencimento
+              será deslocado proporcionalmente; parcelas pagas não serão alteradas.
+              Séries incompletas ou ambíguas serão bloqueadas.
+            </p>
+          )}
+        </fieldset>
       )}
 
       <div className="grid grid-cols-2 gap-3">
@@ -1091,9 +1269,13 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
       }
       const isScheduled = paymentSchedule !== "unico" && repeatCount > 1;
       const total = isScheduled ? repeatCount : 1;
+      if (isScheduled && (!["mensal","semanal"].includes(f.recurrence) || total > 120 || total < 2)) {
+        throw new Error("Série exige recorrência mensal ou semanal e entre 2 e 120 parcelas.");
+      }
       const totalCents = Math.round(f.amount * 100);
       const baseCents = Math.floor(totalCents / total);
       const remainderCents = totalCents % total;
+      const persistedSeriesId = isScheduled ? crypto.randomUUID() : null;
       const rows = Array.from({ length: total }, (_, i) => {
         const due = isScheduled
           ? (f.recurrence === "mensal" ? addMonths(f.due_date, i) : addWeeks(f.due_date, i))
@@ -1111,6 +1293,7 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
           recurrence: paymentSchedule === "unico" ? "nenhuma" : f.recurrence,
           user_id: user.id,
           empresa_id: empresaId,
+          ...(isScheduled ? { series_id: persistedSeriesId, series_index: i + 1, series_total: total } : {}),
         };
       });
       const { error } = await supabase.from("payables").insert(rows as any);

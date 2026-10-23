@@ -1,0 +1,19 @@
+name: CP-04 Route Build Gate
+on:
+  pull_request:
+    paths:
+      - 'src/routes/_authenticated.contas-pagar.tsx'
+      - 'src/lib/payables-collective-preview*'
+      - '.github/workflows/cp04-route-build.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - name: Production bundle compile (no deployment)
+        run: bun run build
