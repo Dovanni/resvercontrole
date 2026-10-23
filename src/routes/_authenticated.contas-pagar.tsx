@@ -795,6 +795,59 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
     bank_account_id: payable.bank_account_id ?? "",
     recurrence: payable.recurrence,
   });
+  const [reconcilingLegacy, setReconcilingLegacy] = useState(false);
+  const reconcileLegacy = async () => {
+    if (!series || hasPersistedSeries || !empresaId || !isEnabled) return;
+    setReconcilingLegacy(true);
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw new Error("Autenticação necessária.");
+      await validatePayableCompany({ data: empresaId });
+      // Read the entire tenant's legacy obligations, not just paginated/filtered UI rows.
+      const candidates: Array<Pick<Payable, "id" | "description" | "amount" | "due_date" | "status" | "paid_amount" | "paid_at" | "series_id">> = [];
+      for (let from = 0; ; from += 500) {
+        const { data, error } = await supabase.from("payables")
+          .select("id,description,amount,due_date,status,paid_amount,paid_at,series_id")
+          .eq("empresa_id", empresaId).eq("user_id", user.id)
+          .range(from, from + 499);
+        if (error) throw error;
+        candidates.push(...(data ?? []));
+        if (!data || data.length < 500) break;
+      }
+      const matches = candidates.filter(p => {
+        const parsed = parseSeries(p.description);
+        return !p.series_id && parsed?.base === series.base && parsed.total === series.total;
+      });
+      const ordered = Array.from({ length: series.total }, (_, i) => {
+        const found = matches.filter(p => parseSeries(p.description)?.index === i + 1);
+        if (found.length !== 1) throw new Error("Série histórica incompleta ou ambígua. Revisão manual necessária.");
+        return found[0];
+      });
+      if (matches.length !== series.total || !ordered.some(p => p.id === payable.id))
+        throw new Error("Série histórica não identificada com segurança.");
+      const approved = await confirm({
+        title: "Vincular série histórica",
+        description: `Confira os ${series.total} lançamentos da série "${series.base}": ${ordered.map((p, i) => `${i + 1}/${series.total}: ${p.description} — ${brl(Number(p.amount))} — ${p.due_date} — ${p.status}`).join("; ")}. Esta operação identifica a série, sem modificar valores, vencimentos ou pagamentos. Confirma que pertencem à mesma obrigação?`,
+        confirmText: "Confirmar vínculo", cancelText: "Cancelar", destructive: false,
+      });
+      if (!approved) return;
+      const snapshot = ordered.map(p => ({
+        id: p.id, description: p.description, amount: Number(p.amount),
+        due_date: p.due_date, status: p.status,
+        paid_amount: Number(p.paid_amount ?? 0), paid_at: p.paid_at,
+      }));
+      const { data, error } = await supabase.rpc("reconcile_legacy_payables_cp04" as any, {
+        p_empresa_id: empresaId, p_ordered_ids: ordered.map(p => p.id),
+        p_expected_snapshot: snapshot,
+      } as any);
+      if (error) throw error;
+      if (!Array.isArray(data) || data.length !== ordered.length)
+        throw new Error("A conciliação não retornou a série completa. Recarregue para auditoria.");
+      toast.success("Série histórica identificada. Abra novamente a edição para escolher o alcance.");
+      onDone();
+    } catch (e: any) { toast.error(e.message ?? "Falha na conciliação da série."); }
+    finally { setReconcilingLegacy(false); }
+  };
   // Read-only preview: never infer series identity from the description suffix.
   // The collective submit path remains disabled until the reviewed RPC is deployed.
   const collectivePreview = useMemo(() => {
@@ -949,6 +1002,15 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
               <span>{label}</span>
             </label>
           ))}
+          {series && !hasPersistedSeries && (
+            <div className="space-y-2 rounded border p-2">
+              <p className="text-muted-foreground">Série antiga sem identificação persistente. Para habilitar a edição coletiva, confira e vincule todos os lançamentos da mesma obrigação.</p>
+              <Button type="button" variant="outline" disabled={reconcilingLegacy || !isEnabled}
+                onClick={() => void reconcileLegacy()}>
+                {reconcilingLegacy ? "Conferindo série..." : "Conferir e vincular série antiga"}
+              </Button>
+            </div>
+          )}
           <p className="text-muted-foreground">Edição coletiva exige confirmação financeira e autorização transacional no banco. Sem RPC instalada, a operação será rejeitada sem alterações.</p>
           {collectivePreview && (
             <div className="rounded border p-3 space-y-2" aria-live="polite">
