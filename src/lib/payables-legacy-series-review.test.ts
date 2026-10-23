@@ -32,7 +32,7 @@ describe("CP-04 legacy series review — no database writes", () => {
   it("does not merge two obligations with the same descriptions automatically", () => {
     const duplicates = rows.map(p => ({ ...p, id: "other-" + p.id }));
     expect(() => prepareReviewedLegacySeries([...rows, ...duplicates],
-      { ...review, orderedIds: ["1", "other-2", "3"] })).not.toThrow();
+      { ...review, orderedIds: ["1", "other-2", "3"] })).toThrow(/ambígua/);
     // A reviewer must supply explicit IDs; matching text alone never creates a plan.
     expect(() => prepareReviewedLegacySeries([...rows, ...duplicates],
       { ...review, orderedIds: [] })).toThrow();
