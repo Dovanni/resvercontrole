@@ -23,7 +23,7 @@ BEGIN
  SELECT count(*) INTO assigned FROM public.reconcile_legacy_payables_cp04(
  'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'::uuid,ids,snapshot);
  IF assigned<>3 THEN RAISE EXCEPTION 'Legacy assignment count mismatch: %',assigned; END IF;
- SELECT min(series_id) INTO sid FROM public.payables WHERE id=ANY(ids);
+ SELECT series_id INTO sid FROM public.payables WHERE id=ids[1];
  IF sid IS NULL OR (SELECT count(DISTINCT series_id) FROM public.payables WHERE id=ANY(ids))<>1
  OR (SELECT array_agg(series_index ORDER BY series_index) FROM public.payables WHERE id=ANY(ids))<>ARRAY[1,2,3]
  THEN RAISE EXCEPTION 'Legacy series identity mismatch'; END IF;
