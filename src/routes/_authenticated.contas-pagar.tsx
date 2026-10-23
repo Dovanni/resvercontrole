@@ -843,7 +843,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
       if (error) throw error;
       if (!Array.isArray(data) || data.length !== ordered.length)
         throw new Error("A conciliação não retornou a série completa. Recarregue para auditoria.");
-      toast.success("Série histórica identificada. Abra novamente a edição para escolher o alcance.");
+      toast.success("Série identificada com segurança. Abra a edição novamente e selecione a opção desejada.");
       onDone();
     } catch (e: any) { toast.error(e.message ?? "Falha na conciliação da série."); }
     finally { setReconcilingLegacy(false); }
@@ -998,20 +998,17 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
           ] as const).map(([value, label]) => (
             <label key={value} className="flex items-center gap-2 cursor-pointer">
               <input type="radio" name="payable-edit-scope" value={value}
-                checked={editScope === value} disabled={value !== "single" && !hasPersistedSeries} onChange={() => setEditScope(value)} />
+                checked={editScope === value} disabled={reconcilingLegacy}
+                onChange={() => {
+                  if (value !== "single" && !hasPersistedSeries) {
+                    void reconcileLegacy();
+                  } else {
+                    setEditScope(value);
+                  }
+                }} />
               <span>{label}</span>
             </label>
           ))}
-          {series && !hasPersistedSeries && (
-            <div className="space-y-2 rounded border p-2">
-              <p className="text-muted-foreground">Série antiga sem identificação persistente. Para habilitar a edição coletiva, confira e vincule todos os lançamentos da mesma obrigação.</p>
-              <Button type="button" variant="outline" disabled={reconcilingLegacy || !isEnabled}
-                onClick={() => void reconcileLegacy()}>
-                {reconcilingLegacy ? "Conferindo série..." : "Conferir e vincular série antiga"}
-              </Button>
-            </div>
-          )}
-          <p className="text-muted-foreground">Edição coletiva exige confirmação financeira e autorização transacional no banco. Sem RPC instalada, a operação será rejeitada sem alterações.</p>
           {collectivePreview && (
             <div className="rounded border p-3 space-y-2" aria-live="polite">
               <p className="font-semibold">Prévia financeira — somente leitura</p>
@@ -1023,13 +1020,6 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
               </ul>
               <p className="text-muted-foreground">A confirmação valida novamente a série no servidor antes da RPC.</p>
             </div>
-          )}
-          {editScope !== "single" && (
-            <p className="text-muted-foreground">
-              Série {payable.series_index ?? series?.index}/{payable.series_total ?? series?.total}: somente parcelas pendentes. O vencimento
-              será deslocado proporcionalmente; parcelas pagas não serão alteradas.
-              Séries incompletas ou ambíguas serão bloqueadas.
-            </p>
           )}
         </fieldset>
       )}
