@@ -109,6 +109,16 @@ assert status>=400,(status,result)
 sql(f"UPDATE public.payables SET status='pago',paid_amount=100,paid_at='2026-10-22 19:30:15.123456+00' WHERE id='00000000-0000-4000-8000-000000000002'")
 status,result=http("/rest/v1/rpc/edit_payables_series_cp04","POST",args,owner_token)
 assert status>=400,(status,result)
+# The database trigger, not merely the UI, must reject financial edits and
+# deletion of a settled row, while preserving the ordinary payment workflow.
+status,result=http("/rest/v1/payables?id=eq.00000000-0000-4000-8000-000000000002","PATCH",{"amount":777},owner_token)
+assert status>=400,("paid-amount-mutation",status,result)
+status,result=http("/rest/v1/payables?id=eq.00000000-0000-4000-8000-000000000002","PATCH",{"due_date":"2026-12-31"},owner_token)
+assert status>=400,("paid-date-mutation",status,result)
+status,result=http("/rest/v1/payables?id=eq.00000000-0000-4000-8000-000000000002","DELETE",None,owner_token)
+assert status>=400,("paid-delete",status,result)
+status,rows=http("/rest/v1/payables?select=id,amount,due_date&id=eq.00000000-0000-4000-8000-000000000002",token=owner_token)
+assert status==200 and len(rows)==1 and float(rows[0]["amount"])==100 and rows[0]["due_date"]=="2026-02-28",("paid-guard",status,rows)
 paid_snap=snapshot(owner_token)
 assert paid_snap[1]["paid_at"] is not None,paid_snap
 args["p_expected_snapshot"]=paid_snap
