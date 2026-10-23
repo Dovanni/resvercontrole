@@ -45,9 +45,9 @@ BEGIN
     SELECT 1 FROM unnest(p_ordered_ids) WITH ORDINALITY input(id,idx)
     JOIN public.payables p ON p.id=input.id
     WHERE p.series_id IS NOT NULL OR p.series_index IS NOT NULL OR p.series_total IS NOT NULL
-      OR (regexp_match(p.description, '\\(([0-9]+)/([0-9]+)\\)\\s*$')) IS NULL
-      OR (regexp_match(p.description, '\\(([0-9]+)/([0-9]+)\\)\\s*$'))[1]::integer <> input.idx
-      OR (regexp_match(p.description, '\\(([0-9]+)/([0-9]+)\\)\\s*$'))[2]::integer <> v_total
+      OR (regexp_match(p.description, $re$\(([0-9]+)/([0-9]+)\)\s*$re$)) IS NULL
+      OR (regexp_match(p.description, $re$\(([0-9]+)/([0-9]+)\)\s*$re$))[1]::integer <> input.idx
+      OR (regexp_match(p.description, $re$\(([0-9]+)/([0-9]+)\)\s*$re$))[2]::integer <> v_total
   ) THEN RAISE EXCEPTION 'Incomplete, identified, or incorrectly ordered series'; END IF;
 
   -- Snapshot prevents stale approvals. Exact server-side comparison, after row locks.
