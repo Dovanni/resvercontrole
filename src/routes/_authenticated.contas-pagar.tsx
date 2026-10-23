@@ -809,7 +809,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
         const { data, error } = await supabase.from("payables")
           .select("id,description,amount,due_date,status,paid_amount,paid_at,series_id")
           .eq("empresa_id", empresaId).eq("user_id", user.id)
-          .range(from, from + 499);
+          .order("id", { ascending: true }).range(from, from + 499);
         if (error) throw error;
         candidates.push(...(data ?? []));
         if (!data || data.length < 500) break;
