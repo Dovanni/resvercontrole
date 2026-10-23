@@ -42,6 +42,21 @@ export function prepareReviewedLegacySeries(
   const byId = new Map(rows.map(row => [row.id, row]));
   if (byId.size !== rows.length) throw new Error("IDs duplicados na origem.");
   const total = ids.length;
+  // Duplicate installment labels within the tenant are ambiguous even when
+  // the reviewer selected IDs: do not silently mix separate obligations.
+  const selected = ids.map(id => byId.get(id));
+  for (const row of selected) {
+    if (!row) continue;
+    const matches = rows.filter(candidate =>
+      candidate.empresa_id === review.empresaId &&
+      candidate.user_id === review.userId &&
+      candidate.description.trim() === row.description.trim() &&
+      !candidate.series_id,
+    );
+    if (matches.length !== 1) {
+      throw new Error("Numeração ambígua entre obrigações; conciliação automática bloqueada.");
+    }
+  }
   for (const [position, id] of ids.entries()) {
     const row = byId.get(id);
     if (!row || row.empresa_id !== review.empresaId || row.user_id !== review.userId) {
