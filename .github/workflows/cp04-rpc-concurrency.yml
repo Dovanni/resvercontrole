@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'docs/cp04-production-rpc-review.sql'
+      - 'docs/cp04-legacy-reconciliation-rpc-review.sql'
+      - 'src/routes/_authenticated.contas-pagar.tsx'
       - 'tests/cp04/rpc-*'
       - 'tests/cp04/supabase-auth-*'
       - '.github/workflows/cp04-supabase-auth.yml'
@@ -39,6 +41,12 @@ jobs:
       - run: psql -v ON_ERROR_STOP=1 -f docs/cp04-production-rpc-review.sql
       - name: Enable function ONLY inside disposable CI database
         run: psql -v ON_ERROR_STOP=1 -c "GRANT EXECUTE ON FUNCTION public.edit_payables_series_cp04(uuid,uuid,text,numeric,date,jsonb) TO authenticated"
+      - name: Install historical reconciliation RPC in disposable database only
+        run: |
+          psql -v ON_ERROR_STOP=1 -f docs/cp04-legacy-reconciliation-rpc-review.sql
+          psql -v ON_ERROR_STOP=1 -c "GRANT EXECUTE ON FUNCTION public.reconcile_legacy_payables_cp04(uuid,uuid[],jsonb) TO authenticated"
+      - name: Run actual legacy reconciliation and collective editing transaction
+        run: psql -v ON_ERROR_STOP=1 -f tests/cp04/real-legacy-rpc.sql
       - run: python -m pip install --user psycopg2-binary==2.9.11
       - name: Two-session concurrent RPC and stale confirmation tests
         run: python tests/cp04/rpc-concurrency.py
