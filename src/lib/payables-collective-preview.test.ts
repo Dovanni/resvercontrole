@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { monthlyDueDate, previewCollectiveEdit, prepareCollectiveConfirmation, type PayablePreviewRow } from "./payables-collective-preview";
+import { monthlyDueDate, previewCollectiveEdit, prepareCollectiveConfirmation, createCollectiveSnapshot, type PayablePreviewRow } from "./payables-collective-preview";
 
 const rows: PayablePreviewRow[] = [
   { id: "a", index: 1, dueDate: "2026-01-31", amount: 94.47, status: "pendente", paidAmount: 0, recurrence: "mensal" },
@@ -87,5 +87,17 @@ describe("CP-04.1 historical legacy cadence", () => {
     const restricted=legacy.map((r,i)=>i===1?{...r,status:"pago" as const,paidAmount:168.18}:i===2?{...r,paidAmount:10}:r);
     const result=previewCollectiveEdit(restricted,1,"all",170.25,"2026-12-20");
     expect(result.changes.map(x=>x.id)).toEqual(["1","4"]);
+  });
+});
+
+describe("CP-04.1 recurrence snapshot contract", () => {
+  it("includes recurrence of all series rows, including paid rows", () => {
+    const snapshot=createCollectiveSnapshot([
+      {id:"b",series_index:2,amount:20,due_date:"2027-01-03",status:"pago",paid_amount:20,paid_at:"2027-01-03T12:00:00Z",recurrence:"nenhuma"},
+      {id:"a",series_index:1,amount:20,due_date:"2026-12-13",status:"pendente",paid_amount:0,paid_at:null,recurrence:"nenhuma"},
+    ]);
+    expect(snapshot.map(x=>x.id)).toEqual(["a","b"]);
+    expect(snapshot.every(x=>x.recurrence==="nenhuma")).toBe(true);
+    expect(JSON.stringify(snapshot)).not.toEqual(JSON.stringify(snapshot.map(({recurrence,...rest})=>rest)));
   });
 });
