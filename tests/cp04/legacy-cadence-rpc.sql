@@ -32,6 +32,14 @@ BEGIN
  EXCEPTION WHEN OTHERS THEN
   IF SQLERRM='Stale snapshot accepted' THEN RAISE; END IF;
  END;
+ -- A recurrence-only change must invalidate a previously approved snapshot.
+ UPDATE public.payables SET recurrence='mensal' WHERE id=selected;
+ BEGIN
+  PERFORM public.edit_payables_series_cp04(company,selected,'all',180,'2026-12-20',snapshot);
+  RAISE EXCEPTION 'Recurrence-only stale snapshot accepted';
+ EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM='Recurrence-only stale snapshot accepted' THEN RAISE; END IF;
+ END;
  RAISE NOTICE 'CP04.1 legacy cadence, no recurrence coercion, stale snapshot PASSED';
 END;
 $test$;
