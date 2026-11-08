@@ -12,8 +12,18 @@ A função real `public.edit_payables_series_cp04(uuid,uuid,text,numeric,date,js
 6. Solicitar autorização explícita para aplicar a migration ao projeto `hoalgniwydgydqaugqph`; verificar assinatura, permissões e comportamento depois da aplicação.
 7. Só após sucesso no banco, solicitar autorização de merge/deploy do frontend; validar em prévia antes de salvar lançamentos reais.
 
-## Observação crítica
-O snapshot atual da RPC contém id, amount, due_date, status, paid_amount e paid_at, mas **não recurrence**. Antes de autorizar a publicação, avaliar se mudança concorrente de recorrência precisa invalidar o snapshot; alinhar contrato entre frontend e RPC se necessário. Esta pendência é um gate, não um detalhe cosmético.
+## Auditoria final de segurança (somente leitura)
+- CI do commit `c87fa4b633b61efa243833e98885bc75ee8aacc8`: seis workflows aprovados, incluindo teste da RPC com PostgreSQL descartável e Auth real em laboratório.
+- Supabase atual: assinatura `edit_payables_series_cp04(uuid,uuid,text,numeric,date,jsonb)`, `SECURITY INVOKER`, `authenticated EXECUTE=true`, `anon EXECUTE=false`; ACL explícita `{postgres=X/postgres,authenticated=X/postgres}`.
+- MD5 da definição da função atual: `4b9f680da1ab529ed23f5c5c557a9da5`. Antes de aplicar, comparar novamente; se diferente, abortar e reauditar.
+- A RPC proposta inclui `recurrence` no snapshot de TODAS as parcelas, inclusive liquidadas. O frontend e os testes SQL/Python foram reconciliados com o novo contrato.
+- IMPORTANTE: implantação do novo contrato RPC antes do frontend antigo pode causar incompatibilidade temporária. Programar janela controlada, aplicar RPC primeiro e fazer merge/deploy do frontend em sequência imediata após verificação; se houver erro, restaurar definição antiga antes de reabrir o fluxo.
+- Registrar a definição original completa em arquivo seguro antes de qualquer migration, não apenas o hash.
+
+## Gates restantes
+- Revisão/aprovação humana do plano de janela e do backup de rollback.
+- Autorização explícita separada para migration no Supabase, e autorização posterior para merge/deploy.
+- **Não executar** mudanças de produção nesta fase.
 
 ## Rollback
 Em caso de falha, restaurar o `CREATE OR REPLACE FUNCTION` anterior preservado no backup de definição; nunca reverter lançamentos por UPDATE indiscriminado. Não iniciar rollback sem autorização.
