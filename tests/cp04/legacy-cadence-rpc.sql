@@ -44,7 +44,7 @@ BEGIN
   PERFORM public.edit_payables_series_cp04(company,selected,'all',180,'2026-12-20',snapshot);
   RAISE EXCEPTION 'Recurrence-only stale snapshot accepted';
  EXCEPTION WHEN OTHERS THEN
-  IF SQLERRM='Recurrence-only stale snapshot accepted' THEN RAISE; END IF;
+  IF SQLERRM='Recurrence-only stale snapshot accepted' OR SQLERRM NOT LIKE 'Confirmation expired%' THEN RAISE; END IF;
  END;
  RAISE NOTICE 'CP04.1 legacy cadence, no recurrence coercion, stale snapshot PASSED';
 END;
