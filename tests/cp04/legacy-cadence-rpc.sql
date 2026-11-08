@@ -12,7 +12,7 @@ DECLARE
 BEGIN
  SELECT jsonb_agg(jsonb_build_object(
   'id',p.id,'amount',p.amount,'due_date',p.due_date,'status',p.status,
-  'paid_amount',p.paid_amount,'paid_at',p.paid_at) ORDER BY p.series_index)
+  'paid_amount',p.paid_amount,'paid_at',p.paid_at,'recurrence',p.recurrence) ORDER BY p.series_index)
  INTO snapshot FROM public.payables p WHERE p.series_id=sid;
  SELECT count(*) INTO updated FROM public.edit_payables_series_cp04(
   company,selected,'all',170.25,'2026-12-20',snapshot);
