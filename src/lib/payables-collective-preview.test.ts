@@ -4,9 +4,9 @@ import { monthlyDueDate, previewCollectiveEdit, prepareCollectiveConfirmation, t
 const rows: PayablePreviewRow[] = [
   { id: "a", index: 1, dueDate: "2026-01-31", amount: 94.47, status: "pendente", paidAmount: 0, recurrence: "mensal" },
   { id: "b", index: 2, dueDate: "2026-02-28", amount: 94.47, status: "pago", paidAmount: 94.47, recurrence: "mensal" },
-  { id: "c", index: 3, dueDate: "2026-03-31", amount: 94.47, status: "pendente", paidAmount: 0 },
+  { id: "c", index: 3, dueDate: "2026-03-31", amount: 94.47, status: "pendente", paidAmount: 0, recurrence: "mensal" },
   { id: "d", index: 4, dueDate: "2026-04-30", amount: 94.47, status: "pendente", paidAmount: 10, recurrence: "mensal" },
-  { id: "e", index: 5, dueDate: "2026-05-31", amount: 94.47, status: "cancelado", paidAmount: 0 },
+  { id: "e", index: 5, dueDate: "2026-05-31", amount: 94.47, status: "cancelado", paidAmount: 0, recurrence: "mensal" },
 ];
 
 describe("monthlyDueDate", () => {
