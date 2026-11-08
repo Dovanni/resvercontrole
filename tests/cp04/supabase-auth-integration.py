@@ -88,9 +88,9 @@ assert status in (200,204,403,401),("cross-company-delete",status,result)
 status,rows=http("/rest/v1/payables?select=id&id=eq."+selected,token=owner_token)
 assert status==200 and len(rows)==1,("cross-company-delete-bypassed",status,rows)
 def snapshot(token):
-    status,rows=http("/rest/v1/payables?select=id,series_index,amount,due_date,status,paid_amount,paid_at&series_id=eq."+series+"&order=series_index.asc",token=token)
+    status,rows=http("/rest/v1/payables?select=id,series_index,amount,due_date,status,paid_amount,paid_at,recurrence&series_id=eq."+series+"&order=series_index.asc",token=token)
     assert status==200,(status,rows)
-    return [{k:r[k] for k in ("id","amount","due_date","status","paid_amount","paid_at")} for r in rows]
+    return [{k:r[k] for k in ("id","amount","due_date","status","paid_amount","paid_at","recurrence")} for r in rows]
 snap=snapshot(owner_token)
 assert len(snap)==2,snap
 args={"p_empresa_id":company,"p_payable_id":selected,"p_scope":"all","p_new_amount":100,"p_anchor_due_date":"2026-01-31","p_expected_snapshot":snap}

@@ -40,6 +40,19 @@ export function weeklyDueDate(anchorISO: string, offsetWeeks: number): string {
   return new Date(Date.UTC(year,month-1,day+offsetWeeks*7)).toISOString().slice(0,10);
 }
 
+/** For legacy 'nenhuma' series, preserve each installment's historical day offset
+ * relative to the selected installment; never infer a monthly cadence.
+ */
+export function legacyDueDate(anchorISO: string, originalISO: string, selectedOriginalISO: string): string {
+  const anchor = parseISODate(anchorISO);
+  const original = parseISODate(originalISO);
+  const selected = parseISODate(selectedOriginalISO);
+  const utc = (d: {year:number;month:number;day:number}) => Date.UTC(d.year,d.month-1,d.day);
+  const result = new Date(utc(anchor) + (utc(original)-utc(selected)));
+  if (!Number.isFinite(result.getTime())) throw new Error("Vencimento histórico inválido");
+  return result.toISOString().slice(0,10);
+}
+
 function cents(value: number): number {
   if (!Number.isFinite(value) || value < 0) throw new Error("Valor inválido");
   const rounded = Math.round(value * 100);
@@ -58,8 +71,10 @@ export function previewCollectiveEdit(
   const nextCents = cents(newAmount);
   if (nextCents <= 0) throw new Error("O valor precisa ser positivo");
   parseISODate(selectedDueDate);
-  const cadence = rows[0]?.recurrence ?? 'mensal';
-  if (!['mensal','semanal'].includes(cadence) || rows.some(row => (row.recurrence ?? 'mensal') !== cadence)) throw new Error('Recorrência inconsistente');
+  const cadence = rows[0]?.recurrence;
+  if (!cadence || !['mensal','semanal','nenhuma'].includes(cadence) || rows.some(row => row.recurrence !== cadence)) throw new Error('Recorrência inconsistente');
+  const selectedOriginal = rows.find(row => row.index === selectedIndex);
+  if (!selectedOriginal) throw new Error("Parcela selecionada ausente");
   const selected = rows.filter((row) =>
     (scope === "all" || row.index >= selectedIndex) &&
     (scope !== "single" || row.index === selectedIndex) &&
@@ -82,7 +97,11 @@ export function previewCollectiveEdit(
       previousAmount: row.amount,
       nextAmount: nextCents / 100,
       previousDueDate: row.dueDate,
-      nextDueDate: cadence === 'semanal' ? weeklyDueDate(selectedDueDate, row.index - selectedIndex) : monthlyDueDate(selectedDueDate, row.index - selectedIndex),
+      nextDueDate: cadence === 'nenhuma'
+        ? legacyDueDate(selectedDueDate, row.dueDate, selectedOriginal.dueDate)
+        : cadence === 'semanal'
+          ? weeklyDueDate(selectedDueDate, row.index - selectedIndex)
+          : monthlyDueDate(selectedDueDate, row.index - selectedIndex),
     })),
   };
 }
@@ -123,7 +142,7 @@ export function prepareCollectiveConfirmation(
  */
 export function createCollectiveSnapshot(rows: Array<{
   id: string; series_index: number; amount: number; due_date: string;
-  status: string; paid_amount: number; paid_at: string | null;
+  status: string; paid_amount: number; paid_at: string | null; recurrence: 'mensal' | 'semanal' | 'nenhuma';
 }>) {
   const ordered = [...rows].sort((a,b) => a.series_index-b.series_index);
   if (new Set(ordered.map(r=>r.series_index)).size !== ordered.length) {
@@ -131,6 +150,6 @@ export function createCollectiveSnapshot(rows: Array<{
   }
   return ordered.map(r=>({
     id:r.id, amount:r.amount, due_date:r.due_date,
-    status:r.status, paid_amount:r.paid_amount, paid_at:r.paid_at,
+    status:r.status, paid_amount:r.paid_amount, paid_at:r.paid_at, recurrence:r.recurrence,
   }));
 }

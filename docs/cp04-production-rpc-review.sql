@@ -74,10 +74,10 @@ BEGIN
         AND p.user_id=v_user)<>v_count THEN
    RAISE EXCEPTION 'Series incomplete or inconsistent';
  END IF;
- -- Every row must share a supported recurrence. No monthly coercion of weekly series.
+ -- Uniform recurrence required. Legacy 'nenhuma' preserves historical due-date offsets; never coerce to monthly.
  SELECT min(p.recurrence) INTO v_recurrence
  FROM public.payables p WHERE p.empresa_id=p_empresa_id AND p.series_id=v_selected.series_id;
- IF v_recurrence NOT IN ('mensal','semanal') OR EXISTS (
+ IF v_recurrence NOT IN ('mensal','semanal','nenhuma') OR EXISTS (
   SELECT 1 FROM public.payables p WHERE p.empresa_id=p_empresa_id
    AND p.series_id=v_selected.series_id AND p.recurrence IS DISTINCT FROM v_recurrence
  ) THEN RAISE EXCEPTION 'Inconsistent or unsupported series recurrence'; END IF;
@@ -85,7 +85,7 @@ BEGIN
  -- Validate ALL series rows, not only targets, so changed payments invalidate confirmation.
  SELECT jsonb_agg(jsonb_build_object(
   'id',p.id,'amount',p.amount,'due_date',p.due_date,
-  'status',p.status,'paid_amount',p.paid_amount,'paid_at',p.paid_at
+  'status',p.status,'paid_amount',p.paid_amount,'paid_at',p.paid_at,'recurrence',p.recurrence
  ) ORDER BY p.series_index) INTO v_snapshot
  FROM public.payables p WHERE p.empresa_id=p_empresa_id
    AND p.series_id=v_selected.series_id AND p.user_id=v_user;
@@ -113,7 +113,9 @@ BEGIN
    AND (p_scope<>'single' OR p.id=p_payable_id)
  ), scheduled AS (
   SELECT t.*,
-   CASE WHEN v_recurrence='semanal' THEN
+   CASE WHEN v_recurrence='nenhuma' THEN
+     (p_anchor_due_date + (t.due_date-v_selected.due_date))::date
+   WHEN v_recurrence='semanal' THEN
      (p_anchor_due_date + 7 * (t.series_index-v_selected.series_index))::date
    ELSE (t.month_start + (least(
       extract(day from p_anchor_due_date)::integer,

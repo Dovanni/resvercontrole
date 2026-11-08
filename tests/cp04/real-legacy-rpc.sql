@@ -32,7 +32,7 @@ BEGIN
  -- Use exactly the snapshot shape expected by the real edit RPC.
  SELECT jsonb_agg(jsonb_build_object(
  'id',p.id,'amount',p.amount,'due_date',p.due_date,
- 'status',p.status,'paid_amount',p.paid_amount,'paid_at',p.paid_at
+ 'status',p.status,'paid_amount',p.paid_amount,'paid_at',p.paid_at,'recurrence',p.recurrence
  ) ORDER BY p.series_index) INTO snapshot
  FROM public.payables p WHERE p.series_id=sid;
  SELECT count(*) INTO updated FROM public.edit_payables_series_cp04(

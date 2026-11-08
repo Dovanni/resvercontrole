@@ -43,3 +43,10 @@ INSERT INTO public.payables(id,empresa_id,user_id,description,amount,due_date,st
  ('00000000-0000-4000-8000-000000000011','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','11111111-1111-4111-8111-111111111111','Aluguel (1/3)',100.24,'2026-04-10','pendente',0,NULL,'mensal'),
  ('00000000-0000-4000-8000-000000000012','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','11111111-1111-4111-8111-111111111111','Aluguel (2/3)',100.24,'2026-05-10','pago',100.24,'2026-05-10T12:00:00Z','mensal'),
  ('00000000-0000-4000-8000-000000000013','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','11111111-1111-4111-8111-111111111111','Aluguel (3/3)',100.24,'2026-06-10','pendente',0,NULL,'mensal');
+
+-- CP-04.1: historical irregular dates, all rows linked but recurrence='nenhuma'.
+INSERT INTO public.payables(id,empresa_id,user_id,series_id,series_index,series_total,description,amount,due_date,status,paid_amount,paid_at,recurrence) VALUES
+ ('00000000-0000-4000-8000-000000000021','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','11111111-1111-4111-8111-111111111111','99999999-9999-4999-8999-999999999999',1,4,'NF 41328 (1/4)',168.18,'2026-12-13','pendente',0,NULL,'nenhuma'),
+ ('00000000-0000-4000-8000-000000000022','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','11111111-1111-4111-8111-111111111111','99999999-9999-4999-8999-999999999999',2,4,'NF 41328 (2/4)',168.18,'2027-01-03','pendente',0,NULL,'nenhuma'),
+ ('00000000-0000-4000-8000-000000000023','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','11111111-1111-4111-8111-111111111111','99999999-9999-4999-8999-999999999999',3,4,'NF 41328 (3/4)',168.18,'2027-02-03','pendente',0,NULL,'nenhuma'),
+ ('00000000-0000-4000-8000-000000000024','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','11111111-1111-4111-8111-111111111111','99999999-9999-4999-8999-999999999999',4,4,'NF 41328 (4/4)',168.18,'2027-03-03','pendente',0,NULL,'nenhuma');

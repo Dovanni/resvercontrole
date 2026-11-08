@@ -969,13 +969,13 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
       }
       const approved = await confirm({
         title:"Confirmar edição coletiva de contas a pagar",
-        description:`${freshConfirmation.count} parcelas. Total anterior: ${brl(freshConfirmation.before)}. Total novo: ${brl(freshConfirmation.after)}. Diferença: ${brl(freshConfirmation.difference)}. Parcelas: ${freshConfirmation.changes.map(p=>`${p.index}: ${p.id} (${p.previousDueDate} → ${p.nextDueDate})`).join("; ")}. Confirma a alteração financeira?`,
+        description:`${fresh[0]?.recurrence === "nenhuma" ? "Série histórica sem periodicidade cadastrada: serão preservados os intervalos originais entre os vencimentos; nenhuma recorrência será alterada. " : ""}${freshConfirmation.count} parcelas. Total anterior: ${brl(freshConfirmation.before)}. Total novo: ${brl(freshConfirmation.after)}. Diferença: ${brl(freshConfirmation.difference)}. Parcelas: ${freshConfirmation.changes.map(p=>`${p.index}: ${p.id} (${p.previousDueDate} → ${p.nextDueDate})`).join("; ")}. Confirma a alteração financeira?`,
         confirmText:"Confirmar alterações",cancelText:"Cancelar",destructive:false
       });
       if (!approved) throw new Error("Operação cancelada sem alterações.");
       const expectedSnapshot=createCollectiveSnapshot(fresh.map(p=>({
         id:p.id,series_index:p.series_index!,amount:Number(p.amount),due_date:p.due_date,
-        status:p.status,paid_amount:Number(p.paid_amount),paid_at:p.paid_at
+        status:p.status,paid_amount:Number(p.paid_amount),paid_at:p.paid_at,recurrence:p.recurrence
       })));
       const { data: result, error: rpcError } = await supabase.rpc("edit_payables_series_cp04" as any,{
         p_empresa_id:empresaId,p_payable_id:payable.id,p_scope:editScope,

@@ -6,6 +6,8 @@ on:
       - 'docs/cp04-legacy-reconciliation-rpc-review.sql'
       - 'src/routes/_authenticated.contas-pagar.tsx'
       - 'tests/cp04/rpc-*'
+      - 'tests/cp04/legacy-cadence-rpc.sql'
+      - 'src/lib/payables-collective-preview.ts'
       - 'tests/cp04/supabase-auth-*'
       - '.github/workflows/cp04-supabase-auth.yml'
       - '.github/workflows/cp04-rpc-concurrency.yml'
@@ -47,6 +49,8 @@ jobs:
           psql -v ON_ERROR_STOP=1 -c "GRANT EXECUTE ON FUNCTION public.reconcile_legacy_payables_cp04(uuid,uuid[],jsonb) TO authenticated"
       - name: Run actual legacy reconciliation and collective editing transaction
         run: psql -v ON_ERROR_STOP=1 -f tests/cp04/real-legacy-rpc.sql
+      - name: Test CP-04.1 historical irregular dates against actual RPC
+        run: psql -v ON_ERROR_STOP=1 -f tests/cp04/legacy-cadence-rpc.sql
       - run: python -m pip install --user psycopg2-binary==2.9.11
       - name: Two-session concurrent RPC and stale confirmation tests
         run: python tests/cp04/rpc-concurrency.py

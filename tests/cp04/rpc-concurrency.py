@@ -14,7 +14,7 @@ def snapshot(c):
     with c.cursor() as q:
         q.execute("""SELECT jsonb_agg(jsonb_build_object(
         'id',id,'amount',amount,'due_date',due_date,
-        'status',status,'paid_amount',paid_amount,'paid_at',paid_at)
+        'status',status,'paid_amount',paid_amount,'paid_at',paid_at,'recurrence',recurrence)
         ORDER BY series_index) FROM public.payables WHERE series_id=
         'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'""")
         return q.fetchone()[0]
