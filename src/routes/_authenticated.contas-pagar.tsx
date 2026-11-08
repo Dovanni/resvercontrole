@@ -934,7 +934,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
         return 1;
       }
 
-      if (!payable.series_id || !payable.series_index || !payable.series_total || !collectivePreview) {
+      if (!payable.series_id || !payable.series_index || !payable.series_total) {
         throw new Error("Série não identificada ou prévia coletiva indisponível.");
       }
       const { data: fresh, error: freshError } = await supabase.from("payables")
@@ -944,6 +944,14 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
       if (freshError || !fresh || fresh.length !== payable.series_total) {
         throw new Error("Série incompleta ou leitura financeira indisponível.");
       }
+      // The table may be filtered or paginated. Never require all series rows
+      // to exist in the visible UI collection; validate the full series from DB.
+      if (fresh.some(p => p.series_id !== payable.series_id || p.series_total !== payable.series_total)
+        || new Set(fresh.map(p => p.series_index)).size !== payable.series_total
+        || fresh.some(p => !p.series_index || p.series_index < 1 || p.series_index > payable.series_total!)
+        || !fresh.some(p => p.id === payable.id && p.series_index === payable.series_index)) {
+        throw new Error("Série financeira incompleta ou inconsistente. Nenhuma alteração realizada.");
+      }
       const freshPreview = previewCollectiveEdit(
         fresh.map(p=>({id:p.id,index:p.series_index!,dueDate:p.due_date,
           amount:Number(p.amount),status:p.status as Payable["status"],
@@ -951,10 +959,13 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
         payable.series_index,editScope,f.amount,f.due_date
       );
       const freshConfirmation = prepareCollectiveConfirmation(payable.series_id,payable.id,editScope,freshPreview);
-      if (JSON.stringify(freshConfirmation.changes) !== JSON.stringify(collectivePreview.changes)
-        || fresh.some(p=>p.series_id!==payable.series_id || p.series_total!==payable.series_total)
-        || new Set(fresh.map(p=>p.series_index)).size!==payable.series_total) {
-        throw new Error("Dados financeiros alterados. Atualize a página e refaça a prévia.");
+      if (f.description.trim() !== payable.description.trim()
+        || f.supplier_id !== (payable.supplier_id ?? "")
+        || f.category !== payable.category
+        || f.payment_method !== (payable.payment_method ?? "pix")
+        || f.bank_account_id !== (payable.bank_account_id ?? "")
+        || f.recurrence !== payable.recurrence) {
+        throw new Error("A edição coletiva altera somente valor e vencimento. Para outros campos, utilize 'Somente esta parcela'.");
       }
       const approved = await confirm({
         title:"Confirmar edição coletiva de contas a pagar",
