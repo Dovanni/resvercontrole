@@ -975,7 +975,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
       if (!approved) throw new Error("Operação cancelada sem alterações.");
       const expectedSnapshot=createCollectiveSnapshot(fresh.map(p=>({
         id:p.id,series_index:p.series_index!,amount:Number(p.amount),due_date:p.due_date,
-        status:p.status,paid_amount:Number(p.paid_amount),paid_at:p.paid_at
+        status:p.status,paid_amount:Number(p.paid_amount),paid_at:p.paid_at,recurrence:p.recurrence
       })));
       const { data: result, error: rpcError } = await supabase.rpc("edit_payables_series_cp04" as any,{
         p_empresa_id:empresaId,p_payable_id:payable.id,p_scope:editScope,
