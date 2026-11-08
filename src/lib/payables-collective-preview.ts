@@ -142,7 +142,7 @@ export function prepareCollectiveConfirmation(
  */
 export function createCollectiveSnapshot(rows: Array<{
   id: string; series_index: number; amount: number; due_date: string;
-  status: string; paid_amount: number; paid_at: string | null;
+  status: string; paid_amount: number; paid_at: string | null; recurrence: 'mensal' | 'semanal' | 'nenhuma';
 }>) {
   const ordered = [...rows].sort((a,b) => a.series_index-b.series_index);
   if (new Set(ordered.map(r=>r.series_index)).size !== ordered.length) {
@@ -150,6 +150,6 @@ export function createCollectiveSnapshot(rows: Array<{
   }
   return ordered.map(r=>({
     id:r.id, amount:r.amount, due_date:r.due_date,
-    status:r.status, paid_amount:r.paid_amount, paid_at:r.paid_at,
+    status:r.status, paid_amount:r.paid_amount, paid_at:r.paid_at, recurrence:r.recurrence,
   }));
 }
