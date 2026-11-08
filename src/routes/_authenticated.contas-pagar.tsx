@@ -969,7 +969,7 @@ function EditPayableForm({ payable, all, suppliers, bankAccounts, onDone }: { pa
       }
       const approved = await confirm({
         title:"Confirmar edição coletiva de contas a pagar",
-        description:`${freshConfirmation.count} parcelas. Total anterior: ${brl(freshConfirmation.before)}. Total novo: ${brl(freshConfirmation.after)}. Diferença: ${brl(freshConfirmation.difference)}. Parcelas: ${freshConfirmation.changes.map(p=>`${p.index}: ${p.id} (${p.previousDueDate} → ${p.nextDueDate})`).join("; ")}. Confirma a alteração financeira?`,
+        description:`${fresh[0]?.recurrence === "nenhuma" ? "Série histórica sem periodicidade cadastrada: serão preservados os intervalos originais entre os vencimentos; nenhuma recorrência será alterada. " : ""}${freshConfirmation.count} parcelas. Total anterior: ${brl(freshConfirmation.before)}. Total novo: ${brl(freshConfirmation.after)}. Diferença: ${brl(freshConfirmation.difference)}. Parcelas: ${freshConfirmation.changes.map(p=>`${p.index}: ${p.id} (${p.previousDueDate} → ${p.nextDueDate})`).join("; ")}. Confirma a alteração financeira?`,
         confirmText:"Confirmar alterações",cancelText:"Cancelar",destructive:false
       });
       if (!approved) throw new Error("Operação cancelada sem alterações.");
