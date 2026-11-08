@@ -85,7 +85,7 @@ BEGIN
  -- Validate ALL series rows, not only targets, so changed payments invalidate confirmation.
  SELECT jsonb_agg(jsonb_build_object(
   'id',p.id,'amount',p.amount,'due_date',p.due_date,
-  'status',p.status,'paid_amount',p.paid_amount,'paid_at',p.paid_at
+  'status',p.status,'paid_amount',p.paid_amount,'paid_at',p.paid_at,'recurrence',p.recurrence
  ) ORDER BY p.series_index) INTO v_snapshot
  FROM public.payables p WHERE p.empresa_id=p_empresa_id
    AND p.series_id=v_selected.series_id AND p.user_id=v_user;
