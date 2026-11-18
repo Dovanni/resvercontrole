@@ -1222,7 +1222,7 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
     amount: 0, due_date: new Date().toISOString().slice(0, 10),
     payment_method: "pix", bank_account_id: "", recurrence: "nenhuma" as "nenhuma" | "semanal" | "mensal",
   });
-  const [repeatCount, setRepeatCount] = useState(2);
+  const [repeatCount, setRepeatCount] = useState("");
   const [paymentSchedule, setPaymentSchedule] = useState<"unico" | "parcelado" | "recorrente">("unico");
   const navCats2 = useNavigate();
   const { data: cats } = useCategoriasContasPagar();
@@ -1233,6 +1233,13 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
 
   const save = useMutation({
     mutationFn: async () => {
+    const minCount = paymentSchedule === "parcelado" ? 2 : 1;
+    if (paymentSchedule !== "unico" &&
+        (!/^\d+$/.test(repeatCount) ||
+         Number(repeatCount) < minCount ||
+         Number(repeatCount) > 60)) {
+      throw new Error(`Informe uma quantidade inteira entre ${minCount} e 60.`);
+    }
       if (f.amount <= 0) throw new Error("Informe um valor maior que zero");
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
@@ -1268,10 +1275,10 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
           throw new Error("Conta bancaria inexistente ou nao autorizada para esta empresa.");
         }
       }
-      const isScheduled = paymentSchedule !== "unico" && repeatCount > 1;
-      const total = isScheduled ? repeatCount : 1;
-      if (isScheduled && (!["mensal","semanal"].includes(f.recurrence) || total > 120 || total < 2)) {
-        throw new Error("Série exige recorrência mensal ou semanal e entre 2 e 120 parcelas.");
+      const isScheduled = paymentSchedule !== "unico" && Number(repeatCount) > 1;
+      const total = isScheduled ? Number(repeatCount) : 1;
+      if (isScheduled && (!["mensal","semanal"].includes(f.recurrence) || total > 60 || total < 2)) {
+        throw new Error("Série exige periodicidade mensal ou semanal e entre 2 e 60 lançamentos.");
       }
       const totalCents = Math.round(f.amount * 100);
       const baseCents = Math.floor(totalCents / total);
@@ -1312,8 +1319,16 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const minCount = paymentSchedule === "parcelado" ? 2 : 1;
+    if (paymentSchedule !== "unico" &&
+        (!/^\d+$/.test(repeatCount) ||
+         Number(repeatCount) < minCount ||
+         Number(repeatCount) > 60)) {
+      toast.error(`Informe uma quantidade inteira entre ${minCount} e 60.`);
+      return;
+    }
     if (f.amount <= 0) { toast.error("Informe um valor maior que zero"); return; }
-    if (paymentSchedule === "parcelado" && Math.round(f.amount * 100) < repeatCount) { toast.error("O valor total deve permitir ao menos R$ 0,01 por parcela"); return; }
+    if (paymentSchedule === "parcelado" && Math.round(f.amount * 100) < Number(repeatCount)) { toast.error("O valor total deve permitir ao menos R$ 0,01 por parcela"); return; }
     // Trava anti-duplicidade: bloquear lançamento manual de despesas de cartão
     if (/cart[aã]o/i.test(f.category)) {
       const ok = await confirm({
@@ -1326,7 +1341,7 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
       });
       if (!ok) return;
     }
-    const isScheduled = paymentSchedule !== "unico" && repeatCount > 1;
+    const isScheduled = paymentSchedule !== "unico" && Number(repeatCount) > 1;
     if (isScheduled) {
       const ok = await confirm({
         title: "Confirmar criação",
@@ -1437,11 +1452,15 @@ function PayableForm({ suppliers, bankAccounts, onDone }: { suppliers: { id: str
             </div>
             <div className="space-y-1.5">
               <Label>{paymentSchedule === "parcelado" ? "Quantidade de parcelas" : "Quantidade de repetições"}</Label>
-              <Input type="number" min={2} max={60} value={repeatCount} onChange={(e) => setRepeatCount(Math.max(2, Math.min(60, Number(e.target.value) || 2)))} />
+              <Input type="number" min={paymentSchedule === "parcelado" ? 2 : 1} max={60} step={1} value={repeatCount} onChange={(e) => setRepeatCount(e.target.value)} />
               <div className="text-xs text-muted-foreground">
-                {paymentSchedule === "parcelado"
-                  ? `Valor total de R$ ${f.amount.toFixed(2).replace(".", ",")} dividido em ${repeatCount} parcelas (com ajuste de centavos).`
-                  : `Serão criadas ${repeatCount} contas de R$ ${f.amount.toFixed(2).replace(".", ",")} cada.`}
+                {/^\d+$/.test(repeatCount) &&
+                 Number(repeatCount) >= (paymentSchedule === "parcelado" ? 2 : 1) &&
+                 Number(repeatCount) <= 60
+                  ? (paymentSchedule === "parcelado"
+                    ? `Valor total de R$ ${f.amount.toFixed(2).replace(".", ",")} dividido em ${repeatCount} parcelas (com ajuste de centavos).`
+                    : `Serão criadas ${repeatCount} contas de R$ ${f.amount.toFixed(2).replace(".", ",")} cada.`)
+                  : "Informe a quantidade para visualizar o lançamento."}
               </div>
             </div>
           </>
